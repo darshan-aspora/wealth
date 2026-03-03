@@ -25,6 +25,12 @@ const components = [
     href: "/explore-headers",
     status: "5 variations",
   },
+  {
+    title: "Ticker",
+    description: "Market tickers — marquee, pills, cards, dense, glow",
+    href: "/explore-tickers",
+    status: "5 variations",
+  },
 ];
 
 const items: Record<Tab, typeof pages> = {

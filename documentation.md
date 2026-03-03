@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mobile trading app prototype for US Equity, ETF, and Options trading. Design-first — no backend, no real data, no auth. Everything is mocked. Built for 390–430px mobile viewport in dark mode.
+Mobile trading app prototype for US Equity, ETF, and Options trading. Design-first — no backend, no real data, no auth. Everything is mocked. Built for 390–430px mobile viewport, dark mode default.
 
 ---
 
@@ -13,7 +13,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 | Next.js | 14.2.35 | App Router, `app/` directory |
 | TypeScript | ^5 | Type safety |
 | Tailwind CSS | ^3.4.1 | Utility-first styling, mobile-first |
-| shadcn/ui | New York style, zinc base | Only component library (Sheet, Dialog, Tabs, Card, Button, etc.) |
+| shadcn/ui | New York style, zinc base | Component library (Sheet, Button, Badge, Checkbox, Switch, ScrollArea) |
 | Framer Motion | ^12.34.5 | Transitions, micro-interactions, gestures |
 | TradingView Lightweight Charts | ^5.1.0 | Candlestick, line, area, volume charts (mock data) |
 | Lucide React | ^0.576.0 | Icons (ships with shadcn) |
@@ -32,45 +32,158 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 ```
 02-US-Equity/
 ├── app/
-│   ├── fonts/              ← Geist fonts (from scaffold, unused — we use Google Fonts)
-│   ├── globals.css         ← Tailwind base + CSS variables (light/dark) + custom utilities
-│   ├── layout.tsx          ← Root layout: dark mode, DM Sans + JetBrains Mono, viewport meta
-│   └── page.tsx            ← Home page (empty placeholder, wrapped in MobileShell)
+│   ├── page.tsx                    ← Directory — landing page with tabs (Pages / Components)
+│   ├── layout.tsx                  ← Root layout: dark mode, DM Sans + JetBrains Mono, viewport meta
+│   ├── global-error.tsx            ← Global error boundary (required by App Router)
+│   ├── globals.css                 ← Tailwind base + CSS variables (light/dark) + custom utilities
+│   ├── home/
+│   │   └── page.tsx                ← Home screen — header with rotating search, bottom nav
+│   ├── explore-headers/
+│   │   └── page.tsx                ← 5 header design variations
+│   └── explore-tickers/
+│       └── page.tsx                ← 5 ticker component variations showcase
 ├── components/
-│   ├── ui/                 ← shadcn auto-generated components (empty for now)
-│   └── mobile-shell.tsx    ← Mobile frame (430px max-width) + bottom tab bar
+│   ├── iphone-frame.tsx            ← StatusBar (theme toggle on tap) + HomeIndicator
+│   ├── mobile-shell.tsx            ← Mobile frame (430px) + bottom tab bar with 5 tabs
+│   ├── theme-provider.tsx          ← Dark/light theme context + toggleTheme hook
+│   ├── ticker.tsx                  ← 5 ticker variations + EditSheet + mock data (20 stocks)
+│   └── ui/                         ← shadcn auto-generated components
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── checkbox.tsx
+│       ├── scroll-area.tsx
+│       ├── sheet.tsx
+│       └── switch.tsx
 ├── lib/
-│   └── utils.ts            ← `cn()` helper (clsx + tailwind-merge)
-├── components.json         ← shadcn/ui config
-├── tailwind.config.ts      ← Tailwind config with custom colors, fonts, shadcn tokens
-├── tsconfig.json           ← TypeScript config with `@/*` alias
-├── postcss.config.mjs      ← PostCSS config for Tailwind
-├── next.config.mjs         ← Next.js config (default)
-├── package.json            ← Dependencies & scripts
-└── SKILL.md                ← Frontend design skill reference
+│   └── utils.ts                    ← cn() helper (clsx + tailwind-merge)
+├── components.json                 ← shadcn/ui config
+├── tailwind.config.ts              ← Tailwind config with custom colors, fonts, shadcn tokens
+├── tsconfig.json                   ← TypeScript config with @/* alias
+├── postcss.config.mjs              ← PostCSS config for Tailwind
+├── next.config.mjs                 ← Next.js config (dev cache disabled to avoid stale builds)
+├── package.json                    ← Dependencies & scripts
+├── SKILL.md                        ← Frontend design skill reference
+└── documentation.md                ← This file
 ```
 
-### Planned Structure (not yet built)
+---
 
-```
-app/
-  explore/page.tsx          ← Discover / Market overview
-  stock/[ticker]/page.tsx   ← Stock detail + chart
-  trade/page.tsx            ← Order entry (buy/sell)
-  portfolio/page.tsx        ← Holdings + P&L
-  options/page.tsx          ← Options chain view
+## Pages Built
 
-components/
-  stock-card.tsx            ← Reusable stock row (ticker, price, change)
-  chart-widget.tsx          ← TradingView Lightweight Charts wrapper
-  bottom-sheet.tsx          ← Composed from shadcn Sheet
-  order-form.tsx            ← Buy/Sell form
-  pill-badge.tsx            ← Green/red change badges
+### 1. Directory (`app/page.tsx`) — Route: `/`
 
-lib/
-  mock-data.ts              ← Static stock data, price histories, portfolio
-  chart-config.ts           ← TradingView chart theme + options
-```
+Landing page listing all available screens and component explorations.
+
+- Two tabs: **Pages** and **Components**
+- Animated tab switcher with Framer Motion `layoutId`
+- Staggered card entrance animations
+- Status badges ("v1", "5 variations")
+- Links to all other pages
+
+### 2. Home (`app/home/page.tsx`) — Route: `/home`
+
+Main trading dashboard screen with watchlist and navigation.
+
+- iPhone StatusBar (tappable for theme toggle)
+- Header with back button, rotating search placeholder ("ETF", "Stocks", "Options", "News", "Advisory", "Services"), and filter button
+- Bottom navigation bar: 5 tabs (Home, Explore, Trade, Portfolio, Options) with animated active indicator
+- Placeholder content area for watchlist
+- HomeIndicator at bottom
+
+### 3. Header Variations (`app/explore-headers/page.tsx`) — Route: `/explore-headers`
+
+5 header design explorations, all with rotating search keyword animation:
+
+1. **Clean Pill** — Rounded-full iOS-inspired search bar (Robinhood-like)
+2. **Underline Minimal** — Editorial feel, bottom-border-only search (Zerodha-inspired)
+3. **Glassmorphic** — Frosted glass with border glow (premium dark theme)
+4. **Compact Dense** — Tight layout with Edit button (high-density Zerodha style)
+5. **Bold Display** — Large search with ring accent (confident trading energy)
+
+### 4. Ticker Variations (`app/explore-tickers/page.tsx`) — Route: `/explore-tickers`
+
+5 ticker component variations, each self-contained with inline edit:
+
+1. **Marquee Tape** — Auto-scrolling infinite loop, edit button pinned right
+2. **Pill Strip** — Swipeable compact pills, edit pill at end
+3. **Mini Cards** — Rich cards with price + change + intensity bar, edit card at end
+4. **Dense Tape** — Two-line auto-scroll, edit label pinned left
+5. **Gradient Glow** — Premium cards with gain/loss gradients, edit card at end
+
+---
+
+## Components Built
+
+### `StatusBar` + `HomeIndicator` — `components/iphone-frame.tsx`
+
+iPhone chrome for realistic mobile framing.
+
+- **StatusBar**: Time (9:41), dynamic island, signal/WiFi/battery icons. Tapping toggles dark/light theme via `useTheme()`.
+- **HomeIndicator**: Bottom swipe bar (Face ID gesture area).
+
+### `MobileShell` — `components/mobile-shell.tsx`
+
+Root mobile frame wrapping pages with navigation.
+
+- Constrains to `max-w-[430px]` centered, `h-dvh` height
+- Scrollable `<main>` with hidden scrollbar
+- **Bottom Tab Bar**: 5 tabs (Home, Explore, Trade, Portfolio, Options)
+- Active tab detection via `usePathname()` with animated indicator (`layoutId`)
+- Glassmorphism: `bg-background/80 backdrop-blur-xl`
+- Safe area padding: `pb-[env(safe-area-inset-bottom,8px)]`
+
+### `ThemeProvider` — `components/theme-provider.tsx`
+
+React Context for theme state management.
+
+- Provides `theme` ("dark" | "light") and `toggleTheme()` function
+- Toggles `dark`/`light` class on `<html>` element
+- Default: dark mode
+- Wrapped at root in `app/layout.tsx`
+
+### Ticker Components — `components/ticker.tsx`
+
+5 exported ticker variations, each self-contained with own state:
+
+| Export | Style | Edit Trigger |
+|---|---|---|
+| `TickerMarquee` | Auto-scrolling infinite tape | Settings icon pinned right |
+| `TickerPills` | Scrollable compact pills | "Edit" pill at end of row |
+| `TickerCards` | Cards with price, change, intensity bar | Dashed "Edit" card at end |
+| `TickerDense` | Two-line auto-scroll tape | "TICKER" label + settings pinned left |
+| `TickerGlow` | Gradient glow cards | Dashed "Edit" card matching style |
+
+**Shared internals:**
+
+- **`EditSheet`** — Bottom sheet for selecting tickers with:
+  - Search input (filters by symbol or company name)
+  - Grouped by category (Indices / Watchlist) with sticky headers
+  - Colored logo avatars for each stock
+  - Two-line rows: bold symbol + lighter company name
+  - Price + % change on the right
+  - Select all / Deselect all per group
+  - Save button
+- **`TickerLogo`** — Colored circle avatar with 1-2 char abbreviation
+- **`useTickerState()`** — Hook managing selected ticker list + filtered data
+- **Mock data**: 20 stocks across 2 categories:
+  - **Indices** (3): SPX, NDX, DJI
+  - **Watchlist** (17): AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH, JNJ, WMT, AVGO, COST, NFLX, AMD, INTC
+- **Helpers**: `formatPrice()`, `formatChange()`, `formatPercent()`, `isGain()`
+
+### shadcn/ui Components — `components/ui/`
+
+Installed via `npx shadcn@latest add`:
+
+- `sheet.tsx` — Bottom/side sheets (used by ticker edit)
+- `button.tsx` — Button variants
+- `badge.tsx` — Status badges
+- `checkbox.tsx` — Checkboxes
+- `scroll-area.tsx` — Custom scroll containers
+- `switch.tsx` — Toggle switches
+
+### `cn()` — `lib/utils.ts`
+
+Utility combining `clsx` + `tailwind-merge` for conditional class composition.
 
 ---
 
@@ -85,7 +198,7 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 
 ### Dark Theme (default)
 
-Dark mode is forced via `<html class="dark">` in the root layout. The color system uses HSL CSS variables consumed through Tailwind tokens.
+Dark mode is forced via `<html class="dark">` in the root layout. Light mode is toggled by tapping the StatusBar. The color system uses HSL CSS variables consumed through Tailwind tokens.
 
 **Key dark mode values:**
 
@@ -104,8 +217,6 @@ Use in Tailwind as: `text-gain`, `text-loss`, `bg-card`, `text-muted-foreground`
 
 ### Trading Color Tokens
 
-Added custom `gain` and `loss` colors to both CSS variables and Tailwind config:
-
 ```tsx
 // In components:
 <span className="text-gain">+2.34%</span>
@@ -116,40 +227,13 @@ Added custom `gain` and `loss` colors to both CSS variables and Tailwind config:
 
 ---
 
-## Components Built
+## Conventions
 
-### `MobileShell` — `components/mobile-shell.tsx`
-
-The root mobile frame that wraps every page.
-
-**What it does:**
-- Constrains content to `max-w-[430px]` centered horizontally
-- Sets `h-dvh` (dynamic viewport height) for full-screen mobile feel
-- Renders a scrollable `<main>` area with hidden scrollbar (`.no-scrollbar`)
-- Bottom padding (`pb-20`) to clear the fixed tab bar
-
-**Bottom Tab Bar:**
-- 5 tabs: Home, Explore, Trade, Portfolio, Options
-- Icons from Lucide React (Home, Search, ArrowLeftRight, PieChart, LayoutGrid)
-- Active tab detection via `usePathname()` — exact match for `/`, prefix match for others
-- Animated active indicator using Framer Motion `layoutId` (spring animation)
-- Glassmorphism effect: `bg-background/80 backdrop-blur-xl`
-- Safe area padding: `pb-[env(safe-area-inset-bottom,8px)]`
-
-### `cn()` — `lib/utils.ts`
-
-Utility function combining `clsx` and `tailwind-merge` for conditional class composition.
-
----
-
-## Global Styles — `app/globals.css`
-
-- Full light + dark CSS variable sets (shadcn zinc base)
-- Custom `--gain` and `--loss` variables for trading colors
-- `--radius: 0.75rem` for consistent border radius
-- Universal `border-border` applied to all elements
-- Body: `bg-background text-foreground` with font smoothing and no tap highlight
-- `.no-scrollbar` utility: hides scrollbar across Webkit, Firefox, and IE/Edge
+- **StatusBar tap = theme toggle**: Present on every page using the StatusBar component
+- **Each ticker variation is self-contained**: Own state, own edit sheet — no provider/context needed. Just `<TickerMarquee />`.
+- **No backend**: All data is mocked inline in components
+- **Mobile-only**: 390–430px width, no desktop breakpoints
+- **Workflow**: Build one screen at a time, iterate, then move on
 
 ---
 
@@ -172,12 +256,13 @@ npm run lint      # ESLint
 
 ---
 
-## Design Rules (reference)
+## Design Rules
 
 - Mobile-only: 390–430px width, no desktop breakpoints
 - Dark mode default with zinc/slate palette
 - Green for buy/gain, red for sell/loss
-- Font scale: large → prices, medium → labels, small → metadata, minimum 12px
+- Font scale: large → prices, medium → labels, small → metadata, minimum 11px
 - Spacing: 16px card padding, 12–16px section gaps
 - Bottom sheets over modals, tab bars over hamburger menus
-- Real mock data: AAPL, TSLA, NVDA, SPY with realistic prices
+- Real mock data: realistic ticker symbols and prices
+- No "AI slop" aesthetics — bold, confident, distinctive design

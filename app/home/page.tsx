@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Search,
-  SlidersHorizontal,
+  LayoutPanelLeft,
   ChevronLeft,
   Home,
   BarChart3,
@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { TickerMarquee } from "@/components/ticker";
 
 // ─── Rotating search placeholder ─────────────────────────────────────
 const searchSuffixes = [
@@ -76,7 +77,7 @@ function Header() {
       </div>
 
       <button className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <SlidersHorizontal size={18} strokeWidth={1.8} />
+        <LayoutPanelLeft size={18} strokeWidth={1.8} />
       </button>
     </header>
   );
@@ -135,6 +136,9 @@ export default function HomePage() {
 
       {/* Header */}
       <Header />
+
+      {/* Ticker */}
+      <TickerMarquee />
 
       {/* Content area */}
       <main className="no-scrollbar flex-1 overflow-y-auto">
