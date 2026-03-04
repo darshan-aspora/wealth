@@ -54,6 +54,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   ├── ticker-visibility.tsx       ← Ticker show/hide context
 │   ├── watchlist-context.tsx       ← Watchlist state context (sort, flags, deletes, collapse)
 │   ├── watchlist-content.tsx       ← Watchlist body — collapsible sections, stock rows, swipe gestures
+│   ├── movers-content.tsx          ← Movers tab — multi-line TradingView chart + top/bottom stock list
 │   ├── sort-sheet.tsx              ← Sort bottom sheet (5 sort options)
 │   └── ui/                         ← shadcn auto-generated components
 │       ├── badge.tsx
@@ -146,6 +147,7 @@ Full watchlist screen with 4 top-level tabs and rich stock management.
 - **Delete** removes the stock with exit animation
 - **Header 3-dot menu** shows: Sort, Edit, Create new section (only on watchlist page)
 - **Sort bottom sheet** with 5 options: Symbol A–Z, % Change, Volume, Market Cap, Flag
+- **Movers tab**: "Watchlist Movers" widget with TradingView multi-line chart comparing top 3 gainers (AMZN, META, AAPL) vs bottom 3 losers (AMD, INTC, TSLA) on a percentage scale, with dashed 0% baseline, stock list below with colored borders matching chart lines, dismiss (×) buttons
 - Wrapped in `WatchlistProvider` context for cross-component state
 
 ---
@@ -178,6 +180,18 @@ Main body of the Watchlist tab.
 - **Actions**: Flag (toggles red dot), Alert (no-op), Delete (removes with exit animation)
 - **Sorting**: `useMemo` applies sort from context to each section's stocks
 - Reuses `TickerLogo`, `formatPrice`, `formatChange`, `formatPercent`, `isGain` from `ticker.tsx`
+
+### `MoversContent` — `components/movers-content.tsx`
+
+Movers tab content showing top gainers vs losers comparison.
+
+- **Chart**: TradingView `lightweight-charts` v5.1.0 with 6 overlaid `LineSeries` (percentage change Y-axis, intraday time X-axis)
+- **Stocks**: 3 gainers (AMZN, META, AAPL) + 3 losers (AMD, INTC, TSLA), each with a unique color
+- **Baseline**: Dashed 0% line separating gainers from losers
+- **Stock list**: Colored left border, TickerLogo, name/symbol, price, % badge, dismiss button
+- **Data**: Seeded PRNG generates deterministic mock intraday walks biased toward each stock's final change%
+- **Interactions**: Dismiss (×) removes a stock; chart re-renders with remaining stocks
+- Reuses `TickerLogo`, `formatPrice`, `formatPercent`, `isGain` from `ticker.tsx`
 
 ### `SortSheet` — `components/sort-sheet.tsx`
 

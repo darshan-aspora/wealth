@@ -10,6 +10,7 @@ import { WatchlistProvider, useWatchlist } from "@/components/watchlist-context"
 import { WatchlistContent, useWatchlistTotalCount } from "@/components/watchlist-content";
 import { SortSheet } from "@/components/sort-sheet";
 import { EditSheet } from "@/components/edit-sheet";
+import { MoversContent } from "@/components/movers-content";
 
 const tabs = ["Watchlist", "AI Insights", "Movers", "News"] as const;
 type Tab = (typeof tabs)[number];
@@ -62,6 +63,8 @@ function WatchlistPageInner() {
       <main className="no-scrollbar flex-1 overflow-y-auto">
         {activeTab === "Watchlist" ? (
           <WatchlistContent />
+        ) : activeTab === "Movers" ? (
+          <MoversContent />
         ) : (
           <div className="flex h-full items-center justify-center px-6">
             <p className="text-[15px] text-muted-foreground/40">{activeTab}</p>
