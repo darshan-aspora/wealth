@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, LayoutPanelLeft, X, Bell } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, X, Bell, EllipsisVertical, LayoutPanelLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Rotating search placeholder ─────────────────────────────────────
@@ -49,6 +49,53 @@ function SearchPlaceholder() {
   );
 }
 
+function OptionsMenu() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
+      >
+        <EllipsisVertical size={18} strokeWidth={1.8} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute right-0 top-11 z-50 min-w-[160px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
+          >
+            <button
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-[14px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+            >
+              <LayoutPanelLeft size={16} strokeWidth={1.8} className="text-muted-foreground" />
+              Customise
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function Header() {
   return (
     <header className="flex items-center gap-2.5 px-4 py-3">
@@ -63,16 +110,14 @@ export function Header() {
         </div>
       </div>
 
-      <button className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <LayoutPanelLeft size={18} strokeWidth={1.8} />
-      </button>
-
       <button className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
         <Bell size={18} strokeWidth={1.8} />
         <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-background">
           3
         </span>
       </button>
+
+      <OptionsMenu />
     </header>
   );
 }
