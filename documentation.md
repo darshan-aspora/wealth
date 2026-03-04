@@ -38,6 +38,8 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   ├── globals.css                 ← Tailwind base + CSS variables (light/dark) + custom utilities
 │   ├── home/
 │   │   └── page.tsx                ← Home screen — header with rotating search, bottom nav
+│   ├── search/
+│   │   └── page.tsx                ← Search page — active input, extended bar, back button
 │   ├── explore-headers/
 │   │   └── page.tsx                ← 5 header design variations
 │   └── explore-tickers/
@@ -90,7 +92,20 @@ Main trading dashboard screen with watchlist and navigation.
 - Placeholder content area for watchlist
 - HomeIndicator at bottom
 
-### 3. Header Variations (`app/explore-headers/page.tsx`) — Route: `/explore-headers`
+### 3. Search (`app/search/page.tsx`) — Route: `/search`
+
+Full-screen search page opened by tapping the search bar on Home.
+
+- iPhone StatusBar (tappable for theme toggle)
+- Back button (ArrowLeft) in the same position as the Home header's X button
+- Extended search bar spanning full remaining width (no bell/options icons)
+- Auto-focused text input on mount
+- Same rotating placeholder animation as Home but lighter (`text-muted-foreground/35`)
+- Clear (X) button appears inside the search bar when text is entered
+- HomeIndicator at bottom
+- Content area reserved for future search results
+
+### 4. Header Variations (`app/explore-headers/page.tsx`) — Route: `/explore-headers`
 
 5 header design explorations, all with rotating search keyword animation:
 
@@ -100,7 +115,7 @@ Main trading dashboard screen with watchlist and navigation.
 4. **Compact Dense** — Tight layout with Edit button (high-density Zerodha style)
 5. **Bold Display** — Large search with ring accent (confident trading energy)
 
-### 4. Ticker Variations (`app/explore-tickers/page.tsx`) — Route: `/explore-tickers`
+### 5. Ticker Variations (`app/explore-tickers/page.tsx`) — Route: `/explore-tickers`
 
 5 ticker component variations, each self-contained with inline edit:
 
@@ -120,6 +135,15 @@ iPhone chrome for realistic mobile framing.
 
 - **StatusBar**: Time (9:41), dynamic island, signal/WiFi/battery icons. Tapping toggles dark/light theme via `useTheme()`.
 - **HomeIndicator**: Bottom swipe bar (Face ID gesture area).
+
+### `Header` — `components/header.tsx`
+
+Home screen search header.
+
+- Layout: `[X Close] [Search Bar (pill)] [Bell w/ badge] [Options menu]`
+- **Rotating placeholder**: Cycles through "ETF", "Stocks", "Options", "News", "Advisory", "Advisory Baskets", "1-Click Algo Strategies" with upward slide animation
+- Search bar is clickable — navigates to `/search` page
+- Exports `searchSuffixes` array and `useRotatingSuffix()` hook for reuse by search page
 
 ### `MobileShell` — `components/mobile-shell.tsx`
 
