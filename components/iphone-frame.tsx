@@ -2,19 +2,34 @@
 
 import { Wifi, Battery, Signal } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useTickerVisibility } from "@/components/ticker-visibility";
+import { cn } from "@/lib/utils";
 
 // ─── iPhone Status Bar ───────────────────────────────────────────────
 // Tap to toggle dark/light mode
+// When ticker is visible, always dark to match ticker strip.
+// When ticker is hidden, follows current theme.
 export function StatusBar() {
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const { tickerVisible } = useTickerVisibility();
+
+  const forceDark = tickerVisible || theme === "dark";
 
   return (
     <div
       onClick={toggleTheme}
-      className="relative flex cursor-pointer items-center justify-between px-6 pt-3 pb-1.5 select-none active:opacity-70 transition-opacity"
+      className={cn(
+        "relative flex cursor-pointer items-center justify-between px-6 pt-3 pb-1.5 select-none active:opacity-70 transition-all duration-200",
+        forceDark ? "bg-[#0f0f11]" : "bg-background"
+      )}
     >
       {/* Time */}
-      <span className="text-[17px] font-semibold leading-none text-foreground">
+      <span
+        className={cn(
+          "text-[17px] font-semibold leading-none",
+          forceDark ? "text-white" : "text-foreground"
+        )}
+      >
         9:41
       </span>
 
@@ -25,10 +40,10 @@ export function StatusBar() {
 
       {/* Right cluster: signal, wifi, battery */}
       <div className="flex items-center gap-1.5">
-        <Signal size={16} strokeWidth={2.2} className="text-foreground" />
-        <Wifi size={17} strokeWidth={2.2} className="text-foreground" />
+        <Signal size={16} strokeWidth={2.2} className={forceDark ? "text-white" : "text-foreground"} />
+        <Wifi size={17} strokeWidth={2.2} className={forceDark ? "text-white" : "text-foreground"} />
         <div className="relative flex items-center">
-          <Battery size={24} strokeWidth={1.6} className="text-foreground" />
+          <Battery size={24} strokeWidth={1.6} className={forceDark ? "text-white" : "text-foreground"} />
         </div>
       </div>
     </div>

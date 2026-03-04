@@ -42,13 +42,19 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   │   └── page.tsx                ← Search page — active input, extended bar, back button
 │   ├── explore-headers/
 │   │   └── page.tsx                ← 5 header design variations
-│   └── explore-tickers/
-│       └── page.tsx                ← 5 ticker component variations showcase
+│   ├── explore-tickers/
+│   │   └── page.tsx                ← 5 ticker component variations showcase
+│   └── watchlist/
+│       └── page.tsx                ← Watchlist page — 4 tabs, stock sections, swipe actions
 ├── components/
 │   ├── iphone-frame.tsx            ← StatusBar (theme toggle on tap) + HomeIndicator
 │   ├── mobile-shell.tsx            ← Mobile frame (430px) + bottom tab bar with 5 tabs
 │   ├── theme-provider.tsx          ← Dark/light theme context + toggleTheme hook
 │   ├── ticker.tsx                  ← 5 ticker variations + EditSheet + mock data (20 stocks)
+│   ├── ticker-visibility.tsx       ← Ticker show/hide context
+│   ├── watchlist-context.tsx       ← Watchlist state context (sort, flags, deletes, collapse)
+│   ├── watchlist-content.tsx       ← Watchlist body — collapsible sections, stock rows, swipe gestures
+│   ├── sort-sheet.tsx              ← Sort bottom sheet (5 sort options)
 │   └── ui/                         ← shadcn auto-generated components
 │       ├── badge.tsx
 │       ├── button.tsx
@@ -125,6 +131,23 @@ Full-screen search page opened by tapping the search bar on Home.
 4. **Dense Tape** — Two-line auto-scroll, edit label pinned left
 5. **Gradient Glow** — Premium cards with gain/loss gradients, edit card at end
 
+### 6. Watchlist (`app/watchlist/page.tsx`) — Route: `/watchlist`
+
+Full watchlist screen with 4 top-level tabs and rich stock management.
+
+- **Tabs**: Watchlist (default), AI Insights, Movers, News — horizontally scrollable, animated underline
+- **Watchlist Tab** contains 3 collapsible sections:
+  - **Indices** (SPX, NDX, DJI)
+  - **US Stocks** (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH)
+  - **Interested** (JNJ, WMT, AVGO, COST, NFLX, AMD, INTC)
+- **Stock rows**: Logo avatar + Symbol/Name + Price + Change (red/green)
+- **Swipe left** on any row reveals 3 actions: Flag (amber), Alert (blue), Delete (red)
+- **Flag** adds a red dot indicator on the left side of the row
+- **Delete** removes the stock with exit animation
+- **Header 3-dot menu** shows: Sort, Edit, Create new section (only on watchlist page)
+- **Sort bottom sheet** with 5 options: Symbol A–Z, % Change, Volume, Market Cap, Flag
+- Wrapped in `WatchlistProvider` context for cross-component state
+
 ---
 
 ## Components Built
@@ -144,6 +167,35 @@ Home screen search header.
 - **Rotating placeholder**: Cycles through "ETF", "Stocks", "Options", "News", "Advisory", "Baskets", "Strategies" with upward slide animation
 - Search bar is clickable — navigates to `/search` page
 - Exports `searchSuffixes` array and `useRotatingSuffix()` hook for reuse by search page
+- **Props**: `onSortClick?: () => void` — when provided, options menu shows Sort/Edit/Create new section; when absent, shows default "Customise"
+
+### `WatchlistContent` — `components/watchlist-content.tsx`
+
+Main body of the Watchlist tab.
+
+- **Collapsible sections**: Section header with label + count + animated chevron
+- **SwipeableRow**: Framer Motion `drag="x"` with `dragDirectionLock` for native-feel horizontal swipe
+- **Actions**: Flag (toggles red dot), Alert (no-op), Delete (removes with exit animation)
+- **Sorting**: `useMemo` applies sort from context to each section's stocks
+- Reuses `TickerLogo`, `formatPrice`, `formatChange`, `formatPercent`, `isGain` from `ticker.tsx`
+
+### `SortSheet` — `components/sort-sheet.tsx`
+
+Bottom sheet for sorting watchlist stocks.
+
+- 5 sort options: Symbol A–Z, % Change, Volume, Market Cap, Flag
+- Active sort shows checkmark; tapping active sort deselects
+- Uses shadcn Sheet (side="bottom", rounded-t-2xl)
+
+### `WatchlistProvider` / `useWatchlist()` — `components/watchlist-context.tsx`
+
+React Context for watchlist state shared between Header and WatchlistContent.
+
+- `sortSheetOpen` / `openSortSheet` / `closeSortSheet`
+- `currentSort` / `setSort` (symbol, change, volume, marketCap, flag, null)
+- `flaggedSymbols` / `toggleFlag`
+- `deletedSymbols` / `deleteSymbol`
+- `collapsedSections` / `toggleSection`
 
 ### `MobileShell` — `components/mobile-shell.tsx`
 
@@ -192,7 +244,8 @@ React Context for theme state management.
 - **Mock data**: 20 stocks across 2 categories:
   - **Indices** (3): SPX, NDX, DJI
   - **Watchlist** (17): AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH, JNJ, WMT, AVGO, COST, NFLX, AMD, INTC
-- **Helpers**: `formatPrice()`, `formatChange()`, `formatPercent()`, `isGain()`
+- **Helpers** (all exported): `formatPrice()`, `formatChange()`, `formatPercent()`, `isGain()`, `TickerLogo`
+- **Extended fields**: `volume` and `marketCap` on each `TickerItem` (used by watchlist sort)
 
 ### shadcn/ui Components — `components/ui/`
 

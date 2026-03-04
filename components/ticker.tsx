@@ -33,34 +33,36 @@ export interface TickerItem {
   logo: string; // 1-2 char abbreviation for avatar
   logoColor: string; // tailwind bg class for avatar
   exchange?: string; // e.g. "NASDAQ", "NYSE"
+  volume?: number; // daily volume
+  marketCap?: number; // in dollars
 }
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 export const ALL_TICKERS: TickerItem[] = [
   // Indices
-  { symbol: "SPX", name: "S&P 500", price: 5998.74, change: 22.43, changePercent: 0.38, category: "index", logo: "SP", logoColor: "bg-blue-600" },
-  { symbol: "NDX", name: "Nasdaq 100", price: 21256.15, change: -87.32, changePercent: -0.41, category: "index", logo: "NQ", logoColor: "bg-emerald-600" },
-  { symbol: "DJI", name: "Dow Jones", price: 43840.91, change: 151.22, changePercent: 0.35, category: "index", logo: "DJ", logoColor: "bg-sky-600" },
+  { symbol: "SPX", name: "S&P 500", price: 5998.74, change: 22.43, changePercent: 0.38, category: "index", logo: "SP", logoColor: "bg-blue-600", volume: 3_120_000_000, marketCap: 0 },
+  { symbol: "NDX", name: "Nasdaq 100", price: 21256.15, change: -87.32, changePercent: -0.41, category: "index", logo: "NQ", logoColor: "bg-emerald-600", volume: 1_850_000_000, marketCap: 0 },
+  { symbol: "DJI", name: "Dow Jones", price: 43840.91, change: 151.22, changePercent: 0.35, category: "index", logo: "DJ", logoColor: "bg-sky-600", volume: 980_000_000, marketCap: 0 },
 
   // Watchlist (user's stocks — Mag 7 + popular picks)
-  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", logo: "A", logoColor: "bg-neutral-600", exchange: "NASDAQ" },
-  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", logo: "MS", logoColor: "bg-sky-700", exchange: "NASDAQ" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", logo: "G", logoColor: "bg-red-600", exchange: "NASDAQ" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", logo: "AZ", logoColor: "bg-amber-600", exchange: "NASDAQ" },
-  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", logo: "NV", logoColor: "bg-green-700", exchange: "NASDAQ" },
-  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", logo: "M", logoColor: "bg-blue-700", exchange: "NASDAQ" },
-  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", logo: "T", logoColor: "bg-red-700", exchange: "NASDAQ" },
-  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", logo: "JP", logoColor: "bg-slate-700", exchange: "NYSE" },
-  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", logo: "V", logoColor: "bg-indigo-700", exchange: "NYSE" },
-  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", logo: "UH", logoColor: "bg-cyan-700", exchange: "NYSE" },
-  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", logo: "JJ", logoColor: "bg-rose-700", exchange: "NYSE" },
-  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", logo: "WM", logoColor: "bg-blue-800", exchange: "NYSE" },
-  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", logo: "AV", logoColor: "bg-red-800", exchange: "NASDAQ" },
-  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", logo: "CO", logoColor: "bg-red-600", exchange: "NASDAQ" },
-  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", logo: "N", logoColor: "bg-red-700", exchange: "NASDAQ" },
-  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ" },
-  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", logo: "IN", logoColor: "bg-sky-800", exchange: "NASDAQ" },
+  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", logo: "A", logoColor: "bg-neutral-600", exchange: "NASDAQ", volume: 52_340_000, marketCap: 3_520_000_000_000 },
+  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", logo: "MS", logoColor: "bg-sky-700", exchange: "NASDAQ", volume: 23_180_000, marketCap: 3_210_000_000_000 },
+  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", logo: "G", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 28_450_000, marketCap: 2_180_000_000_000 },
+  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", logo: "AZ", logoColor: "bg-amber-600", exchange: "NASDAQ", volume: 41_200_000, marketCap: 2_140_000_000_000 },
+  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", logo: "NV", logoColor: "bg-green-700", exchange: "NASDAQ", volume: 68_500_000, marketCap: 3_240_000_000_000 },
+  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", logo: "M", logoColor: "bg-blue-700", exchange: "NASDAQ", volume: 18_900_000, marketCap: 1_560_000_000_000 },
+  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", logo: "T", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 95_700_000, marketCap: 792_000_000_000 },
+  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", logo: "JP", logoColor: "bg-slate-700", exchange: "NYSE", volume: 8_420_000, marketCap: 698_000_000_000 },
+  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", logo: "V", logoColor: "bg-indigo-700", exchange: "NYSE", volume: 6_850_000, marketCap: 580_000_000_000 },
+  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", logo: "UH", logoColor: "bg-cyan-700", exchange: "NYSE", volume: 3_210_000, marketCap: 484_000_000_000 },
+  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", logo: "JJ", logoColor: "bg-rose-700", exchange: "NYSE", volume: 7_100_000, marketCap: 374_000_000_000 },
+  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", logo: "WM", logoColor: "bg-blue-800", exchange: "NYSE", volume: 9_800_000, marketCap: 625_000_000_000 },
+  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", logo: "AV", logoColor: "bg-red-800", exchange: "NASDAQ", volume: 12_400_000, marketCap: 870_000_000_000 },
+  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", logo: "CO", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 2_300_000, marketCap: 409_000_000_000 },
+  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", logo: "N", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 5_600_000, marketCap: 401_000_000_000 },
+  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ", volume: 44_200_000, marketCap: 192_000_000_000 },
+  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", logo: "IN", logoColor: "bg-sky-800", exchange: "NASDAQ", volume: 38_900_000, marketCap: 95_000_000_000 },
 ];
 
 const DEFAULT_SELECTED = [
@@ -76,27 +78,27 @@ const CATEGORY_ORDER: TickerItem["category"][] = ["index", "watchlist"];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatPrice(price: number) {
+export function formatPrice(price: number) {
   return price >= 1000
     ? price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : price.toFixed(2);
 }
 
-function formatChange(change: number) {
+export function formatChange(change: number) {
   const sign = change >= 0 ? "+" : "";
   return `${sign}${change.toFixed(2)}`;
 }
 
-function formatPercent(pct: number) {
+export function formatPercent(pct: number) {
   const sign = pct >= 0 ? "+" : "";
   return `${sign}${pct.toFixed(2)}%`;
 }
 
-const isGain = (t: TickerItem) => t.change >= 0;
+export const isGain = (t: TickerItem) => t.change >= 0;
 
 // ─── Logo Avatar ─────────────────────────────────────────────────────────────
 
-function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
+export function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
   const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const text = size === "sm" ? "text-[11px]" : "text-[12px]";
 
@@ -357,7 +359,7 @@ function EditButton({
       selected={selected}
       onSave={onSave}
       trigger={
-        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/70 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-white/15 hover:text-white">
           <Settings2 size={15} />
         </button>
       }
@@ -376,8 +378,8 @@ export function TickerMarquee() {
 
   if (tickers.length === 0) {
     return (
-      <div className="flex items-center justify-between px-4 py-3 border-y border-border/40">
-        <span className="text-[14px] text-muted-foreground">No tickers selected</span>
+      <div className="flex items-center justify-between bg-[#0f0f11] px-4 py-3">
+        <span className="text-[14px] text-white/50">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
     );
@@ -386,10 +388,10 @@ export function TickerMarquee() {
   const doubled = [...tickers, ...tickers];
 
   return (
-    <div className="relative flex items-center border-y border-border/40">
+    <div className="relative flex items-center bg-[#0f0f11]">
       {/* Fade edges */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-[40px] z-10 w-8 bg-gradient-to-l from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#0f0f11] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-[40px] z-10 w-8 bg-gradient-to-l from-[#0f0f11] to-transparent" />
 
       {/* Scrolling content */}
       <div className="flex-1 overflow-hidden py-2.5">
@@ -407,16 +409,16 @@ export function TickerMarquee() {
         >
           {doubled.map((t, i) => (
             <div key={`${t.symbol}-${i}`} className="flex items-center gap-2 shrink-0">
-              <span className="text-[15px] font-semibold text-foreground">
+              <span className="text-[15px] font-semibold text-white">
                 {t.symbol}
               </span>
-              <span className="text-[14px] font-medium text-muted-foreground tabular-nums">
+              <span className="text-[14px] font-medium text-white/50 tabular-nums">
                 {formatPrice(t.price)}
               </span>
               <span
                 className={cn(
                   "text-[14px] font-semibold tabular-nums",
-                  isGain(t) ? "text-gain" : "text-loss"
+                  isGain(t) ? "text-emerald-400" : "text-red-400"
                 )}
               >
                 {formatPercent(t.changePercent)}
@@ -569,7 +571,7 @@ export function TickerDense() {
 
   if (tickers.length === 0) {
     return (
-      <div className="flex items-center justify-between px-4 py-2.5 border-y border-border/40">
+      <div className="flex items-center justify-between px-4 py-2.5 ">
         <span className="text-[13px] text-muted-foreground">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
@@ -579,7 +581,7 @@ export function TickerDense() {
   const doubled = [...tickers, ...tickers];
 
   return (
-    <div className="relative flex items-center border-y border-border/40">
+    <div className="relative flex items-center ">
       {/* Edit button pinned left */}
       <div className="relative z-20 shrink-0 pl-3 pr-2">
         <EditSheet

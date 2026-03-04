@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3 } from "lucide-react";
+import { Search, X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3, ArrowUpDown, Pencil, FolderPlus } from "lucide-react";
 import { useTickerVisibility } from "@/components/ticker-visibility";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -56,7 +56,7 @@ function SearchPlaceholder() {
   );
 }
 
-function OptionsMenu() {
+function OptionsMenu({ onSortClick, onEditClick }: { onSortClick?: () => void; onEditClick?: () => void }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { tickerVisible, showTicker } = useTickerVisibility();
@@ -90,28 +90,79 @@ function OptionsMenu() {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute right-0 top-12 z-50 min-w-[180px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
           >
-            {!tickerVisible && (
+            {onSortClick ? (
               <>
                 <button
                   onClick={() => {
-                    showTicker();
+                    onSortClick();
                     setOpen(false);
                   }}
-                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[16px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
                 >
-                  <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                  Show Ticker
+                  <ArrowUpDown size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                  Sort
                 </button>
                 <div className="h-px bg-border/60" />
+                <button
+                  onClick={() => {
+                    onEditClick?.();
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                >
+                  <Pencil size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                  Edit
+                </button>
+                <div className="h-px bg-border/60" />
+                <button
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-2.5 whitespace-nowrap px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                >
+                  <FolderPlus size={18} strokeWidth={1.8} className="shrink-0 text-muted-foreground" />
+                  Create section
+                </button>
+                {!tickerVisible && (
+                  <>
+                    <div className="my-1 h-px bg-border/40" />
+                    <button
+                      onClick={() => {
+                        showTicker();
+                        setOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                    >
+                      <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                      Show Ticker
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                >
+                  <LayoutPanelLeft size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                  Customise
+                </button>
+                {!tickerVisible && (
+                  <>
+                    <div className="h-px bg-border/60" />
+                    <button
+                      onClick={() => {
+                        showTicker();
+                        setOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                    >
+                      <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                      Show Ticker
+                    </button>
+                  </>
+                )}
               </>
             )}
-            <button
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[16px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-            >
-              <LayoutPanelLeft size={18} strokeWidth={1.8} className="text-muted-foreground" />
-              Customise
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -119,7 +170,7 @@ function OptionsMenu() {
   );
 }
 
-export function Header() {
+export function Header({ onSortClick, onEditClick }: { onSortClick?: () => void; onEditClick?: () => void } = {}) {
   const router = useRouter();
 
   return (
@@ -145,7 +196,7 @@ export function Header() {
         </span>
       </button>
 
-      <OptionsMenu />
+      <OptionsMenu onSortClick={onSortClick} onEditClick={onEditClick} />
     </header>
   );
 }
