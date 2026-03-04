@@ -141,7 +141,7 @@ iPhone chrome for realistic mobile framing.
 Home screen search header.
 
 - Layout: `[X Close] [Search Bar (pill)] [Bell w/ badge] [Options menu]`
-- **Rotating placeholder**: Cycles through "ETF", "Stocks", "Options", "News", "Advisory", "Advisory Baskets", "1-Click Algo Strategies" with upward slide animation
+- **Rotating placeholder**: Cycles through "ETF", "Stocks", "Options", "News", "Advisory", "Baskets", "Strategies" with upward slide animation
 - Search bar is clickable — navigates to `/search` page
 - Exports `searchSuffixes` array and `useRotatingSuffix()` hook for reuse by search page
 

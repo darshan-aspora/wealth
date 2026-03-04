@@ -15,7 +15,7 @@ import {
   MoreHorizontal,
   Bookmark,
   FileText,
-  LayoutGrid,
+  ShoppingBasket,
   BookOpen,
   ChevronRight,
   Wallet,
@@ -55,8 +55,8 @@ const v2Tabs = [
 /* ------------------------------------------------------------------ */
 
 const moreItems: { label: string; icon: LucideIcon }[] = [
-  { label: "Advisory Baskets", icon: LayoutGrid },
-  { label: "1-Click Algo Strategies", icon: Rocket },
+  { label: "Baskets", icon: ShoppingBasket },
+  { label: "Strategies", icon: Rocket },
   { label: "Learn", icon: BookOpen },
   { label: "Reports", icon: FileText },
 ];

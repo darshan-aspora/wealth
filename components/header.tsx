@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, Bell, EllipsisVertical, LayoutPanelLeft } from "lucide-react";
+import { Search, X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3 } from "lucide-react";
+import { useTickerVisibility } from "@/components/ticker-visibility";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Rotating search placeholder ─────────────────────────────────────
@@ -10,10 +11,10 @@ export const searchSuffixes = [
   "ETF",
   "Stocks",
   "Options",
+  "Indices",
   "News",
-  "Advisory",
-  "Advisory Baskets",
-  "1-Click Algo Strategies",
+  "Baskets",
+  "Strategies",
 ];
 
 export function useRotatingSuffix(interval = 2200) {
@@ -29,22 +30,27 @@ export function useRotatingSuffix(interval = 2200) {
 
 function SearchPlaceholder() {
   const suffix = useRotatingSuffix();
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = spanRef.current;
+    if (!el) return;
+    // Force-restart CSS animation: remove → reflow → re-add
+    el.style.animation = "none";
+    void el.offsetHeight;
+    el.style.animation = "";
+  }, [suffix]);
+
   return (
     <span className="flex items-center">
       <span>Search</span>
       <span className="relative ml-[5px] inline-flex h-6 w-[170px] items-center overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={suffix}
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -16, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            className="absolute left-0"
-          >
-            {suffix}
-          </motion.span>
-        </AnimatePresence>
+        <span
+          ref={spanRef}
+          className="absolute left-0 animate-slide-up-in"
+        >
+          {suffix}
+        </span>
       </span>
     </span>
   );
@@ -53,6 +59,7 @@ function SearchPlaceholder() {
 function OptionsMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { tickerVisible, showTicker } = useTickerVisibility();
 
   useEffect(() => {
     if (!open) return;
@@ -83,6 +90,21 @@ function OptionsMenu() {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute right-0 top-12 z-50 min-w-[180px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
           >
+            {!tickerVisible && (
+              <>
+                <button
+                  onClick={() => {
+                    showTicker();
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[16px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+                >
+                  <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
+                  Show Ticker
+                </button>
+                <div className="h-px bg-border/60" />
+              </>
+            )}
             <button
               onClick={() => setOpen(false)}
               className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[16px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
