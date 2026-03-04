@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -28,9 +27,8 @@ export interface TickerItem {
   change: number;
   changePercent: number;
   category: "index" | "watchlist";
-  logo: string; // 1-2 char abbreviation for fallback avatar
-  logoColor: string; // tailwind bg class for fallback
-  logoUrl?: string; // path to local logo image in /public/logos/
+  logo: string; // 1-2 char abbreviation for avatar
+  logoColor: string; // tailwind bg class for avatar
 }
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
@@ -42,23 +40,23 @@ export const ALL_TICKERS: TickerItem[] = [
   { symbol: "DJI", name: "Dow Jones", price: 43840.91, change: 151.22, changePercent: 0.35, category: "index", logo: "DJ", logoColor: "bg-sky-600" },
 
   // Watchlist (user's stocks — Mag 7 + popular picks)
-  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", logo: "A", logoColor: "bg-neutral-600", logoUrl: "/logos/aapl.png" },
-  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", logo: "MS", logoColor: "bg-sky-700", logoUrl: "/logos/msft.png" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", logo: "G", logoColor: "bg-red-600", logoUrl: "/logos/googl.png" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", logo: "AZ", logoColor: "bg-amber-600", logoUrl: "/logos/amzn.png" },
-  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", logo: "NV", logoColor: "bg-green-700", logoUrl: "/logos/nvda.png" },
-  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", logo: "M", logoColor: "bg-blue-700", logoUrl: "/logos/meta.png" },
-  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", logo: "T", logoColor: "bg-red-700", logoUrl: "/logos/tsla.png" },
-  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", logo: "JP", logoColor: "bg-slate-700", logoUrl: "/logos/jpm.png" },
-  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", logo: "V", logoColor: "bg-indigo-700", logoUrl: "/logos/v.png" },
-  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", logo: "UH", logoColor: "bg-cyan-700", logoUrl: "/logos/unh.png" },
-  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", logo: "JJ", logoColor: "bg-rose-700", logoUrl: "/logos/jnj.png" },
-  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", logo: "WM", logoColor: "bg-blue-800", logoUrl: "/logos/wmt.png" },
-  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", logo: "AV", logoColor: "bg-red-800", logoUrl: "/logos/avgo.png" },
-  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", logo: "CO", logoColor: "bg-red-600", logoUrl: "/logos/cost.png" },
-  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", logo: "N", logoColor: "bg-red-700", logoUrl: "/logos/nflx.png" },
-  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", logo: "AM", logoColor: "bg-neutral-700", logoUrl: "/logos/amd.png" },
-  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", logo: "IN", logoColor: "bg-sky-800", logoUrl: "/logos/intc.png" },
+  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", logo: "A", logoColor: "bg-neutral-600" },
+  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", logo: "MS", logoColor: "bg-sky-700" },
+  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", logo: "G", logoColor: "bg-red-600" },
+  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", logo: "AZ", logoColor: "bg-amber-600" },
+  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", logo: "NV", logoColor: "bg-green-700" },
+  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", logo: "M", logoColor: "bg-blue-700" },
+  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", logo: "T", logoColor: "bg-red-700" },
+  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", logo: "JP", logoColor: "bg-slate-700" },
+  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", logo: "V", logoColor: "bg-indigo-700" },
+  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", logo: "UH", logoColor: "bg-cyan-700" },
+  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", logo: "JJ", logoColor: "bg-rose-700" },
+  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", logo: "WM", logoColor: "bg-blue-800" },
+  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", logo: "AV", logoColor: "bg-red-800" },
+  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", logo: "CO", logoColor: "bg-red-600" },
+  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", logo: "N", logoColor: "bg-red-700" },
+  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", logo: "AM", logoColor: "bg-neutral-700" },
+  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", logo: "IN", logoColor: "bg-sky-800" },
 ];
 
 const DEFAULT_SELECTED = [
@@ -95,23 +93,8 @@ const isGain = (t: TickerItem) => t.change >= 0;
 // ─── Logo Avatar ─────────────────────────────────────────────────────────────
 
 function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
-  const px = size === "sm" ? 24 : 32;
   const dim = size === "sm" ? "h-6 w-6" : "h-8 w-8";
   const text = size === "sm" ? "text-[9px]" : "text-[10px]";
-
-  if (ticker.logoUrl) {
-    return (
-      <div className={cn(dim, "shrink-0 rounded-full overflow-hidden bg-white")}>
-        <Image
-          src={ticker.logoUrl}
-          alt={ticker.name}
-          width={px}
-          height={px}
-          className="h-full w-full object-contain"
-        />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -200,7 +183,7 @@ function EditSheet({
         side="bottom"
         className="mx-auto max-w-[430px] rounded-t-2xl border-border/60 bg-background px-0 pb-8"
       >
-        <SheetHeader className="px-5 pb-0 border-0">
+        <SheetHeader className="flex-row items-center justify-between px-5 pb-0 border-0">
           <SheetTitle className="text-[16px] font-semibold">
             Edit Ticker
           </SheetTitle>

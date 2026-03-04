@@ -5,7 +5,7 @@ import { Header } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
 import { BottomNavV2 } from "@/components/bottom-nav";
 
-export default function HomePage() {
+export default function MarketPage() {
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
@@ -14,9 +14,7 @@ export default function HomePage() {
 
       <main className="no-scrollbar flex-1 overflow-y-auto">
         <div className="flex h-full items-center justify-center px-6">
-          <p className="text-[13px] text-muted-foreground/50">
-            Watchlist content goes here
-          </p>
+          <p className="text-[13px] text-muted-foreground/50">Market</p>
         </div>
       </main>
 

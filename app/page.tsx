@@ -31,6 +31,12 @@ const components = [
     href: "/explore-tickers",
     status: "5 variations",
   },
+  {
+    title: "Bottom Nav",
+    description: "Tab bar — icon, label, active indicator",
+    href: "/explore-bottom-nav",
+    status: "2 variations",
+  },
 ];
 
 const items: Record<Tab, typeof pages> = {
