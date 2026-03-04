@@ -32,7 +32,7 @@ function SearchPlaceholder() {
   return (
     <span className="flex items-center">
       <span>Search</span>
-      <span className="relative ml-[5px] inline-flex h-5 w-[160px] items-center overflow-hidden">
+      <span className="relative ml-[5px] inline-flex h-6 w-[170px] items-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.span
             key={suffix}
@@ -69,9 +69,9 @@ function OptionsMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
-        <EllipsisVertical size={18} strokeWidth={1.8} />
+        <EllipsisVertical size={20} strokeWidth={1.8} />
       </button>
 
       <AnimatePresence>
@@ -81,13 +81,13 @@ function OptionsMenu() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-11 z-50 min-w-[160px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
+            className="absolute right-0 top-12 z-50 min-w-[180px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
           >
             <button
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-[14px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
+              className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[16px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
             >
-              <LayoutPanelLeft size={16} strokeWidth={1.8} className="text-muted-foreground" />
+              <LayoutPanelLeft size={18} strokeWidth={1.8} className="text-muted-foreground" />
               Customise
             </button>
           </motion.div>
@@ -102,23 +102,23 @@ export function Header() {
 
   return (
     <header className="flex items-center gap-2.5 px-4 py-3">
-      <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <X size={18} strokeWidth={2} />
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <X size={20} strokeWidth={2} />
       </button>
 
       <div
         onClick={() => router.push("/search")}
-        className="relative flex h-10 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-3.5"
+        className="relative flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4"
       >
-        <div className="min-w-0 flex-1 overflow-hidden text-[14px] text-muted-foreground/60">
+        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
           <SearchPlaceholder />
         </div>
-        <Search size={16} className="ml-2 shrink-0 text-muted-foreground/60" />
+        <Search size={18} className="ml-2 shrink-0 text-muted-foreground/60" />
       </div>
 
-      <button className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <Bell size={18} strokeWidth={1.8} />
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-background">
+      <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Bell size={20} strokeWidth={1.8} />
+        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
           3
         </span>
       </button>

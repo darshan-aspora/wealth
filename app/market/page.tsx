@@ -14,7 +14,7 @@ export default function MarketPage() {
 
       <main className="no-scrollbar flex-1 overflow-y-auto">
         <div className="flex h-full items-center justify-center px-6">
-          <p className="text-[13px] text-muted-foreground/50">Market</p>
+          <p className="text-[15px] text-muted-foreground/50">Market</p>
         </div>
       </main>
 

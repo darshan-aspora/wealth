@@ -102,10 +102,10 @@ function typeLabel(type: SearchItem["type"]) {
 function SearchPagePlaceholder() {
   const suffix = useRotatingSuffix();
   return (
-    <span className="pointer-events-none absolute inset-0 flex items-center text-[14px] text-muted-foreground/35">
+    <span className="pointer-events-none absolute inset-0 flex items-center text-[16px] text-muted-foreground/35">
       <span className="flex items-center leading-none">
         <span>Search</span>
-        <span className="relative ml-[5px] inline-flex h-5 w-[160px] items-center overflow-hidden">
+        <span className="relative ml-[5px] inline-flex h-6 w-[170px] items-center overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.span
               key={suffix}
@@ -146,12 +146,12 @@ function SearchHeader({
     <header className="flex items-center gap-2.5 px-4 py-3">
       <button
         onClick={() => router.back()}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
-        <ArrowLeft size={18} strokeWidth={2} />
+        <ArrowLeft size={20} strokeWidth={2} />
       </button>
 
-      <div className="relative flex h-10 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-muted/50 px-3.5">
+      <div className="relative flex h-12 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-muted/50 px-4">
         <div className="relative h-full flex-1">
           {!query && <SearchPagePlaceholder />}
           <input
@@ -159,7 +159,7 @@ function SearchHeader({
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            className="relative z-10 h-full w-full bg-transparent text-[14px] text-foreground outline-none"
+            className="relative z-10 h-full w-full bg-transparent text-[16px] text-foreground outline-none"
           />
         </div>
 
@@ -175,9 +175,9 @@ function SearchHeader({
                 onQueryChange("");
                 inputRef.current?.focus();
               }}
-              className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted-foreground/30"
+              className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground/30"
             >
-              <X size={12} strokeWidth={2.5} className="text-background" />
+              <X size={14} strokeWidth={2.5} className="text-background" />
             </motion.button>
           ) : (
             <motion.div
@@ -188,15 +188,15 @@ function SearchHeader({
               transition={{ duration: 0.15 }}
               className="ml-2 shrink-0"
             >
-              <Search size={16} className="text-muted-foreground/60" />
+              <Search size={18} className="text-muted-foreground/60" />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <button className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <Bell size={18} strokeWidth={1.8} />
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-background">
+      <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Bell size={20} strokeWidth={1.8} />
+        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
           3
         </span>
       </button>
@@ -222,7 +222,7 @@ function SearchTabs({
           <button
             key={tab}
             onClick={() => onChange(tab)}
-            className={`relative shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+            className={`relative shrink-0 rounded-full px-4 py-2 text-[15px] font-medium transition-colors ${
               isActive
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground/70"
@@ -254,20 +254,20 @@ function ResultRow({
   onToggleWatchlist: (symbol: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
+    <div className="flex items-center gap-3 px-4 py-4">
       {/* Logo circle */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/70">
-        <span className="text-[13px] font-semibold text-foreground/80">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted/70">
+        <span className="text-[15px] font-semibold text-foreground/80">
           {item.symbol.slice(0, 2)}
         </span>
       </div>
 
       {/* Name + Symbol:Exchange — left aligned */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-left text-[14px] font-medium text-foreground">
+        <p className="truncate text-left text-[16px] font-medium text-foreground">
           {item.name}
         </p>
-        <p className="text-left text-[12px] text-muted-foreground">
+        <p className="text-left text-[14px] text-muted-foreground">
           {item.symbol}
           {item.exchange && (
             <span className="text-muted-foreground/40"> : {item.exchange}</span>
@@ -276,7 +276,7 @@ function ResultRow({
       </div>
 
       {/* Type badge */}
-      <span className="shrink-0 rounded bg-muted/70 px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+      <span className="shrink-0 rounded bg-muted/70 px-2 py-1 text-[12px] font-medium leading-none text-muted-foreground">
         {typeLabel(item.type)}
       </span>
 
@@ -284,7 +284,7 @@ function ResultRow({
       <motion.button
         whileTap={{ scale: 0.85 }}
         onClick={() => onToggleWatchlist(item.symbol)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center"
+        className="flex h-10 w-10 shrink-0 items-center justify-center"
       >
         <motion.div
           animate={isWatchlisted ? { scale: [1, 1.25, 1] } : { scale: 1 }}
@@ -292,14 +292,14 @@ function ResultRow({
         >
           {isWatchlisted ? (
             <Bookmark
-              size={18}
+              size={20}
               strokeWidth={0}
               fill="currentColor"
               className="text-foreground"
             />
           ) : (
             <Bookmark
-              size={18}
+              size={20}
               strokeWidth={1.8}
               className="text-muted-foreground/50"
             />
@@ -318,9 +318,9 @@ function WatchlistToast({ message }: { message: string }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="fixed bottom-20 left-0 right-0 z-50 mx-auto w-fit rounded-full bg-foreground px-4 py-2 shadow-lg"
+      className="fixed bottom-20 left-0 right-0 z-50 mx-auto w-fit rounded-full bg-foreground px-5 py-2.5 shadow-lg"
     >
-      <p className="whitespace-nowrap text-[13px] font-medium text-background">
+      <p className="whitespace-nowrap text-[15px] font-medium text-background">
         {message}
       </p>
     </motion.div>
@@ -372,8 +372,8 @@ export default function SearchPage() {
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-6">
-            <Search size={32} className="text-muted-foreground/20" />
-            <p className="text-[13px] text-muted-foreground/50">
+            <Search size={36} className="text-muted-foreground/20" />
+            <p className="text-[15px] text-muted-foreground/50">
               No results found
             </p>
           </div>

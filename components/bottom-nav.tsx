@@ -84,7 +84,7 @@ function TabBar({
   return (
     <>
       <nav className="border-t border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,8px)] pt-2">
+        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,8px)] pt-2.5">
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href ||
@@ -95,14 +95,14 @@ function TabBar({
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-medium transition-colors",
+                  "relative flex min-w-0 flex-col items-center gap-1 px-1.5 py-1.5 text-[12px] font-medium transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {isActive && (
                   <motion.div
                     layoutId={layoutId}
-                    className="absolute -top-2 h-0.5 w-5 rounded-full bg-foreground"
+                    className="absolute -top-2.5 h-0.5 w-6 rounded-full bg-foreground"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -110,7 +110,7 @@ function TabBar({
                   animate={{ scale: isActive ? 1.05 : 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 24 }}
                 >
-                  <tab.icon size={22} strokeWidth={1.6} />
+                  <tab.icon size={24} strokeWidth={1.6} />
                 </motion.div>
                 <span>{tab.label}</span>
               </Link>
@@ -120,9 +120,9 @@ function TabBar({
           {moreSheet && (
             <button
               onClick={() => setMoreOpen(true)}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors"
+              className="relative flex min-w-0 flex-col items-center gap-1 px-1.5 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors"
             >
-              <MoreHorizontal size={22} strokeWidth={1.6} />
+              <MoreHorizontal size={24} strokeWidth={1.6} />
               <span>More</span>
             </button>
           )}
@@ -133,21 +133,21 @@ function TabBar({
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-10">
             <SheetHeader className="mb-4">
-              <SheetTitle className="text-[15px]">More</SheetTitle>
+              <SheetTitle className="text-[17px]">More</SheetTitle>
             </SheetHeader>
 
             {/* Funds card */}
-            <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/50">
-                <Wallet size={20} strokeWidth={1.6} className="text-foreground" />
+            <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3.5 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
+                <Wallet size={22} strokeWidth={1.6} className="text-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground">Available funds</p>
-                <p className="text-[16px] font-semibold font-mono tabular-nums text-foreground">
+                <p className="text-[13px] text-muted-foreground">Available funds</p>
+                <p className="text-[18px] font-semibold font-mono tabular-nums text-foreground">
                   $12,485.50
                 </p>
               </div>
-              <ChevronRight size={16} className="text-muted-foreground/50" />
+              <ChevronRight size={18} className="text-muted-foreground/50" />
             </button>
 
             <div className="grid grid-cols-4 gap-y-5 gap-x-2">
@@ -156,10 +156,10 @@ function TabBar({
                   key={item.label}
                   className="flex flex-col items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/50">
-                    <item.icon size={20} strokeWidth={1.6} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
+                    <item.icon size={22} strokeWidth={1.6} />
                   </div>
-                  <span className="text-[11px] font-medium">{item.label}</span>
+                  <span className="text-[13px] font-medium">{item.label}</span>
                 </button>
               ))}
             </div>

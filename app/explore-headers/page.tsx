@@ -24,7 +24,7 @@ function RotatingText({ prefix = "Search " }: { prefix?: string }) {
   return (
     <span className="flex items-center gap-0">
       <span>{prefix}</span>
-      <span className="relative inline-flex w-[72px] overflow-hidden">
+      <span className="relative inline-flex w-[84px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.span
             key={keyword}
@@ -47,19 +47,19 @@ function RotatingText({ prefix = "Search " }: { prefix?: string }) {
 function HeaderV1() {
   return (
     <header className="flex items-center gap-2.5 px-4 py-3">
-      <button className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <ChevronLeft size={22} strokeWidth={2} />
+      <button className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <ChevronLeft size={24} strokeWidth={2} />
       </button>
 
-      <div className="relative flex h-10 flex-1 items-center rounded-full bg-muted/50 px-3.5">
-        <Search size={16} className="shrink-0 text-muted-foreground/60" />
-        <div className="ml-2 text-[14px] text-muted-foreground/60">
+      <div className="relative flex h-12 flex-1 items-center rounded-full bg-muted/50 px-4">
+        <Search size={18} className="shrink-0 text-muted-foreground/60" />
+        <div className="ml-2 text-[16px] text-muted-foreground/60">
           <RotatingText />
         </div>
       </div>
 
-      <button className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <SlidersHorizontal size={18} strokeWidth={1.8} />
+      <button className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <SlidersHorizontal size={20} strokeWidth={1.8} />
       </button>
     </header>
   );
@@ -70,19 +70,19 @@ function HeaderV1() {
 function HeaderV2() {
   return (
     <header className="flex items-center gap-3 px-4 py-3">
-      <button className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
-        <ArrowLeft size={20} strokeWidth={1.8} />
+      <button className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
+        <ArrowLeft size={22} strokeWidth={1.8} />
       </button>
 
-      <div className="relative flex h-10 flex-1 items-center border-b border-border/80 px-0.5">
-        <Search size={15} className="shrink-0 text-muted-foreground/50" />
-        <div className="ml-2.5 text-[14px] font-light tracking-wide text-muted-foreground/50">
+      <div className="relative flex h-12 flex-1 items-center border-b border-border/80 px-0.5">
+        <Search size={17} className="shrink-0 text-muted-foreground/50" />
+        <div className="ml-2.5 text-[16px] font-light tracking-wide text-muted-foreground/50">
           <RotatingText />
         </div>
       </div>
 
-      <button className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
-        <Grid2x2 size={18} strokeWidth={1.6} />
+      <button className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
+        <Grid2x2 size={20} strokeWidth={1.6} />
       </button>
     </header>
   );
@@ -93,21 +93,21 @@ function HeaderV2() {
 function HeaderV3() {
   return (
     <header className="flex items-center gap-2.5 px-4 py-3">
-      <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-        <ChevronLeft size={20} strokeWidth={2} />
+      <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
+        <ChevronLeft size={22} strokeWidth={2} />
       </button>
 
-      <div className="relative flex h-10 flex-1 items-center rounded-xl border border-border/40 bg-card/40 px-3.5 backdrop-blur-sm">
-        <Search size={16} className="shrink-0 text-muted-foreground/50" />
-        <div className="ml-2 text-[14px] text-muted-foreground/50">
+      <div className="relative flex h-12 flex-1 items-center rounded-xl border border-border/40 bg-card/40 px-3.5 backdrop-blur-sm">
+        <Search size={18} className="shrink-0 text-muted-foreground/50" />
+        <div className="ml-2 text-[16px] text-muted-foreground/50">
           <RotatingText />
         </div>
         {/* Subtle top-edge highlight */}
         <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       </div>
 
-      <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-        <Settings2 size={18} strokeWidth={1.6} />
+      <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
+        <Settings2 size={20} strokeWidth={1.6} />
       </button>
     </header>
   );
@@ -119,19 +119,19 @@ function HeaderV4() {
   return (
     <header className="px-4 py-3">
       <div className="flex items-center gap-2">
-        <button className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground active:bg-muted/30">
-          <ArrowLeft size={18} strokeWidth={2} />
+        <button className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground active:bg-muted/30">
+          <ArrowLeft size={20} strokeWidth={2} />
         </button>
 
-        <div className="relative flex h-9 flex-1 items-center rounded-lg bg-muted/40 px-3">
-          <Search size={14} className="shrink-0 text-muted-foreground/50" />
-          <div className="ml-2 text-[13px] text-muted-foreground/50">
+        <div className="relative flex h-11 flex-1 items-center rounded-lg bg-muted/40 px-3">
+          <Search size={16} className="shrink-0 text-muted-foreground/50" />
+          <div className="ml-2 text-[15px] text-muted-foreground/50">
             <RotatingText />
           </div>
         </div>
 
-        <button className="flex h-8 items-center gap-1 rounded-md border border-border/50 bg-card/50 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-          <LayoutDashboard size={13} strokeWidth={1.6} />
+        <button className="flex h-10 items-center gap-1 rounded-md border border-border/50 bg-card/50 px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
+          <LayoutDashboard size={15} strokeWidth={1.6} />
           <span>Edit</span>
         </button>
       </div>
@@ -144,19 +144,19 @@ function HeaderV4() {
 function HeaderV5() {
   return (
     <header className="flex items-center gap-3 px-4 py-3.5">
-      <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40 text-foreground transition-colors hover:bg-muted/60 active:scale-95">
-        <ChevronLeft size={22} strokeWidth={2.2} />
+      <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/40 text-foreground transition-colors hover:bg-muted/60 active:scale-95">
+        <ChevronLeft size={24} strokeWidth={2.2} />
       </button>
 
-      <div className="relative flex h-11 flex-1 items-center rounded-xl bg-muted/30 ring-1 ring-border/50 px-4">
-        <Search size={17} className="shrink-0 text-foreground/40" />
-        <div className="ml-2.5 text-[15px] font-medium text-foreground/30">
+      <div className="relative flex h-12 flex-1 items-center rounded-xl bg-muted/30 ring-1 ring-border/50 px-4">
+        <Search size={19} className="shrink-0 text-foreground/40" />
+        <div className="ml-2.5 text-[17px] font-medium text-foreground/30">
           <RotatingText />
         </div>
       </div>
 
-      <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40 text-foreground transition-colors hover:bg-muted/60 active:scale-95">
-        <Grip size={20} strokeWidth={1.8} />
+      <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/40 text-foreground transition-colors hover:bg-muted/60 active:scale-95">
+        <Grip size={22} strokeWidth={1.8} />
       </button>
     </header>
   );
@@ -178,15 +178,15 @@ export default function ExploreHeaders() {
       <div className="flex items-center gap-3 px-5 pt-14 pb-5">
         <Link
           href="/"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft size={18} strokeWidth={2} />
+          <ArrowLeft size={20} strokeWidth={2} />
         </Link>
         <div>
-          <h1 className="text-[17px] font-semibold text-foreground">
+          <h1 className="text-[19px] font-semibold text-foreground">
             Header Design
           </h1>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[14px] text-muted-foreground">
             5 variations — search, nav, customise
           </p>
         </div>
@@ -205,13 +205,13 @@ export default function ExploreHeaders() {
           >
             {/* Label */}
             <div className="mb-2 flex items-baseline gap-2">
-              <span className="text-[11px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
+              <span className="text-[13px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
                 {String(v.id).padStart(2, "0")}
               </span>
-              <span className="text-[13px] font-semibold text-foreground/80">
+              <span className="text-[15px] font-semibold text-foreground/80">
                 {v.label}
               </span>
-              <span className="text-[11px] text-muted-foreground/40">
+              <span className="text-[13px] text-muted-foreground/40">
                 {v.sublabel}
               </span>
             </div>

@@ -11,10 +11,10 @@ export function StatusBar() {
   return (
     <div
       onClick={toggleTheme}
-      className="relative flex cursor-pointer items-center justify-between px-6 pt-3 pb-1 select-none active:opacity-70 transition-opacity"
+      className="relative flex cursor-pointer items-center justify-between px-6 pt-3 pb-1.5 select-none active:opacity-70 transition-opacity"
     >
       {/* Time */}
-      <span className="text-[15px] font-semibold leading-none text-foreground">
+      <span className="text-[17px] font-semibold leading-none text-foreground">
         9:41
       </span>
 
@@ -25,10 +25,10 @@ export function StatusBar() {
 
       {/* Right cluster: signal, wifi, battery */}
       <div className="flex items-center gap-1.5">
-        <Signal size={14} strokeWidth={2.2} className="text-foreground" />
-        <Wifi size={15} strokeWidth={2.2} className="text-foreground" />
+        <Signal size={16} strokeWidth={2.2} className="text-foreground" />
+        <Wifi size={17} strokeWidth={2.2} className="text-foreground" />
         <div className="relative flex items-center">
-          <Battery size={22} strokeWidth={1.6} className="text-foreground" />
+          <Battery size={24} strokeWidth={1.6} className="text-foreground" />
         </div>
       </div>
     </div>

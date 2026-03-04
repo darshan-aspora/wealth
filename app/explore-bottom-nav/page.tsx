@@ -78,14 +78,14 @@ function NavPreviewV1() {
               key={tab.id}
               onClick={() => setActive(tab.id)}
               className={cn(
-                "relative flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-medium transition-colors",
+                "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
                 isActive ? "text-foreground" : "text-muted-foreground"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="bnav-v1-preview"
-                  className="absolute -top-2 h-0.5 w-5 rounded-full bg-foreground"
+                  className="absolute -top-2.5 h-0.5 w-6 rounded-full bg-foreground"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -93,7 +93,7 @@ function NavPreviewV1() {
                 animate={{ scale: isActive ? 1.05 : 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 24 }}
               >
-                <tab.icon size={22} strokeWidth={1.6} />
+                <tab.icon size={24} strokeWidth={1.6} />
               </motion.div>
               <span>{tab.label}</span>
             </button>
@@ -123,14 +123,14 @@ function NavPreviewV2() {
                 key={tab.id}
                 onClick={() => setActive(tab.id)}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-medium transition-colors",
+                  "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {isActive && (
                   <motion.div
                     layoutId="bnav-v2-preview"
-                    className="absolute -top-2 h-0.5 w-5 rounded-full bg-foreground"
+                    className="absolute -top-2.5 h-0.5 w-6 rounded-full bg-foreground"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -138,7 +138,7 @@ function NavPreviewV2() {
                   animate={{ scale: isActive ? 1.05 : 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 24 }}
                 >
-                  <tab.icon size={22} strokeWidth={1.6} />
+                  <tab.icon size={24} strokeWidth={1.6} />
                 </motion.div>
                 <span>{tab.label}</span>
               </button>
@@ -147,9 +147,9 @@ function NavPreviewV2() {
 
           <button
             onClick={() => setMoreOpen(true)}
-            className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors"
+            className="relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors"
           >
-            <MoreHorizontal size={22} strokeWidth={1.6} />
+            <MoreHorizontal size={24} strokeWidth={1.6} />
             <span>More</span>
           </button>
         </div>
@@ -158,21 +158,21 @@ function NavPreviewV2() {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-10">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-[15px]">More</SheetTitle>
+            <SheetTitle className="text-[17px]">More</SheetTitle>
           </SheetHeader>
 
           {/* Funds card */}
-          <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/50">
-              <Wallet size={20} strokeWidth={1.6} className="text-foreground" />
+          <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3.5 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
+              <Wallet size={22} strokeWidth={1.6} className="text-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-muted-foreground">Available funds</p>
-              <p className="text-[16px] font-semibold font-mono tabular-nums text-foreground">
+              <p className="text-[13px] text-muted-foreground">Available funds</p>
+              <p className="text-[18px] font-semibold font-mono tabular-nums text-foreground">
                 $12,485.50
               </p>
             </div>
-            <ChevronRight size={16} className="text-muted-foreground/50" />
+            <ChevronRight size={18} className="text-muted-foreground/50" />
           </button>
 
           <div className="grid grid-cols-4 gap-y-5 gap-x-2">
@@ -181,10 +181,10 @@ function NavPreviewV2() {
                 key={item.label}
                 className="flex flex-col items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/50">
-                  <item.icon size={20} strokeWidth={1.6} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
+                  <item.icon size={22} strokeWidth={1.6} />
                 </div>
-                <span className="text-[11px] font-medium">{item.label}</span>
+                <span className="text-[13px] font-medium">{item.label}</span>
               </button>
             ))}
           </div>
@@ -224,15 +224,15 @@ export default function ExploreBottomNav() {
       <div className="flex items-center gap-3 px-5 pt-14 pb-5">
         <Link
           href="/"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft size={18} strokeWidth={2} />
+          <ArrowLeft size={20} strokeWidth={2} />
         </Link>
         <div>
-          <h1 className="text-[17px] font-semibold text-foreground">
+          <h1 className="text-[19px] font-semibold text-foreground">
             Bottom Nav
           </h1>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[14px] text-muted-foreground">
             2 variations — tab bar, icons, indicators
           </p>
         </div>
@@ -251,13 +251,13 @@ export default function ExploreBottomNav() {
           >
             {/* Label */}
             <div className="mb-2 flex items-baseline gap-2">
-              <span className="text-[11px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
+              <span className="text-[13px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
                 {String(v.id).padStart(2, "0")}
               </span>
-              <span className="text-[13px] font-semibold text-foreground/80">
+              <span className="text-[15px] font-semibold text-foreground/80">
                 {v.label}
               </span>
-              <span className="text-[11px] text-muted-foreground/40">
+              <span className="text-[13px] text-muted-foreground/40">
                 {v.sublabel}
               </span>
             </div>

@@ -26,7 +26,7 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
 
       {/* Bottom tab bar */}
       <nav className="absolute bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,8px)] pt-2">
+        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,8px)] pt-2.5">
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href ||
@@ -37,7 +37,7 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 px-3 py-1 text-[11px] font-medium transition-colors",
+                  "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
                   isActive
                     ? "text-foreground"
                     : "text-muted-foreground"
@@ -46,12 +46,12 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
                 {isActive && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="absolute -top-2 h-0.5 w-5 rounded-full bg-foreground"
+                    className="absolute -top-2.5 h-0.5 w-6 rounded-full bg-foreground"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
                 <tab.icon
-                  size={22}
+                  size={24}
                   strokeWidth={isActive ? 2.2 : 1.6}
                 />
                 <span>{tab.label}</span>

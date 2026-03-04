@@ -93,8 +93,8 @@ const isGain = (t: TickerItem) => t.change >= 0;
 // ─── Logo Avatar ─────────────────────────────────────────────────────────────
 
 function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
-  const dim = size === "sm" ? "h-6 w-6" : "h-8 w-8";
-  const text = size === "sm" ? "text-[9px]" : "text-[10px]";
+  const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const text = size === "sm" ? "text-[11px]" : "text-[12px]";
 
   return (
     <div
@@ -184,7 +184,7 @@ function EditSheet({
         className="mx-auto max-w-[430px] rounded-t-2xl border-border/60 bg-background px-0 pb-8"
       >
         <SheetHeader className="flex-row items-center justify-between px-5 pb-0 border-0">
-          <SheetTitle className="text-[16px] font-semibold">
+          <SheetTitle className="text-[18px] font-semibold">
             Edit Ticker
           </SheetTitle>
         </SheetHeader>
@@ -193,7 +193,7 @@ function EditSheet({
         <div className="px-5 pt-3 pb-3">
           <div className="relative">
             <Search
-              size={15}
+              size={17}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60"
             />
             <input
@@ -201,7 +201,7 @@ function EditSheet({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search stocks, ETFs..."
-              className="w-full rounded-lg border border-border/60 bg-secondary/40 py-2 pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-muted-foreground/40 focus:bg-secondary/60 transition-colors"
+              className="w-full rounded-lg border border-border/60 bg-secondary/40 py-2.5 pl-10 pr-3 text-[15px] text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-muted-foreground/40 focus:bg-secondary/60 transition-colors"
             />
           </div>
         </div>
@@ -211,7 +211,7 @@ function EditSheet({
         <div className="max-h-[55vh] overflow-y-auto no-scrollbar px-5">
           {grouped.length === 0 && (
             <div className="py-8 text-center">
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[15px] text-muted-foreground">
                 No results for &ldquo;{query}&rdquo;
               </p>
             </div>
@@ -226,7 +226,7 @@ function EditSheet({
             return (
               <div key={group.category}>
                 <div className="flex items-center justify-between sticky top-0 z-10 bg-background pt-3 pb-2 -mx-5 px-5 border-b border-border/30">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {group.label}
                   </h3>
                   {!lowerQuery && (
@@ -236,7 +236,7 @@ function EditSheet({
                           ? deselectAll(group.category)
                           : selectAll(group.category)
                       }
-                      className="text-[11px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
+                      className="text-[13px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
                     >
                       {allSelected ? "Deselect all" : "Select all"}
                     </button>
@@ -250,21 +250,21 @@ function EditSheet({
                         key={ticker.symbol}
                         onClick={() => toggle(ticker.symbol)}
                         className={cn(
-                          "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-colors text-left",
+                          "flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors text-left",
                           checked ? "bg-secondary/50" : "hover:bg-secondary/25"
                         )}
                       >
                         {/* Checkbox */}
                         <div
                           className={cn(
-                            "flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md border transition-colors",
+                            "flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md border transition-colors",
                             checked
                               ? "border-foreground bg-foreground"
                               : "border-muted-foreground/30"
                           )}
                         >
                           {checked && (
-                            <Check size={11} className="text-background" strokeWidth={3} />
+                            <Check size={13} className="text-background" strokeWidth={3} />
                           )}
                         </div>
 
@@ -273,22 +273,22 @@ function EditSheet({
 
                         {/* Name + Symbol */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-foreground leading-tight truncate">
+                          <p className="text-[15px] font-bold text-foreground leading-tight truncate">
                             {ticker.symbol}
                           </p>
-                          <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                          <p className="text-[13px] text-muted-foreground leading-tight truncate mt-0.5">
                             {ticker.name}
                           </p>
                         </div>
 
                         {/* Price + Change */}
                         <div className="shrink-0 text-right">
-                          <p className="text-[13px] font-semibold text-foreground tabular-nums leading-tight">
+                          <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
                             {formatPrice(ticker.price)}
                           </p>
                           <p
                             className={cn(
-                              "text-[11px] font-medium tabular-nums leading-tight mt-0.5",
+                              "text-[13px] font-medium tabular-nums leading-tight mt-0.5",
                               isGain(ticker) ? "text-gain" : "text-loss"
                             )}
                           >
@@ -307,7 +307,7 @@ function EditSheet({
         <div className="px-5 pt-4">
           <button
             onClick={save}
-            className="w-full rounded-xl bg-foreground py-3 text-[14px] font-semibold text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
+            className="w-full rounded-xl bg-foreground py-3.5 text-[16px] font-semibold text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
           >
             Save ({local.length})
           </button>
@@ -338,8 +338,8 @@ function EditButton({
       selected={selected}
       onSave={onSave}
       trigger={
-        <button className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary/70 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-          <Settings2 size={13} />
+        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/70 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+          <Settings2 size={15} />
         </button>
       }
     />
@@ -355,7 +355,7 @@ export function TickerMarquee() {
   if (tickers.length === 0) {
     return (
       <div className="flex items-center justify-between px-4 py-3 border-y border-border/40">
-        <span className="text-[12px] text-muted-foreground">No tickers selected</span>
+        <span className="text-[14px] text-muted-foreground">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
     );
@@ -385,15 +385,15 @@ export function TickerMarquee() {
         >
           {doubled.map((t, i) => (
             <div key={`${t.symbol}-${i}`} className="flex items-center gap-2 shrink-0">
-              <span className="text-[13px] font-semibold text-foreground">
+              <span className="text-[15px] font-semibold text-foreground">
                 {t.symbol}
               </span>
-              <span className="text-[12px] font-medium text-muted-foreground tabular-nums">
+              <span className="text-[14px] font-medium text-muted-foreground tabular-nums">
                 {formatPrice(t.price)}
               </span>
               <span
                 className={cn(
-                  "text-[12px] font-semibold tabular-nums",
+                  "text-[14px] font-semibold tabular-nums",
                   isGain(t) ? "text-gain" : "text-loss"
                 )}
               >
@@ -427,18 +427,18 @@ export function TickerPills() {
           <div
             key={t.symbol}
             className={cn(
-              "flex items-center gap-1.5 shrink-0 rounded-full border px-3 py-1.5",
+              "flex items-center gap-1.5 shrink-0 rounded-full border px-3.5 py-2",
               isGain(t)
                 ? "border-gain/20 bg-gain/[0.06]"
                 : "border-loss/20 bg-loss/[0.06]"
             )}
           >
-            <span className="text-[12px] font-semibold text-foreground">
+            <span className="text-[14px] font-semibold text-foreground">
               {t.symbol}
             </span>
             <span
               className={cn(
-                "text-[11px] font-semibold tabular-nums",
+                "text-[13px] font-semibold tabular-nums",
                 isGain(t) ? "text-gain" : "text-loss"
               )}
             >
@@ -452,9 +452,9 @@ export function TickerPills() {
           selected={selected}
           onSave={setSelected}
           trigger={
-            <button className="flex items-center gap-1 shrink-0 rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <Settings2 size={12} />
-              <span className="text-[11px] font-medium">Edit</span>
+            <button className="flex items-center gap-1 shrink-0 rounded-full border border-border/60 bg-secondary/40 px-3.5 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+              <Settings2 size={14} />
+              <span className="text-[13px] font-medium">Edit</span>
             </button>
           }
         />
@@ -477,25 +477,25 @@ export function TickerCards() {
         {tickers.map((t) => (
           <div
             key={t.symbol}
-            className="shrink-0 w-[120px] rounded-xl border border-border/60 bg-card p-3 space-y-2"
+            className="shrink-0 w-[136px] rounded-xl border border-border/60 bg-card p-3 space-y-2"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-bold text-foreground">
+              <span className="text-[15px] font-bold text-foreground">
                 {t.symbol}
               </span>
               {isGain(t) ? (
-                <TrendingUp size={13} className="text-gain" />
+                <TrendingUp size={15} className="text-gain" />
               ) : (
-                <TrendingDown size={13} className="text-loss" />
+                <TrendingDown size={15} className="text-loss" />
               )}
             </div>
             <div>
-              <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
+              <p className="text-[17px] font-semibold text-foreground tabular-nums leading-tight">
                 {formatPrice(t.price)}
               </p>
               <p
                 className={cn(
-                  "text-[11px] font-medium tabular-nums mt-0.5",
+                  "text-[13px] font-medium tabular-nums mt-0.5",
                   isGain(t) ? "text-gain" : "text-loss"
                 )}
               >
@@ -519,9 +519,9 @@ export function TickerCards() {
           selected={selected}
           onSave={setSelected}
           trigger={
-            <button className="shrink-0 w-[72px] rounded-xl border border-dashed border-border/60 bg-card/50 flex flex-col items-center justify-center gap-1.5 transition-colors hover:bg-card hover:border-border">
-              <Settings2 size={16} className="text-muted-foreground" />
-              <span className="text-[10px] font-medium text-muted-foreground">Edit</span>
+            <button className="shrink-0 w-[84px] rounded-xl border border-dashed border-border/60 bg-card/50 flex flex-col items-center justify-center gap-1.5 transition-colors hover:bg-card hover:border-border">
+              <Settings2 size={18} className="text-muted-foreground" />
+              <span className="text-[12px] font-medium text-muted-foreground">Edit</span>
             </button>
           }
         />
@@ -539,7 +539,7 @@ export function TickerDense() {
   if (tickers.length === 0) {
     return (
       <div className="flex items-center justify-between px-4 py-2.5 border-y border-border/40">
-        <span className="text-[11px] text-muted-foreground">No tickers selected</span>
+        <span className="text-[13px] text-muted-foreground">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
     );
@@ -556,8 +556,8 @@ export function TickerDense() {
           onSave={setSelected}
           trigger={
             <button className="flex items-center gap-1 rounded-md bg-secondary/60 px-2 py-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <Settings2 size={11} />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Ticker</span>
+              <Settings2 size={13} />
+              <span className="text-[12px] font-semibold uppercase tracking-wider">Ticker</span>
             </button>
           }
         />
@@ -585,16 +585,16 @@ export function TickerDense() {
               key={`${t.symbol}-${i}`}
               className="shrink-0 flex flex-col items-center px-4 border-r border-border/30 last:border-r-0"
             >
-              <span className="text-[11px] font-bold text-foreground tracking-wide">
+              <span className="text-[13px] font-bold text-foreground tracking-wide">
                 {t.symbol}
               </span>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[11px] text-muted-foreground tabular-nums">
+                <span className="text-[13px] text-muted-foreground tabular-nums">
                   {formatPrice(t.price)}
                 </span>
                 <span
                   className={cn(
-                    "text-[10px] font-semibold tabular-nums",
+                    "text-[12px] font-semibold tabular-nums",
                     isGain(t) ? "text-gain" : "text-loss"
                   )}
                 >
@@ -624,7 +624,7 @@ export function TickerGlow() {
           <div
             key={t.symbol}
             className={cn(
-              "relative shrink-0 rounded-2xl border px-4 py-3 min-w-[140px] overflow-hidden",
+              "relative shrink-0 rounded-2xl border px-4 py-3 min-w-[156px] overflow-hidden",
               isGain(t) ? "border-gain/20" : "border-loss/20"
             )}
           >
@@ -638,7 +638,7 @@ export function TickerGlow() {
             />
             <div className="relative">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[14px] font-bold text-foreground">
+                <span className="text-[16px] font-bold text-foreground">
                   {t.symbol}
                 </span>
                 <div
@@ -648,19 +648,19 @@ export function TickerGlow() {
                   )}
                 >
                   {isGain(t) ? (
-                    <TrendingUp size={11} strokeWidth={2.5} />
+                    <TrendingUp size={13} strokeWidth={2.5} />
                   ) : (
-                    <TrendingDown size={11} strokeWidth={2.5} />
+                    <TrendingDown size={13} strokeWidth={2.5} />
                   )}
-                  <span className="text-[10px] font-bold tabular-nums">
+                  <span className="text-[12px] font-bold tabular-nums">
                     {formatPercent(t.changePercent)}
                   </span>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground leading-none mb-1">
+              <p className="text-[12px] text-muted-foreground leading-none mb-1">
                 {t.name}
               </p>
-              <p className="text-[17px] font-bold text-foreground tabular-nums leading-tight">
+              <p className="text-[19px] font-bold text-foreground tabular-nums leading-tight">
                 {formatPrice(t.price)}
               </p>
             </div>
@@ -672,9 +672,9 @@ export function TickerGlow() {
           selected={selected}
           onSave={setSelected}
           trigger={
-            <button className="relative shrink-0 rounded-2xl border border-dashed border-border/40 px-5 py-3 min-w-[80px] flex flex-col items-center justify-center gap-1.5 transition-colors hover:border-border/60 hover:bg-card/30">
-              <Settings2 size={18} className="text-muted-foreground" />
-              <span className="text-[10px] font-semibold text-muted-foreground">Edit</span>
+            <button className="relative shrink-0 rounded-2xl border border-dashed border-border/40 px-5 py-3 min-w-[92px] flex flex-col items-center justify-center gap-1.5 transition-colors hover:border-border/60 hover:bg-card/30">
+              <Settings2 size={20} className="text-muted-foreground" />
+              <span className="text-[12px] font-semibold text-muted-foreground">Edit</span>
             </button>
           }
         />
