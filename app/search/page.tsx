@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Bell, Search, X, Bookmark } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { TickerMarquee } from "@/components/ticker";
 import { useRotatingSuffix } from "@/components/header";
 
 // ─── Mock search data ────────────────────────────────────────────────
@@ -355,6 +356,7 @@ export default function SearchPage() {
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
+      <TickerMarquee />
       <SearchHeader query={query} onQueryChange={setQuery} />
       <SearchTabs active={activeTab} onChange={setActiveTab} />
 

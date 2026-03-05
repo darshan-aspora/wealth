@@ -49,6 +49,8 @@ type WatchlistCtx = {
   // Deletes (swipe delete)
   deletedSymbols: Set<string>;
   deleteSymbol: (symbol: string) => void;
+  deletedSections: Set<string>;
+  deleteSection: (sectionId: string) => void;
   // Collapse
   collapsedSections: Set<string>;
   toggleSection: (sectionId: string) => void;
@@ -69,6 +71,8 @@ const Ctx = createContext<WatchlistCtx>({
   toggleFlag: () => {},
   deletedSymbols: new Set(),
   deleteSymbol: () => {},
+  deletedSections: new Set(),
+  deleteSection: () => {},
   collapsedSections: new Set(),
   toggleSection: () => {},
 });
@@ -80,6 +84,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
   const [currentSort, setCurrentSort] = useState<SortOption>(null);
   const [flaggedSymbols, setFlagged] = useState<Set<string>>(new Set());
   const [deletedSymbols, setDeleted] = useState<Set<string>>(new Set());
+  const [deletedSections, setDeletedSections] = useState<Set<string>>(new Set());
   const [collapsedSections, setCollapsed] = useState<Set<string>>(new Set());
 
   const toggleFlag = (symbol: string) => {
@@ -93,6 +98,10 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
 
   const deleteSymbol = (symbol: string) => {
     setDeleted((prev) => new Set(prev).add(symbol));
+  };
+
+  const deleteSection = (sectionId: string) => {
+    setDeletedSections((prev) => new Set(prev).add(sectionId));
   };
 
   const toggleSection = (sectionId: string) => {
@@ -121,6 +130,8 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
         toggleFlag,
         deletedSymbols,
         deleteSymbol,
+        deletedSections,
+        deleteSection,
         collapsedSections,
         toggleSection,
       }}

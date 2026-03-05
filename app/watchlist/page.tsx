@@ -12,6 +12,7 @@ import { SortSheet } from "@/components/sort-sheet";
 import { EditSheet } from "@/components/edit-sheet";
 import { MoversContent } from "@/components/movers-content";
 import { NewsContent } from "@/components/news-content";
+import { AiInsightsContent } from "@/components/ai-insights-content";
 
 const tabs = ["Watchlist", "AI Insights", "Movers", "News"] as const;
 type Tab = (typeof tabs)[number];
@@ -68,11 +69,9 @@ function WatchlistPageInner() {
           <MoversContent />
         ) : activeTab === "News" ? (
           <NewsContent />
-        ) : (
-          <div className="flex h-full items-center justify-center px-6">
-            <p className="text-[15px] text-muted-foreground/40">{activeTab}</p>
-          </div>
-        )}
+        ) : activeTab === "AI Insights" ? (
+          <AiInsightsContent />
+        ) : null}
       </main>
 
       <SortSheet />

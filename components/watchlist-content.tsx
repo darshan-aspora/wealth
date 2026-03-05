@@ -24,15 +24,17 @@ import { useWatchlist } from "@/components/watchlist-context";
 // ─── Total count for tab badge ──────────────────────────────────────────────
 
 export function useWatchlistTotalCount() {
-  const { sections, deletedSymbols } = useWatchlist();
+  const { sections, deletedSymbols, deletedSections } = useWatchlist();
   return useMemo(
     () =>
-      sections.reduce(
-        (sum, s) =>
-          sum + s.stocks.filter((t) => !deletedSymbols.has(t.symbol)).length,
-        0
-      ),
-    [sections, deletedSymbols]
+      sections
+        .filter((s) => !deletedSections.has(s.id))
+        .reduce(
+          (sum, s) =>
+            sum + s.stocks.filter((t) => !deletedSymbols.has(t.symbol)).length,
+          0
+        ),
+    [sections, deletedSymbols, deletedSections]
   );
 }
 
@@ -62,6 +64,87 @@ function SectionHeader({
         <ChevronDown size={18} className="text-muted-foreground/60" />
       </motion.div>
     </button>
+  );
+}
+
+// ─── Swipeable Section Header ──────────────────────────────────────────────
+
+const SECTION_ACTION_WIDTH = 64; // 1 button × 64px
+
+function SwipeableSectionHeader({
+  label,
+  isCollapsed,
+  onToggle,
+  onDelete,
+  isOpen,
+  onOpen,
+}: {
+  label: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+  isOpen: boolean;
+  onOpen: () => void;
+}) {
+  const x = useMotionValue(0);
+  const controls = useAnimation();
+
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.x < -40) {
+      onOpen();
+      controls.start({
+        x: -SECTION_ACTION_WIDTH,
+        transition: { type: "spring", stiffness: 400, damping: 35 },
+      });
+    } else {
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 400, damping: 35 },
+      });
+    }
+  };
+
+  // Close when another row opens
+  useEffect(() => {
+    if (!isOpen) {
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 400, damping: 35 },
+      });
+    }
+  }, [isOpen, controls]);
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Delete button behind the header */}
+      <div className="absolute bottom-0 right-0 top-0 flex items-stretch">
+        <button
+          onClick={onDelete}
+          className="flex w-16 flex-col items-center justify-center gap-1 bg-red-500/90 text-white"
+        >
+          <Trash2 size={16} strokeWidth={1.8} />
+          <span className="text-[11px] font-medium">Delete</span>
+        </button>
+      </div>
+
+      {/* Draggable foreground */}
+      <motion.div
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: -SECTION_ACTION_WIDTH, right: 0 }}
+        dragElastic={0.1}
+        style={{ x }}
+        animate={controls}
+        onDragEnd={handleDragEnd}
+        className="relative z-10 bg-background"
+      >
+        <SectionHeader
+          label={label}
+          isCollapsed={isCollapsed}
+          onToggle={onToggle}
+        />
+      </motion.div>
+    </div>
   );
 }
 
@@ -231,6 +314,8 @@ export function WatchlistContent() {
     toggleFlag,
     deletedSymbols,
     deleteSymbol,
+    deletedSections,
+    deleteSection,
     collapsedSections,
     toggleSection,
   } = useWatchlist();
@@ -240,43 +325,53 @@ export function WatchlistContent() {
   const [openRow, setOpenRow] = useState<string | null>(null);
 
   const sortedSections = useMemo(() => {
-    return sections.map((section) => ({
-      ...section,
-      stocks: [...section.stocks]
-        .filter((s) => !deletedSymbols.has(s.symbol))
-        .sort((a, b) => {
-          switch (currentSort) {
-            case "symbol":
-              return a.symbol.localeCompare(b.symbol);
-            case "change":
-              return Math.abs(b.changePercent) - Math.abs(a.changePercent);
-            case "volume":
-              return (b.volume ?? 0) - (a.volume ?? 0);
-            case "marketCap":
-              return (b.marketCap ?? 0) - (a.marketCap ?? 0);
-            case "flag": {
-              const af = flaggedSymbols.has(a.symbol) ? 0 : 1;
-              const bf = flaggedSymbols.has(b.symbol) ? 0 : 1;
-              return af - bf;
+    return sections
+      .filter((s) => !deletedSections.has(s.id))
+      .map((section) => ({
+        ...section,
+        stocks: [...section.stocks]
+          .filter((s) => !deletedSymbols.has(s.symbol))
+          .sort((a, b) => {
+            switch (currentSort) {
+              case "symbol":
+                return a.symbol.localeCompare(b.symbol);
+              case "change":
+                return Math.abs(b.changePercent) - Math.abs(a.changePercent);
+              case "volume":
+                return (b.volume ?? 0) - (a.volume ?? 0);
+              case "marketCap":
+                return (b.marketCap ?? 0) - (a.marketCap ?? 0);
+              case "flag": {
+                const af = flaggedSymbols.has(a.symbol) ? 0 : 1;
+                const bf = flaggedSymbols.has(b.symbol) ? 0 : 1;
+                return af - bf;
+              }
+              default:
+                return 0;
             }
-            default:
-              return 0;
-          }
-        }),
-    }));
-  }, [sections, currentSort, deletedSymbols, flaggedSymbols]);
+          }),
+      }));
+  }, [sections, currentSort, deletedSymbols, deletedSections, flaggedSymbols]);
 
   return (
     <div className="pb-4">
+      <AnimatePresence initial={false}>
       {sortedSections.map((section) => {
         const isCollapsed = collapsedSections.has(section.id);
 
         return (
-          <div key={section.id}>
-            <SectionHeader
+          <motion.div
+            key={section.id}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.25 } }}
+            className="overflow-hidden"
+          >
+            <SwipeableSectionHeader
               label={section.label}
               isCollapsed={isCollapsed}
               onToggle={() => toggleSection(section.id)}
+              onDelete={() => deleteSection(section.id)}
+              isOpen={openRow === `section-${section.id}`}
+              onOpen={() => setOpenRow(`section-${section.id}`)}
             />
 
             <AnimatePresence initial={false}>
@@ -320,9 +415,10 @@ export function WatchlistContent() {
 
             {/* Section divider */}
             <div className="mx-4 h-px bg-border/30" />
-          </div>
+          </motion.div>
         );
       })}
+      </AnimatePresence>
 
       {/* Add button */}
       <button

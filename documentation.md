@@ -55,6 +55,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   ├── watchlist-context.tsx       ← Watchlist state context (sort, flags, deletes, collapse)
 │   ├── watchlist-content.tsx       ← Watchlist body — collapsible sections, stock rows, swipe gestures
 │   ├── movers-content.tsx          ← Movers tab — multi-line TradingView chart + top/bottom stock list
+│   ├── ai-insights-content.tsx    ← AI Insights tab — 3-phase analysis (analyzing → typing → complete)
 │   ├── sort-sheet.tsx              ← Sort bottom sheet (5 sort options)
 │   └── ui/                         ← shadcn auto-generated components
 │       ├── badge.tsx
@@ -148,6 +149,7 @@ Full watchlist screen with 4 top-level tabs and rich stock management.
 - **Header 3-dot menu** shows: Sort, Edit, Create new section (only on watchlist page)
 - **Sort bottom sheet** with 5 options: Symbol A–Z, % Change, Volume, Market Cap, Flag
 - **Movers tab**: "Watchlist Movers" widget with TradingView multi-line chart comparing top 3 gainers (AMZN, META, AAPL) vs bottom 3 losers (AMD, INTC, TSLA) on a percentage scale, with dashed 0% baseline, stock list below with colored borders matching chart lines, dismiss (×) buttons
+- **AI Insights tab**: AI-powered market analysis with 3 phases — analyzing animation (orbiting dots + cycling messages), typewriter text output with inline stock badges (colored gain/loss pills), and complete state with reanalyze button. Mock prose covers market overview, top movers analysis, sector commentary, and risk factors. Stock badges show symbol + % change inline within flowing text.
 - Wrapped in `WatchlistProvider` context for cross-component state
 
 ---
@@ -192,6 +194,17 @@ Movers tab content showing top gainers vs losers comparison.
 - **Data**: Seeded PRNG generates deterministic mock intraday walks biased toward each stock's final change%
 - **Interactions**: Dismiss (×) removes a stock; chart re-renders with remaining stocks
 - Reuses `TickerLogo`, `formatPrice`, `formatPercent`, `isGain` from `ticker.tsx`
+
+### `AiInsightsContent` — `components/ai-insights-content.tsx`
+
+AI analysis tab with three-phase experience.
+
+- **Phase 1 — Analyzing**: Orbiting dots animation (3 dots, 120° apart) around a pulsing Sparkles icon, with cycling status messages ("Scanning N positions...", "Analyzing market signals...", "Correlating price movements..."). Runs for 3.5 seconds.
+- **Phase 2 — Typing**: Typewriter effect rendering prose text character-by-character at ~22ms/char with variable speed (pauses at punctuation). Inline `StockBadge` components render atomically as the stream reaches them. Blinking cursor at the typing position. Auto-scrolls to keep latest text visible.
+- **Phase 3 — Complete**: Cursor disappears, "Reanalyze" button fades in. Clicking it resets via `key={runKey}` remount pattern.
+- **StockBadge**: Inline `motion.span` showing symbol + % change with `bg-gain/15` or `bg-loss/15` tint, spring pop-in animation.
+- **Content**: Structured as a `Segment[]` array (text/stock/break types) covering market overview, top gainers, losers, sector commentary, and risk factors.
+- Consumes `useWatchlist()` for stock count; references `ALL_TICKERS` for badge data.
 
 ### `SortSheet` — `components/sort-sheet.tsx`
 

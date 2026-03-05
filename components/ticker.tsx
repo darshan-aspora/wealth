@@ -378,7 +378,7 @@ export function TickerMarquee() {
 
   if (tickers.length === 0) {
     return (
-      <div className="flex items-center justify-between bg-[#0f0f11] px-4 py-3">
+      <div className="-mt-px flex items-center justify-between bg-[#0f0f11] px-4 py-3">
         <span className="text-[14px] text-white/50">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
@@ -388,7 +388,7 @@ export function TickerMarquee() {
   const doubled = [...tickers, ...tickers];
 
   return (
-    <div className="relative flex items-center bg-[#0f0f11]">
+    <div className="relative -mt-px flex items-center bg-[#0f0f11]">
       {/* Fade edges */}
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#0f0f11] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-[40px] z-10 w-8 bg-gradient-to-l from-[#0f0f11] to-transparent" />
