@@ -10,7 +10,6 @@ import {
   Sparkles,
   Rocket,
   Compass,
-  ClipboardList,
   PieChart,
   MoreHorizontal,
   Bookmark,
@@ -43,15 +42,15 @@ const v1Tabs = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  V2 — Explore · Market · Orders · Portfolio · More                 */
+/*  V2 — Explore · Market · Watchlist · Portfolio · Advisory · More   */
 /* ------------------------------------------------------------------ */
 
 const v2Tabs = [
   { label: "Explore", icon: Compass, href: "/explore" },
   { label: "Market", icon: BarChart3, href: "/market" },
   { label: "Watchlist", icon: Bookmark, href: "/watchlist" },
-  { label: "Orders", icon: ClipboardList, href: "/orders" },
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },
+  { label: "Advisory", icon: Sparkles, href: "/advisory" },
 ];
 
 /* ------------------------------------------------------------------ */

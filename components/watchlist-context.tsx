@@ -15,17 +15,17 @@ const INITIAL_SECTIONS: WatchlistSection[] = [
   {
     id: "indices",
     label: "Indices",
-    stocks: ALL_TICKERS.filter((t) => t.category === "index"),
+    stocks: ALL_TICKERS.filter((t) => t.type === "Index"),
   },
   {
     id: "us-stocks",
     label: "US Stocks",
-    stocks: ALL_TICKERS.filter((t) => t.category === "watchlist").slice(0, 10),
+    stocks: ALL_TICKERS.filter((t) => t.type === "Equity").slice(0, 10),
   },
   {
     id: "interested",
     label: "Interested",
-    stocks: ALL_TICKERS.filter((t) => t.category === "watchlist").slice(10),
+    stocks: ALL_TICKERS.filter((t) => t.type === "Equity").slice(10),
   },
 ];
 

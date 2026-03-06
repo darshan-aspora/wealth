@@ -30,6 +30,7 @@ export interface TickerItem {
   change: number;
   changePercent: number;
   category: "index" | "watchlist";
+  type: "Index" | "Equity" | "ETF" | "Option";
   logo: string; // 1-2 char abbreviation for avatar
   logoColor: string; // tailwind bg class for avatar
   exchange?: string; // e.g. "NASDAQ", "NYSE"
@@ -40,41 +41,47 @@ export interface TickerItem {
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 export const ALL_TICKERS: TickerItem[] = [
-  // Indices
-  { symbol: "SPX", name: "S&P 500", price: 5998.74, change: 22.43, changePercent: 0.38, category: "index", logo: "SP", logoColor: "bg-blue-600", volume: 3_120_000_000, marketCap: 0 },
-  { symbol: "NDX", name: "Nasdaq 100", price: 21256.15, change: -87.32, changePercent: -0.41, category: "index", logo: "NQ", logoColor: "bg-emerald-600", volume: 1_850_000_000, marketCap: 0 },
-  { symbol: "DJI", name: "Dow Jones", price: 43840.91, change: 151.22, changePercent: 0.35, category: "index", logo: "DJ", logoColor: "bg-sky-600", volume: 980_000_000, marketCap: 0 },
+  // Indices (5)
+  { symbol: "SPX", name: "S&P 500", price: 5998.74, change: 22.43, changePercent: 0.38, category: "index", type: "Index", logo: "SP", logoColor: "bg-blue-600", volume: 3_120_000_000, marketCap: 0 },
+  { symbol: "NDX", name: "Nasdaq 100", price: 21256.15, change: -87.32, changePercent: -0.41, category: "index", type: "Index", logo: "NQ", logoColor: "bg-emerald-600", volume: 1_850_000_000, marketCap: 0 },
+  { symbol: "DJI", name: "Dow Jones", price: 43840.91, change: 151.22, changePercent: 0.35, category: "index", type: "Index", logo: "DJ", logoColor: "bg-sky-600", volume: 980_000_000, marketCap: 0 },
+  { symbol: "RUT", name: "Russell 2000", price: 2287.43, change: 15.67, changePercent: 0.69, category: "index", type: "Index", logo: "R", logoColor: "bg-orange-600", volume: 450_000_000, marketCap: 0 },
+  { symbol: "VIX", name: "CBOE Volatility", price: 14.82, change: -0.43, changePercent: -2.82, category: "index", type: "Index", logo: "VX", logoColor: "bg-purple-600", volume: 0, marketCap: 0 },
 
-  // Watchlist (user's stocks — Mag 7 + popular picks)
-  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", logo: "A", logoColor: "bg-neutral-600", exchange: "NASDAQ", volume: 52_340_000, marketCap: 3_520_000_000_000 },
-  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", logo: "MS", logoColor: "bg-sky-700", exchange: "NASDAQ", volume: 23_180_000, marketCap: 3_210_000_000_000 },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", logo: "G", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 28_450_000, marketCap: 2_180_000_000_000 },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", logo: "AZ", logoColor: "bg-amber-600", exchange: "NASDAQ", volume: 41_200_000, marketCap: 2_140_000_000_000 },
-  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", logo: "NV", logoColor: "bg-green-700", exchange: "NASDAQ", volume: 68_500_000, marketCap: 3_240_000_000_000 },
-  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", logo: "M", logoColor: "bg-blue-700", exchange: "NASDAQ", volume: 18_900_000, marketCap: 1_560_000_000_000 },
-  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", logo: "T", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 95_700_000, marketCap: 792_000_000_000 },
-  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", logo: "JP", logoColor: "bg-slate-700", exchange: "NYSE", volume: 8_420_000, marketCap: 698_000_000_000 },
-  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", logo: "V", logoColor: "bg-indigo-700", exchange: "NYSE", volume: 6_850_000, marketCap: 580_000_000_000 },
-  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", logo: "UH", logoColor: "bg-cyan-700", exchange: "NYSE", volume: 3_210_000, marketCap: 484_000_000_000 },
-  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", logo: "JJ", logoColor: "bg-rose-700", exchange: "NYSE", volume: 7_100_000, marketCap: 374_000_000_000 },
-  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", logo: "WM", logoColor: "bg-blue-800", exchange: "NYSE", volume: 9_800_000, marketCap: 625_000_000_000 },
-  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", logo: "AV", logoColor: "bg-red-800", exchange: "NASDAQ", volume: 12_400_000, marketCap: 870_000_000_000 },
-  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", logo: "CO", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 2_300_000, marketCap: 409_000_000_000 },
-  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", logo: "N", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 5_600_000, marketCap: 401_000_000_000 },
-  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ", volume: 44_200_000, marketCap: 192_000_000_000 },
-  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", logo: "IN", logoColor: "bg-sky-800", exchange: "NASDAQ", volume: 38_900_000, marketCap: 95_000_000_000 },
+  // Equities (17)
+  { symbol: "AAPL", name: "Apple Inc.", price: 228.52, change: 3.14, changePercent: 1.39, category: "watchlist", type: "Equity", logo: "A", logoColor: "bg-neutral-600", exchange: "NASDAQ", volume: 52_340_000, marketCap: 3_520_000_000_000 },
+  { symbol: "MSFT", name: "Microsoft Corp.", price: 432.18, change: -2.87, changePercent: -0.66, category: "watchlist", type: "Equity", logo: "MS", logoColor: "bg-sky-700", exchange: "NASDAQ", volume: 23_180_000, marketCap: 3_210_000_000_000 },
+  { symbol: "GOOGL", name: "Alphabet Inc.", price: 178.95, change: 1.42, changePercent: 0.80, category: "watchlist", type: "Equity", logo: "G", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 28_450_000, marketCap: 2_180_000_000_000 },
+  { symbol: "AMZN", name: "Amazon.com Inc.", price: 207.33, change: 4.56, changePercent: 2.25, category: "watchlist", type: "Equity", logo: "AZ", logoColor: "bg-amber-600", exchange: "NASDAQ", volume: 41_200_000, marketCap: 2_140_000_000_000 },
+  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", type: "Equity", logo: "NV", logoColor: "bg-green-700", exchange: "NASDAQ", volume: 68_500_000, marketCap: 3_240_000_000_000 },
+  { symbol: "META", name: "Meta Platforms", price: 612.77, change: 8.93, changePercent: 1.48, category: "watchlist", type: "Equity", logo: "M", logoColor: "bg-blue-700", exchange: "NASDAQ", volume: 18_900_000, marketCap: 1_560_000_000_000 },
+  { symbol: "TSLA", name: "Tesla Inc.", price: 248.42, change: -11.58, changePercent: -4.46, category: "watchlist", type: "Equity", logo: "T", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 95_700_000, marketCap: 792_000_000_000 },
+  { symbol: "JPM", name: "JPMorgan Chase", price: 242.15, change: 1.87, changePercent: 0.78, category: "watchlist", type: "Equity", logo: "JP", logoColor: "bg-slate-700", exchange: "NYSE", volume: 8_420_000, marketCap: 698_000_000_000 },
+  { symbol: "V", name: "Visa Inc.", price: 315.44, change: 2.31, changePercent: 0.74, category: "watchlist", type: "Equity", logo: "V", logoColor: "bg-indigo-700", exchange: "NYSE", volume: 6_850_000, marketCap: 580_000_000_000 },
+  { symbol: "UNH", name: "UnitedHealth Group", price: 524.88, change: -4.12, changePercent: -0.78, category: "watchlist", type: "Equity", logo: "UH", logoColor: "bg-cyan-700", exchange: "NYSE", volume: 3_210_000, marketCap: 484_000_000_000 },
+  { symbol: "JNJ", name: "Johnson & Johnson", price: 155.62, change: 0.89, changePercent: 0.58, category: "watchlist", type: "Equity", logo: "JJ", logoColor: "bg-rose-700", exchange: "NYSE", volume: 7_100_000, marketCap: 374_000_000_000 },
+  { symbol: "WMT", name: "Walmart Inc.", price: 92.35, change: 0.67, changePercent: 0.73, category: "watchlist", type: "Equity", logo: "WM", logoColor: "bg-blue-800", exchange: "NYSE", volume: 9_800_000, marketCap: 625_000_000_000 },
+  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", type: "Equity", logo: "AV", logoColor: "bg-red-800", exchange: "NASDAQ", volume: 12_400_000, marketCap: 870_000_000_000 },
+  { symbol: "COST", name: "Costco Wholesale", price: 922.11, change: 5.44, changePercent: 0.59, category: "watchlist", type: "Equity", logo: "CO", logoColor: "bg-red-600", exchange: "NASDAQ", volume: 2_300_000, marketCap: 409_000_000_000 },
+  { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", type: "Equity", logo: "N", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 5_600_000, marketCap: 401_000_000_000 },
+  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", type: "Equity", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ", volume: 44_200_000, marketCap: 192_000_000_000 },
+  { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", type: "Equity", logo: "IN", logoColor: "bg-sky-800", exchange: "NASDAQ", volume: 38_900_000, marketCap: 95_000_000_000 },
+
+  // ETFs (5)
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", price: 601.42, change: 2.48, changePercent: 0.41, category: "watchlist", type: "ETF", logo: "SP", logoColor: "bg-amber-700", exchange: "NYSE Arca", volume: 85_000_000, marketCap: 560_000_000_000 },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", price: 521.87, change: 3.12, changePercent: 0.60, category: "watchlist", type: "ETF", logo: "QQ", logoColor: "bg-teal-600", exchange: "NASDAQ", volume: 42_000_000, marketCap: 280_000_000_000 },
+  { symbol: "VOO", name: "Vanguard S&P 500", price: 553.28, change: 2.27, changePercent: 0.41, category: "watchlist", type: "ETF", logo: "VO", logoColor: "bg-red-700", exchange: "NYSE Arca", volume: 5_200_000, marketCap: 480_000_000_000 },
+  { symbol: "IWM", name: "iShares Russell 2000", price: 228.56, change: 1.58, changePercent: 0.70, category: "watchlist", type: "ETF", logo: "IW", logoColor: "bg-slate-600", exchange: "NYSE Arca", volume: 28_000_000, marketCap: 72_000_000_000 },
+  { symbol: "GLD", name: "SPDR Gold Shares", price: 242.56, change: 1.87, changePercent: 0.78, category: "watchlist", type: "ETF", logo: "GL", logoColor: "bg-yellow-600", exchange: "NYSE Arca", volume: 8_900_000, marketCap: 65_000_000_000 },
 ];
 
 const DEFAULT_SELECTED = [
   "SPX", "NDX", "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA",
 ];
 
-const CATEGORY_LABELS: Record<TickerItem["category"], string> = {
-  index: "Indices",
-  watchlist: "Watchlist",
-};
-
-const CATEGORY_ORDER: TickerItem["category"][] = ["index", "watchlist"];
+const MAX_TICKERS = 10;
+const EDIT_TABS = ["Indices", "Watchlist", "Equities", "ETFs", "Options"] as const;
+type EditTab = (typeof EDIT_TABS)[number];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -119,6 +126,41 @@ export function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?:
 
 // ─── Edit Sheet (inline, self-triggering) ────────────────────────────────────
 
+function getTabItems(tab: EditTab, localSelected: string[], query: string): TickerItem[] {
+  const q = query.toLowerCase().trim();
+  let items: TickerItem[];
+
+  switch (tab) {
+    case "Indices":
+      items = ALL_TICKERS.filter((t) => t.type === "Index");
+      break;
+    case "Watchlist":
+      items = ALL_TICKERS.filter((t) => localSelected.includes(t.symbol));
+      break;
+    case "Equities":
+      items = ALL_TICKERS.filter((t) => t.type === "Equity");
+      break;
+    case "ETFs":
+      items = ALL_TICKERS.filter((t) => t.type === "ETF");
+      break;
+    case "Options":
+      items = ALL_TICKERS.filter((t) => t.type === "Option");
+      break;
+    default:
+      items = [];
+  }
+
+  if (q) {
+    items = items.filter(
+      (t) =>
+        t.symbol.toLowerCase().includes(q) ||
+        t.name.toLowerCase().includes(q)
+    );
+  }
+
+  return items;
+}
+
 function EditSheet({
   selected,
   onSave,
@@ -131,32 +173,44 @@ function EditSheet({
   const [local, setLocal] = useState<string[]>(selected);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<EditTab>("Indices");
   const { hideTicker } = useTickerVisibility();
 
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
       setLocal(selected);
       setQuery("");
+      setActiveTab("Indices");
     }
     setOpen(isOpen);
   };
 
+  const atLimit = local.length >= MAX_TICKERS;
+
   const toggle = (symbol: string) => {
-    setLocal((prev) =>
-      prev.includes(symbol)
-        ? prev.filter((s) => s !== symbol)
-        : [...prev, symbol]
-    );
+    setLocal((prev) => {
+      if (prev.includes(symbol)) return prev.filter((s) => s !== symbol);
+      if (prev.length >= MAX_TICKERS) return prev;
+      return [...prev, symbol];
+    });
   };
 
-  const selectAll = (category: TickerItem["category"]) => {
-    const syms = ALL_TICKERS.filter((t) => t.category === category).map((t) => t.symbol);
-    setLocal((prev) => Array.from(new Set([...prev, ...syms])));
+  const selectAllForTab = () => {
+    const tabItems = getTabItems(activeTab, local, "");
+    setLocal((prev) => {
+      const remaining = MAX_TICKERS - prev.length;
+      const toAdd = tabItems
+        .map((t) => t.symbol)
+        .filter((s) => !prev.includes(s))
+        .slice(0, remaining);
+      return [...prev, ...toAdd];
+    });
   };
 
-  const deselectAll = (category: TickerItem["category"]) => {
-    const syms = ALL_TICKERS.filter((t) => t.category === category).map((t) => t.symbol);
-    setLocal((prev) => prev.filter((s) => !syms.includes(s)));
+  const deselectAllForTab = () => {
+    const tabItems = getTabItems(activeTab, local, "");
+    const syms = new Set(tabItems.map((t) => t.symbol));
+    setLocal((prev) => prev.filter((s) => !syms.has(s)));
   };
 
   const save = () => {
@@ -164,24 +218,16 @@ function EditSheet({
     setOpen(false);
   };
 
-  const lowerQuery = query.toLowerCase().trim();
-
-  const grouped = useMemo(
-    () =>
-      CATEGORY_ORDER.map((cat) => ({
-        category: cat,
-        label: CATEGORY_LABELS[cat],
-        items: ALL_TICKERS.filter((t) => {
-          if (t.category !== cat) return false;
-          if (!lowerQuery) return true;
-          return (
-            t.symbol.toLowerCase().includes(lowerQuery) ||
-            t.name.toLowerCase().includes(lowerQuery)
-          );
-        }),
-      })).filter((g) => g.items.length > 0),
-    [lowerQuery]
+  const items = useMemo(
+    () => getTabItems(activeTab, local, query),
+    [activeTab, local, query]
   );
+
+  const tabAllSelected = useMemo(() => {
+    if (activeTab === "Watchlist") return false;
+    const tabItems = getTabItems(activeTab, local, "");
+    return tabItems.length > 0 && tabItems.every((t) => local.includes(t.symbol));
+  }, [activeTab, local]);
 
   return (
     <Sheet open={open} onOpenChange={handleOpen}>
@@ -194,10 +240,18 @@ function EditSheet({
           <SheetTitle className="text-[18px] font-semibold">
             Edit Ticker
           </SheetTitle>
+          {local.length > 0 && (
+            <button
+              onClick={() => setLocal([])}
+              className="text-[14px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              Unselect all
+            </button>
+          )}
         </SheetHeader>
 
         {/* Search */}
-        <div className="px-5 pt-3 pb-3">
+        <div className="px-5 pt-3 pb-2">
           <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-secondary/40 px-3 py-2.5 transition-colors focus-within:border-muted-foreground/40 focus-within:bg-secondary/60">
             <Search
               size={17}
@@ -213,105 +267,132 @@ function EditSheet({
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 pb-2">
+          {EDIT_TABS.map((tab) => {
+            const isActive = tab === activeTab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "relative shrink-0 rounded-full px-3.5 py-2 text-[14px] font-medium transition-colors",
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground/70"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="edit-sheet-tab"
+                    className="absolute inset-0 rounded-full bg-muted/70"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{tab}</span>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="h-px bg-border/60 relative z-10" />
 
-        <div className="max-h-[55vh] overflow-y-auto no-scrollbar px-5">
-          {grouped.length === 0 && (
+        {/* Tab header — select/deselect all for non-Watchlist tabs */}
+        {activeTab !== "Watchlist" && items.length > 0 && !query && (
+          <div className="flex items-center justify-between px-5 pt-2.5 pb-1">
+            <span className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {activeTab}
+            </span>
+            <button
+              onClick={() => (tabAllSelected ? deselectAllForTab() : selectAllForTab())}
+              className="text-[13px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              {tabAllSelected ? "Deselect all" : "Select all"}
+            </button>
+          </div>
+        )}
+
+        <div className="max-h-[45vh] overflow-y-auto no-scrollbar px-5">
+          {items.length === 0 && (
             <div className="py-8 text-center">
               <p className="text-[15px] text-muted-foreground">
-                No results for &ldquo;{query}&rdquo;
+                {query
+                  ? <>No results for &ldquo;{query}&rdquo;</>
+                  : activeTab === "Watchlist"
+                    ? "No tickers selected yet"
+                    : activeTab === "Options"
+                      ? "Coming soon"
+                      : "No items"}
               </p>
             </div>
           )}
 
-          {grouped.map((group) => {
-            const allInGroup = ALL_TICKERS.filter((t) => t.category === group.category);
-            const allSelected = allInGroup.every((t) =>
-              local.includes(t.symbol)
-            );
-
-            return (
-              <div key={group.category}>
-                <div className="flex items-center justify-between sticky -top-px z-10 bg-background pt-3 pb-2 -mx-5 px-5 border-b border-border/30 shadow-[0_-1px_0_0_hsl(var(--background))]">
-                  <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {group.label}
-                  </h3>
-                  {!lowerQuery && (
-                    <button
-                      onClick={() =>
-                        allSelected
-                          ? deselectAll(group.category)
-                          : selectAll(group.category)
-                      }
-                      className="text-[13px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
-                    >
-                      {allSelected ? "Deselect all" : "Select all"}
-                    </button>
+          <div className="space-y-0.5">
+            {items.map((ticker) => {
+              const checked = local.includes(ticker.symbol);
+              const disabled = !checked && atLimit;
+              return (
+                <button
+                  key={ticker.symbol}
+                  onClick={() => toggle(ticker.symbol)}
+                  disabled={disabled}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors text-left",
+                    checked
+                      ? "bg-secondary/50"
+                      : disabled
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:bg-secondary/25"
                   )}
-                </div>
-                <div className="space-y-0.5">
-                  {group.items.map((ticker) => {
-                    const checked = local.includes(ticker.symbol);
-                    return (
-                      <button
-                        key={ticker.symbol}
-                        onClick={() => toggle(ticker.symbol)}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors text-left",
-                          checked ? "bg-secondary/50" : "hover:bg-secondary/25"
-                        )}
-                      >
-                        {/* Checkbox */}
-                        <div
-                          className={cn(
-                            "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 transition-all",
-                            checked
-                              ? "border-foreground bg-foreground"
-                              : "border-muted-foreground/25 bg-transparent"
-                          )}
-                        >
-                          {checked && (
-                            <Check size={12} className="text-background" strokeWidth={3.5} />
-                          )}
-                        </div>
+                >
+                  {/* Checkbox */}
+                  <div
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 transition-all",
+                      checked
+                        ? "border-foreground bg-foreground"
+                        : "border-muted-foreground/25 bg-transparent"
+                    )}
+                  >
+                    {checked && (
+                      <Check size={12} className="text-background" strokeWidth={3.5} />
+                    )}
+                  </div>
 
-                        {/* Logo */}
-                        <TickerLogo ticker={ticker} />
+                  {/* Logo */}
+                  <TickerLogo ticker={ticker} />
 
-                        {/* Name + Symbol:Exchange */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[15px] font-medium text-foreground leading-tight truncate">
-                            {ticker.name}
-                          </p>
-                          <p className="text-[13px] text-muted-foreground leading-tight truncate mt-0.5">
-                            {ticker.symbol}
-                            {ticker.exchange && (
-                              <span className="text-muted-foreground/40"> : {ticker.exchange}</span>
-                            )}
-                          </p>
-                        </div>
+                  {/* Name + Symbol:Exchange */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-medium text-foreground leading-tight truncate">
+                      {ticker.name}
+                    </p>
+                    <p className="text-[13px] text-muted-foreground leading-tight truncate mt-0.5">
+                      {ticker.symbol}
+                      {ticker.exchange && (
+                        <span className="text-muted-foreground/40"> : {ticker.exchange}</span>
+                      )}
+                    </p>
+                  </div>
 
-                        {/* Price + Change */}
-                        <div className="shrink-0 text-right">
-                          <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
-                            {formatPrice(ticker.price)}
-                          </p>
-                          <p
-                            className={cn(
-                              "text-[13px] font-medium tabular-nums leading-tight mt-0.5",
-                              isGain(ticker) ? "text-gain" : "text-loss"
-                            )}
-                          >
-                            {formatPercent(ticker.changePercent)}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                  {/* Price + Change */}
+                  <div className="shrink-0 text-right">
+                    <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
+                      {formatPrice(ticker.price)}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-[13px] font-medium tabular-nums leading-tight mt-0.5",
+                        isGain(ticker) ? "text-gain" : "text-loss"
+                      )}
+                    >
+                      {formatPercent(ticker.changePercent)}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex gap-3 px-5 pt-4">
@@ -330,7 +411,7 @@ function EditSheet({
             className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-foreground py-3.5 text-[16px] font-semibold text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
           >
             <Save size={16} />
-            Save ({local.length})
+            Save {local.length} of {MAX_TICKERS}
           </button>
         </div>
       </SheetContent>

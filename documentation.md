@@ -50,7 +50,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   ├── iphone-frame.tsx            ← StatusBar (theme toggle on tap) + HomeIndicator
 │   ├── mobile-shell.tsx            ← Mobile frame (430px) + bottom tab bar with 5 tabs
 │   ├── theme-provider.tsx          ← Dark/light theme context + toggleTheme hook
-│   ├── ticker.tsx                  ← 5 ticker variations + EditSheet + mock data (20 stocks)
+│   ├── ticker.tsx                  ← 5 ticker variations + EditSheet + mock data (27 tickers)
 │   ├── ticker-visibility.tsx       ← Ticker show/hide context
 │   ├── watchlist-context.tsx       ← Watchlist state context (sort, flags, deletes, collapse)
 │   ├── watchlist-content.tsx       ← Watchlist body — collapsible sections, stock rows, swipe gestures
@@ -139,7 +139,7 @@ Full watchlist screen with 4 top-level tabs and rich stock management.
 
 - **Tabs**: Watchlist (default), AI Insights, Movers, News — horizontally scrollable, animated underline
 - **Watchlist Tab** contains 3 collapsible sections:
-  - **Indices** (SPX, NDX, DJI)
+  - **Indices** (SPX, NDX, DJI, RUT, VIX)
   - **US Stocks** (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH)
   - **Interested** (JNJ, WMT, AVGO, COST, NFLX, AMD, INTC)
 - **Stock rows**: Logo avatar + Symbol/Name + Price + Change (red/green)
@@ -260,19 +260,20 @@ React Context for theme state management.
 
 - **`EditSheet`** — Bottom sheet for selecting tickers with:
   - Search input (filters by symbol or company name)
-  - Grouped by category (Indices / Watchlist) with sticky headers
-  - Colored logo avatars for each stock
-  - Two-line rows: bold symbol + lighter company name
-  - Price + % change on the right
-  - Select all / Deselect all per group
-  - Save button
+  - **Tabbed navigation**: Indices, Watchlist, Equities, ETFs, Options — animated pill tabs
+  - Watchlist tab shows currently-selected items; other tabs show all items of that type
+  - **Max 10 tickers** — "Save N of 10" button label; items dim when limit reached
+  - **Unselect all** in header clears all selections
+  - Per-tab Select all / Deselect all
+  - Colored logo avatars, two-line rows (name + symbol:exchange), price + % change
 - **`TickerLogo`** — Colored circle avatar with 1-2 char abbreviation
 - **`useTickerState()`** — Hook managing selected ticker list + filtered data
-- **Mock data**: 20 stocks across 2 categories:
-  - **Indices** (3): SPX, NDX, DJI
-  - **Watchlist** (17): AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH, JNJ, WMT, AVGO, COST, NFLX, AMD, INTC
+- **Mock data**: 27 tickers with `type` field (`"Index" | "Equity" | "ETF" | "Option"`):
+  - **Indices** (5): SPX, NDX, DJI, RUT, VIX
+  - **Equities** (17): AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, UNH, JNJ, WMT, AVGO, COST, NFLX, AMD, INTC
+  - **ETFs** (5): SPY, QQQ, VOO, IWM, GLD
 - **Helpers** (all exported): `formatPrice()`, `formatChange()`, `formatPercent()`, `isGain()`, `TickerLogo`
-- **Extended fields**: `volume` and `marketCap` on each `TickerItem` (used by watchlist sort)
+- **Extended fields**: `volume`, `marketCap`, and `type` on each `TickerItem`
 
 ### shadcn/ui Components — `components/ui/`
 
