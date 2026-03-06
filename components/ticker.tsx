@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -427,6 +427,74 @@ function useTickerState() {
   return { selected, setSelected, tickers };
 }
 
+// ─── Live price fluctuation hook ──────────────────────────────────────────────
+// Simulates tiny random price ticks every 1.5–3s for a "live" feel.
+
+function useLiveTickers(tickers: TickerItem[]) {
+  const [livePrices, setLivePrices] = useState<
+    Map<string, { price: number; change: number; changePercent: number }>
+  >(new Map());
+
+  const baseRef = useRef<Map<string, TickerItem>>(new Map());
+
+  // Sync base prices when tickers change
+  useEffect(() => {
+    const map = new Map<string, TickerItem>();
+    tickers.forEach((t) => map.set(t.symbol, { ...t }));
+    baseRef.current = map;
+  }, [tickers]);
+
+  const tick = useCallback(() => {
+    setLivePrices((prev) => {
+      const next = new Map(prev);
+      baseRef.current.forEach((base, symbol) => {
+        const current = next.get(symbol);
+        const price = current?.price ?? base.price;
+        // Random walk: ±0.01% to ±0.08% of price
+        const magnitude = price * (0.0001 + Math.random() * 0.0007);
+        const delta = Math.random() > 0.5 ? magnitude : -magnitude;
+        const newPrice = Math.max(0.01, price + delta);
+        const totalChange = newPrice - (base.price - base.change); // change from prev close
+        const totalPct = (totalChange / (base.price - base.change)) * 100;
+        next.set(symbol, {
+          price: newPrice,
+          change: totalChange,
+          changePercent: totalPct,
+        });
+      });
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    // Initial tick
+    const initialTimeout = setTimeout(tick, 800);
+
+    // Recurring ticks at random intervals
+    let timer: ReturnType<typeof setTimeout>;
+    function scheduleTick() {
+      const delay = 1500 + Math.random() * 1500; // 1.5–3s
+      timer = setTimeout(() => {
+        tick();
+        scheduleTick();
+      }, delay);
+    }
+    scheduleTick();
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearTimeout(timer);
+    };
+  }, [tick]);
+
+  // Merge live prices onto tickers
+  return tickers.map((t) => {
+    const live = livePrices.get(t.symbol);
+    if (!live) return t;
+    return { ...t, price: live.price, change: live.change, changePercent: live.changePercent };
+  });
+}
+
 // Inline edit button used inside each ticker variation
 function EditButton({
   selected,
@@ -448,10 +516,11 @@ function EditButton({
   );
 }
 
-// ─── VARIATION 1: Marquee Tape ───────────────────────────────────────────────
+// ─── VARIATION 1a: Marquee Tape (AUTO-SCROLL — BACKUP) ──────────────────────
 // Auto-scrolling infinite loop with an inline edit button pinned to the right.
+// Kept as backup. To restore: swap TickerMarqueeAuto → TickerMarquee in pages.
 
-export function TickerMarquee() {
+export function TickerMarqueeAuto() {
   const { tickerVisible } = useTickerVisibility();
   const { selected, setSelected, tickers } = useTickerState();
 
@@ -512,6 +581,79 @@ export function TickerMarquee() {
       {/* Edit button pinned right */}
       <div className="relative z-20 shrink-0 pl-2 pr-3">
         <EditButton selected={selected} onSave={setSelected} />
+      </div>
+    </div>
+  );
+}
+
+// ─── VARIATION 1b: Draggable Tape (ACTIVE) ──────────────────────────────────
+// User drags left/right. Background matches current theme (white/black).
+
+export function TickerMarquee() {
+  const { tickerVisible } = useTickerVisibility();
+  const { selected, setSelected, tickers } = useTickerState();
+  const liveTickers = useLiveTickers(tickers);
+
+  if (!tickerVisible) return null;
+
+  if (liveTickers.length === 0) {
+    return (
+      <div className="border-b border-border/40">
+        <div className="flex items-center justify-between bg-background px-4 py-3">
+          <span className="text-[14px] text-muted-foreground">No tickers selected</span>
+          <EditSheet
+            selected={selected}
+            onSave={setSelected}
+            trigger={
+              <button className="flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <Settings2 size={14} />
+                <span className="text-[13px] font-medium">Edit</span>
+              </button>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-b border-border/40">
+      <div className="overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-6 whitespace-nowrap pl-4 py-2.5">
+          {liveTickers.map((t) => (
+            <div key={t.symbol} className="flex items-center gap-2 shrink-0">
+              <span className="text-[15px] font-semibold text-foreground">
+                {t.symbol}
+              </span>
+              <span className="min-w-[52px] text-right text-[14px] font-medium text-muted-foreground tabular-nums font-mono transition-colors">
+                {formatPrice(t.price)}
+              </span>
+              <span
+                className={cn(
+                  "min-w-[56px] text-right text-[14px] font-semibold tabular-nums font-mono transition-colors",
+                  isGain(t) ? "text-gain" : "text-loss"
+                )}
+              >
+                {formatPercent(t.changePercent)}
+              </span>
+            </div>
+          ))}
+
+          {/* Edit pill — scrolls inline at the end */}
+          <EditSheet
+            selected={selected}
+            onSave={setSelected}
+            trigger={
+              <button className="flex items-center gap-1.5 shrink-0 rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <Settings2 size={14} />
+                <span className="text-[13px] font-medium">Edit</span>
+              </button>
+            }
+          />
+
+          {/* Spacer — forces breathing room after Edit since padding-right is collapsed in overflow-x */}
+          <div className="shrink-0 w-2 min-w-[8px]">&nbsp;</div>
+        </div>
       </div>
     </div>
   );

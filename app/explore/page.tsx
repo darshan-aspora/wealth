@@ -19,8 +19,8 @@ export default function ExplorePage() {
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
-      <TickerMarquee />
       <Header />
+      <TickerMarquee />
 
       <main className="no-scrollbar flex-1 overflow-y-auto">
         <Hero />

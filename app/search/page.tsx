@@ -356,8 +356,8 @@ export default function SearchPage() {
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
-      <TickerMarquee />
       <SearchHeader query={query} onQueryChange={setQuery} />
+      <TickerMarquee />
       <SearchTabs active={activeTab} onChange={setActiveTab} />
 
       <main className="no-scrollbar flex-1 overflow-y-auto">

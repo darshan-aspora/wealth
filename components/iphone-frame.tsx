@@ -2,32 +2,28 @@
 
 import { Wifi, Battery, Signal } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
-import { useTickerVisibility } from "@/components/ticker-visibility";
 import { cn } from "@/lib/utils";
 
 // ─── iPhone Status Bar ───────────────────────────────────────────────
-// Tap to toggle dark/light mode
-// When ticker is visible, always dark to match ticker strip.
-// When ticker is hidden, follows current theme.
+// Tap to toggle dark/light mode. Follows current theme (white/black).
 export function StatusBar() {
   const { theme, toggleTheme } = useTheme();
-  const { tickerVisible } = useTickerVisibility();
 
-  const forceDark = tickerVisible || theme === "dark";
+  const isDark = theme === "dark";
 
   return (
     <div
       onClick={toggleTheme}
       className={cn(
         "relative flex cursor-pointer items-center justify-between px-6 pt-3 pb-1.5 select-none active:opacity-70 transition-all duration-200",
-        forceDark ? "bg-[#0f0f11]" : "bg-background"
+        isDark ? "bg-[#0f0f11]" : "bg-white"
       )}
     >
       {/* Time */}
       <span
         className={cn(
           "text-[17px] font-semibold leading-none",
-          forceDark ? "text-white" : "text-foreground"
+          isDark ? "text-white" : "text-black"
         )}
       >
         9:41
@@ -40,10 +36,10 @@ export function StatusBar() {
 
       {/* Right cluster: signal, wifi, battery */}
       <div className="flex items-center gap-1.5">
-        <Signal size={16} strokeWidth={2.2} className={forceDark ? "text-white" : "text-foreground"} />
-        <Wifi size={17} strokeWidth={2.2} className={forceDark ? "text-white" : "text-foreground"} />
+        <Signal size={16} strokeWidth={2.2} className={isDark ? "text-white" : "text-black"} />
+        <Wifi size={17} strokeWidth={2.2} className={isDark ? "text-white" : "text-black"} />
         <div className="relative flex items-center">
-          <Battery size={24} strokeWidth={1.6} className={forceDark ? "text-white" : "text-foreground"} />
+          <Battery size={24} strokeWidth={1.6} className={isDark ? "text-white" : "text-black"} />
         </div>
       </div>
     </div>

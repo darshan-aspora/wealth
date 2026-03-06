@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import {
   TickerMarquee,
+  TickerMarqueeAuto,
   TickerPills,
   TickerCards,
   TickerDense,
@@ -13,7 +14,8 @@ import {
 } from "@/components/ticker";
 
 const variations = [
-  { title: "Marquee Tape", description: "Auto-scrolling infinite loop, broadcast feel", component: TickerMarquee },
+  { title: "Draggable Tape", description: "Swipeable, theme-matching (active)", component: TickerMarquee },
+  { title: "Marquee Tape", description: "Auto-scrolling infinite loop (backup)", component: TickerMarqueeAuto },
   { title: "Pill Strip", description: "Compact swipeable pills, color-coded gain/loss", component: TickerPills },
   { title: "Mini Cards", description: "Rich cards with price, change, and intensity bar", component: TickerCards },
   { title: "Dense Tape", description: "Two-line auto-scroll, symbol + price stacked", component: TickerDense },
