@@ -5,23 +5,13 @@ import { motion, useInView } from "framer-motion";
 
 const stages = [
   {
-    title: "The First Step",
-    badge: "Beginner",
-    body: "Buy your first stock. Understand orders. Build confidence.",
-    videos: [
-      { title: "What is a stock?", duration: "3 min" },
-      { title: "Market vs Limit orders", duration: "4 min" },
-      { title: "Buy your first stock in 60s", duration: "2 min" },
-    ],
-  },
-  {
     title: "The Confident Investor",
-    badge: "Active",
-    body: "Diversify with ETFs. Start a SIP. Read sectors and indices.",
+    badge: "Intermediate",
+    body: "Read earnings reports. Understand P/E ratios. Spot sector rotation.",
     videos: [
-      { title: "What is an ETF?", duration: "3 min" },
-      { title: "SIP vs lump sum", duration: "4 min" },
       { title: "How to read earnings", duration: "5 min" },
+      { title: "P/E ratios explained", duration: "4 min" },
+      { title: "Sector rotation strategies", duration: "5 min" },
     ],
   },
   {
@@ -106,10 +96,10 @@ export function LearningJourney() {
             {stages.map((stage, i) => (
               <div
                 key={stage.title}
-                className="shrink-0 w-[280px] border border-border rounded-xl overflow-hidden bg-background"
+                className="shrink-0 w-[280px] border border-border rounded-xl overflow-hidden bg-background flex flex-col"
               >
                 {/* Card header */}
-                <div className="bg-muted p-4">
+                <div className="bg-muted p-4 flex-1">
                   <span className="text-muted-foreground text-xs font-medium">
                     Chapter {i + 1}
                   </span>
@@ -122,7 +112,7 @@ export function LearningJourney() {
                 </div>
 
                 {/* Videos list */}
-                <div className="p-4 space-y-3">
+                <div className="p-4 space-y-3 mt-auto">
                   {stage.videos.map((v) => (
                     <div key={v.title} className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">

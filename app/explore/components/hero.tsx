@@ -10,7 +10,7 @@ const fadeUp = {
     transition: {
       delay: i * 0.25,
       duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
     },
   }),
 };
@@ -58,7 +58,9 @@ export function Hero() {
             variants={fadeUp}
             className="text-[13px] tracking-wide text-muted-foreground mt-3 text-center"
           >
-            Stocks · ETFs · Options · Advisory Baskets · 1-Click Algo Strategies
+            Stocks · ETFs · Options
+            <br />
+            Advisory Baskets · 1-Click Algo Strategies
           </motion.p>
 
           {/* Video placeholder */}

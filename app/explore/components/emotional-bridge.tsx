@@ -74,9 +74,11 @@ export function EmotionalBridge() {
         >
           <motion.h2
             variants={fadeUp}
-            className="text-2xl font-bold text-foreground text-center"
+            className="text-[28px] leading-[1.15] tracking-tight font-bold text-foreground text-center"
           >
-            Make your money work for you
+            Make your money
+            <br />
+            work for you
           </motion.h2>
 
           <motion.div
