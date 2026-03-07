@@ -16,6 +16,12 @@ const pages = [
     href: "/home",
     status: "v1",
   },
+  {
+    title: "Stocks",
+    description: "Stock detail view with charts and trading",
+    href: "/stocks",
+    status: "v1",
+  },
 ];
 
 const components = [

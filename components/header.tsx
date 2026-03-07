@@ -28,7 +28,7 @@ export function useRotatingSuffix(interval = 2200) {
   return searchSuffixes[index];
 }
 
-function SearchPlaceholder() {
+export function SearchPlaceholder() {
   const suffix = useRotatingSuffix();
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -56,7 +56,7 @@ function SearchPlaceholder() {
   );
 }
 
-function OptionsMenu({ onSortClick, onEditClick }: { onSortClick?: () => void; onEditClick?: () => void }) {
+export function OptionsMenu({ onSortClick, onEditClick }: { onSortClick?: () => void; onEditClick?: () => void } = {}) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { tickerVisible, showTicker } = useTickerVisibility();
