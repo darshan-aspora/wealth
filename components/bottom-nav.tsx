@@ -28,6 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useExploreVersion } from "@/app/explore/explore-version-context";
 
 /* ------------------------------------------------------------------ */
 /*  V1 — Home · Market · Portfolio · Advisory · Autopilot             */
@@ -79,6 +80,7 @@ function TabBar({
 }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const exploreVersion = useExploreVersion();
 
   return (
     <>
@@ -93,6 +95,16 @@ function TabBar({
               <Link
                 key={tab.href}
                 href={tab.href}
+                onClick={(e) => {
+                  if (
+                    isActive &&
+                    tab.href === "/explore" &&
+                    exploreVersion
+                  ) {
+                    e.preventDefault();
+                    exploreVersion.setShowVersionPicker(true);
+                  }
+                }}
                 className={cn(
                   "relative flex min-w-0 flex-col items-center gap-1 px-1.5 py-1.5 text-[12px] font-medium transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground"

@@ -619,7 +619,7 @@ export function TickerMarquee() {
   return (
     <div className="border-b border-border/40">
       <div className="overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-6 whitespace-nowrap pl-4 py-2.5">
+        <div className="flex items-center gap-6 whitespace-nowrap pl-4 pt-0.5 pb-2.5">
           {liveTickers.map((t) => (
             <div key={t.symbol} className="flex items-center gap-2 shrink-0">
               <span className="text-[15px] font-semibold text-foreground">
