@@ -53,7 +53,7 @@ export function TheNumbers() {
               }}
               className="text-center"
             >
-              <p className="text-2xl font-bold font-mono text-foreground">
+              <p className="text-2xl font-bold tabular-nums text-foreground">
                 {stat.value}
               </p>
               <p className="text-xs text-muted-foreground mt-1">

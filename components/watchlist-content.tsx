@@ -185,7 +185,7 @@ function StockRow({
 
       {/* Price + Change */}
       <div className="shrink-0 text-right">
-        <p className="font-mono text-[15px] font-semibold tabular-nums leading-tight text-foreground">
+        <p className="tabular-nums text-[15px] font-semibold tabular-nums leading-tight text-foreground">
           {formatPrice(ticker.price)}
         </p>
         <p

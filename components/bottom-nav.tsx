@@ -51,7 +51,7 @@ const v2Tabs = [
   { label: "Market", icon: BarChart3, href: "/market" },
   { label: "Watchlist", icon: Bookmark, href: "/watchlist" },
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },
-  { label: "Advisory", icon: Sparkles, href: "/advisory" },
+  { label: "Learn", icon: BookOpen, href: "/learn" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -85,7 +85,7 @@ function TabBar({
   return (
     <>
       <nav className="border-t border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,8px)] pt-2.5">
+        <div className="flex items-center justify-around px-2 pb-2 pt-1.5">
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href ||
@@ -106,17 +106,10 @@ function TabBar({
                   }
                 }}
                 className={cn(
-                  "relative flex min-w-0 flex-col items-center gap-1 px-1.5 py-1.5 text-[12px] font-medium transition-colors",
+                  "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId={layoutId}
-                    className="absolute -top-2.5 h-0.5 w-6 rounded-full bg-foreground"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
                 <motion.div
                   animate={{ scale: isActive ? 1.05 : 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 24 }}
@@ -131,7 +124,7 @@ function TabBar({
           {moreSheet && (
             <button
               onClick={() => setMoreOpen(true)}
-              className="relative flex min-w-0 flex-col items-center gap-1 px-1.5 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors"
+              className="relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors"
             >
               <MoreHorizontal size={24} strokeWidth={1.6} />
               <span>More</span>
@@ -154,7 +147,7 @@ function TabBar({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] text-muted-foreground">Available funds</p>
-                <p className="text-[18px] font-semibold font-mono tabular-nums text-foreground">
+                <p className="text-[18px] font-semibold tabular-nums text-foreground">
                   $12,485.50
                 </p>
               </div>
@@ -190,5 +183,5 @@ export function BottomNavV1() {
 }
 
 export function BottomNavV2() {
-  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" moreSheet />;
+  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" />;
 }

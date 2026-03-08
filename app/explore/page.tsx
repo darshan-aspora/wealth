@@ -34,7 +34,7 @@ const exploreTabs: { id: ExploreTab; label: string }[] = [
   { id: "equity", label: "Stocks" },
   { id: "etf", label: "ETF" },
   { id: "options", label: "Options" },
-  { id: "advisory", label: "Advisory Baskets" },
+  { id: "advisory", label: "Baskets" },
 ];
 
 function ExploreContent() {

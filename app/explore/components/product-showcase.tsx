@@ -11,7 +11,7 @@ const tabs = [
   { id: "stocks", label: "Stocks" },
   { id: "etfs", label: "ETFs" },
   { id: "options", label: "Options" },
-  { id: "advisory", label: "Advisory Baskets" },
+  { id: "advisory", label: "Baskets" },
   { id: "algo", label: "Algo Strategies" },
 ];
 
@@ -221,8 +221,8 @@ function GradientCard({ top, sub, value, change, positive }: { top: string; sub:
       <div className="relative">
         <p className="font-bold text-foreground text-sm">{top}</p>
         <p className="text-muted-foreground text-xs mt-0.5 truncate">{sub}</p>
-        <p className="font-mono text-foreground text-sm mt-2">{value}</p>
-        <p className={cn("font-mono text-sm font-medium mt-0.5", positive ? "text-gain" : "text-loss")}>
+        <p className="tabular-nums text-foreground text-sm mt-2">{value}</p>
+        <p className={cn("tabular-nums text-sm font-medium mt-0.5", positive ? "text-gain" : "text-loss")}>
           {change}
         </p>
       </div>
@@ -364,8 +364,8 @@ function OptionsCard({ sectionRef }: { sectionRef: (el: HTMLDivElement | null) =
               <div className="relative">
                 <p className="font-bold text-foreground text-sm">{c.contract}</p>
                 <p className={cn("text-xs mt-0.5 font-medium", c.type === "Call" ? "text-gain" : "text-loss")}>{c.type}</p>
-                <p className="font-mono text-foreground text-sm mt-2">{c.premium}</p>
-                <p className={cn("font-mono text-sm font-medium mt-0.5", c.positive ? "text-gain" : "text-loss")}>{c.change}</p>
+                <p className="tabular-nums text-foreground text-sm mt-2">{c.premium}</p>
+                <p className={cn("tabular-nums text-sm font-medium mt-0.5", c.positive ? "text-gain" : "text-loss")}>{c.change}</p>
               </div>
             </div>
           ))}
@@ -402,8 +402,8 @@ function AdvisoryCard({ sectionRef }: { sectionRef: (el: HTMLDivElement | null) 
               <div className="relative">
                 <p className="font-bold text-foreground text-sm">{b.name}</p>
                 <p className="text-muted-foreground text-xs mt-0.5 truncate">{b.strategy}</p>
-                <p className="font-mono text-gain text-sm font-bold mt-2">{b.cagr} CAGR</p>
-                <p className="font-mono text-xs text-muted-foreground mt-0.5">Min {b.min}</p>
+                <p className="tabular-nums text-gain text-sm font-bold mt-2">{b.cagr} CAGR</p>
+                <p className="tabular-nums text-xs text-muted-foreground mt-0.5">Min {b.min}</p>
               </div>
             </div>
           ))}
@@ -440,8 +440,8 @@ function AlgoCard({ sectionRef }: { sectionRef: (el: HTMLDivElement | null) => v
               <div className="relative">
                 <p className="font-bold text-foreground text-sm">{s.name}</p>
                 <p className="text-muted-foreground text-xs mt-0.5">{s.fee}</p>
-                <p className="font-mono text-gain text-sm font-bold mt-2">{s.backtest}</p>
-                <p className="font-mono text-xs text-muted-foreground mt-0.5">{s.users.toLocaleString()} users</p>
+                <p className="tabular-nums text-gain text-sm font-bold mt-2">{s.backtest}</p>
+                <p className="tabular-nums text-xs text-muted-foreground mt-0.5">{s.users.toLocaleString()} users</p>
               </div>
             </div>
           ))}

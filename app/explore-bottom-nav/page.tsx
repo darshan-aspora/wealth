@@ -168,7 +168,7 @@ function NavPreviewV2() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] text-muted-foreground">Available funds</p>
-              <p className="text-[18px] font-semibold font-mono tabular-nums text-foreground">
+              <p className="text-[18px] font-semibold tabular-nums text-foreground">
                 $12,485.50
               </p>
             </div>
@@ -251,7 +251,7 @@ export default function ExploreBottomNav() {
           >
             {/* Label */}
             <div className="mb-2 flex items-baseline gap-2">
-              <span className="text-[13px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
+              <span className="text-[13px] tabular-nums font-semibold text-muted-foreground/50 tabular-nums">
                 {String(v.id).padStart(2, "0")}
               </span>
               <span className="text-[15px] font-semibold text-foreground/80">

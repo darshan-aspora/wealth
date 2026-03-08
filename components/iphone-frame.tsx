@@ -51,7 +51,7 @@ export function StatusBar() {
 export function HomeIndicator() {
   return (
     <div className="flex items-center justify-center pb-2 pt-1">
-      <div className="h-[5px] w-[134px] rounded-full bg-foreground/20" />
+      <div className="h-[5px] w-[134px] rounded-full bg-black" />
     </div>
   );
 }

@@ -86,9 +86,9 @@ type EditTab = (typeof EDIT_TABS)[number];
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export function formatPrice(price: number) {
-  return price >= 1000
-    ? price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : price.toFixed(2);
+  if (price >= 1000) return price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (price >= 1) return price.toFixed(0);
+  return price.toFixed(2);
 }
 
 export function formatChange(change: number) {
@@ -98,7 +98,7 @@ export function formatChange(change: number) {
 
 export function formatPercent(pct: number) {
   const sign = pct >= 0 ? "+" : "";
-  return `${sign}${pct.toFixed(2)}%`;
+  return `${sign}${pct.toFixed(1)}%`;
 }
 
 export const isGain = (t: TickerItem) => t.change >= 0;
@@ -618,41 +618,45 @@ export function TickerMarquee() {
 
   return (
     <div className="border-b border-border/40">
-      <div className="overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-6 whitespace-nowrap pl-4 pt-0.5 pb-2.5">
-          {liveTickers.map((t) => (
-            <div key={t.symbol} className="flex items-center gap-2 shrink-0">
-              <span className="text-[15px] font-semibold text-foreground">
-                {t.symbol}
-              </span>
-              <span className="min-w-[52px] text-right text-[14px] font-medium text-muted-foreground tabular-nums font-mono transition-colors">
-                {formatPrice(t.price)}
-              </span>
-              <span
-                className={cn(
-                  "min-w-[56px] text-right text-[14px] font-semibold tabular-nums font-mono transition-colors",
-                  isGain(t) ? "text-gain" : "text-loss"
-                )}
-              >
-                {formatPercent(t.changePercent)}
-              </span>
-            </div>
-          ))}
+      <div className="relative flex items-center">
+        {/* Scrollable ticker items */}
+        <div className="flex-1 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-5 whitespace-nowrap pl-3 pr-2 pt-0.5 pb-2.5">
+            {liveTickers.map((t) => (
+              <div key={t.symbol} className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[15px] font-semibold text-foreground">
+                  {t.symbol}
+                </span>
+                <span className="tnum text-[14px] font-medium text-muted-foreground transition-colors">
+                  {formatPrice(t.price)}
+                </span>
+                <span
+                  className={cn(
+                    "tnum text-[14px] font-semibold transition-colors",
+                    isGain(t) ? "text-gain" : "text-loss"
+                  )}
+                >
+                  {formatPercent(t.changePercent)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          {/* Edit pill — scrolls inline at the end */}
+        {/* Fade edge before edit button */}
+        <div className="pointer-events-none absolute right-[56px] inset-y-0 w-12 bg-gradient-to-l from-background via-background/40 to-transparent z-10" />
+
+        {/* Edit button — always visible, pinned right */}
+        <div className="relative z-20 shrink-0 pr-3 pl-1 pb-1">
           <EditSheet
             selected={selected}
             onSave={setSelected}
             trigger={
-              <button className="flex items-center gap-1.5 shrink-0 rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <Settings2 size={14} />
-                <span className="text-[13px] font-medium">Edit</span>
+              <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground">
+                <Settings2 size={20} strokeWidth={1.8} />
               </button>
             }
           />
-
-          {/* Spacer — forces breathing room after Edit since padding-right is collapsed in overflow-x */}
-          <div className="shrink-0 w-2 min-w-[8px]">&nbsp;</div>
         </div>
       </div>
     </div>

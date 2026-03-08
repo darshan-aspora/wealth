@@ -31,8 +31,8 @@ function IndexItem({
   return (
     <span className="inline-flex items-center gap-2 px-4">
       <span className="text-foreground font-sans">{name}</span>
-      <span className="text-foreground font-mono">{value}</span>
-      <span className={cn("font-mono", positive ? "text-gain" : "text-loss")}>
+      <span className="text-foreground tabular-nums">{value}</span>
+      <span className={cn("tabular-nums", positive ? "text-gain" : "text-loss")}>
         {positive ? "\u2191" : "\u2193"}
         {change}
       </span>
@@ -55,8 +55,8 @@ function MoverItem({
   return (
     <span className="inline-flex items-center gap-2 px-4">
       <span className="text-foreground font-medium font-sans">{symbol}</span>
-      <span className="text-foreground font-mono">{price}</span>
-      <span className={cn("font-mono", positive ? "text-gain" : "text-loss")}>
+      <span className="text-foreground tabular-nums">{price}</span>
+      <span className={cn("tabular-nums", positive ? "text-gain" : "text-loss")}>
         {positive ? "\u2191" : "\u2193"}
         {change}
       </span>

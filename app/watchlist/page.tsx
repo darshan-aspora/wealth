@@ -25,7 +25,7 @@ function WatchlistPageInner() {
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
-      <Header onSortClick={openSortSheet} onEditClick={openEditSheet} />
+      <Header />
       <TickerMarquee />
 
       {/* Tab Bar */}

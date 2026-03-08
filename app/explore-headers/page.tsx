@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, Search, SlidersHorizontal, Settings2, Grid2x2, LayoutDashboard, Grip } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Search, SlidersHorizontal, Settings2, Grid2x2, LayoutDashboard, Grip, X, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Shared: animated search keywords ────────────────────────────────
@@ -162,6 +162,35 @@ function HeaderV5() {
   );
 }
 
+// ─── Variation 6: Search + Bell + Profile ───────────────────────────
+// Current production header — X back, pill search, bell with badge, profile avatar
+function HeaderV6() {
+  return (
+    <header className="flex items-center gap-3 px-4 py-3">
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <X size={20} strokeWidth={2} />
+      </button>
+
+      <div className="relative flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4">
+        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
+          <RotatingText />
+        </div>
+      </div>
+
+      <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Bell size={20} strokeWidth={1.8} />
+        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
+          3
+        </span>
+      </button>
+
+      <button className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full transition-opacity hover:opacity-90 active:opacity-80">
+        <img src="/profile.png" alt="Profile" className="h-full w-full object-cover" />
+      </button>
+    </header>
+  );
+}
+
 // ─── Page ────────────────────────────────────────────────────────────
 const variations = [
   { id: 1, label: "Clean Pill", sublabel: "Rounded, iOS-inspired", component: HeaderV1 },
@@ -169,6 +198,7 @@ const variations = [
   { id: 3, label: "Glassmorphic", sublabel: "Frosted glass, bordered", component: HeaderV3 },
   { id: 4, label: "Compact Dense", sublabel: "Tight, Zerodha-style density", component: HeaderV4 },
   { id: 5, label: "Bold Display", sublabel: "Large, confident, ring-accented", component: HeaderV5 },
+  { id: 6, label: "Search + Bell + Profile", sublabel: "X back, pill, bell badge, avatar", component: HeaderV6 },
 ];
 
 export default function ExploreHeaders() {
@@ -187,7 +217,7 @@ export default function ExploreHeaders() {
             Header Design
           </h1>
           <p className="text-[14px] text-muted-foreground">
-            5 variations — search, nav, customise
+            6 variations — search, nav, customise
           </p>
         </div>
       </div>
@@ -205,7 +235,7 @@ export default function ExploreHeaders() {
           >
             {/* Label */}
             <div className="mb-2 flex items-baseline gap-2">
-              <span className="text-[13px] font-mono font-semibold text-muted-foreground/50 tabular-nums">
+              <span className="text-[13px] tabular-nums font-semibold text-muted-foreground/50 tabular-nums">
                 {String(v.id).padStart(2, "0")}
               </span>
               <span className="text-[15px] font-semibold text-foreground/80">

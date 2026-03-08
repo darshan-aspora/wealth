@@ -67,7 +67,7 @@ export function Pricing() {
                         <p className="text-muted-foreground text-xs mt-0.5">{item.note}</p>
                       )}
                     </div>
-                    <p className={`font-mono text-[15px] font-semibold shrink-0 ml-4 ${item.value === "Free" ? "text-gain" : "text-foreground"}`}>
+                    <p className={`tabular-nums text-[15px] font-semibold shrink-0 ml-4 ${item.value === "Free" ? "text-gain" : "text-foreground"}`}>
                       {item.value}
                     </p>
                   </div>

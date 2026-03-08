@@ -134,9 +134,9 @@ function Range52W({
           style={{ left: `${pct}%`, transform: `translate(-50%, -50%)` }}
         />
       </div>
-      <div className="flex justify-between font-mono text-[10px] tabular-nums text-muted-foreground">
-        <span>${low < 10 ? low.toFixed(1) : low.toFixed(0)}</span>
-        <span>${high < 10 ? high.toFixed(1) : high.toFixed(0)}</span>
+      <div className="flex justify-between tabular-nums text-[10px] tabular-nums text-muted-foreground">
+        <span>{low < 10 ? low.toFixed(1) : low.toFixed(0)}</span>
+        <span>{high < 10 ? high.toFixed(1) : high.toFixed(0)}</span>
       </div>
     </div>
   );
@@ -373,8 +373,7 @@ function TopMoversWidget() {
                       key={etf.symbol}
                       className="h-[56px] border-t border-border/20"
                     >
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-foreground">
-                        $
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-foreground">
                         {etf.price.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
@@ -383,7 +382,7 @@ function TopMoversWidget() {
 
                       <td
                         className={cn(
-                          "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
                           isGainer ? "text-emerald-500" : "text-red-500"
                         )}
                       >
@@ -400,19 +399,19 @@ function TopMoversWidget() {
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.volume}
                       </td>
 
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.aum}
                       </td>
 
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.expenseRatio.toFixed(2)}%
                       </td>
 
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.yield != null ? `${etf.yield.toFixed(2)}%` : "—"}
                       </td>
 
@@ -633,7 +632,7 @@ function ScoreBar({ score }: { score: number }) {
       <div className="flex h-[4px] w-full overflow-hidden rounded-full bg-muted">
         <div className="rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="font-mono text-[11px] font-semibold tabular-nums" style={{ color }}>
+      <span className="tabular-nums text-[11px] font-semibold tabular-nums" style={{ color }}>
         {score.toFixed(1)}
       </span>
     </div>
@@ -794,13 +793,13 @@ function RiskAdjustedWidget() {
                         <Stars count={etf.stars} />
                       </td>
                       <td className={cn(
-                        "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                        "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
                         etf.return3y >= 0 ? "text-emerald-500" : "text-red-500"
                       )}>
                         {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
                       </td>
                       <td className={cn(
-                        "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                        "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
                         etf.return5y >= 0 ? "text-emerald-500" : "text-red-500"
                       )}>
                         {etf.return5y >= 0 ? "+" : ""}{etf.return5y.toFixed(1)}%
@@ -811,10 +810,10 @@ function RiskAdjustedWidget() {
                       <td className={cn("whitespace-nowrap px-3 text-center text-[12px] font-medium", returnColor[etf.returnRating])}>
                         {etf.returnRating}
                       </td>
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.expenseRatio.toFixed(2)}%
                       </td>
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {etf.aum}
                       </td>
                       <td className="whitespace-nowrap px-3 text-right text-[12px] text-muted-foreground">
@@ -935,7 +934,7 @@ function ForwardLookingWidget() {
                         {etf.riskGrade}
                       </td>
                       <td className={cn(
-                        "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                        "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
                         etf.ytdReturn >= 0 ? "text-emerald-500" : "text-red-500"
                       )}>
                         {etf.ytdReturn >= 0 ? "+" : ""}{etf.ytdReturn.toFixed(1)}%
@@ -1505,7 +1504,7 @@ const bannerLabels: Record<BannerMode, string> = {
 };
 
 function PromoBanner() {
-  const [mode, setMode] = useState<BannerMode>("strip");
+  const [mode, setMode] = useState<BannerMode>("big-full");
 
   const cycle = () =>
     setMode((p) => bannerOrder[(bannerOrder.indexOf(p) + 1) % bannerOrder.length]);

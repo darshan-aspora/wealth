@@ -74,6 +74,12 @@
   }
 }
 
+/* Tabular figures — forces equal-width digits in DM Sans */
+.tnum {
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Hide scrollbar for mobile feel */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

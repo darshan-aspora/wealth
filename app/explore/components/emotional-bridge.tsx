@@ -97,7 +97,7 @@ export function EmotionalBridge() {
                 <h3 className="text-lg font-bold text-foreground mt-3">
                   {card.title}
                 </h3>
-                <p className="font-mono text-2xl font-bold text-gain mt-2">
+                <p className="tabular-nums text-2xl font-bold text-gain mt-2">
                   {card.stat}
                 </p>
                 <p className="text-muted-foreground text-xs">{card.statLabel}</p>

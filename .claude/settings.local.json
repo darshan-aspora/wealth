@@ -7,7 +7,11 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(npx tsc --noEmit --pretty)",
       "Bash(git worktree remove --force .claude/worktrees/suspicious-mahavira)",
-      "Bash(git branch -D claude/suspicious-mahavira)"
+      "Bash(git branch -D claude/suspicious-mahavira)",
+      "Bash(grep -oh \"rounded-[a-z-]*\" /Users/apple/Dev/02-US-Equity/components/*.tsx /Users/apple/Dev/02-US-Equity/components/ui/*.tsx)",
+      "WebSearch",
+      "Bash(npx next build)",
+      "Bash(npx tsc --noEmit --pretty app/explore/components/market-dashboard.tsx)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Bookmark,
   Brain,
@@ -21,6 +21,7 @@ import {
   Plus,
   Filter,
   TrendingDown,
+  ArrowDown,
   BarChart3,
   Gem,
   Rocket,
@@ -35,7 +36,7 @@ import { motion, AnimatePresence } from "framer-motion";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type CapSize = "mega" | "large" | "small";
+type CapSize = "mega" | "large" | "midcap" | "small";
 type MoverType = "gainers" | "losers";
 
 interface Stock {
@@ -49,6 +50,9 @@ interface Stock {
   high52w: number;
   low52w: number;
   color: string;
+  revGrowth: number;
+  profitGrowth: number;
+  rating: "Buy" | "Sell" | "Hold";
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,10 +69,11 @@ function makeSparkline(symbol: string, isGainer: boolean): number[] {
   const seed = hashStr(symbol);
   const pts: number[] = [];
   let v = 50;
-  for (let i = 0; i < 24; i++) {
+  // 52 points ≈ weekly over 1 year
+  for (let i = 0; i < 52; i++) {
     const r = (Math.sin(seed + i * 127) + 1) / 2;
-    v += (r - 0.5 + (isGainer ? 0.15 : -0.15)) * 6;
-    v = Math.max(12, Math.min(88, v));
+    v += (r - 0.5 + (isGainer ? 0.12 : -0.12)) * 4;
+    v = Math.max(8, Math.min(92, v));
     pts.push(v);
   }
   return pts;
@@ -116,82 +121,53 @@ function Sparkline({
 }
 
 /* ------------------------------------------------------------------ */
-/*  52-Week Range Bar                                                  */
+/*  Rating Badge                                                       */
 /* ------------------------------------------------------------------ */
 
-function Range52W({
-  low,
-  high,
-  current,
-}: {
-  low: number;
-  high: number;
-  current: number;
-}) {
-  const range = high - low || 1;
-  const pct = Math.min(Math.max(((current - low) / range) * 100, 4), 96);
+function RatingBadge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
+        rating === "Buy" && "bg-emerald-500/15 text-emerald-500",
+        rating === "Sell" && "bg-red-500/15 text-red-500",
+        rating === "Hold" && "bg-muted text-muted-foreground"
+      )}
+    >
+      {rating}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rating Gauge                                                       */
+/* ------------------------------------------------------------------ */
+
+function RatingGauge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
+  const position = rating === "Sell" ? 15 : rating === "Hold" ? 50 : 85;
 
   return (
-    <div className="flex w-[90px] flex-col gap-1">
-      <div className="relative h-[5px] w-full rounded-full bg-muted">
+    <div className="w-[52px] flex-shrink-0">
+      <div className="relative flex h-[5px] overflow-hidden rounded-full">
+        <div className="flex-1 bg-red-500/25" />
+        <div className="flex-1 bg-muted" />
+        <div className="flex-1 bg-emerald-500/25" />
+      </div>
+      <div className="relative mt-0.5 h-2">
         <div
-          className="absolute top-1/2 h-[9px] w-[9px] -translate-y-1/2 rounded-full bg-foreground ring-2 ring-card"
-          style={{ left: `${pct}%`, transform: `translate(-50%, -50%)` }}
+          className={cn(
+            "absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full",
+            rating === "Buy" && "bg-emerald-500",
+            rating === "Sell" && "bg-red-500",
+            rating === "Hold" && "bg-muted-foreground"
+          )}
+          style={{ left: `${position}%` }}
         />
       </div>
-      <div className="flex justify-between font-mono text-[10px] tabular-nums text-muted-foreground">
-        <span>${low < 10 ? low.toFixed(1) : low.toFixed(0)}</span>
-        <span>${high < 10 ? high.toFixed(1) : high.toFixed(0)}</span>
-      </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Analyst Ratings Bar (mega cap only)                                */
-/* ------------------------------------------------------------------ */
-
-function AnalystBar({
-  buy,
-  hold,
-  sell,
-}: {
-  buy: number;
-  hold: number;
-  sell: number;
-}) {
-  const total = buy + hold + sell;
-  const buyPct = (buy / total) * 100;
-  const holdPct = (hold / total) * 100;
-
-  return (
-    <div className="flex w-[100px] flex-col items-center gap-1">
-      <div className="flex h-[5px] w-full overflow-hidden rounded-full">
-        <div className="bg-emerald-500" style={{ width: `${buyPct}%` }} />
-        <div className="bg-muted-foreground/40" style={{ width: `${holdPct}%` }} />
-        {sell > 0 && <div className="flex-1 bg-red-500" />}
-      </div>
-      <div className="flex gap-2.5 font-mono text-[10px] tabular-nums">
-        <span className="text-emerald-500">{buy}</span>
-        <span className="text-muted-foreground">{hold}</span>
-        <span className="text-red-500">{sell}</span>
-      </div>
-    </div>
-  );
-}
-
-const analystRatings: Record<string, { buy: number; hold: number; sell: number }> = {
-  NVDA: { buy: 18, hold: 1, sell: 1 },
-  META: { buy: 17, hold: 2, sell: 1 },
-  AMZN: { buy: 19, hold: 1, sell: 0 },
-  MSFT: { buy: 18, hold: 2, sell: 0 },
-  AAPL: { buy: 16, hold: 3, sell: 1 },
-  TSLA: { buy: 12, hold: 5, sell: 3 },
-  GOOGL: { buy: 17, hold: 2, sell: 1 },
-  "BRK.B": { buy: 10, hold: 8, sell: 2 },
-  JPM: { buy: 15, hold: 4, sell: 1 },
-  V: { buy: 18, hold: 1, sell: 1 },
-};
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                          */
@@ -200,48 +176,62 @@ const analystRatings: Record<string, { buy: number; hold: number; sell: number }
 const data: Record<MoverType, Record<CapSize, Stock[]>> = {
   gainers: {
     mega: [
-      { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, volume: "52.3M", marketCap: "$2.2T", pe: 68.4, high52w: 974.0, low52w: 392.3, color: "#76B900" },
-      { symbol: "META", name: "Meta Platforms", price: 523.8, changePercent: 3.69, volume: "28.1M", marketCap: "$1.3T", pe: 34.2, high52w: 542.81, low52w: 296.4, color: "#0668E1" },
-      { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, volume: "45.7M", marketCap: "$1.9T", pe: 58.6, high52w: 191.7, low52w: 118.35, color: "#FF9900" },
-      { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, volume: "22.4M", marketCap: "$3.2T", pe: 36.8, high52w: 432.98, low52w: 309.45, color: "#00A4EF" },
-      { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, volume: "38.9M", marketCap: "$3.0T", pe: 31.2, high52w: 199.62, low52w: 164.08, color: "#555555" },
+      { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, volume: "52.3M", marketCap: "$2.2T", pe: 68, high52w: 974.0, low52w: 392.3, color: "#76B900", revGrowth: 122.4, profitGrowth: 581.3, rating: "Buy" },
+      { symbol: "META", name: "Meta Platforms", price: 523.8, changePercent: 3.69, volume: "28.1M", marketCap: "$1.3T", pe: 34, high52w: 542.8, low52w: 296.4, color: "#0668E1", revGrowth: 24.7, profitGrowth: 69.3, rating: "Buy" },
+      { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, volume: "45.7M", marketCap: "$1.9T", pe: 59, high52w: 191.7, low52w: 118.4, color: "#FF9900", revGrowth: 12.5, profitGrowth: 229.1, rating: "Buy" },
+      { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, volume: "22.4M", marketCap: "$3.2T", pe: 37, high52w: 433.0, low52w: 309.5, color: "#00A4EF", revGrowth: 17.6, profitGrowth: 33.2, rating: "Buy" },
+      { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, volume: "38.9M", marketCap: "$3.0T", pe: 31, high52w: 199.6, low52w: 164.1, color: "#555555", revGrowth: 2.1, profitGrowth: 10.7, rating: "Buy" },
     ],
     large: [
-      { symbol: "PLTR", name: "Palantir", price: 24.85, changePercent: 12.34, volume: "98.2M", marketCap: "$54B", pe: 242.0, high52w: 27.5, low52w: 13.68, color: "#1D1D1D" },
-      { symbol: "COIN", name: "Coinbase", price: 178.42, changePercent: 9.6, volume: "14.3M", marketCap: "$42B", pe: 45.3, high52w: 185.67, low52w: 78.43, color: "#0052FF" },
-      { symbol: "SHOP", name: "Shopify", price: 78.35, changePercent: 7.43, volume: "18.7M", marketCap: "$98B", pe: 82.1, high52w: 81.28, low52w: 45.5, color: "#96BF48" },
-      { symbol: "SQ", name: "Block Inc", price: 72.18, changePercent: 6.22, volume: "12.5M", marketCap: "$43B", pe: 56.7, high52w: 78.24, low52w: 39.78, color: "#3E4348" },
-      { symbol: "ABNB", name: "Airbnb", price: 156.73, changePercent: 5.46, volume: "8.9M", marketCap: "$98B", pe: 38.5, high52w: 170.1, low52w: 110.4, color: "#FF5A5F" },
+      { symbol: "PLTR", name: "Palantir", price: 24.85, changePercent: 12.34, volume: "98.2M", marketCap: "$54B", pe: 242, high52w: 27.5, low52w: 13.7, color: "#1D1D1D", revGrowth: 17.7, profitGrowth: 32.1, rating: "Buy" },
+      { symbol: "COIN", name: "Coinbase", price: 178.42, changePercent: 9.6, volume: "14.3M", marketCap: "$42B", pe: 45, high52w: 185.7, low52w: 78.4, color: "#0052FF", revGrowth: 101.4, profitGrowth: 285.0, rating: "Buy" },
+      { symbol: "SHOP", name: "Shopify", price: 78.35, changePercent: 7.43, volume: "18.7M", marketCap: "$98B", pe: 82, high52w: 81.3, low52w: 45.5, color: "#96BF48", revGrowth: 26.1, profitGrowth: 140.8, rating: "Buy" },
+      { symbol: "SQ", name: "Block Inc", price: 72.18, changePercent: 6.22, volume: "12.5M", marketCap: "$43B", pe: 57, high52w: 78.2, low52w: 39.8, color: "#3E4348", revGrowth: 24.5, profitGrowth: 88.2, rating: "Hold" },
+      { symbol: "ABNB", name: "Airbnb", price: 156.73, changePercent: 5.46, volume: "8.9M", marketCap: "$98B", pe: 39, high52w: 170.1, low52w: 110.4, color: "#FF5A5F", revGrowth: 18.3, profitGrowth: 55.7, rating: "Buy" },
+    ],
+    midcap: [
+      { symbol: "CRWD", name: "CrowdStrike", price: 312.8, changePercent: 4.2, volume: "8.4M", marketCap: "$72B", pe: 720, high52w: 365.0, low52w: 135.0, color: "#E11D48", revGrowth: 36.4, profitGrowth: 120.5, rating: "Buy" },
+      { symbol: "DDOG", name: "Datadog", price: 124.6, changePercent: 3.1, volume: "6.2M", marketCap: "$39B", pe: 320, high52w: 135.5, low52w: 75.0, color: "#7C3AED", revGrowth: 26.8, profitGrowth: 45.2, rating: "Buy" },
+      { symbol: "ZS", name: "Zscaler", price: 218.4, changePercent: 2.7, volume: "3.8M", marketCap: "$31B", pe: 520, high52w: 259.6, low52w: 140.0, color: "#0EA5E9", revGrowth: 34.8, profitGrowth: 88.1, rating: "Buy" },
+      { symbol: "HUBS", name: "HubSpot", price: 582.4, changePercent: 2.4, volume: "1.2M", marketCap: "$30B", pe: 480, high52w: 668.2, low52w: 392.1, color: "#FF7A59", revGrowth: 23.1, profitGrowth: 72.4, rating: "Buy" },
+      { symbol: "VEEV", name: "Veeva Systems", price: 198.5, changePercent: 1.9, volume: "2.1M", marketCap: "$32B", pe: 56, high52w: 235.4, low52w: 155.8, color: "#FF6B00", revGrowth: 12.8, profitGrowth: 28.6, rating: "Hold" },
     ],
     small: [
-      { symbol: "IONQ", name: "IonQ", price: 12.45, changePercent: 21.24, volume: "42.1M", marketCap: "$2.7B", pe: null, high52w: 15.28, low52w: 5.18, color: "#7C3AED" },
-      { symbol: "SMCI", name: "Super Micro", price: 28.73, changePercent: 15.81, volume: "35.6M", marketCap: "$15B", pe: 12.3, high52w: 122.9, low52w: 17.25, color: "#0071C5" },
-      { symbol: "SOUN", name: "SoundHound", price: 5.42, changePercent: 14.35, volume: "28.4M", marketCap: "$1.8B", pe: null, high52w: 10.25, low52w: 1.49, color: "#8B5CF6" },
-      { symbol: "JOBY", name: "Joby Aviation", price: 6.78, changePercent: 12.07, volume: "15.8M", marketCap: "$4.5B", pe: null, high52w: 8.42, low52w: 3.68, color: "#14B8A6" },
-      { symbol: "MARA", name: "Marathon Digi", price: 18.92, changePercent: 10.84, volume: "22.3M", marketCap: "$5.6B", pe: 24.8, high52w: 31.42, low52w: 8.43, color: "#F59E0B" },
+      { symbol: "IONQ", name: "IonQ", price: 12.45, changePercent: 21.24, volume: "42.1M", marketCap: "$2.7B", pe: null, high52w: 15.3, low52w: 5.2, color: "#7C3AED", revGrowth: 89.5, profitGrowth: -42.1, rating: "Hold" },
+      { symbol: "SMCI", name: "Super Micro", price: 28.73, changePercent: 15.81, volume: "35.6M", marketCap: "$15B", pe: 12, high52w: 122.9, low52w: 17.3, color: "#0071C5", revGrowth: 110.2, profitGrowth: 88.4, rating: "Buy" },
+      { symbol: "SOUN", name: "SoundHound", price: 5.42, changePercent: 14.35, volume: "28.4M", marketCap: "$1.8B", pe: null, high52w: 10.3, low52w: 1.5, color: "#8B5CF6", revGrowth: 52.3, profitGrowth: -68.4, rating: "Hold" },
+      { symbol: "JOBY", name: "Joby Aviation", price: 6.78, changePercent: 12.07, volume: "15.8M", marketCap: "$4.5B", pe: null, high52w: 8.4, low52w: 3.7, color: "#14B8A6", revGrowth: -100.0, profitGrowth: -100.0, rating: "Hold" },
+      { symbol: "MARA", name: "Marathon Digi", price: 18.92, changePercent: 10.84, volume: "22.3M", marketCap: "$5.6B", pe: 25, high52w: 31.4, low52w: 8.4, color: "#F59E0B", revGrowth: 229.0, profitGrowth: 350.2, rating: "Buy" },
     ],
   },
   losers: {
     mega: [
-      { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, volume: "112.4M", marketCap: "$568B", pe: 48.2, high52w: 299.29, low52w: 152.37, color: "#CC0000" },
-      { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, volume: "32.8M", marketCap: "$1.9T", pe: 27.4, high52w: 174.72, low52w: 120.21, color: "#4285F4" },
-      { symbol: "BRK.B", name: "Berkshire", price: 412.5, changePercent: -2.12, volume: "4.2M", marketCap: "$882B", pe: 10.8, high52w: 445.18, low52w: 344.62, color: "#3E2F84" },
-      { symbol: "JPM", name: "JPMorgan", price: 198.73, changePercent: -1.71, volume: "9.8M", marketCap: "$572B", pe: 11.6, high52w: 210.48, low52w: 162.35, color: "#003087" },
-      { symbol: "V", name: "Visa", price: 285.6, changePercent: -1.42, volume: "7.1M", marketCap: "$588B", pe: 32.4, high52w: 296.35, low52w: 248.67, color: "#1A1F71" },
+      { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, volume: "112.4M", marketCap: "$568B", pe: 48, high52w: 299.3, low52w: 152.4, color: "#CC0000", revGrowth: 8.5, profitGrowth: -23.1, rating: "Sell" },
+      { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, volume: "32.8M", marketCap: "$1.9T", pe: 27, high52w: 174.7, low52w: 120.2, color: "#4285F4", revGrowth: 13.6, profitGrowth: 31.4, rating: "Buy" },
+      { symbol: "BRK.B", name: "Berkshire", price: 412.5, changePercent: -2.12, volume: "4.2M", marketCap: "$882B", pe: 11, high52w: 445.2, low52w: 344.6, color: "#3E2F84", revGrowth: 20.8, profitGrowth: 42.1, rating: "Hold" },
+      { symbol: "JPM", name: "JPMorgan", price: 198.73, changePercent: -1.71, volume: "9.8M", marketCap: "$572B", pe: 12, high52w: 210.5, low52w: 162.4, color: "#003087", revGrowth: 9.4, profitGrowth: 25.3, rating: "Buy" },
+      { symbol: "V", name: "Visa", price: 285.6, changePercent: -1.42, volume: "7.1M", marketCap: "$588B", pe: 32, high52w: 296.4, low52w: 248.7, color: "#1A1F71", revGrowth: 10.2, profitGrowth: 17.4, rating: "Buy" },
     ],
     large: [
-      { symbol: "SNAP", name: "Snap Inc", price: 11.24, changePercent: -14.27, volume: "45.2M", marketCap: "$18B", pe: null, high52w: 17.89, low52w: 8.28, color: "#EAAB00" },
-      { symbol: "RIVN", name: "Rivian", price: 15.63, changePercent: -8.33, volume: "38.7M", marketCap: "$16B", pe: null, high52w: 28.06, low52w: 8.26, color: "#2D6A4F" },
-      { symbol: "HOOD", name: "Robinhood", price: 18.45, changePercent: -6.25, volume: "22.1M", marketCap: "$16B", pe: 62.4, high52w: 23.78, low52w: 7.91, color: "#00C805" },
-      { symbol: "LYFT", name: "Lyft", price: 14.82, changePercent: -5.54, volume: "16.8M", marketCap: "$5.8B", pe: null, high52w: 20.82, low52w: 8.85, color: "#EA39E8" },
-      { symbol: "DKNG", name: "DraftKings", price: 35.67, changePercent: -4.75, volume: "12.4M", marketCap: "$34B", pe: null, high52w: 49.57, low52w: 26.18, color: "#61B729" },
+      { symbol: "SNAP", name: "Snap Inc", price: 11.24, changePercent: -14.27, volume: "45.2M", marketCap: "$18B", pe: null, high52w: 17.9, low52w: 8.3, color: "#EAAB00", revGrowth: 5.1, profitGrowth: -12.4, rating: "Hold" },
+      { symbol: "RIVN", name: "Rivian", price: 15.63, changePercent: -8.33, volume: "38.7M", marketCap: "$16B", pe: null, high52w: 28.1, low52w: 8.3, color: "#2D6A4F", revGrowth: 167.4, profitGrowth: -45.2, rating: "Hold" },
+      { symbol: "HOOD", name: "Robinhood", price: 18.45, changePercent: -6.25, volume: "22.1M", marketCap: "$16B", pe: 62, high52w: 23.8, low52w: 7.9, color: "#00C805", revGrowth: 29.4, profitGrowth: 120.8, rating: "Hold" },
+      { symbol: "LYFT", name: "Lyft", price: 14.82, changePercent: -5.54, volume: "16.8M", marketCap: "$5.8B", pe: null, high52w: 20.8, low52w: 8.9, color: "#EA39E8", revGrowth: 3.2, profitGrowth: -88.4, rating: "Sell" },
+      { symbol: "DKNG", name: "DraftKings", price: 35.67, changePercent: -4.75, volume: "12.4M", marketCap: "$34B", pe: null, high52w: 49.6, low52w: 26.2, color: "#61B729", revGrowth: 44.2, profitGrowth: 62.1, rating: "Hold" },
+    ],
+    midcap: [
+      { symbol: "SNAP", name: "Snap Inc", price: 11.24, changePercent: -5.8, volume: "45.2M", marketCap: "$18B", pe: null, high52w: 17.9, low52w: 8.3, color: "#EAAB00", revGrowth: 5.1, profitGrowth: -12.4, rating: "Hold" },
+      { symbol: "ROKU", name: "Roku", price: 62.4, changePercent: -4.5, volume: "8.1M", marketCap: "$9B", pe: null, high52w: 106.8, low52w: 51.2, color: "#6C3A97", revGrowth: 14.2, profitGrowth: -35.6, rating: "Hold" },
+      { symbol: "PINS", name: "Pinterest", price: 28.6, changePercent: -3.8, volume: "12.4M", marketCap: "$19B", pe: 42, high52w: 40.2, low52w: 22.8, color: "#E60023", revGrowth: 11.8, profitGrowth: -8.4, rating: "Hold" },
+      { symbol: "BILL", name: "BILL Holdings", price: 58.2, changePercent: -3.2, volume: "4.2M", marketCap: "$6.2B", pe: null, high52w: 88.5, low52w: 44.3, color: "#00C4CC", revGrowth: -4.2, profitGrowth: -68.5, rating: "Sell" },
+      { symbol: "OKTA", name: "Okta", price: 88.4, changePercent: -2.9, volume: "5.8M", marketCap: "$15B", pe: null, high52w: 115.2, low52w: 65.8, color: "#007DC1", revGrowth: 18.4, profitGrowth: 42.1, rating: "Hold" },
     ],
     small: [
-      { symbol: "WKHS", name: "Workhorse", price: 1.23, changePercent: -20.65, volume: "18.9M", marketCap: "$245M", pe: null, high52w: 3.82, low52w: 0.38, color: "#E97C37" },
-      { symbol: "SPCE", name: "Virgin Galactic", price: 2.45, changePercent: -15.52, volume: "24.6M", marketCap: "$712M", pe: null, high52w: 5.6, low52w: 0.87, color: "#0ABAB5" },
-      { symbol: "NKLA", name: "Nikola", price: 0.87, changePercent: -12.12, volume: "32.1M", marketCap: "$418M", pe: null, high52w: 2.83, low52w: 0.52, color: "#2563EB" },
-      { symbol: "MVST", name: "Microvast", price: 1.56, changePercent: -10.34, volume: "8.4M", marketCap: "$478M", pe: null, high52w: 3.12, low52w: 0.82, color: "#DC2626" },
-      { symbol: "QS", name: "QuantumScape", price: 6.78, changePercent: -8.99, volume: "11.2M", marketCap: "$3.2B", pe: null, high52w: 11.56, low52w: 4.02, color: "#0EA5E9" },
+      { symbol: "WKHS", name: "Workhorse", price: 1.23, changePercent: -20.65, volume: "18.9M", marketCap: "$245M", pe: null, high52w: 3.8, low52w: 0.4, color: "#E97C37", revGrowth: -72.4, profitGrowth: -180.5, rating: "Sell" },
+      { symbol: "SPCE", name: "Virgin Galactic", price: 2.45, changePercent: -15.52, volume: "24.6M", marketCap: "$712M", pe: null, high52w: 5.6, low52w: 0.9, color: "#0ABAB5", revGrowth: -95.4, profitGrowth: -210.3, rating: "Sell" },
+      { symbol: "NKLA", name: "Nikola", price: 0.87, changePercent: -12.12, volume: "32.1M", marketCap: "$418M", pe: null, high52w: 2.8, low52w: 0.5, color: "#2563EB", revGrowth: -42.1, profitGrowth: -150.2, rating: "Sell" },
+      { symbol: "MVST", name: "Microvast", price: 1.56, changePercent: -10.34, volume: "8.4M", marketCap: "$478M", pe: null, high52w: 3.1, low52w: 0.8, color: "#DC2626", revGrowth: 12.4, profitGrowth: -88.2, rating: "Sell" },
+      { symbol: "QS", name: "QuantumScape", price: 6.78, changePercent: -8.99, volume: "11.2M", marketCap: "$3.2B", pe: null, high52w: 11.6, low52w: 4.0, color: "#0EA5E9", revGrowth: -100.0, profitGrowth: -100.0, rating: "Hold" },
     ],
   },
 };
@@ -250,10 +240,11 @@ const data: Record<MoverType, Record<CapSize, Stock[]>> = {
 /*  Cap-size cycle config                                              */
 /* ------------------------------------------------------------------ */
 
-const capOrder: CapSize[] = ["mega", "large", "small"];
+const capOrder: CapSize[] = ["mega", "large", "midcap", "small"];
 const capLabels: Record<CapSize, string> = {
   mega: "Mega Cap",
   large: "Large Cap",
+  midcap: "Mid Cap",
   small: "Small Cap",
 };
 
@@ -268,8 +259,8 @@ function TopMoversWidget() {
 
   const stocks = data[moverType][capSize];
   const isGainer = moverType === "gainers";
-  const isMega = capSize === "mega";
   const sparkColor = isGainer ? "#10b981" : "#ef4444";
+  const showRating = capSize === "mega" || capSize === "large";
 
   const sparklines = useMemo(
     () =>
@@ -294,10 +285,10 @@ function TopMoversWidget() {
     <div>
       {/* Title outside the card */}
       <h2 className="mb-2 text-[18px] font-bold tracking-tight">
-        Top Movers
+        What&apos;s Moving
       </h2>
 
-      {/* Controls row: shadcn Tabs + cap-size cycler — outside the card */}
+      {/* Controls row: Gainers/Losers + cap-size cycler */}
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex gap-2">
           {(["gainers", "losers"] as MoverType[]).map((t) => (
@@ -318,7 +309,7 @@ function TopMoversWidget() {
 
         <button
           onClick={cycleCapSize}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3 py-1 text-[13px] font-medium text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all active:scale-95"
         >
           <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
@@ -336,8 +327,8 @@ function TopMoversWidget() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        {/* Table: two-panel layout — frozen column never moves */}
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden pt-3">
+        {/* Table: frozen left column + scrollable right */}
         <AnimatePresence mode="wait">
           <motion.div
             key={`${moverType}-${capSize}`}
@@ -345,19 +336,19 @@ function TopMoversWidget() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex border-t border-border/40"
+            className="flex"
           >
-            {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
+            {/* ---- Frozen left column: Logo + Name ---- */}
+            <div className="z-10 w-[170px] flex-shrink-0 border-r border-border/20 bg-card">
               {/* Header */}
-              <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-[40px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Stock
               </div>
               {/* Rows */}
               {stocks.map((stock) => (
                 <div
                   key={stock.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-4"
+                  className="flex h-[64px] items-center px-4"
                 >
                   <div className="flex items-center gap-2.5">
                     <button
@@ -365,7 +356,7 @@ function TopMoversWidget() {
                       className="flex-shrink-0 transition-transform active:scale-90"
                     >
                       <Bookmark
-                        size={16}
+                        size={14}
                         strokeWidth={1.8}
                         className={cn(
                           "transition-colors",
@@ -376,18 +367,11 @@ function TopMoversWidget() {
                       />
                     </button>
                     <div
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground"
-                    >
-                      {stock.symbol.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
-                        {stock.name}
-                      </p>
-                      <p className="text-[12px] leading-tight text-muted-foreground">
-                        {stock.symbol}
-                      </p>
-                    </div>
+                      className="h-8 w-8 flex-shrink-0 rounded-full bg-muted"
+                    />
+                    <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight text-foreground">
+                      {stock.name}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -395,32 +379,38 @@ function TopMoversWidget() {
 
             {/* ---- Scrollable right columns ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: isMega ? 690 : 570 }}>
+              <table style={{ minWidth: 820 }}>
                 <thead>
-                  <tr className="h-[37px]">
-                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <tr className="h-[40px]">
+                    <th className="w-[94px] min-w-[94px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Price
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      % Chg
+                    <th className="w-[94px] min-w-[94px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 justify-end">
+                        <ArrowDown size={10} className="text-foreground" />
+                        Chg%
+                      </span>
                     </th>
-                    <th className="min-w-[64px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      1D
+                    <th className="min-w-[68px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      1Y
                     </th>
-                    <th className="min-w-[68px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Vol
+                    <th className="min-w-[52px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      PE
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Mkt Cap
+                    <th className="min-w-[78px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Rev Gr.
                     </th>
-                    <th className="min-w-[58px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      P/E
+                    <th className="min-w-[82px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Profit Gr.
                     </th>
-                    <th className="min-w-[110px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      52W Range
+                    <th className="min-w-[78px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      1Y High
                     </th>
-                    {isMega && (
-                      <th className="min-w-[120px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[74px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      1Y Low
+                    </th>
+                    {showRating && (
+                      <th className="min-w-[62px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                         Rating
                       </th>
                     )}
@@ -430,29 +420,25 @@ function TopMoversWidget() {
                   {stocks.map((stock) => (
                     <tr
                       key={stock.symbol}
-                      className="h-[56px] border-t border-border/20"
+                      className="h-[64px]"
                     >
-                      {/* Price */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-foreground">
-                        $
-                        {stock.price.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      {/* Price — single decimal, no $ */}
+                      <td className="w-[94px] min-w-[94px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                        {stock.price.toFixed(1)}
                       </td>
 
-                      {/* % Change */}
+                      {/* % Change — single decimal */}
                       <td
                         className={cn(
-                          "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                          "w-[94px] min-w-[94px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold",
                           isGainer ? "text-emerald-500" : "text-red-500"
                         )}
                       >
                         {stock.changePercent >= 0 ? "+" : ""}
-                        {stock.changePercent.toFixed(2)}%
+                        {stock.changePercent.toFixed(1)}%
                       </td>
 
-                      {/* 1D Sparkline */}
+                      {/* 1Y Sparkline */}
                       <td className="px-3">
                         <div className="flex justify-center">
                           <Sparkline
@@ -462,44 +448,50 @@ function TopMoversWidget() {
                         </div>
                       </td>
 
-                      {/* Volume */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
-                        {stock.volume}
+                      {/* P/E — no decimal */}
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                        {stock.pe != null ? Math.round(stock.pe) : "—"}
                       </td>
 
-                      {/* Market Cap */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
-                        {stock.marketCap}
+                      {/* Revenue Growth */}
+                      <td
+                        className={cn(
+                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium",
+                          stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500"
+                        )}
+                      >
+                        {stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%
                       </td>
 
-                      {/* P/E */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
-                        {stock.pe != null ? stock.pe.toFixed(1) : "—"}
+                      {/* Profit Growth */}
+                      <td
+                        className={cn(
+                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium",
+                          stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500"
+                        )}
+                      >
+                        {stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%
                       </td>
 
-                      {/* 52W Range */}
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <Range52W
-                            low={stock.low52w}
-                            high={stock.high52w}
-                            current={stock.price}
-                          />
-                        </div>
+                      {/* 1Y High */}
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                        {stock.high52w.toFixed(1)}
                       </td>
 
-                      {/* Analyst Rating (mega cap only) */}
-                      {isMega && analystRatings[stock.symbol] && (
+                      {/* 1Y Low */}
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                        {stock.low52w.toFixed(1)}
+                      </td>
+
+                      {/* Rating Badge — mega & large cap only */}
+                      {showRating && (
                         <td className="px-3">
                           <div className="flex justify-center">
-                            <AnalystBar
-                              buy={analystRatings[stock.symbol].buy}
-                              hold={analystRatings[stock.symbol].hold}
-                              sell={analystRatings[stock.symbol].sell}
-                            />
+                            <RatingBadge rating={stock.rating} />
                           </div>
                         </td>
                       )}
+
                     </tr>
                   ))}
                 </tbody>
@@ -508,9 +500,9 @@ function TopMoversWidget() {
           </motion.div>
         </AnimatePresence>
 
-        {/* View More — connected to card */}
-        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-          View More
+        {/* See All */}
+        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-4 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+          See All 76 Movers
           <ChevronRight size={16} />
         </button>
       </div>
@@ -574,7 +566,7 @@ function BasketCard({ basket }: { basket: Basket }) {
         <div className="flex items-center gap-4 text-[13px]">
           <div>
             <p className="text-[11px] text-muted-foreground">Minimum</p>
-            <p className="font-medium text-foreground">${basket.minInvestment}</p>
+            <p className="font-medium text-foreground">{basket.minInvestment}</p>
           </div>
           <div>
             <p className="text-[11px] text-muted-foreground">Volatility</p>
@@ -734,7 +726,7 @@ function ConsensusBadge({ buy, hold, sell }: { buy: number; hold: number; sell: 
         <div className="bg-muted-foreground/40" style={{ width: `${holdPct}%` }} />
         {sell > 0 && <div className="flex-1 bg-red-500" />}
       </div>
-      <div className="flex gap-2.5 font-mono text-[10px] tabular-nums">
+      <div className="flex gap-2.5 tabular-nums text-[10px] tabular-nums">
         <span className="text-emerald-500">{buy}</span>
         <span className="text-muted-foreground">{hold}</span>
         <span className="text-red-500">{sell}</span>
@@ -876,7 +868,7 @@ function AnalystRatingsWidget() {
                       {/* Upside % */}
                       <td
                         className={cn(
-                          "whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums",
+                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
                           stock.upside >= 0 ? "text-emerald-500" : "text-red-500"
                         )}
                       >
@@ -891,22 +883,22 @@ function AnalystRatingsWidget() {
                       </td>
 
                       {/* Price */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-foreground">
-                        ${stock.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-foreground">
+                        {stock.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
 
                       {/* Target Price */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
-                        ${stock.targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
+                        {stock.targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
 
                       {/* Avg Volume */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {stock.avgVolume}
                       </td>
 
                       {/* Market Cap */}
-                      <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
                         {stock.marketCap}
                       </td>
 
@@ -1406,7 +1398,7 @@ function HeatmapWidget() {
 
         <button
           onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3 py-1 text-[13px] font-medium text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all active:scale-95"
         >
           <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
@@ -1501,7 +1493,7 @@ const bannerLabels: Record<BannerMode, string> = {
 };
 
 function PromoBanner() {
-  const [mode, setMode] = useState<BannerMode>("strip");
+  const [mode, setMode] = useState<BannerMode>("big-full");
 
   const cycle = () =>
     setMode((p) => bannerOrder[(bannerOrder.indexOf(p) + 1) % bannerOrder.length]);
