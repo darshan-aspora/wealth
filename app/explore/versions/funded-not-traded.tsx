@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
   Brain,
@@ -1347,16 +1348,27 @@ function treemapLayout(
   return rects;
 }
 
-function heatColor(change: number): string {
-  if (change >= 3) return "#166534";
-  if (change >= 2) return "#15803d";
-  if (change >= 1) return "#16a34a";
-  if (change >= 0.3) return "#22863a";
-  if (change > -0.3) return "#3f3f46";
-  if (change > -1) return "#c53030";
-  if (change > -2) return "#dc2626";
-  if (change > -3) return "#b91c1c";
-  return "#991b1b";
+function heatColor(change: number, isDark: boolean): string {
+  if (isDark) {
+    if (change >= 3) return "#1a3a2a";
+    if (change >= 2) return "#1e3d2d";
+    if (change >= 1) return "#223f30";
+    if (change >= 0.3) return "#2a4436";
+    if (change > -0.3) return "#2a2a2e";
+    if (change > -1) return "#3d2a2a";
+    if (change > -2) return "#422828";
+    if (change > -3) return "#482626";
+    return "#4e2424";
+  }
+  if (change >= 3) return "#c1e6d0";
+  if (change >= 2) return "#cfeadb";
+  if (change >= 1) return "#d9f0e3";
+  if (change >= 0.3) return "#e4f5ec";
+  if (change > -0.3) return "#ececee";
+  if (change > -1) return "#f5e0e0";
+  if (change > -2) return "#f0d4d4";
+  if (change > -3) return "#eac8c8";
+  return "#e4bcbc";
 }
 
 /* ------------------------------------------------------------------ */
@@ -1366,6 +1378,8 @@ function heatColor(change: number): string {
 function HeatmapWidget() {
   const [index, setIndex] = useState<HeatmapIndex>("sp500");
   const [view, setView] = useState<HeatmapView>("stocks");
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const items = view === "stocks" ? heatmapStocks[index] : heatmapSectors[index];
   const rects = useMemo(() => treemapLayout(items), [items]);
@@ -1447,11 +1461,11 @@ function HeatmapWidget() {
                 >
                   <div
                     className="flex h-full w-full flex-col items-center justify-center rounded-[3px]"
-                    style={{ backgroundColor: heatColor(r.change) }}
+                    style={{ backgroundColor: heatColor(r.change, isDark) }}
                   >
                     {showLabel && (
                       <span
-                        className="font-bold leading-none text-white text-center px-1"
+                        className={cn("font-bold leading-none text-center px-1", isDark ? "text-white" : "text-black/80")}
                         style={{ fontSize: isLarge ? 13 : 10 }}
                       >
                         {r.symbol}
@@ -1459,7 +1473,7 @@ function HeatmapWidget() {
                     )}
                     {showChange && (
                       <span
-                        className="mt-0.5 leading-none text-white/80"
+                        className={cn("mt-0.5 leading-none", isDark ? "text-white/80" : "text-black/50")}
                         style={{ fontSize: isLarge ? 11 : 9 }}
                       >
                         {r.change > 0 ? "+" : ""}{r.change.toFixed(1)}%
