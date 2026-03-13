@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createChart, LineSeries, LineStyle, ColorType } from "lightweight-charts";
 import type { IChartApi, ISeriesApi, SeriesType } from "lightweight-charts";
-import { X, Plus, Check } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import {

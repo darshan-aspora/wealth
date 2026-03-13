@@ -44,6 +44,22 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   │   └── page.tsx                ← 5 header design variations
 │   ├── explore-tickers/
 │   │   └── page.tsx                ← 5 ticker component variations showcase
+│   ├── market/
+│   │   ├── page.tsx                ← Markets page — 4 tabs (US Markets, Global, News, India)
+│   │   ├── data.ts                 ← All mock data + TypeScript interfaces for markets
+│   │   └── components/
+│   │       ├── market-table.tsx    ← Generic scrollable table with frozen first column
+│   │       ├── sub-tabs.tsx        ← Pill-style sub-tab switcher with Framer Motion
+│   │       ├── section-header.tsx  ← Section title + subtitle + optional action
+│   │       ├── sparkline.tsx       ← Mini SVG sparkline for stock/ETF tables
+│   │       ├── economic-overview.tsx ← Economic indicators list
+│   │       ├── news-accordion.tsx  ← Expandable news accordion (Perplexity-style)
+│   │       ├── stock-screener.tsx  ← Screener cards with criteria
+│   │       ├── earnings-calendar.tsx ← Week nav + day strip + company list
+│   │       ├── us-markets-tab.tsx  ← US Markets tab content
+│   │       ├── global-markets-tab.tsx ← Global tab content
+│   │       ├── news-tab.tsx        ← News tab content
+│   │       └── india-tab.tsx       ← India tab content
 │   └── watchlist/
 │       └── page.tsx                ← Watchlist page — 4 tabs, stock sections, swipe actions
 ├── components/
@@ -57,6 +73,8 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   ├── movers-content.tsx          ← Movers tab — multi-line TradingView chart + top/bottom stock list
 │   ├── ai-insights-content.tsx    ← AI Insights tab — 3-phase analysis (analyzing → typing → complete)
 │   ├── sort-sheet.tsx              ← Sort bottom sheet (5 sort options)
+│   ├── header-v1.tsx              ← Original header backup (V1 — close left, bell, profile right)
+│   ├── stories-viewer.tsx         ← Instagram-style stories: StoryRing + StoriesViewer + 6 mock stories
 │   └── ui/                         ← shadcn auto-generated components
 │       ├── badge.tsx
 │       ├── button.tsx
@@ -133,7 +151,18 @@ Full-screen search page opened by tapping the search bar on Home.
 4. **Dense Tape** — Two-line auto-scroll, edit label pinned left
 5. **Gradient Glow** — Premium cards with gain/loss gradients, edit card at end
 
-### 6. Watchlist (`app/watchlist/page.tsx`) — Route: `/watchlist`
+### 6. Markets (`app/market/page.tsx`) — Route: `/market`
+
+Comprehensive markets page with 4 top-level tabs: US Markets, Global, News, India. Collapsible header on scroll, sticky tabs with Framer Motion animated indicator.
+
+- **US Markets tab**: Major Indices table (6 rows × 9 columns), Sectors table (11 rows), Top 10 sub-tabs (Stocks / ETFs / Mutual Funds) each with scrollable table + sparklines, Economic Overview (10 macro indicators), Market Summary accordion (5 AI-curated news items), Stock Screener (5 screener cards), Earnings Calendar (week nav + company list)
+- **Global tab**: Global Indices (6 region sub-tabs: Most Popular, Americas, Europe, Asia Pacific, Middle East, Africa), Commodities (5 category sub-tabs), Currencies (4 type sub-tabs incl. Crypto with Market Cap column), Global Market Summary accordion
+- **News tab**: Standalone Market Summary accordion with expandable summaries, ticker tags, and source attribution
+- **India tab**: Key Market Data (4 sub-tabs: Indices, Sectors, Currencies, Commodities), Top 10 Stocks table, Market Summary accordion, Economic Overview
+- All tables use generic `MarketTable<T>` component with frozen first column, horizontal scroll, and configurable columns
+- All mock data centralized in `app/market/data.ts` with full TypeScript interfaces
+
+### 7. Watchlist (`app/watchlist/page.tsx`) — Route: `/watchlist`
 
 Full watchlist screen with 4 top-level tabs and rich stock management.
 
@@ -165,13 +194,37 @@ iPhone chrome for realistic mobile framing.
 
 ### `Header` — `components/header.tsx`
 
-Home screen search header.
+Home screen search header with stories integration.
 
-- Layout: `[X Close] [Search Bar (pill)] [Bell w/ badge] [Options menu]`
+- Layout: `[Story Ring / Profile] [Search Bar (pill)] [X Close]`
+- **Story Ring**: Instagram-style segmented ring around profile avatar. Each segment = one story. Unread segments are gradient-colored (amber → red → purple), read segments are muted grey. Clicking opens the full-screen StoriesViewer.
 - **Rotating placeholder**: Cycles through "ETF", "Stocks", "Options", "News", "Advisory", "Baskets", "Strategies" with upward slide animation
 - Search bar is clickable — navigates to `/search` page
+- Close button moved to rightmost position
 - Exports `searchSuffixes` array and `useRotatingSuffix()` hook for reuse by search page
 - **Props**: `onSortClick?: () => void` — when provided, options menu shows Sort/Edit/Create new section; when absent, shows default "Customise"
+
+### `HeaderV1` (backup) — `components/header-v1.tsx`
+
+Original header layout preserved as a backup for easy rollback.
+
+- Layout: `[X Close] [Search Bar (pill)] [Bell w/ badge] [Profile avatar]`
+- Same rotating search placeholder, options menu, and bell notification as original
+
+### `StoriesViewer` — `components/stories-viewer.tsx`
+
+Instagram-style full-screen stories viewer with trading content.
+
+- **StoryRing** component: SVG-based segmented circle with `stroke-dasharray` segments. Takes `totalStories`, `readCount`, `size`, `children`, and `onClick` props. Gradient ring for unread, muted for read.
+- **StoriesViewer** component: Full-screen overlay with 6 stories. Features:
+  - Progress bars at top (one per story, auto-advancing over 5 seconds)
+  - Tap left 35% = go back, tap right 65% = go forward
+  - Long press pauses auto-advance
+  - Slide-in/out content transitions via Framer Motion
+  - Close button (X) at top right
+  - Story counter at bottom
+  - `onStorySeen` callback to track read progress
+- **6 Mock Stories**: Top Movers, IPO Alert, Sector Spotlight, Portfolio Recap, What's New, Market Outlook — each with unique gradient background, icon, and rich card content
 
 ### `WatchlistContent` — `components/watchlist-content.tsx`
 
@@ -274,6 +327,43 @@ React Context for theme state management.
   - **ETFs** (5): SPY, QQQ, VOO, IWM, GLD
 - **Helpers** (all exported): `formatPrice()`, `formatChange()`, `formatPercent()`, `isGain()`, `TickerLogo`
 - **Extended fields**: `volume`, `marketCap`, and `type` on each `TickerItem`
+
+### `MarketTable<T>` — `app/market/components/market-table.tsx`
+
+Generic reusable scrollable table used ~8 times across the Markets page.
+
+- **`TableColumn<T>`** interface: `key`, `label`, `align`, `frozen?`, `minWidth?`, `render(row, index)`
+- Frozen first column: `sticky left-0 z-[2] bg-card shadow-[2px_0_8px_rgba(0,0,0,0.12)]`
+- Header: `bg-muted/30 text-[12px] font-semibold uppercase tracking-wider`
+- Cells: `text-[13px] font-mono tabular-nums whitespace-nowrap`
+- Helper components: `PctCell` (green/red percentage), `RangeCell` (low–high range), `ChangeCell` (signed change value)
+- Optional `onRowClick` callback per row
+
+### `SubTabs` — `app/market/components/sub-tabs.tsx`
+
+Pill-style horizontal scrollable sub-tab switcher.
+
+- Framer Motion `layoutId` for animated active pill background
+- Active: `bg-foreground text-background rounded-full`
+- Inactive: `bg-muted/40 text-muted-foreground rounded-full`
+
+### `NewsAccordion` — `app/market/components/news-accordion.tsx`
+
+Perplexity Finance-style expandable news accordion.
+
+- Framer Motion `AnimatePresence` for smooth expand/collapse
+- Ticker tags: clickable pills linking to `/stocks/{symbol}`
+- Source logos: colored circles with single character + source names
+- First item expanded by default
+- Props: `title`, `subtitle`, `items: NewsItem[]`, `sourceCount`
+
+### `EarningsCalendar` — `app/market/components/earnings-calendar.tsx`
+
+Self-contained earnings calendar widget.
+
+- Week navigation (prev/next arrows), day strip (Mon–Fri)
+- Active day: `bg-foreground text-background rounded-xl`
+- Company rows: colored logo + name/ticker + EPS estimate + BMO/AMC badge
 
 ### shadcn/ui Components — `components/ui/`
 

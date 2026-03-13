@@ -21,6 +21,7 @@ import {
   Rocket,
   DollarSign,
   Scale,
+  Maximize2,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -265,9 +266,8 @@ function TopMoversWidget() {
 
         <button
           onClick={cycleCategory}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3 py-1 text-[13px] font-medium text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
         >
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={category}
@@ -280,6 +280,7 @@ function TopMoversWidget() {
               {catLabels[category]}
             </motion.span>
           </AnimatePresence>
+          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
         </button>
       </div>
 
@@ -992,6 +993,181 @@ const premiumScreeners: Screener[] = [
   { name: "Premium / Discount", description: "Trading at significant NAV discount", icon: TrendingDown, color: "#6366F1", matchCount: 18 },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  Dividend ETFs Widget                                               */
+/* ------------------------------------------------------------------ */
+
+type DivETFTab = "high-yield" | "div-growth" | "bond-income";
+
+interface DivETF {
+  symbol: string;
+  name: string;
+  yield: number;
+  changePct: number;
+  expenseRatio: string;
+  aum: string;
+  ytd: number;
+  frequency: "Monthly" | "Quarterly";
+  topHoldings: string;
+}
+
+const divETFTabs: { id: DivETFTab; label: string }[] = [
+  { id: "high-yield", label: "High Yield" },
+  { id: "div-growth", label: "Dividend Growth" },
+  { id: "bond-income", label: "Bond & Income" },
+];
+
+const divETFData: Record<DivETFTab, DivETF[]> = {
+  "high-yield": [
+    { symbol: "SCHD", name: "Schwab US Dividend", yield: 3.42, changePct: 0.38, expenseRatio: "0.06%", aum: "63B", ytd: 4.82, frequency: "Quarterly", topHoldings: "AMGN, ABBV, HD" },
+    { symbol: "JEPI", name: "JPM Equity Premium", yield: 7.24, changePct: -0.15, expenseRatio: "0.35%", aum: "34B", ytd: 2.18, frequency: "Monthly", topHoldings: "MSFT, AMZN, META" },
+    { symbol: "JEPQ", name: "JPM Nasdaq Premium", yield: 9.41, changePct: 0.62, expenseRatio: "0.35%", aum: "18B", ytd: 6.94, frequency: "Monthly", topHoldings: "AAPL, MSFT, NVDA" },
+    { symbol: "HDV", name: "iShares High Dividend", yield: 3.81, changePct: 0.22, expenseRatio: "0.08%", aum: "11B", ytd: 3.56, frequency: "Quarterly", topHoldings: "XOM, JNJ, ABBV" },
+    { symbol: "VYM", name: "Vanguard High Yield", yield: 2.92, changePct: 0.18, expenseRatio: "0.06%", aum: "55B", ytd: 5.12, frequency: "Quarterly", topHoldings: "JPM, AVGO, XOM" },
+  ],
+  "div-growth": [
+    { symbol: "VIG", name: "Vanguard Div Appreciation", yield: 1.72, changePct: 0.28, expenseRatio: "0.06%", aum: "82B", ytd: 6.48, frequency: "Quarterly", topHoldings: "AAPL, MSFT, JPM" },
+    { symbol: "DGRO", name: "iShares Div Growth", yield: 2.31, changePct: 0.14, expenseRatio: "0.08%", aum: "28B", ytd: 5.22, frequency: "Quarterly", topHoldings: "MSFT, AAPL, JPM" },
+    { symbol: "NOBL", name: "ProShares Div Aristocrats", yield: 2.08, changePct: -0.12, expenseRatio: "0.35%", aum: "12B", ytd: 3.14, frequency: "Quarterly", topHoldings: "GD, EMR, ATO" },
+    { symbol: "DGRW", name: "WisdomTree US Qual Div", yield: 1.82, changePct: 0.34, expenseRatio: "0.28%", aum: "13B", ytd: 7.62, frequency: "Monthly", topHoldings: "MSFT, AAPL, NVDA" },
+    { symbol: "SDY", name: "SPDR S&P Div ETF", yield: 2.58, changePct: 0.08, expenseRatio: "0.35%", aum: "22B", ytd: 2.94, frequency: "Quarterly", topHoldings: "KVUE, IBM, T" },
+  ],
+  "bond-income": [
+    { symbol: "BND", name: "Vanguard Total Bond", yield: 3.92, changePct: 0.05, expenseRatio: "0.03%", aum: "108B", ytd: 1.24, frequency: "Monthly", topHoldings: "US Treasury, MBS" },
+    { symbol: "HYG", name: "iShares High Yield Corp", yield: 5.81, changePct: -0.08, expenseRatio: "0.49%", aum: "18B", ytd: 2.68, frequency: "Monthly", topHoldings: "CCL, DISH, TMUS" },
+    { symbol: "TLT", name: "iShares 20+ Yr Treasury", yield: 4.12, changePct: -0.32, expenseRatio: "0.15%", aum: "52B", ytd: -2.14, frequency: "Monthly", topHoldings: "US Treasury" },
+    { symbol: "VCIT", name: "Vanguard Intm Corp Bond", yield: 4.48, changePct: 0.02, expenseRatio: "0.04%", aum: "44B", ytd: 1.82, frequency: "Monthly", topHoldings: "Bank of America, JPM" },
+    { symbol: "AGG", name: "iShares Core US Agg", yield: 3.68, changePct: 0.04, expenseRatio: "0.03%", aum: "92B", ytd: 0.94, frequency: "Monthly", topHoldings: "US Treasury, MBS" },
+  ],
+};
+
+function DividendETFsWidget() {
+  const [divTab, setDivTab] = useState<DivETFTab>("high-yield");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const etfs = divETFData[divTab];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => {
+      const n = new Set(p);
+      n.has(sym) ? n.delete(sym) : n.add(sym);
+      return n;
+    });
+
+  return (
+    <div>
+      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
+        Dividend ETFs
+      </h2>
+      <p className="mb-2.5 text-[14px] text-muted-foreground">
+        Income-focused ETFs sorted by yield
+      </p>
+
+      {/* Pill tabs */}
+      <div className="mb-2.5 flex gap-2 overflow-x-auto no-scrollbar">
+        {divETFTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setDivTab(tab.id)}
+            className={cn(
+              "flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+              divTab === tab.id
+                ? "bg-foreground text-background"
+                : "border border-border/60 text-muted-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={divTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex"
+          >
+            <FrozenETFColumn etfs={etfs} bookmarks={bookmarks} toggleBookmark={toggleBookmark} />
+
+            <div className="flex-1 overflow-x-auto no-scrollbar">
+              <table style={{ minWidth: 520 }}>
+                <thead>
+                  <tr className="h-[37px]">
+                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Yield
+                    </th>
+                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      % Chg
+                    </th>
+                    <th className="min-w-[56px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Exp %
+                    </th>
+                    <th className="min-w-[52px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      AUM
+                    </th>
+                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      YTD
+                    </th>
+                    <th className="min-w-[48px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Freq
+                    </th>
+                    <th className="min-w-[100px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Top Holdings
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {etfs.map((etf) => (
+                    <tr key={etf.symbol} className="h-[56px] border-t border-border/20">
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] font-bold tabular-nums text-gain">
+                        {etf.yield.toFixed(2)}%
+                      </td>
+                      <td className={cn(
+                        "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
+                        etf.changePct >= 0 ? "text-emerald-500" : "text-red-500"
+                      )}>
+                        {etf.changePct >= 0 ? "+" : ""}{etf.changePct.toFixed(2)}%
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] tabular-nums text-muted-foreground">
+                        {etf.expenseRatio}
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] tabular-nums text-muted-foreground">
+                        {etf.aum}
+                      </td>
+                      <td className={cn(
+                        "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
+                        etf.ytd >= 0 ? "text-emerald-500" : "text-red-500"
+                      )}>
+                        {etf.ytd >= 0 ? "+" : ""}{etf.ytd.toFixed(2)}%
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[12px] text-muted-foreground">
+                        {etf.frequency === "Monthly" ? "Mo" : "Qt"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[12px] text-muted-foreground">
+                        {etf.topHoldings}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* View More */}
+        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+          View More
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ScreenerWidget() {
   const [activeTab, setActiveTab] = useState<ScreenerTab>("basic");
   const screeners = activeTab === "basic" ? basicScreeners : premiumScreeners;
@@ -1276,7 +1452,7 @@ const heatmapCategories: { symbol: string; weight: number; change: number }[] = 
 /* ------------------------------------------------------------------ */
 
 const TM_W = 400;
-const TM_H = 300;
+const TM_H = 420;
 
 interface HeatRect {
   x: number; y: number; w: number; h: number;
@@ -1402,9 +1578,9 @@ function HeatmapWidget() {
 
   return (
     <div>
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">ETF Heatmap</h2>
+      <h2 className="mb-3.5 text-[18px] font-bold tracking-tight">ETF at a Glance</h2>
 
-      <div className="mb-2.5 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-2">
           {(["aum", "volume"] as const).map((id) => (
             <button
@@ -1424,9 +1600,8 @@ function HeatmapWidget() {
 
         <button
           onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3 py-1 text-[13px] font-medium text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
         >
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={view}
@@ -1439,64 +1614,70 @@ function HeatmapWidget() {
               {heatViewLabels[view]}
             </motion.span>
           </AnimatePresence>
+          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
         </button>
       </div>
 
       <div
         className="relative w-full overflow-hidden rounded-2xl"
         style={{ aspectRatio: `${TM_W} / ${TM_H}` }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${basis}-${view}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0"
-          >
-            {rects.map((r) => {
-              const showLabel = r.w > 28 && r.h > 24;
-              const showChange = r.w > 42 && r.h > 32;
-              const isLarge = r.w > 65 && r.h > 50;
-              return (
-                <div
-                  key={r.symbol}
-                  className="absolute p-[0.75px]"
-                  style={{
-                    left: `${(r.x / TM_W) * 100}%`,
-                    top: `${(r.y / TM_H) * 100}%`,
-                    width: `${(r.w / TM_W) * 100}%`,
-                    height: `${(r.h / TM_H) * 100}%`,
-                  }}
-                >
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${basis}-${view}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-0"
+            >
+              {rects.map((r) => {
+                const showLabel = r.w > 28 && r.h > 24;
+                const showChange = r.w > 42 && r.h > 32;
+                const isLarge = r.w > 65 && r.h > 50;
+                return (
                   <div
-                    className="flex h-full w-full flex-col items-center justify-center rounded-[3px]"
-                    style={{ backgroundColor: heatColor(r.change, isDark) }}
+                    key={r.symbol}
+                    className="absolute p-[1px]"
+                    style={{
+                      left: `${(r.x / TM_W) * 100}%`,
+                      top: `${(r.y / TM_H) * 100}%`,
+                      width: `${(r.w / TM_W) * 100}%`,
+                      height: `${(r.h / TM_H) * 100}%`,
+                    }}
                   >
-                    {showLabel && (
-                      <span
-                        className={cn("font-bold leading-none text-center px-1", isDark ? "text-white" : "text-black/80")}
-                        style={{ fontSize: isLarge ? 13 : 10 }}
-                      >
-                        {r.symbol}
-                      </span>
-                    )}
-                    {showChange && (
-                      <span
-                        className={cn("mt-0.5 leading-none", isDark ? "text-white/80" : "text-black/50")}
-                        style={{ fontSize: isLarge ? 11 : 9 }}
-                      >
-                        {r.change > 0 ? "+" : ""}{r.change.toFixed(1)}%
-                      </span>
-                    )}
+                    <div
+                      className="flex h-full w-full flex-col items-center justify-center"
+                      style={{ backgroundColor: heatColor(r.change, isDark) }}
+                    >
+                      {showLabel && (
+                        <span
+                          className={cn("font-bold leading-none text-center px-1", isDark ? "text-white" : "text-black/80")}
+                          style={{ fontSize: isLarge ? 13 : 10 }}
+                        >
+                          {r.symbol}
+                        </span>
+                      )}
+                      {showChange && (
+                        <span
+                          className={cn("mt-0.5 leading-none", isDark ? "text-white/80" : "text-black/50")}
+                          style={{ fontSize: isLarge ? 11 : 9 }}
+                        >
+                          {r.change > 0 ? "+" : ""}{r.change.toFixed(1)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </motion.div>
-        </AnimatePresence>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
       </div>
+
+      <button className="mt-3 flex w-full items-center justify-center gap-2 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+        <Maximize2 size={15} />
+        Open in Fullscreen
+      </button>
     </div>
   );
 }
@@ -1562,6 +1743,7 @@ export function ETFFundedNotTraded() {
       <TrendingCategoriesWidget />
       <RiskAdjustedWidget />
       <ForwardLookingWidget />
+      <DividendETFsWidget />
       <ScreenerWidget />
       <LevelUpWidget />
     </div>

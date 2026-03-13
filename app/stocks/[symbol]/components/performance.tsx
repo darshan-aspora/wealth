@@ -125,10 +125,10 @@ function RangeSlider({
       </div>
       <div className="flex justify-between">
         <span className="font-mono text-[13px] tabular-nums text-muted-foreground">
-          ${formatPrice(low)}
+          {formatPrice(low)}
         </span>
         <span className="font-mono text-[13px] tabular-nums text-muted-foreground">
-          ${formatPrice(high)}
+          {formatPrice(high)}
         </span>
       </div>
     </div>

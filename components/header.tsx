@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { X, Search, EllipsisVertical, LayoutPanelLeft, BarChart3, ArrowUpDown, Pencil, FolderPlus } from "lucide-react";
+import { X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3, ArrowUpDown, Pencil, FolderPlus } from "lucide-react";
 import { useTickerVisibility } from "@/components/ticker-visibility";
 import { motion, AnimatePresence } from "framer-motion";
+import { StoryRing, StoriesViewer, TOTAL_STORIES, AsporaLogo } from "@/components/stories-viewer";
 
 // ─── Rotating search placeholder ─────────────────────────────────────
 export const searchSuffixes = [
@@ -35,7 +36,6 @@ export function SearchPlaceholder() {
   useEffect(() => {
     const el = spanRef.current;
     if (!el) return;
-    // Force-restart CSS animation: remove → reflow → re-add
     el.style.animation = "none";
     void el.offsetHeight;
     el.style.animation = "";
@@ -172,31 +172,64 @@ export function OptionsMenu({ onSortClick, onEditClick }: { onSortClick?: () => 
 
 export function Header() {
   const router = useRouter();
+  const [storiesOpen, setStoriesOpen] = useState(false);
+  const [readCount, setReadCount] = useState(0);
+
+  const handleStorySeen = useCallback((index: number) => {
+    setReadCount((prev) => Math.max(prev, index + 1));
+  }, []);
 
   return (
-    <header className="flex items-center gap-1.5 pl-3 pr-4 py-3">
-      <button
-        onClick={() => router.push("/")}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
-      >
-        <X size={22} strokeWidth={2} />
-      </button>
+    <>
+      <header className="flex items-center gap-1.5 pl-3 pr-3 py-3">
+        {/* Close button (leftmost) */}
+        <button
+          onClick={() => router.push("/")}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
+        >
+          <X size={22} strokeWidth={2} />
+        </button>
 
-      <div
-        onClick={() => router.push("/search")}
-        className="relative flex h-12 mr-1.5 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4"
-      >
-        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
-          <SearchPlaceholder />
+        {/* Search bar */}
+        <div
+          onClick={() => router.push("/search")}
+          className="relative flex h-12 mx-1 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4"
+        >
+          <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
+            <SearchPlaceholder />
+          </div>
         </div>
-        <Search size={18} className="shrink-0 text-muted-foreground/60" />
-      </div>
 
-      {/* Profile avatar with notification badge */}
-      <button className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-visible rounded-full transition-opacity hover:opacity-90 active:opacity-80">
-        <img src="/profile.png" alt="Profile" className="h-full w-full rounded-full object-cover" />
-        <span className="absolute -right-0.5 -top-0.5 h-[10px] w-[10px] rounded-full bg-red-500 ring-2 ring-background" />
-      </button>
-    </header>
+        {/* Notification bell */}
+        <button
+          onClick={() => router.push("/notifications")}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
+        >
+          <Bell size={20} strokeWidth={1.8} />
+          <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
+            3
+          </span>
+        </button>
+
+        {/* Story ring / co-creation (rightmost) */}
+        <StoryRing
+          totalStories={TOTAL_STORIES}
+          readCount={readCount}
+          size={42}
+          onClick={() => setStoriesOpen(true)}
+        >
+          <div className="flex h-full w-full items-center justify-center" style={{ background: "linear-gradient(135deg, #7c5af5 0%, #5b3fd4 100%)" }}>
+            <AsporaLogo size={22} className="text-white" />
+          </div>
+        </StoryRing>
+      </header>
+
+      {/* Stories overlay */}
+      <StoriesViewer
+        isOpen={storiesOpen}
+        onClose={() => setStoriesOpen(false)}
+        onStorySeen={handleStorySeen}
+      />
+    </>
   );
 }

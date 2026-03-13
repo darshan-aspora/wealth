@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/mock-data.ts)",
+      "Bash(ls -la /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/revenue.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/events.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/my-orders.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/about.tsx)",
+      "Bash(npx next lint --file app/stocks/[symbol]/page.tsx --file app/stocks/[symbol]/components/revenue.tsx --file app/stocks/[symbol]/components/events.tsx --file app/stocks/[symbol]/components/my-orders.tsx --file app/stocks/[symbol]/components/about.tsx)",
+      "Bash(npx next lint --file app/watchlist/page.tsx)",
+      "Bash(npx next lint --file app/notifications/page.tsx)",
+      "Bash(ls /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/)",
+      "Bash(find /Users/apple/Dev/02-US-Equity/app/stocks/[symbol] -type f -name \"*.tsx\")",
+      "Bash(npx tsc:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/apple/Dev/02-US-Equity/app",
+      "/Users/apple/Dev/02-US-Equity/app/stocks/[symbol]"
+    ]
+  }
+}

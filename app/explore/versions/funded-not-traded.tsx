@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
@@ -11,11 +11,7 @@ import {
   Layers,
   Cpu,
   CreditCard,
-  Cloud,
   TrendingUp,
-  Shield,
-  HeartPulse,
-  ShoppingCart,
   ArrowUpDown,
   ChevronRight,
   Target,
@@ -27,6 +23,9 @@ import {
   Gem,
   Rocket,
   Lock,
+  Maximize2,
+  Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,7 +37,7 @@ import { motion, AnimatePresence } from "framer-motion";
 /* ------------------------------------------------------------------ */
 
 type CapSize = "mega" | "large" | "midcap" | "small";
-type MoverType = "gainers" | "losers";
+type MoverType = "gainers" | "losers" | "most-active" | "near-52w-high" | "near-52w-low";
 
 interface Stock {
   symbol: string;
@@ -118,6 +117,32 @@ function Sparkline({
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  52W Range Bar                                                      */
+/* ------------------------------------------------------------------ */
+
+function RangeBar({ low, high, current }: { low: number; high: number; current: number }) {
+  const range = high - low || 1;
+  const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
+
+  return (
+    <div className="flex items-baseline gap-1.5 w-full">
+      <span className="text-[13px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+        {low.toFixed(0)}
+      </span>
+      <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
+        <div
+          className="absolute h-[12px] bg-foreground"
+          style={{ left: `${pct}%`, width: 2, bottom: 0 }}
+        />
+      </div>
+      <span className="text-[13px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+        {high.toFixed(0)}
+      </span>
+    </div>
   );
 }
 
@@ -235,6 +260,96 @@ const data: Record<MoverType, Record<CapSize, Stock[]>> = {
       { symbol: "QS", name: "QuantumScape", price: 6.78, changePercent: -8.99, volume: "11.2M", marketCap: "$3.2B", pe: null, high52w: 11.6, low52w: 4.0, color: "#0EA5E9", revGrowth: -100.0, profitGrowth: -100.0, rating: "Hold" },
     ],
   },
+  "most-active": {
+    mega: [
+      { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, volume: "112.4M", marketCap: "$568B", pe: 48, high52w: 299.3, low52w: 152.4, color: "#CC0000", revGrowth: 8.5, profitGrowth: -23.1, rating: "Sell" },
+      { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, volume: "52.3M", marketCap: "$2.2T", pe: 68, high52w: 974.0, low52w: 392.3, color: "#76B900", revGrowth: 122.4, profitGrowth: 581.3, rating: "Buy" },
+      { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, volume: "45.7M", marketCap: "$1.9T", pe: 59, high52w: 191.7, low52w: 118.4, color: "#FF9900", revGrowth: 12.5, profitGrowth: 229.1, rating: "Buy" },
+      { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, volume: "38.9M", marketCap: "$3.0T", pe: 31, high52w: 199.6, low52w: 164.1, color: "#555555", revGrowth: 2.1, profitGrowth: 10.7, rating: "Buy" },
+      { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, volume: "32.8M", marketCap: "$1.9T", pe: 27, high52w: 174.7, low52w: 120.2, color: "#4285F4", revGrowth: 13.6, profitGrowth: 31.4, rating: "Buy" },
+    ],
+    large: [
+      { symbol: "PLTR", name: "Palantir", price: 24.85, changePercent: 12.34, volume: "98.2M", marketCap: "$54B", pe: 242, high52w: 27.5, low52w: 13.7, color: "#1D1D1D", revGrowth: 17.7, profitGrowth: 32.1, rating: "Buy" },
+      { symbol: "SNAP", name: "Snap Inc", price: 11.24, changePercent: -14.27, volume: "45.2M", marketCap: "$18B", pe: null, high52w: 17.9, low52w: 8.3, color: "#EAAB00", revGrowth: 5.1, profitGrowth: -12.4, rating: "Hold" },
+      { symbol: "RIVN", name: "Rivian", price: 15.63, changePercent: -8.33, volume: "38.7M", marketCap: "$16B", pe: null, high52w: 28.1, low52w: 8.3, color: "#2D6A4F", revGrowth: 167.4, profitGrowth: -45.2, rating: "Hold" },
+      { symbol: "HOOD", name: "Robinhood", price: 18.45, changePercent: -6.25, volume: "22.1M", marketCap: "$16B", pe: 62, high52w: 23.8, low52w: 7.9, color: "#00C805", revGrowth: 29.4, profitGrowth: 120.8, rating: "Hold" },
+      { symbol: "COIN", name: "Coinbase", price: 178.42, changePercent: 9.6, volume: "14.3M", marketCap: "$42B", pe: 45, high52w: 185.7, low52w: 78.4, color: "#0052FF", revGrowth: 101.4, profitGrowth: 285.0, rating: "Buy" },
+    ],
+    midcap: [
+      { symbol: "SOUN", name: "SoundHound", price: 5.42, changePercent: 14.35, volume: "28.4M", marketCap: "$1.8B", pe: null, high52w: 10.3, low52w: 1.5, color: "#8B5CF6", revGrowth: 52.3, profitGrowth: -68.4, rating: "Hold" },
+      { symbol: "PINS", name: "Pinterest", price: 28.6, changePercent: -3.8, volume: "12.4M", marketCap: "$19B", pe: 42, high52w: 40.2, low52w: 22.8, color: "#E60023", revGrowth: 11.8, profitGrowth: -8.4, rating: "Hold" },
+      { symbol: "CRWD", name: "CrowdStrike", price: 312.8, changePercent: 4.2, volume: "8.4M", marketCap: "$72B", pe: 720, high52w: 365.0, low52w: 135.0, color: "#E11D48", revGrowth: 36.4, profitGrowth: 120.5, rating: "Buy" },
+      { symbol: "ROKU", name: "Roku", price: 62.4, changePercent: -4.5, volume: "8.1M", marketCap: "$9B", pe: null, high52w: 106.8, low52w: 51.2, color: "#6C3A97", revGrowth: 14.2, profitGrowth: -35.6, rating: "Hold" },
+      { symbol: "DDOG", name: "Datadog", price: 124.6, changePercent: 3.1, volume: "6.2M", marketCap: "$39B", pe: 320, high52w: 135.5, low52w: 75.0, color: "#7C3AED", revGrowth: 26.8, profitGrowth: 45.2, rating: "Buy" },
+    ],
+    small: [
+      { symbol: "IONQ", name: "IonQ", price: 12.45, changePercent: 21.24, volume: "42.1M", marketCap: "$2.7B", pe: null, high52w: 15.3, low52w: 5.2, color: "#7C3AED", revGrowth: 89.5, profitGrowth: -42.1, rating: "Hold" },
+      { symbol: "NKLA", name: "Nikola", price: 0.87, changePercent: -12.12, volume: "32.1M", marketCap: "$418M", pe: null, high52w: 2.8, low52w: 0.5, color: "#2563EB", revGrowth: -42.1, profitGrowth: -150.2, rating: "Sell" },
+      { symbol: "MARA", name: "Marathon Digi", price: 18.92, changePercent: 10.84, volume: "22.3M", marketCap: "$5.6B", pe: 25, high52w: 31.4, low52w: 8.4, color: "#F59E0B", revGrowth: 229.0, profitGrowth: 350.2, rating: "Buy" },
+      { symbol: "WKHS", name: "Workhorse", price: 1.23, changePercent: -20.65, volume: "18.9M", marketCap: "$245M", pe: null, high52w: 3.8, low52w: 0.4, color: "#E97C37", revGrowth: -72.4, profitGrowth: -180.5, rating: "Sell" },
+      { symbol: "SMCI", name: "Super Micro", price: 28.73, changePercent: 15.81, volume: "15.6M", marketCap: "$15B", pe: 12, high52w: 122.9, low52w: 17.3, color: "#0071C5", revGrowth: 110.2, profitGrowth: 88.4, rating: "Buy" },
+    ],
+  },
+  "near-52w-high": {
+    mega: [
+      { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, volume: "38.9M", marketCap: "$3.0T", pe: 31, high52w: 199.6, low52w: 164.1, color: "#555555", revGrowth: 2.1, profitGrowth: 10.7, rating: "Buy" },
+      { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, volume: "22.4M", marketCap: "$3.2T", pe: 37, high52w: 433.0, low52w: 309.5, color: "#00A4EF", revGrowth: 17.6, profitGrowth: 33.2, rating: "Buy" },
+      { symbol: "META", name: "Meta Platforms", price: 523.8, changePercent: 3.69, volume: "28.1M", marketCap: "$1.3T", pe: 34, high52w: 542.8, low52w: 296.4, color: "#0668E1", revGrowth: 24.7, profitGrowth: 69.3, rating: "Buy" },
+      { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, volume: "45.7M", marketCap: "$1.9T", pe: 59, high52w: 191.7, low52w: 118.4, color: "#FF9900", revGrowth: 12.5, profitGrowth: 229.1, rating: "Buy" },
+      { symbol: "JPM", name: "JPMorgan", price: 208.3, changePercent: 1.42, volume: "9.8M", marketCap: "$600B", pe: 12, high52w: 211.5, low52w: 162.4, color: "#003087", revGrowth: 9.4, profitGrowth: 25.3, rating: "Buy" },
+    ],
+    large: [
+      { symbol: "COIN", name: "Coinbase", price: 178.42, changePercent: 9.6, volume: "14.3M", marketCap: "$42B", pe: 45, high52w: 185.7, low52w: 78.4, color: "#0052FF", revGrowth: 101.4, profitGrowth: 285.0, rating: "Buy" },
+      { symbol: "SHOP", name: "Shopify", price: 78.35, changePercent: 7.43, volume: "18.7M", marketCap: "$98B", pe: 82, high52w: 81.3, low52w: 45.5, color: "#96BF48", revGrowth: 26.1, profitGrowth: 140.8, rating: "Buy" },
+      { symbol: "PLTR", name: "Palantir", price: 26.48, changePercent: 3.2, volume: "98.2M", marketCap: "$54B", pe: 242, high52w: 27.5, low52w: 13.7, color: "#1D1D1D", revGrowth: 17.7, profitGrowth: 32.1, rating: "Buy" },
+      { symbol: "ABNB", name: "Airbnb", price: 162.3, changePercent: 2.8, volume: "8.9M", marketCap: "$98B", pe: 39, high52w: 170.1, low52w: 110.4, color: "#FF5A5F", revGrowth: 18.3, profitGrowth: 55.7, rating: "Buy" },
+      { symbol: "UBER", name: "Uber", price: 71.4, changePercent: 1.9, volume: "11.2M", marketCap: "$151B", pe: 38, high52w: 74.8, low52w: 46.2, color: "#000000", revGrowth: 16.2, profitGrowth: 82.5, rating: "Buy" },
+    ],
+    midcap: [
+      { symbol: "CRWD", name: "CrowdStrike", price: 348.2, changePercent: 2.1, volume: "8.4M", marketCap: "$72B", pe: 720, high52w: 365.0, low52w: 135.0, color: "#E11D48", revGrowth: 36.4, profitGrowth: 120.5, rating: "Buy" },
+      { symbol: "DDOG", name: "Datadog", price: 129.8, changePercent: 1.8, volume: "6.2M", marketCap: "$39B", pe: 320, high52w: 135.5, low52w: 75.0, color: "#7C3AED", revGrowth: 26.8, profitGrowth: 45.2, rating: "Buy" },
+      { symbol: "HUBS", name: "HubSpot", price: 642.8, changePercent: 1.4, volume: "1.2M", marketCap: "$30B", pe: 480, high52w: 668.2, low52w: 392.1, color: "#FF7A59", revGrowth: 23.1, profitGrowth: 72.4, rating: "Buy" },
+      { symbol: "APP", name: "AppLovin", price: 91.4, changePercent: 3.8, volume: "4.2M", marketCap: "$31B", pe: 48, high52w: 94.8, low52w: 28.5, color: "#FF5500", revGrowth: 44.2, profitGrowth: 132.5, rating: "Buy" },
+      { symbol: "MELI", name: "MercadoLibre", price: 1842.5, changePercent: 1.2, volume: "0.9M", marketCap: "$93B", pe: 82, high52w: 1890.0, low52w: 1142.4, color: "#FFE600", revGrowth: 36.8, profitGrowth: 94.2, rating: "Buy" },
+    ],
+    small: [
+      { symbol: "IONQ", name: "IonQ", price: 14.62, changePercent: 5.2, volume: "42.1M", marketCap: "$2.7B", pe: null, high52w: 15.3, low52w: 5.2, color: "#7C3AED", revGrowth: 89.5, profitGrowth: -42.1, rating: "Hold" },
+      { symbol: "MARA", name: "Marathon Digi", price: 30.1, changePercent: 4.8, volume: "22.3M", marketCap: "$5.6B", pe: 25, high52w: 31.4, low52w: 8.4, color: "#F59E0B", revGrowth: 229.0, profitGrowth: 350.2, rating: "Buy" },
+      { symbol: "SMCI", name: "Super Micro", price: 117.4, changePercent: 3.2, volume: "35.6M", marketCap: "$15B", pe: 12, high52w: 122.9, low52w: 17.3, color: "#0071C5", revGrowth: 110.2, profitGrowth: 88.4, rating: "Buy" },
+      { symbol: "RKLB", name: "Rocket Lab", price: 7.82, changePercent: 2.1, volume: "12.4M", marketCap: "$3.9B", pe: null, high52w: 8.15, low52w: 3.12, color: "#FF4400", revGrowth: 68.4, profitGrowth: -82.1, rating: "Buy" },
+      { symbol: "AI", name: "C3.ai", price: 28.6, changePercent: 2.8, volume: "8.4M", marketCap: "$3.6B", pe: null, high52w: 29.8, low52w: 16.2, color: "#0052CC", revGrowth: 22.8, profitGrowth: -45.2, rating: "Hold" },
+    ],
+  },
+  "near-52w-low": {
+    mega: [
+      { symbol: "TSLA", name: "Tesla", price: 158.7, changePercent: -2.8, volume: "112.4M", marketCap: "$505B", pe: 42, high52w: 299.3, low52w: 152.4, color: "#CC0000", revGrowth: 8.5, profitGrowth: -23.1, rating: "Sell" },
+      { symbol: "GOOGL", name: "Alphabet", price: 124.8, changePercent: -1.9, volume: "32.8M", marketCap: "$1.56T", pe: 22, high52w: 174.7, low52w: 120.2, color: "#4285F4", revGrowth: 13.6, profitGrowth: 31.4, rating: "Buy" },
+      { symbol: "V", name: "Visa", price: 254.2, changePercent: -1.4, volume: "7.1M", marketCap: "$524B", pe: 28, high52w: 296.4, low52w: 248.7, color: "#1A1F71", revGrowth: 10.2, profitGrowth: 17.4, rating: "Buy" },
+      { symbol: "WMT", name: "Walmart", price: 58.9, changePercent: -0.9, volume: "14.2M", marketCap: "$474B", pe: 32, high52w: 84.2, low52w: 57.1, color: "#0071CE", revGrowth: 5.8, profitGrowth: 12.4, rating: "Hold" },
+      { symbol: "XOM", name: "ExxonMobil", price: 104.2, changePercent: -1.2, volume: "18.6M", marketCap: "$422B", pe: 14, high52w: 123.8, low52w: 101.2, color: "#FF0000", revGrowth: -4.2, profitGrowth: -18.4, rating: "Hold" },
+    ],
+    large: [
+      { symbol: "RIVN", name: "Rivian", price: 8.82, changePercent: -3.4, volume: "38.7M", marketCap: "$9.1B", pe: null, high52w: 28.1, low52w: 8.3, color: "#2D6A4F", revGrowth: 167.4, profitGrowth: -45.2, rating: "Hold" },
+      { symbol: "SNAP", name: "Snap Inc", price: 8.72, changePercent: -4.2, volume: "45.2M", marketCap: "$13.8B", pe: null, high52w: 17.9, low52w: 8.3, color: "#EAAB00", revGrowth: 5.1, profitGrowth: -12.4, rating: "Hold" },
+      { symbol: "LYFT", name: "Lyft", price: 9.32, changePercent: -2.8, volume: "16.8M", marketCap: "$3.6B", pe: null, high52w: 20.8, low52w: 8.9, color: "#EA39E8", revGrowth: 3.2, profitGrowth: -88.4, rating: "Sell" },
+      { symbol: "HOOD", name: "Robinhood", price: 8.42, changePercent: -2.4, volume: "22.1M", marketCap: "$7.2B", pe: null, high52w: 23.8, low52w: 7.9, color: "#00C805", revGrowth: 29.4, profitGrowth: 120.8, rating: "Hold" },
+      { symbol: "LCID", name: "Lucid Group", price: 3.28, changePercent: -3.1, volume: "22.4M", marketCap: "$7.2B", pe: null, high52w: 7.82, low52w: 3.12, color: "#00A3CC", revGrowth: 218.4, profitGrowth: -182.4, rating: "Sell" },
+    ],
+    midcap: [
+      { symbol: "ROKU", name: "Roku", price: 53.8, changePercent: -3.2, volume: "8.1M", marketCap: "$7.8B", pe: null, high52w: 106.8, low52w: 51.2, color: "#6C3A97", revGrowth: 14.2, profitGrowth: -35.6, rating: "Hold" },
+      { symbol: "BILL", name: "BILL Holdings", price: 46.4, changePercent: -2.8, volume: "4.2M", marketCap: "$4.9B", pe: null, high52w: 88.5, low52w: 44.3, color: "#00C4CC", revGrowth: -4.2, profitGrowth: -68.5, rating: "Sell" },
+      { symbol: "PINS", name: "Pinterest", price: 23.9, changePercent: -2.2, volume: "12.4M", marketCap: "$16B", pe: 35, high52w: 40.2, low52w: 22.8, color: "#E60023", revGrowth: 11.8, profitGrowth: -8.4, rating: "Hold" },
+      { symbol: "OKTA", name: "Okta", price: 68.4, changePercent: -1.8, volume: "5.8M", marketCap: "$11.6B", pe: null, high52w: 115.2, low52w: 65.8, color: "#007DC1", revGrowth: 18.4, profitGrowth: 42.1, rating: "Hold" },
+      { symbol: "U", name: "Unity Software", price: 22.4, changePercent: -2.4, volume: "9.2M", marketCap: "$7.8B", pe: null, high52w: 48.6, low52w: 21.4, color: "#000000", revGrowth: -8.4, profitGrowth: -112.4, rating: "Sell" },
+    ],
+    small: [
+      { symbol: "WKHS", name: "Workhorse", price: 0.42, changePercent: -8.7, volume: "18.9M", marketCap: "$84M", pe: null, high52w: 3.8, low52w: 0.4, color: "#E97C37", revGrowth: -72.4, profitGrowth: -180.5, rating: "Sell" },
+      { symbol: "SPCE", name: "Virgin Galactic", price: 0.96, changePercent: -6.2, volume: "24.6M", marketCap: "$279M", pe: null, high52w: 5.6, low52w: 0.9, color: "#0ABAB5", revGrowth: -95.4, profitGrowth: -210.3, rating: "Sell" },
+      { symbol: "NKLA", name: "Nikola", price: 0.54, changePercent: -5.8, volume: "32.1M", marketCap: "$260M", pe: null, high52w: 2.8, low52w: 0.5, color: "#2563EB", revGrowth: -42.1, profitGrowth: -150.2, rating: "Sell" },
+      { symbol: "MVST", name: "Microvast", price: 0.85, changePercent: -4.8, volume: "8.4M", marketCap: "$260M", pe: null, high52w: 3.1, low52w: 0.8, color: "#DC2626", revGrowth: 12.4, profitGrowth: -88.2, rating: "Sell" },
+      { symbol: "QS", name: "QuantumScape", price: 4.22, changePercent: -3.8, volume: "11.2M", marketCap: "$2.0B", pe: null, high52w: 11.6, low52w: 4.0, color: "#0EA5E9", revGrowth: -100.0, profitGrowth: -100.0, rating: "Hold" },
+    ],
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -249,6 +364,14 @@ const capLabels: Record<CapSize, string> = {
   small: "Small Cap",
 };
 
+const moverTabs: { id: MoverType; label: string }[] = [
+  { id: "gainers", label: "Gainers" },
+  { id: "losers", label: "Losers" },
+  { id: "most-active", label: "Most Active" },
+  { id: "near-52w-high", label: "Near 52W High" },
+  { id: "near-52w-low", label: "Near 52W Low" },
+];
+
 /* ------------------------------------------------------------------ */
 /*  Top Movers Widget                                                  */
 /* ------------------------------------------------------------------ */
@@ -259,9 +382,10 @@ function TopMoversWidget() {
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
   const stocks = data[moverType][capSize];
+  const isGainersLosers = moverType === "gainers" || moverType === "losers";
   const isGainer = moverType === "gainers";
-  const sparkColor = isGainer ? "#10b981" : "#ef4444";
-  const showRating = capSize === "mega" || capSize === "large";
+  const sparkColor = moverType === "gainers" ? "#10b981" : moverType === "losers" ? "#ef4444" : "#6366f1";
+  const showRating = isGainersLosers && (capSize === "mega" || capSize === "large");
 
   const sparklines = useMemo(
     () =>
@@ -282,54 +406,56 @@ function TopMoversWidget() {
   const cycleCapSize = () =>
     setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
 
+  const thCls = "px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground";
+
   return (
     <div>
-      {/* Title outside the card */}
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">
-        What&apos;s Moving
-      </h2>
-
-      {/* Controls row: Gainers/Losers + cap-size cycler */}
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex gap-2">
-          {(["gainers", "losers"] as MoverType[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setMoverType(t)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                moverType === t
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {t === "gainers" ? "Gainers" : "Losers"}
-            </button>
-          ))}
-        </div>
-
+      {/* Title row: title + cap-size flipper inline */}
+      <div className="mb-3.5 flex items-center justify-between">
+        <h2 className="text-[18px] font-bold tracking-tight">
+          What&apos;s Moving
+        </h2>
         <button
           onClick={cycleCapSize}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
         >
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={capSize}
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.15 }}
               className="block"
             >
               {capLabels[capSize]}
             </motion.span>
           </AnimatePresence>
+          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
         </button>
       </div>
 
+      {/* Mover-type tabs — scrollable pills */}
+      <div className="mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 pb-0.5">
+          {moverTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setMoverType(tab.id)}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+                moverType === tab.id
+                  ? "bg-foreground text-background"
+                  : "border border-border/60 text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-border/60 bg-card overflow-hidden pt-3">
-        {/* Table: frozen left column + scrollable right */}
         <AnimatePresence mode="wait">
           <motion.div
             key={`${moverType}-${capSize}`}
@@ -339,40 +465,17 @@ function TopMoversWidget() {
             transition={{ duration: 0.15 }}
             className="flex"
           >
-            {/* ---- Frozen left column: Logo + Name ---- */}
-            <div className="z-10 w-[170px] flex-shrink-0 border-r border-border/20 bg-card">
-              {/* Header */}
-              <div className="flex h-[40px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Stock
-              </div>
-              {/* Rows */}
+            {/* ---- Frozen left column: symbol + name (no bookmark) ---- */}
+            <div className="z-10 w-[148px] flex-shrink-0 border-r border-border/20 bg-card">
+              <div className={cn("flex h-[40px] items-center px-4", thCls)}>Stock</div>
               {stocks.map((stock) => (
-                <div
-                  key={stock.symbol}
-                  className="flex h-[64px] items-center px-4"
-                >
+                <div key={stock.symbol} className="flex h-[64px] items-center px-4">
                   <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => toggleBookmark(stock.symbol)}
-                      className="flex-shrink-0 transition-transform active:scale-90"
-                    >
-                      <Bookmark
-                        size={14}
-                        strokeWidth={1.8}
-                        className={cn(
-                          "transition-colors",
-                          bookmarks.has(stock.symbol)
-                            ? "fill-foreground text-foreground"
-                            : "text-muted-foreground/60"
-                        )}
-                      />
-                    </button>
-                    <div
-                      className="h-8 w-8 flex-shrink-0 rounded-full bg-muted"
-                    />
-                    <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight text-foreground">
-                      {stock.name}
-                    </p>
+                    <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-bold leading-tight text-foreground">{stock.symbol}</p>
+                      <p className="max-w-[72px] truncate text-[12px] leading-tight text-muted-foreground">{stock.name}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -380,231 +483,198 @@ function TopMoversWidget() {
 
             {/* ---- Scrollable right columns ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 820 }}>
+              <table style={{ minWidth: isGainersLosers ? 780 : 560 }}>
                 <thead>
                   <tr className="h-[40px]">
-                    <th className="w-[94px] min-w-[94px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Price
-                    </th>
-                    <th className="w-[94px] min-w-[94px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 justify-end">
-                        <ArrowDown size={10} className="text-foreground" />
-                        Chg%
-                      </span>
-                    </th>
-                    <th className="min-w-[68px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      1Y
-                    </th>
-                    <th className="min-w-[52px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      PE
-                    </th>
-                    <th className="min-w-[78px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Rev Gr.
-                    </th>
-                    <th className="min-w-[82px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Profit Gr.
-                    </th>
-                    <th className="min-w-[78px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      1Y High
-                    </th>
-                    <th className="min-w-[74px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      1Y Low
-                    </th>
-                    {showRating && (
-                      <th className="min-w-[62px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        Rating
+
+                    {isGainersLosers && (<>
+                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, "w-[72px] min-w-[72px] text-right")}>
+                        <span className="inline-flex items-center justify-end gap-1">
+                          <ArrowDown size={10} className="text-foreground" />Chg%
+                        </span>
                       </th>
-                    )}
+                      <th className={cn(thCls, "min-w-[64px] text-center")}>1Y</th>
+                      <th className={cn(thCls, "min-w-[48px] text-right")}>PE</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
+                      <th className={cn(thCls, "min-w-[74px] text-right")}>Rev Gr.</th>
+                      <th className={cn(thCls, "min-w-[80px] text-right")}>Profit Gr.</th>
+                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
+                      {showRating && <th className={cn(thCls, "min-w-[60px] text-center")}>Rating</th>}
+                    </>)}
+
+                    {moverType === "most-active" && (<>
+                      <th className={cn(thCls, "min-w-[76px] text-right")}>Volume</th>
+                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
+                      <th className={cn(thCls, "min-w-[64px] text-center")}>1Y</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
+                      <th className={cn(thCls, "min-w-[48px] text-right")}>PE</th>
+                    </>)}
+
+                    {moverType === "near-52w-high" && (<>
+                      <th className={cn(thCls, "min-w-[82px] text-right")}>From High</th>
+                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
+                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
+                    </>)}
+
+                    {moverType === "near-52w-low" && (<>
+                      <th className={cn(thCls, "min-w-[82px] text-right")}>From Low</th>
+                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
+                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
+                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
+                    </>)}
+
+                    {/* Watchlist — always rightmost */}
+                    <th className={cn(thCls, "w-[48px] min-w-[48px] text-center")}>Watch</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stocks.map((stock) => (
-                    <tr
-                      key={stock.symbol}
-                      className="h-[64px]"
-                    >
-                      {/* Price — single decimal, no $ */}
-                      <td className="w-[94px] min-w-[94px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
-                        {stock.price.toFixed(1)}
-                      </td>
+                  {stocks.map((stock) => {
+                    const fromHigh = (stock.high52w - stock.price) / stock.high52w * 100;
+                    const fromLow = (stock.price - stock.low52w) / stock.low52w * 100;
+                    const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+                    return (
+                      <tr key={stock.symbol} className="h-[64px]">
 
-                      {/* % Change — single decimal */}
-                      <td
-                        className={cn(
-                          "w-[94px] min-w-[94px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold",
-                          isGainer ? "text-emerald-500" : "text-red-500"
-                        )}
-                      >
-                        {stock.changePercent >= 0 ? "+" : ""}
-                        {stock.changePercent.toFixed(1)}%
-                      </td>
+                        {isGainersLosers && (<>
+                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                            {stock.price.toFixed(1)}
+                          </td>
+                          <td className={cn("w-[72px] min-w-[72px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
+                          </td>
+                          <td className="px-3">
+                            <div className="flex justify-center">
+                              <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.pe != null ? Math.round(stock.pe) : "—"}
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.marketCap.replace("$", "")}
+                          </td>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
+                            {stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%
+                          </td>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
+                            {stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%
+                          </td>
+                          <td className="min-w-[136px] px-3">
+                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
+                          </td>
+                          {showRating && (
+                            <td className="px-3">
+                              <div className="flex justify-center">
+                                <RatingBadge rating={stock.rating} />
+                              </div>
+                            </td>
+                          )}
+                        </>)}
 
-                      {/* 1Y Sparkline */}
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <Sparkline
-                            points={sparklines[stock.symbol]}
-                            color={sparkColor}
-                          />
-                        </div>
-                      </td>
+                        {moverType === "most-active" && (<>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-foreground">
+                            {stock.volume}
+                          </td>
+                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                            {stock.price.toFixed(1)}
+                          </td>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
+                          </td>
+                          <td className="px-3">
+                            <div className="flex justify-center">
+                              <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.marketCap.replace("$", "")}
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.pe != null ? Math.round(stock.pe) : "—"}
+                          </td>
+                        </>)}
 
-                      {/* P/E — no decimal */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
-                        {stock.pe != null ? Math.round(stock.pe) : "—"}
-                      </td>
+                        {moverType === "near-52w-high" && (<>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-amber-500">
+                            -{fromHigh.toFixed(1)}%
+                          </td>
+                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                            {stock.price.toFixed(1)}
+                          </td>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
+                          </td>
+                          <td className="min-w-[136px] px-3">
+                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.volume}
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.marketCap.replace("$", "")}
+                          </td>
+                        </>)}
 
-                      {/* Revenue Growth */}
-                      <td
-                        className={cn(
-                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium",
-                          stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500"
-                        )}
-                      >
-                        {stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%
-                      </td>
+                        {moverType === "near-52w-low" && (<>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-sky-500">
+                            +{fromLow.toFixed(1)}%
+                          </td>
+                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                            {stock.price.toFixed(1)}
+                          </td>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
+                          </td>
+                          <td className="min-w-[136px] px-3">
+                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.volume}
+                          </td>
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                            {stock.marketCap.replace("$", "")}
+                          </td>
+                        </>)}
 
-                      {/* Profit Growth */}
-                      <td
-                        className={cn(
-                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium",
-                          stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500"
-                        )}
-                      >
-                        {stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%
-                      </td>
-
-                      {/* 1Y High */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
-                        {stock.high52w.toFixed(1)}
-                      </td>
-
-                      {/* 1Y Low */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
-                        {stock.low52w.toFixed(1)}
-                      </td>
-
-                      {/* Rating Badge — mega & large cap only */}
-                      {showRating && (
-                        <td className="px-3">
+                        {/* Watchlist — always rightmost */}
+                        <td className="w-[48px] px-3">
                           <div className="flex justify-center">
-                            <RatingBadge rating={stock.rating} />
+                            <button
+                              onClick={() => toggleBookmark(stock.symbol)}
+                              className="transition-transform active:scale-90"
+                            >
+                              <Bookmark
+                                size={15}
+                                strokeWidth={1.8}
+                                className={cn(
+                                  "transition-colors",
+                                  bookmarks.has(stock.symbol)
+                                    ? "fill-foreground text-foreground"
+                                    : "text-muted-foreground/50"
+                                )}
+                              />
+                            </button>
                           </div>
                         </td>
-                      )}
-
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </motion.div>
         </AnimatePresence>
-
-        {/* See All */}
-        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-4 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-          See All 76 Movers
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Recurring Baskets — data                                           */
-/* ------------------------------------------------------------------ */
-
-type Volatility = "high" | "mid" | "low";
-
-const volStyle: Record<Volatility, { label: string; bg: string; text: string }> = {
-  high: { label: "High Volatility", bg: "bg-red-500/10", text: "text-red-500" },
-  mid: { label: "Mid Volatility", bg: "bg-amber-500/10", text: "text-amber-500" },
-  low: { label: "Low Volatility", bg: "bg-emerald-500/10", text: "text-emerald-500" },
-};
-
-interface Basket {
-  name: string;
-  subtitle: string;
-  icon: LucideIcon;
-  color: string;
-  stocks: number;
-  minInvestment: number;
-  cagr3y: number;
-  volatility: Volatility;
-}
-
-const recurringBaskets: Basket[] = [
-  { name: "AI & Robotics", subtitle: "Leading AI & automation companies", icon: Brain, color: "#8B5CF6", stocks: 12, minInvestment: 10, cagr3y: 42.8, volatility: "high" },
-  { name: "FAANG+", subtitle: "Big tech & digital platforms", icon: Layers, color: "#3B82F6", stocks: 7, minInvestment: 15, cagr3y: 22.4, volatility: "mid" },
-  { name: "Clean Energy & EV", subtitle: "Solar, wind & EV ecosystem", icon: Zap, color: "#22C55E", stocks: 10, minInvestment: 10, cagr3y: 28.5, volatility: "high" },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Recurring Baskets Widget                                           */
-/* ------------------------------------------------------------------ */
-
-function BasketCard({ basket }: { basket: Basket }) {
-  const vol = volStyle[basket.volatility];
-  return (
-    <button className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors active:scale-[0.98]">
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-muted"
-        >
-          <basket.icon size={22} strokeWidth={1.7} className="text-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-bold">{basket.name}</p>
-          <p className="text-[13px] text-muted-foreground">{basket.subtitle}</p>
-        </div>
-        <div className="flex-shrink-0 text-right">
-          <p className="text-[17px] font-bold tabular-nums text-emerald-500">+{basket.cagr3y}%</p>
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">3Y CAGR</p>
-        </div>
-      </div>
-      <div className="border-t border-border/40 pt-3 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-[13px]">
-          <div>
-            <p className="text-[11px] text-muted-foreground">Minimum</p>
-            <p className="font-medium text-foreground">{basket.minInvestment}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground">Volatility</p>
-            <p className={cn("font-medium", vol.text)}>{vol.label.replace(" Volatility", "")}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground">Rebalanced</p>
-            <p className="font-medium text-foreground">Weekly</p>
-          </div>
-        </div>
-        <span className="rounded-full bg-foreground px-3.5 py-1.5 text-[13px] font-semibold text-background">
-          Explore
-        </span>
-      </div>
-    </button>
-  );
-}
-
-function RecurringBasketsWidget() {
-  return (
-    <div>
-      {/* Title + subtext outside the card */}
-      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
-        Recurring Baskets
-      </h2>
-      <p className="mb-3 text-[14px] text-muted-foreground">
-        Auto-invest daily, weekly, or monthly into curated baskets
-      </p>
-
-      <div className="space-y-2.5">
-        {recurringBaskets.map((basket) => (
-          <BasketCard key={basket.name} basket={basket} />
-        ))}
       </div>
 
-      <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-border/60 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-        View More
+      <button className="mt-3 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+        See All 76 Movers
         <ChevronRight size={16} />
       </button>
     </div>
@@ -612,41 +682,120 @@ function RecurringBasketsWidget() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Trending Collections                                               */
+/*  Smart Collections — data                                           */
 /* ------------------------------------------------------------------ */
 
-const trendingCollections: { name: string; icon: LucideIcon; color: string }[] = [
-  { name: "AI & Machine Learning", icon: Brain, color: "#8B5CF6" },
-  { name: "Defense & Aerospace", icon: Shield, color: "#3B82F6" },
-  { name: "Gold & Silver", icon: Coins, color: "#F59E0B" },
-  { name: "Cloud Computing", icon: Cloud, color: "#06B6D4" },
-  { name: "Healthcare & Biotech", icon: HeartPulse, color: "#EF4444" },
-  { name: "Consumer & Retail", icon: ShoppingCart, color: "#10B981" },
+type RiskCategory = "conservative" | "moderate" | "aggressive" | "thematic";
+
+const riskStyle: Record<RiskCategory, { label: string; color: string }> = {
+  conservative: { label: "Conservative", color: "text-blue-500" },
+  moderate: { label: "Moderate", color: "text-amber-500" },
+  aggressive: { label: "Aggressive", color: "text-red-500" },
+  thematic: { label: "Thematic", color: "text-violet-500" },
+};
+
+interface Collection {
+  name: string;
+  description: string;
+  icon: LucideIcon;
+  cagr5y: number;
+  maxDrawdown: number;
+  risk: RiskCategory;
+}
+
+const smartCollections: Collection[] = [
+  { name: "AI & Robotics", description: "Top AI, automation & chip companies driving the next wave", icon: Brain, cagr5y: 38.4, maxDrawdown: -34.2, risk: "aggressive" },
+  { name: "FAANG+", description: "Big tech & digital platforms with proven cash flows", icon: Layers, cagr5y: 19.6, maxDrawdown: -18.5, risk: "moderate" },
+  { name: "Clean Energy & EV", description: "Solar, wind & EV ecosystem shaping the future", icon: Zap, cagr5y: 24.1, maxDrawdown: -41.8, risk: "aggressive" },
 ];
 
-function TrendingCollectionsWidget() {
+/* ------------------------------------------------------------------ */
+/*  Smart Collections — card                                           */
+/* ------------------------------------------------------------------ */
+
+function CollectionCard({ c }: { c: Collection }) {
+  const risk = riskStyle[c.risk];
+
+  return (
+    <button className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors active:scale-[0.98]">
+      {/* Row 1: icon + title + 5Y CAGR */}
+      <div className="flex items-center gap-3 mb-2.5">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-muted">
+          <c.icon size={22} strokeWidth={1.7} className="text-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[16px] font-bold leading-tight">{c.name}</p>
+          <p className="text-[13px] text-muted-foreground leading-snug mt-0.5">{c.description}</p>
+        </div>
+      </div>
+
+      {/* Row 2: stats grid */}
+      <div className="border-t border-border/40 pt-3 grid grid-cols-3 gap-2">
+        {/* 5Y CAGR */}
+        <div>
+          <p className="text-[11px] text-muted-foreground mb-0.5">5Y CAGR</p>
+          <p className="text-[15px] font-bold tabular-nums text-emerald-500">+{c.cagr5y}%</p>
+        </div>
+        {/* Max Drawdown */}
+        <div>
+          <p className="text-[11px] text-muted-foreground mb-0.5">Max DD</p>
+          <p className="text-[15px] font-bold tabular-nums text-red-500">{c.maxDrawdown}%</p>
+        </div>
+        {/* Category */}
+        <div className="text-right">
+          <p className="text-[11px] text-muted-foreground mb-0.5">Category</p>
+          <p className={cn("text-[13px] font-semibold", risk.color)}>{risk.label}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Smart Collections Widget                                           */
+/* ------------------------------------------------------------------ */
+
+function RecurringBasketsWidget() {
   return (
     <div>
-      <h2 className="mb-3 text-[18px] font-bold tracking-tight">
-        Trending Collections
-      </h2>
-      <div className="grid grid-cols-2 gap-2">
-        {trendingCollections.map((col) => (
-          <button
-            key={col.name}
-            className="flex items-center gap-2.5 rounded-xl bg-muted/40 px-3 py-2.5 text-left transition-colors active:scale-[0.98]"
-          >
-            <div
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted"
-            >
-              <col.icon size={18} strokeWidth={1.7} className="text-foreground" />
-            </div>
-            <p className="text-[13px] font-semibold leading-tight text-foreground">
-              {col.name}
-            </p>
-          </button>
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
+            Smart Collections
+          </h2>
+          <p className="text-[14px] text-muted-foreground">
+            One tap, any amount. Start with $1 or go all in, we recommend starting small.
+          </p>
+        </div>
+        <button className="flex-shrink-0 ml-3 flex items-center gap-1.5 rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-muted-foreground transition-colors active:scale-[0.97]">
+          <Plus size={14} />
+          Create
+        </button>
+      </div>
+
+      <div className="space-y-2.5">
+        {smartCollections.map((c) => (
+          <CollectionCard key={c.name} c={c} />
         ))}
       </div>
+
+      {/* Build your own */}
+      <button className="mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card/50 p-4 text-left transition-colors active:scale-[0.98]">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-muted">
+          <Wrench size={20} strokeWidth={1.7} className="text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-bold">Build Your Own Collection</p>
+          <p className="text-[13px] text-muted-foreground">Pick your stocks, set weights, auto-invest on your terms</p>
+        </div>
+        <ChevronRight size={18} className="text-muted-foreground flex-shrink-0" />
+      </button>
+
+      {/* View more */}
+      <button className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-border/60 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+        View 12 Other Collections
+        <ChevronRight size={16} />
+      </button>
     </div>
   );
 }
@@ -926,123 +1075,518 @@ function AnalystRatingsWidget() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Dividend Stocks Widget                                             */
+/* ------------------------------------------------------------------ */
+
+type DividendTab = "high-yield" | "aristocrats" | "growth" | "monthly";
+
+interface DividendStock {
+  symbol: string;
+  name: string;
+  price: number;
+  yield: number;
+  annualDiv: number;
+  payoutRatio: number;
+  growth5Y: number;
+  streak: number;
+  nextExDate: string;
+}
+
+const divTabs: { id: DividendTab; label: string }[] = [
+  { id: "high-yield", label: "High Yield" },
+  { id: "aristocrats", label: "Aristocrats" },
+  { id: "growth", label: "Growth" },
+  { id: "monthly", label: "Monthly" },
+];
+
+const dividendStocks: Record<DividendTab, DividendStock[]> = {
+  "high-yield": [
+    { symbol: "MO", name: "Altria Group", price: 48.52, yield: 8.41, annualDiv: 4.08, payoutRatio: 80, growth5Y: 4.2, streak: 54, nextExDate: "Mar 24" },
+    { symbol: "MPLX", name: "MPLX LP", price: 41.28, yield: 8.18, annualDiv: 3.38, payoutRatio: 85, growth5Y: 5.8, streak: 10, nextExDate: "Apr 8" },
+    { symbol: "ET", name: "Energy Transfer", price: 15.84, yield: 7.92, annualDiv: 1.25, payoutRatio: 72, growth5Y: 3.1, streak: 3, nextExDate: "Apr 15" },
+    { symbol: "VZ", name: "Verizon", price: 39.12, yield: 6.78, annualDiv: 2.65, payoutRatio: 57, growth5Y: 2.0, streak: 19, nextExDate: "Apr 1" },
+    { symbol: "T", name: "AT&T", price: 17.08, yield: 6.52, annualDiv: 1.11, payoutRatio: 48, growth5Y: -4.2, streak: 2, nextExDate: "Apr 1" },
+  ],
+  "aristocrats": [
+    { symbol: "PG", name: "Procter & Gamble", price: 168.42, yield: 2.38, annualDiv: 4.03, payoutRatio: 62, growth5Y: 6.1, streak: 68, nextExDate: "Apr 18" },
+    { symbol: "JNJ", name: "Johnson & Johnson", price: 160.88, yield: 3.08, annualDiv: 4.96, payoutRatio: 44, growth5Y: 5.8, streak: 62, nextExDate: "Mar 24" },
+    { symbol: "KO", name: "Coca-Cola", price: 62.14, yield: 3.12, annualDiv: 1.94, payoutRatio: 68, growth5Y: 3.8, streak: 62, nextExDate: "Mar 28" },
+    { symbol: "PEP", name: "PepsiCo", price: 172.34, yield: 2.72, annualDiv: 5.42, payoutRatio: 66, growth5Y: 7.1, streak: 52, nextExDate: "Mar 31" },
+    { symbol: "MMM", name: "3M Company", price: 102.14, yield: 5.82, annualDiv: 6.00, payoutRatio: 92, growth5Y: 1.2, streak: 66, nextExDate: "Apr 11" },
+  ],
+  "growth": [
+    { symbol: "V", name: "Visa", price: 282.50, yield: 0.78, annualDiv: 2.08, payoutRatio: 22, growth5Y: 17.4, streak: 16, nextExDate: "Apr 28" },
+    { symbol: "AVGO", name: "Broadcom", price: 168.24, yield: 1.82, annualDiv: 21.00, payoutRatio: 48, growth5Y: 14.2, streak: 14, nextExDate: "Apr 18" },
+    { symbol: "HD", name: "Home Depot", price: 362.18, yield: 2.48, annualDiv: 9.00, payoutRatio: 52, growth5Y: 10.8, streak: 15, nextExDate: "Mar 19" },
+    { symbol: "MSFT", name: "Microsoft", price: 415.80, yield: 0.72, annualDiv: 3.00, payoutRatio: 26, growth5Y: 10.2, streak: 22, nextExDate: "Apr 15" },
+    { symbol: "ABBV", name: "AbbVie", price: 166.52, yield: 3.72, annualDiv: 6.20, payoutRatio: 54, growth5Y: 8.5, streak: 52, nextExDate: "Apr 14" },
+  ],
+  "monthly": [
+    { symbol: "AGNC", name: "AGNC Investment", price: 9.72, yield: 14.82, annualDiv: 1.44, payoutRatio: 95, growth5Y: -2.1, streak: 14, nextExDate: "Mar 28" },
+    { symbol: "O", name: "Realty Income", price: 58.24, yield: 5.42, annualDiv: 3.16, payoutRatio: 74, growth5Y: 3.4, streak: 30, nextExDate: "Mar 31" },
+    { symbol: "MAIN", name: "Main Street Capital", price: 45.62, yield: 6.18, annualDiv: 2.82, payoutRatio: 68, growth5Y: 4.2, streak: 14, nextExDate: "Apr 15" },
+    { symbol: "STAG", name: "STAG Industrial", price: 35.88, yield: 4.12, annualDiv: 1.48, payoutRatio: 72, growth5Y: 2.8, streak: 13, nextExDate: "Mar 28" },
+    { symbol: "JEPI", name: "JPM Equity Premium", price: 56.12, yield: 7.24, annualDiv: 4.06, payoutRatio: 0, growth5Y: 0, streak: 3, nextExDate: "Apr 1" },
+  ],
+};
+
+function PayoutBadge({ value }: { value: number }) {
+  if (value === 0) return <span className="text-[12px] text-muted-foreground/40">—</span>;
+  const color =
+    value < 75
+      ? "bg-emerald-500/15 text-emerald-500"
+      : value < 90
+        ? "bg-amber-500/15 text-amber-500"
+        : "bg-red-500/15 text-red-500";
+  return (
+    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums", color)}>
+      {value}%
+    </span>
+  );
+}
+
+function DividendStocksWidget() {
+  const [divTab, setDivTab] = useState<DividendTab>("high-yield");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const stocks = dividendStocks[divTab];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => {
+      const n = new Set(p);
+      n.has(sym) ? n.delete(sym) : n.add(sym);
+      return n;
+    });
+
+  return (
+    <div>
+      <h2 className="mb-2 text-[18px] font-bold tracking-tight">
+        Dividend Stocks
+      </h2>
+
+      {/* Pill tabs */}
+      <div className="mb-2.5 flex gap-2 overflow-x-auto no-scrollbar">
+        {divTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setDivTab(tab.id)}
+            className={cn(
+              "flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+              divTab === tab.id
+                ? "bg-foreground text-background"
+                : "border border-border/60 text-muted-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={divTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex"
+          >
+            {/* ---- Frozen left column ---- */}
+            <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
+              <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Stock
+              </div>
+              {stocks.map((stock) => (
+                <div
+                  key={stock.symbol}
+                  className="flex h-[56px] items-center border-t border-border/20 px-4"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => toggleBookmark(stock.symbol)}
+                      className="flex-shrink-0 transition-transform active:scale-90"
+                    >
+                      <Bookmark
+                        size={16}
+                        strokeWidth={1.8}
+                        className={cn(
+                          "transition-colors",
+                          bookmarks.has(stock.symbol)
+                            ? "fill-foreground text-foreground"
+                            : "text-muted-foreground/60"
+                        )}
+                      />
+                    </button>
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
+                      {stock.symbol.slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
+                        {stock.name}
+                      </p>
+                      <p className="text-[12px] leading-tight text-muted-foreground">
+                        {stock.symbol}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ---- Scrollable right columns ---- */}
+            <div className="flex-1 overflow-x-auto no-scrollbar">
+              <table style={{ minWidth: 520 }}>
+                <thead>
+                  <tr className="h-[37px]">
+                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Yield
+                    </th>
+                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Div/Yr
+                    </th>
+                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Payout
+                    </th>
+                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      5Y CAGR
+                    </th>
+                    <th className="min-w-[56px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Streak
+                    </th>
+                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Ex-Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stocks.map((stock) => (
+                    <tr
+                      key={stock.symbol}
+                      className="h-[56px] border-t border-border/20"
+                    >
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] font-bold tabular-nums text-gain">
+                        {stock.yield.toFixed(2)}%
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] tabular-nums text-foreground">
+                        {stock.annualDiv.toFixed(2)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right">
+                        <PayoutBadge value={stock.payoutRatio} />
+                      </td>
+                      <td
+                        className={cn(
+                          "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
+                          stock.growth5Y >= 0 ? "text-emerald-500" : "text-red-500"
+                        )}
+                      >
+                        {stock.growth5Y >= 0 ? "+" : ""}{stock.growth5Y.toFixed(1)}%
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums text-foreground">
+                        {stock.streak}yr
+                      </td>
+                      <td className="whitespace-nowrap px-3 text-right text-[13px] text-muted-foreground">
+                        {stock.nextExDate}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* View More */}
+        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+          View More
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Level Up Widget                                                    */
 /* ------------------------------------------------------------------ */
 
-const levelUpStages = [
+interface StorySlide {
+  emoji: string;
+  title: string;
+  body: string;
+}
+
+interface LevelUpStory {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  color: string;
+  slides: StorySlide[];
+}
+
+const levelUpStories: LevelUpStory[] = [
   {
-    title: "The Confident Investor",
-    body: "Read earnings reports. Understand P/E ratios. Spot sector rotation.",
-    videos: [
-      { title: "How to read earnings", duration: "5 min" },
-      { title: "P/E ratios explained", duration: "4 min" },
-      { title: "Sector rotation strategies", duration: "5 min" },
+    title: "Confident\nInvestor",
+    subtitle: "Stage 1",
+    emoji: "📊",
+    color: "#6366f1",
+    slides: [
+      { emoji: "📋", title: "Read Earnings Reports", body: "Every quarter, companies reveal their truth. Revenue, profit, guidance — three numbers that move stock prices more than any tweet." },
+      { emoji: "⚖️", title: "The P/E Ratio", body: "Price divided by earnings. Is 30x PE cheap or expensive? It depends on growth. Fast growers earn high multiples. Slow ones don't." },
+      { emoji: "🔄", title: "Sector Rotation", body: "Money flows between sectors like tides. Tech leads bull runs. Defensives shine in downturns. Knowing the cycle is half the edge." },
+      { emoji: "💡", title: "Your First Insight", body: "Start with companies you use every day. You already know their products. Now learn to read their numbers." },
     ],
   },
   {
-    title: "The Strategic Investor",
-    body: "Read charts. Spot patterns. Make your first swing trade.",
-    videos: [
-      { title: "Reading a stock chart", duration: "5 min" },
-      { title: "Support & resistance", duration: "4 min" },
-      { title: "Volume: the hidden signal", duration: "3 min" },
+    title: "Strategic\nInvestor",
+    subtitle: "Stage 2",
+    emoji: "📈",
+    color: "#10b981",
+    slides: [
+      { emoji: "📈", title: "Reading a Chart", body: "Price tells a story. Higher highs and higher lows = uptrend. Lower highs and lower lows = downtrend. Everything else is noise." },
+      { emoji: "🧱", title: "Support & Resistance", body: "Prices remember. Where buyers stepped in before is support. Where sellers pushed back is resistance. These levels matter." },
+      { emoji: "📦", title: "Volume Confirms", body: "A breakout on low volume is suspect. A breakout on 3x average volume? That's conviction. Volume never lies." },
+      { emoji: "⏰", title: "Timing Your Entry", body: "Patience is a strategy. Waiting for a pullback to support before entering can dramatically improve your risk/reward ratio." },
     ],
   },
   {
-    title: "The Options Explorer",
-    body: "Calls, puts, covered calls. Trade options with confidence.",
-    videos: [
-      { title: "Options 101: Calls", duration: "3 min" },
-      { title: "Options 102: Puts", duration: "4 min" },
-      { title: "Covered calls for income", duration: "5 min" },
+    title: "Options\nExplorer",
+    subtitle: "Stage 3",
+    emoji: "🎯",
+    color: "#a855f7",
+    slides: [
+      { emoji: "📞", title: "What is a Call?", body: "A call option gives you the right to buy 100 shares at a set price before expiry. You profit when the stock rises above your strike." },
+      { emoji: "📉", title: "What is a Put?", body: "A put gives you the right to sell at a set price. Traders use puts to profit from falling stocks or to protect existing positions." },
+      { emoji: "🛡️", title: "Covered Calls", body: "Own 100 shares? Sell a call against them. You collect premium immediately. If the stock stays flat, you keep both the shares and the cash." },
+      { emoji: "⚡", title: "The Greeks", body: "Delta, theta, vega — options move differently than stocks. Delta measures direction, theta measures time decay. Master these first." },
     ],
   },
   {
-    title: "Power Mode",
-    body: "Algo strategies. Advanced orders. Extended-hours trading.",
-    videos: [
-      { title: "How algo trading works", duration: "4 min" },
-      { title: "Bracket & OCO orders", duration: "5 min" },
-      { title: "From investor to trader", duration: "6 min" },
+    title: "Power\nMode",
+    subtitle: "Stage 4",
+    emoji: "⚡",
+    color: "#f59e0b",
+    slides: [
+      { emoji: "🤖", title: "Algo Trading Basics", body: "Algorithms execute at speeds and precision humans can't match. Even simple rules — buy when RSI < 30 — beat emotional trading." },
+      { emoji: "🔗", title: "Bracket Orders", body: "Set your entry, stop-loss, and target in one click. Your risk is fully defined before you even enter the trade." },
+      { emoji: "🌙", title: "Extended Hours", body: "Earnings happen after the bell. Extended hours let you react before the main session opens. Spreads are wider — size down." },
+      { emoji: "🏆", title: "Find Your Edge", body: "Every pro has a defined edge: a strategy that works more than it fails. Find yours, test it small, and execute without emotion." },
     ],
   },
 ];
 
-function LevelUpWidget() {
-  const [expanded, setExpanded] = useState(0);
+/* ------------------------------------------------------------------ */
+/*  Story Viewer — full-frame overlay                                  */
+/* ------------------------------------------------------------------ */
+
+function StoryViewer({ story, onClose }: { story: LevelUpStory; onClose: () => void }) {
+  const [slideIdx, setSlideIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const slide = story.slides[slideIdx];
+
+  const advance = () => {
+    if (slideIdx < story.slides.length - 1) setSlideIdx((s) => s + 1);
+    else onClose();
+  };
+
+  const retreat = () => {
+    if (slideIdx > 0) setSlideIdx((s) => s - 1);
+  };
+
+  useEffect(() => {
+    setProgress(0);
+    const t0 = Date.now();
+    timerRef.current = setInterval(() => {
+      const pct = Math.min(((Date.now() - t0) / 5000) * 100, 100);
+      setProgress(pct);
+      if (pct >= 100) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (slideIdx < story.slides.length - 1) setSlideIdx((s) => s + 1);
+        else onClose();
+      }
+    }, 16);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slideIdx]);
+
+  const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const w = rect.width;
+    if (x < w / 3) retreat(); else advance();
+  };
+
+  // Swipe gesture support
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) advance();
+      else retreat();
+    }
+  };
 
   return (
-    <div>
-      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
-        Level Up
-      </h2>
-      <p className="mb-3 text-[14px] text-muted-foreground">
-        Every great trader started as a curious investor. Here&apos;s the path.
-      </p>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={handleTap}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="fixed inset-0 z-[100] mx-auto flex max-w-[430px] flex-col bg-background"
+    >
+      {/* Colored radial glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `radial-gradient(ellipse at 50% 10%, ${story.color}20 0%, transparent 55%)` }}
+      />
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        {levelUpStages.map((stage, i) => {
-          const isOpen = expanded === i;
-          return (
+      {/* Progress bars */}
+      <div className="relative z-10 flex gap-1 px-4 pt-4">
+        {story.slides.map((_, i) => (
+          <div key={i} className="h-[2.5px] flex-1 overflow-hidden rounded-full bg-muted">
             <div
-              key={stage.title}
-              className={cn(i > 0 && "border-t border-border/40")}
-            >
-              <button
-                onClick={() => setExpanded(isOpen ? -1 : i)}
-                className="flex w-full items-center gap-3 p-3.5 text-left"
-              >
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-[13px] font-bold text-foreground">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-semibold text-foreground">{stage.title}</p>
-                  {!isOpen && (
-                    <p className="text-[12px] text-muted-foreground truncate">{stage.body}</p>
-                  )}
-                </div>
-                <ChevronRight
-                  size={16}
-                  className={cn(
-                    "flex-shrink-0 text-muted-foreground transition-transform duration-200",
-                    isOpen && "rotate-90"
-                  )}
-                />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-3.5 pb-3.5 pt-0">
-                      <p className="text-[13px] text-muted-foreground mb-3">{stage.body}</p>
-                      <div className="space-y-2">
-                        {stage.videos.map((v) => (
-                          <div key={v.title} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-0.5">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </div>
-                            <p className="text-[13px] font-medium text-foreground flex-1">{v.title}</p>
-                            <span className="text-[12px] text-muted-foreground">{v.duration}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+              className="h-full rounded-full"
+              style={{
+                background: story.color,
+                width: i < slideIdx ? "100%" : i === slideIdx ? `${progress}%` : "0%",
+                transition: "none",
+              }}
+            />
+          </div>
+        ))}
       </div>
-    </div>
+
+      {/* Top bar */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[18px]"
+            style={{ backgroundColor: `${story.color}18` }}
+          >
+            {story.emoji}
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold leading-tight">
+              {story.subtitle} · {story.title.replace("\n", " ")}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {slideIdx + 1} of {story.slides.length}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/60"
+        >
+          <X size={16} className="text-foreground" />
+        </button>
+      </div>
+
+      {/* Slide content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={slideIdx}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.04 }}
+          transition={{ duration: 0.18 }}
+          className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 text-center"
+        >
+          <span className="mb-5 select-none text-[64px] leading-none">{slide.emoji}</span>
+          <h3
+            className="mb-4 text-[26px] font-bold leading-tight tracking-tight"
+            style={{ color: story.color }}
+          >
+            {slide.title}
+          </h3>
+          <p className="max-w-[300px] text-[16px] leading-relaxed text-muted-foreground">
+            {slide.body}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Tap hint */}
+      <div className="relative z-10 flex justify-between px-8 pb-8">
+        <div className="flex items-center gap-1 text-muted-foreground/30">
+          <ChevronRight size={13} className="rotate-180" />
+          <span className="text-[11px]">Back</span>
+        </div>
+        <div className="flex items-center gap-1 text-muted-foreground/30">
+          <span className="text-[11px]">Next</span>
+          <ChevronRight size={13} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Level Up Widget — stories format                                   */
+/* ------------------------------------------------------------------ */
+
+function LevelUpWidget() {
+  const [openStory, setOpenStory] = useState<LevelUpStory | null>(null);
+  const [viewed, setViewed] = useState<Set<string>>(new Set());
+
+  return (
+    <>
+      <div>
+        <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">Level Up</h2>
+        <p className="mb-4 text-[14px] text-muted-foreground">
+          Every great trader started as a curious investor. Here&apos;s the path.
+        </p>
+
+        <div className="flex gap-5">
+          {levelUpStories.map((story) => {
+            const isViewed = viewed.has(story.title);
+            return (
+              <button
+                key={story.title}
+                onClick={() => {
+                  setOpenStory(story);
+                  setViewed((p) => { const n = new Set(p); n.add(story.title); return n; });
+                }}
+                className="flex flex-shrink-0 flex-col items-center gap-1.5"
+              >
+                {/* Ring + avatar */}
+                <div
+                  className="rounded-full p-[2.5px]"
+                  style={isViewed
+                    ? { border: "2.5px solid rgba(128,128,128,0.25)" }
+                    : { background: `linear-gradient(135deg, ${story.color}, ${story.color}66)`, padding: "2.5px" }
+                  }
+                >
+                  <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-background text-[28px]">
+                    {story.emoji}
+                  </div>
+                </div>
+                <p className="max-w-[68px] text-center text-[11px] font-semibold leading-tight text-foreground">
+                  {story.title.replace("\n", " ")}
+                </p>
+                <p className="text-[10px] text-muted-foreground/70">{story.subtitle}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {openStory && (
+          <StoryViewer story={openStory} onClose={() => setOpenStory(null)} />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -1053,8 +1597,8 @@ function LevelUpWidget() {
 type ScreenerTab = "basic" | "premium" | "saved";
 
 const screenerTabs: { id: ScreenerTab; label: string; disabled?: boolean }[] = [
-  { id: "basic", label: "Basic" },
-  { id: "premium", label: "Premium" },
+  { id: "basic", label: "Popular" },
+  { id: "premium", label: "Advanced" },
   { id: "saved", label: "Saved", disabled: true },
 ];
 
@@ -1263,7 +1807,7 @@ const heatViewLabels: Record<HeatmapView, string> = { stocks: "Stocks", sectors:
 /* ------------------------------------------------------------------ */
 
 const TM_W = 400;
-const TM_H = 300;
+const TM_H = 500;
 
 interface HeatRect {
   x: number; y: number; w: number; h: number;
@@ -1389,10 +1933,10 @@ function HeatmapWidget() {
 
   return (
     <div>
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">Market Heatmap</h2>
+      <h2 className="mb-3.5 text-[18px] font-bold tracking-tight">Market at a Glance</h2>
 
       {/* Index pills + view flipper */}
-      <div className="mb-2.5 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-2">
           {(["sp500", "nasdaq100"] as const).map((id) => (
             <button
@@ -1412,9 +1956,8 @@ function HeatmapWidget() {
 
         <button
           onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all active:scale-95"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
         >
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={view}
@@ -1427,6 +1970,7 @@ function HeatmapWidget() {
               {heatViewLabels[view]}
             </motion.span>
           </AnimatePresence>
+          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
         </button>
       </div>
 
@@ -1451,7 +1995,7 @@ function HeatmapWidget() {
               return (
                 <div
                   key={r.symbol}
-                  className="absolute p-[0.75px]"
+                  className="absolute p-[1px]"
                   style={{
                     left: `${(r.x / TM_W) * 100}%`,
                     top: `${(r.y / TM_H) * 100}%`,
@@ -1460,7 +2004,7 @@ function HeatmapWidget() {
                   }}
                 >
                   <div
-                    className="flex h-full w-full flex-col items-center justify-center rounded-[3px]"
+                    className="flex h-full w-full flex-col items-center justify-center"
                     style={{ backgroundColor: heatColor(r.change, isDark) }}
                   >
                     {showLabel && (
@@ -1486,6 +2030,11 @@ function HeatmapWidget() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <button className="mt-3 flex w-full items-center justify-center gap-2 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
+        <Maximize2 size={15} />
+        Open in Fullscreen
+      </button>
     </div>
   );
 }
@@ -1549,8 +2098,8 @@ export function ExploreFundedNotTraded() {
       <TopMoversWidget />
       <HeatmapWidget />
       <RecurringBasketsWidget />
-      <TrendingCollectionsWidget />
       <AnalystRatingsWidget />
+      <DividendStocksWidget />
       <ScreenerWidget />
       <LevelUpWidget />
     </div>

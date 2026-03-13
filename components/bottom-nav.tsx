@@ -20,7 +20,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -51,7 +51,6 @@ const v2Tabs = [
   { label: "Market", icon: BarChart3, href: "/market" },
   { label: "Watchlist", icon: Bookmark, href: "/watchlist" },
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },
-  { label: "Learn", icon: BookOpen, href: "/learn" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -85,52 +84,62 @@ function TabBar({
   return (
     <>
       <nav className="border-t border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center justify-around px-2 pb-2 pt-1.5">
-          {tabs.map((tab) => {
-            const isActive =
-              pathname === tab.href ||
-              (tab.href !== "/" && pathname.startsWith(tab.href));
+        <LayoutGroup id={layoutId}>
+          <div className="flex items-center justify-around px-2 pb-2 pt-1.5">
+            {tabs.map((tab) => {
+              const isActive =
+                pathname === tab.href ||
+                (tab.href !== "/" && pathname.startsWith(tab.href));
 
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                onClick={(e) => {
-                  if (
-                    isActive &&
-                    tab.href === "/explore" &&
-                    exploreVersion
-                  ) {
-                    e.preventDefault();
-                    exploreVersion.setShowVersionPicker(true);
-                  }
-                }}
-                className={cn(
-                  "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
-                  isActive ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                <motion.div
-                  animate={{ scale: isActive ? 1.05 : 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 24 }}
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  onClick={(e) => {
+                    if (
+                      isActive &&
+                      tab.href === "/explore" &&
+                      exploreVersion
+                    ) {
+                      e.preventDefault();
+                      exploreVersion.setShowVersionPicker(true);
+                    }
+                  }}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
                 >
-                  <tab.icon size={24} strokeWidth={1.6} />
-                </motion.div>
-                <span>{tab.label}</span>
-              </Link>
-            );
-          })}
+                  {isActive && (
+                    <motion.div
+                      layoutId="tab-pill"
+                      className="absolute inset-0 rounded-xl bg-muted/50"
+                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    />
+                  )}
+                  <motion.div
+                    className="relative z-10"
+                    animate={{ scale: isActive ? 1.05 : 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                  >
+                    <tab.icon size={24} strokeWidth={1.6} />
+                  </motion.div>
+                  <span className="relative z-10">{tab.label}</span>
+                </Link>
+              );
+            })}
 
-          {moreSheet && (
-            <button
-              onClick={() => setMoreOpen(true)}
-              className="relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors"
-            >
-              <MoreHorizontal size={24} strokeWidth={1.6} />
-              <span>More</span>
-            </button>
-          )}
-        </div>
+            {moreSheet && (
+              <button
+                onClick={() => setMoreOpen(true)}
+                className="relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors"
+              >
+                <MoreHorizontal size={24} strokeWidth={1.6} />
+                <span>More</span>
+              </button>
+            )}
+          </div>
+        </LayoutGroup>
       </nav>
 
       {moreSheet && (
@@ -183,5 +192,5 @@ export function BottomNavV1() {
 }
 
 export function BottomNavV2() {
-  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" />;
+  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" moreSheet />;
 }

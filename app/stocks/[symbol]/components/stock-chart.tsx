@@ -80,7 +80,7 @@ export function StockChart({ data, chartType, showVolume, isGain }: StockChartPr
       });
 
       lineSeries.setData(
-        data.map((d) => ({ time: d.time, value: d.close })),
+        data.map((d) => ({ time: d.time as unknown as import("lightweight-charts").Time, value: d.close })),
       );
     } else {
       const candleSeries = chart.addSeries(CandlestickSeries, {

@@ -627,12 +627,12 @@ export function TickerMarquee() {
                 <span className="text-[15px] font-semibold text-foreground">
                   {t.symbol}
                 </span>
-                <span className="tnum text-[14px] font-medium text-muted-foreground transition-colors">
+                <span className="tnum inline-block min-w-[48px] text-right text-[14px] font-medium text-muted-foreground transition-colors">
                   {formatPrice(t.price)}
                 </span>
                 <span
                   className={cn(
-                    "tnum text-[14px] font-semibold transition-colors",
+                    "tnum inline-block min-w-[52px] text-right text-[14px] font-semibold transition-colors",
                     isGain(t) ? "text-gain" : "text-loss"
                   )}
                 >

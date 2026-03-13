@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
+import { useAI } from "@/contexts/ai-context";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Header } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
@@ -13,6 +14,8 @@ import {
 import { ExploreFTUX } from "./versions/ftux";
 import { ExploreFundedNotTraded } from "./versions/funded-not-traded";
 import { ETFFundedNotTraded } from "./versions/etf-funded-not-traded";
+import { AdvisoryBaskets } from "./versions/advisory-baskets";
+import { AlgoStrategies } from "./versions/algo-strategies";
 import {
   Sheet,
   SheetContent,
@@ -28,13 +31,15 @@ const versions: { id: ExploreVersion; label: string; description: string }[] = [
   { id: "funded-not-traded", label: "Funded, Not Traded", description: "Funded but hasn't traded yet" },
 ];
 
-type ExploreTab = "equity" | "etf" | "options" | "advisory";
+
+type ExploreTab = "equity" | "etf" | "options" | "advisory" | "algo";
 
 const exploreTabs: { id: ExploreTab; label: string }[] = [
   { id: "equity", label: "Stocks" },
   { id: "etf", label: "ETF" },
   { id: "options", label: "Options" },
   { id: "advisory", label: "Baskets" },
+  { id: "algo", label: "Algo Strategies" },
 ];
 
 function ExploreContent() {
@@ -46,6 +51,19 @@ function ExploreContent() {
   } = useExploreVersion()!;
 
   const [activeTab, setActiveTab] = useState<ExploreTab>("equity");
+  const prevTabRef = useRef<ExploreTab>("equity");
+  const { setAISource } = useAI();
+
+  useEffect(() => {
+    const sourceMap: Record<ExploreTab, Parameters<typeof setAISource>[0]> = {
+      equity: { type: "explore-stocks" },
+      etf: { type: "explore-etf" },
+      options: { type: "explore-options" },
+      advisory: { type: "explore-baskets" },
+      algo: { type: "explore-stocks" },
+    };
+    setAISource(sourceMap[activeTab]);
+  }, [activeTab, setAISource]);
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollTop = useRef(0);
   const scrollThreshold = 8;
@@ -91,7 +109,10 @@ function ExploreContent() {
             {exploreTabs.map((tab, i) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === "advisory") prevTabRef.current = activeTab;
+                  setActiveTab(tab.id);
+                }}
                 className={cn(
                   "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
                   i === 0 ? "pr-3" : "px-3",
@@ -146,9 +167,10 @@ function ExploreContent() {
           </div>
         )}
         {activeTab === "advisory" && (
-          <div className="flex flex-1 items-center justify-center px-6 py-20">
-            <p className="text-[16px] text-muted-foreground">Advisory Baskets — coming soon</p>
-          </div>
+          <AdvisoryBaskets onDismiss={() => setActiveTab(prevTabRef.current)} />
+        )}
+        {activeTab === "algo" && (
+          <AlgoStrategies />
         )}
       </main>
 

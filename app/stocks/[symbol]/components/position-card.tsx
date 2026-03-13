@@ -1,9 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Wallet } from "lucide-react";
 import { POSITIONS } from "./mock-data";
-import { formatPrice } from "@/components/ticker";
 
 interface PositionCardProps {
   symbol: string;
@@ -14,68 +13,68 @@ export function PositionCard({ symbol }: PositionCardProps) {
   if (!position) return null;
 
   const totalGain = position.totalReturn >= 0;
-  const todayGain = position.todayPnL >= 0;
 
   return (
-    <div className="mx-4 mb-4 rounded-2xl border border-border/60 bg-card p-4">
+    <div className="px-4 py-4">
+      {/* Section header */}
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Your Position
-        </h3>
-        <button className="flex items-center gap-0.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-          View Orders <ChevronRight size={14} />
+        <h2 className="text-[18px] font-bold text-foreground">Investment</h2>
+        <button className="flex items-center gap-0.5 text-[14px] text-muted-foreground transition-colors hover:text-foreground">
+          <ChevronRight size={16} />
         </button>
       </div>
 
-      <div className="mb-3 flex items-baseline justify-between">
+      {/* Holdings row */}
+      <div className="grid grid-cols-3 gap-3 mb-3">
         <div>
-          <span className="text-[20px] font-bold text-foreground">{position.shares} shares</span>
-          <span className="ml-2 text-[14px] text-muted-foreground">
-            Avg. ${formatPrice(position.avgCost)}
+          <p className="text-[12px] text-muted-foreground">Total Holdings</p>
+          <p className="text-[17px] font-bold text-foreground tabular-nums mt-0.5">
+            {position.marketValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div>
+          <p className="text-[12px] text-muted-foreground">P&L</p>
+          <p className={cn(
+            "text-[17px] font-bold tabular-nums mt-0.5",
+            totalGain ? "text-gain" : "text-loss"
+          )}>
+            {totalGain ? "+" : ""}{Math.abs(position.totalReturn).toFixed(1)}
+            <span className="text-[13px] ml-0.5">({totalGain ? "+" : ""}{position.totalReturnPercent.toFixed(1)}%)</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-[12px] text-muted-foreground">Share</p>
+          <p className="text-[17px] font-bold text-foreground tabular-nums mt-0.5">
+            {position.shares}
+          </p>
+        </div>
+      </div>
+
+      {/* Pending orders */}
+      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-4 py-3 mb-2 transition-colors active:bg-muted/50">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-[12px] font-bold text-background">
+            3
           </span>
+          <span className="text-[15px] font-medium text-foreground">Pending Orders</span>
         </div>
-      </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[15px] font-semibold text-foreground tabular-nums">250</span>
+          <ChevronRight size={16} className="text-muted-foreground" />
+        </div>
+      </button>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted-foreground">Market Value</p>
-          <p className="font-mono text-[17px] font-semibold tabular-nums text-foreground">
-            ${formatPrice(position.marketValue)}
-          </p>
+      {/* Buying power */}
+      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-4 py-3 transition-colors active:bg-muted/50">
+        <div className="flex items-center gap-2">
+          <Wallet size={16} className="text-muted-foreground" />
+          <span className="text-[15px] font-medium text-foreground">Buying Power</span>
         </div>
-        <div>
-          <p className="text-[12px] uppercase tracking-wider text-muted-foreground">Total Return</p>
-          <p
-            className={cn(
-              "font-mono text-[17px] font-semibold tabular-nums",
-              totalGain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
-            )}
-          >
-            {totalGain ? "+" : ""}${formatPrice(Math.abs(position.totalReturn))}
-            <span className="ml-1 text-[14px]">
-              ({totalGain ? "+" : ""}{position.totalReturnPercent.toFixed(1)}%)
-            </span>
-          </p>
+        <div className="flex items-center gap-1">
+          <span className="text-[15px] font-semibold text-foreground tabular-nums">54.10</span>
+          <ChevronRight size={16} className="text-muted-foreground" />
         </div>
-      </div>
-
-      {/* Today's P&L — the differentiator */}
-      <div
-        className={cn(
-          "mt-3 rounded-xl px-3 py-2",
-          todayGain ? "bg-[hsl(var(--gain))]/[0.06]" : "bg-[hsl(var(--loss))]/[0.06]",
-        )}
-      >
-        <p className="text-[13px] text-muted-foreground">Today&apos;s P&L</p>
-        <p
-          className={cn(
-            "font-mono text-[16px] font-semibold tabular-nums",
-            todayGain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
-          )}
-        >
-          {todayGain ? "+" : ""}${formatPrice(Math.abs(position.todayPnL))}
-        </p>
-      </div>
+      </button>
     </div>
   );
 }

@@ -22,6 +22,12 @@ const pages = [
     href: "/stocks",
     status: "v1",
   },
+  {
+    title: "Alerts",
+    description: "Set price and percentage alerts for stocks",
+    href: "/stocks/AAPL/alerts",
+    status: "v1",
+  },
 ];
 
 const components = [

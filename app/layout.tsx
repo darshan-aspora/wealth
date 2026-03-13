@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
+import { AIProvider } from "@/contexts/ai-context";
+import { AIOverlay } from "@/components/ai-overlay";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -40,7 +42,12 @@ export default function RootLayout({
         className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          <TickerVisibilityProvider>{children}</TickerVisibilityProvider>
+          <TickerVisibilityProvider>
+            <AIProvider>
+              {children}
+              <AIOverlay />
+            </AIProvider>
+          </TickerVisibilityProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -11,7 +11,15 @@
       "Bash(grep -oh \"rounded-[a-z-]*\" /Users/apple/Dev/02-US-Equity/components/*.tsx /Users/apple/Dev/02-US-Equity/components/ui/*.tsx)",
       "WebSearch",
       "Bash(npx next build)",
-      "Bash(npx tsc --noEmit --pretty app/explore/components/market-dashboard.tsx)"
+      "Bash(npx tsc --noEmit --pretty app/explore/components/market-dashboard.tsx)",
+      "Bash(npx next build --no-lint)",
+      "Bash(npx tsc --noEmit app/portfolio/page.tsx)",
+      "Bash(npx tsc --noEmit --pretty app/explore/versions/advisory-baskets.tsx)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx next lint)"
+    ],
+    "additionalDirectories": [
+      "/Users/apple/Dev/02-US-Equity/app/baskets"
     ]
   }
 }
