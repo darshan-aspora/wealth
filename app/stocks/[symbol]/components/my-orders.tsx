@@ -134,7 +134,7 @@ export default function MyOrdersTab({ symbol }: MyOrdersTabProps) {
   });
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       {/* Heading */}
       <h2 className="mb-4 text-[18px] font-semibold text-foreground">
         My Orders

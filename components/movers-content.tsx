@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createChart, LineSeries, LineStyle, ColorType } from "lightweight-charts";
-import type { IChartApi, ISeriesApi, SeriesType } from "lightweight-charts";
+import type { IChartApi, ISeriesApi, SeriesType, UTCTimestamp } from "lightweight-charts";
 import { X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import {
   ALL_TICKERS,
@@ -160,7 +161,7 @@ function MoversChart({ movers, isDark }: { movers: MoverConfig[]; isDark: boolea
         lastValueVisible: false,
         crosshairMarkerVisible: false,
       });
-      series.setData(mover.data);
+      series.setData(mover.data.map(d => ({ ...d, time: d.time as UTCTimestamp })));
       if (idx === 0) firstSeries = series;
     });
 
@@ -211,7 +212,7 @@ function MoverRow({
   return (
     <div
       className={cn(
-        "relative flex items-center gap-3 px-4 py-3",
+        "relative flex items-center gap-3 px-5 py-3",
         !isLast && "border-b border-border/30"
       )}
     >
@@ -306,7 +307,7 @@ function AddStockSheet({
                   onAdd(ticker.symbol);
                   onOpenChange(false);
                 }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-secondary/40 text-left"
+                className="flex w-full items-center gap-3 rounded-xl px-5 py-3 transition-colors hover:bg-secondary/40 text-left"
               >
                 <TickerLogo ticker={ticker} size="sm" />
                 <div className="flex-1 min-w-0">
@@ -398,13 +399,14 @@ export function MoversContent() {
 
       {/* Add stock button */}
       <div className="h-px bg-border/40" />
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setAddSheetOpen(true)}
-        className="flex w-full items-center justify-center gap-2 py-3 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="w-full gap-2 py-3 text-[15px] font-medium text-muted-foreground hover:text-foreground"
       >
         <Plus size={16} strokeWidth={2.5} />
         Add Stock
-      </button>
+      </Button>
 
       <AddStockSheet
         open={addSheetOpen}

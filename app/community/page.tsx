@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { AsporaLogo } from "@/components/stories-viewer";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 // ─── Tab config ──────────────────────────────────────────────────────
 
@@ -60,7 +62,7 @@ function VoteRow({
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-secondary/50 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl bg-secondary/50 px-5 py-3">
       <div className="flex flex-col items-center gap-0.5">
         <button
           onClick={() => handleVote(1)}
@@ -115,7 +117,7 @@ function FeedbackBox({ placeholder }: { placeholder: string }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-2 rounded-2xl px-4 py-3"
+        className="flex items-center gap-2 rounded-2xl px-5 py-3"
         style={{ background: "hsl(var(--gain) / 0.08)", border: "1px solid hsl(var(--gain) / 0.15)" }}
       >
         <Check size={16} style={{ color: "hsl(var(--gain))" }} strokeWidth={2} />
@@ -131,12 +133,12 @@ function FeedbackBox({ placeholder }: { placeholder: string }) {
       className="flex items-end gap-2 rounded-2xl p-2.5"
       style={{ background: "hsl(var(--secondary) / 0.5)", border: "1px solid hsl(var(--border) / 0.5)" }}
     >
-      <textarea
+      <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="flex-1 resize-none bg-transparent px-2 py-1.5 text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/40"
+        className="flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:ring-offset-0"
         style={{ scrollbarWidth: "none" }}
       />
       <button
@@ -242,13 +244,10 @@ export default function CommunityPage() {
       <StatusBar />
 
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border/30 px-4 pb-3 pt-2">
-        <button
-          onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground active:bg-muted/40"
-        >
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
+      <div className="flex items-center gap-3 border-b border-border/30 px-5 pb-3 pt-2">
+        <Button variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground" onClick={() => router.back()}>
+          <ArrowLeft size={20} strokeWidth={1.8} />
+        </Button>
         <div className="flex items-center gap-2">
           <AsporaLogo size={28} className="text-foreground" />
           <span className="text-[17px] font-bold text-foreground">Build With Us</span>
@@ -281,7 +280,7 @@ export default function CommunityPage() {
 
       {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-        <div className="px-4 py-5 space-y-8">
+        <div className="px-5 py-5 space-y-8">
 
           {/* ── Hero ──────────────────────────────────────────── */}
           <motion.div
@@ -324,7 +323,7 @@ export default function CommunityPage() {
                 { name: "Explore & FTUX", detail: "Onboarding flow, product showcase, feature deep-dives" },
                 { name: "Portfolio Tracking", detail: "Holdings overview, P&L, sector allocation" },
               ].map((feat) => (
-                <div key={feat.name} className="flex items-start gap-3 rounded-2xl bg-secondary/40 px-4 py-3">
+                <div key={feat.name} className="flex items-start gap-3 rounded-2xl bg-secondary/40 px-5 py-3">
                   <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full" style={{ background: "hsl(var(--gain) / 0.15)" }}>
                     <div className="h-1.5 w-1.5 rounded-full" style={{ background: "hsl(var(--gain))" }} />
                   </div>
@@ -352,7 +351,7 @@ export default function CommunityPage() {
                 { name: "Advanced Charting", progress: 20, status: "Design phase", detail: "Candlestick patterns, 30+ indicators, drawing tools, multi-timeframe." },
                 { name: "Recurring Investments", progress: 15, status: "Planning", detail: "Set weekly/monthly auto-invest schedules for any stock or basket." },
               ].map((feat) => (
-                <div key={feat.name} className="rounded-2xl bg-secondary/40 px-4 py-3.5">
+                <div key={feat.name} className="rounded-2xl bg-secondary/40 px-5 py-3.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[15px] font-semibold text-foreground">{feat.name}</span>
                     <span
@@ -392,7 +391,7 @@ export default function CommunityPage() {
                 { quote: "The explore page onboarding is slick. More interactive walkthroughs.", user: "New User", action: "Expanding guided tours to other sections" },
                 { quote: "Need fractional shares. Can't afford full shares of AMZN/GOOGL.", user: "Student Investor", action: "Fractional shares on the roadmap for Q3" },
               ].map((item, i) => (
-                <div key={i} className="rounded-2xl bg-secondary/40 px-4 py-3.5">
+                <div key={i} className="rounded-2xl bg-secondary/40 px-5 py-3.5">
                   <p className="text-[14px] font-medium leading-snug text-foreground/85">
                     &ldquo;{item.quote}&rdquo;
                   </p>

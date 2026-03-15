@@ -14,7 +14,7 @@ export function Ownership({ symbol }: OwnershipProps) {
   if (!data) return null;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
         Ownership
       </h2>

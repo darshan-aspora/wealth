@@ -66,7 +66,7 @@ export function EmotionalBridge() {
 
   return (
     <section className="bg-muted py-8">
-      <div ref={sectionRef} className="px-4">
+      <div ref={sectionRef} className="px-5">
         <motion.div
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}

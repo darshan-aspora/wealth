@@ -39,7 +39,7 @@ export default function PortfolioPage() {
 
       {/* Tab bar */}
       <div className="relative border-b border-border/40">
-        <div className="no-scrollbar flex overflow-x-auto px-4">
+        <div className="no-scrollbar flex overflow-x-auto px-5">
           {tabs.map((tab) => (
             <button
               key={tab}

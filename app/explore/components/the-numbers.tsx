@@ -34,7 +34,7 @@ export function TheNumbers() {
     <section className="bg-muted/50 py-12">
       <div
         ref={containerRef}
-        className="px-4"
+        className="px-5"
       >
         <div className="grid grid-cols-2 gap-6">
           {stats.map((stat, index) => (

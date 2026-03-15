@@ -2,251 +2,155 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MarketTable, PctCell, RangeCell, ChangeCell, type TableColumn } from "./market-table";
-import { SectionHeader, SectionDivider } from "./section-header";
+import { MarketTable, PctCell, RangeBar, type TableColumn } from "./market-table";
+import { SectionHeader } from "./section-header";
 import { EconomicOverview } from "./economic-overview";
 import { NewsAccordion } from "./news-accordion";
-import { StockScreener } from "./stock-screener";
-import { EarningsCalendar } from "./earnings-calendar";
-import { DividendETFsMarket } from "./dividend-etfs-table";
-import { DividendCalendar } from "./dividend-calendar";
-import { Sparkline } from "./sparkline";
 import {
-  US_INDICES, US_SECTORS, TOP_STOCKS, TOP_ETFS,
-  US_ECONOMIC, US_NEWS,
-  type PerformanceRow, type TopStock, type TopETF,
+  US_IDX_POPULAR, US_IDX_STRATEGY,
+  US_IDX_THEMATIC, US_IDX_VOL_SENTIMENT, US_IDX_FIXED_INCOME,
+  US_SECTORS, US_SECTORS_ALT, US_ECONOMIC, US_NEWS,
+  type PerformanceRow,
 } from "../data";
 
 // ---- Performance table columns (shared by Indices & Sectors) ----
 const perfColumns: TableColumn<PerformanceRow>[] = [
-  { key: "name", label: "Name", align: "left", frozen: true, minWidth: 140, render: (r) => <span className="text-[14px] font-semibold text-foreground">{r.name}</span> },
+  { key: "name", label: "Name", align: "left", frozen: true, width: 200, render: (r) => <span className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</span> },
+  { key: "last", label: "Level", align: "right", render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> },
   { key: "today", label: "Today", align: "right", render: (r) => <PctCell value={r.today} /> },
   { key: "5d", label: "5 Days", align: "right", render: (r) => <PctCell value={r.fiveDays} /> },
   { key: "1m", label: "1 Month", align: "right", render: (r) => <PctCell value={r.oneMonth} /> },
   { key: "ytd", label: "YTD", align: "right", render: (r) => <PctCell value={r.ytd} /> },
   { key: "1y", label: "1 Year", align: "right", render: (r) => <PctCell value={r.oneYear} /> },
   { key: "3y", label: "3 Years", align: "right", render: (r) => <PctCell value={r.threeYears} /> },
-  { key: "dayRange", label: "Day Range", align: "right", render: (r) => <RangeCell low={r.dayRange[0]} high={r.dayRange[1]} /> },
-  { key: "52w", label: "52W Range", align: "right", render: (r) => <RangeCell low={r.weekRange52[0]} high={r.weekRange52[1]} /> },
+  { key: "dayRange", label: "Day Range", align: "right", render: (r) => <RangeBar low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} /> },
+  { key: "1yRange", label: "1Y Range", align: "right", render: (r) => <RangeBar low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} /> },
 ];
 
-// ---- Top 5 Stocks columns ----
-const stockColumns: TableColumn<TopStock>[] = [
-  {
-    key: "stock", label: "Stock", align: "left", frozen: true, minWidth: 160,
-    render: (r) => (
-      <div className="flex items-center gap-2.5">
-        <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", r.logoColor)}>
-          {r.logo}
-        </div>
-        <div>
-          <div className="text-[14px] font-bold text-foreground">{r.symbol}</div>
-          <div className="max-w-[80px] truncate text-[12px] text-muted-foreground">{r.name}</div>
-        </div>
-      </div>
-    ),
-  },
-  { key: "price", label: "Price", align: "right", render: (r) => <span className="font-mono tabular-nums text-foreground">{r.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> },
-  { key: "change", label: "Change", align: "right", render: (r) => <ChangeCell value={(r.change >= 0 ? "+" : "") + r.change.toFixed(2)} isUp={r.change >= 0} /> },
-  { key: "pct", label: "% Chg", align: "right", render: (r) => <PctCell value={r.changePct} /> },
-  { key: "volume", label: "Volume", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.volume}</span> },
-  { key: "mktcap", label: "Mkt Cap", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.marketCap}</span> },
-  { key: "chart", label: "Chart", align: "right", render: (r) => <Sparkline data={r.sparkline} /> },
-];
+// ---- Index filter pills ----
+const INDEX_FILTERS = ["Popular", "Strategy", "Thematic", "Vol & Sentiment", "Fixed Income"] as const;
+type IndexFilter = (typeof INDEX_FILTERS)[number];
 
-// ---- Top 5 ETFs columns ----
-const etfColumns: TableColumn<TopETF>[] = [
-  {
-    key: "etf", label: "ETF", align: "left", frozen: true, minWidth: 160,
-    render: (r) => (
-      <div className="flex items-center gap-2.5">
-        <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", r.logoColor)}>
-          {r.logo}
-        </div>
-        <div>
-          <div className="text-[14px] font-bold text-foreground">{r.symbol}</div>
-          <div className="max-w-[80px] truncate text-[12px] text-muted-foreground">{r.name}</div>
-        </div>
-      </div>
-    ),
-  },
-  { key: "price", label: "Price", align: "right", render: (r) => <span className="font-mono tabular-nums text-foreground">{r.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span> },
-  { key: "pct", label: "% Chg", align: "right", render: (r) => <PctCell value={r.changePct} /> },
-  { key: "volume", label: "Volume", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.volume}</span> },
-  { key: "aum", label: "AUM", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.aum}</span> },
-  { key: "exp", label: "Exp. Ratio", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.expenseRatio}</span> },
-  { key: "chart", label: "Chart", align: "right", render: (r) => <Sparkline data={r.sparkline} /> },
-];
+const INDEX_DATA: Record<IndexFilter, PerformanceRow[]> = {
+  "Popular": US_IDX_POPULAR,
+  "Strategy": US_IDX_STRATEGY,
+  "Thematic": US_IDX_THEMATIC,
+  "Vol & Sentiment": US_IDX_VOL_SENTIMENT,
+  "Fixed Income": US_IDX_FIXED_INCOME,
+};
 
-// ---- Mover tabs (matching explore page) ----
-const MOVER_TABS = ["Gainers", "Losers", "Most Active", "Near 52W High", "Near 52W Low"] as const;
-type MoverType = (typeof MOVER_TABS)[number];
+// ---- Sector filter pills ----
+const SECTOR_FILTERS = ["Conventional", "Alternative", "Cyclical", "Defensive", "Growth"] as const;
+type SectorFilter = (typeof SECTOR_FILTERS)[number];
 
-const CAP_SIZES = ["Mega Cap", "Large Cap", "Mid Cap", "Small Cap"] as const;
-type CapSize = (typeof CAP_SIZES)[number];
-
-// ---- ETF tabs ----
-const ETF_TABS = ["Most Active", "Top Inflows", "Equity", "Bond", "Sector", "Thematic"] as const;
-type ETFFilter = (typeof ETF_TABS)[number];
+const CYCLICAL_SECTORS = ["Technology", "Consumer Discr.", "Financials", "Industrials", "Basic Materials", "Real Estate"];
+const DEFENSIVE_SECTORS = ["Healthcare", "Consumer Staples", "Utilities", "Comm. Svcs"];
+const GROWTH_SECTORS = ["Technology", "Consumer Discr.", "Comm. Svcs"];
 
 export function USMarketsTab() {
-  const [moverType, setMoverType] = useState<MoverType>("Gainers");
-  const [capSize, setCapSize] = useState<CapSize>("Mega Cap");
-  const [etfFilter, setEtfFilter] = useState<ETFFilter>("Most Active");
+  const [indexFilter, setIndexFilter] = useState<IndexFilter>("Popular");
+  const [sectorFilter, setSectorFilter] = useState<SectorFilter>("Conventional");
 
-  const cycleCapSize = () =>
-    setCapSize((p) => CAP_SIZES[(CAP_SIZES.indexOf(p) + 1) % CAP_SIZES.length]);
+  const filteredIndices = INDEX_DATA[indexFilter];
 
-  const top5Stocks = TOP_STOCKS.slice(0, 5);
-  const top5ETFs = TOP_ETFS.slice(0, 5);
+  const filteredSectors = sectorFilter === "Conventional" ? US_SECTORS
+    : sectorFilter === "Alternative" ? US_SECTORS_ALT
+    : sectorFilter === "Cyclical" ? US_SECTORS.filter(r => CYCLICAL_SECTORS.includes(r.name))
+    : sectorFilter === "Defensive" ? US_SECTORS.filter(r => DEFENSIVE_SECTORS.includes(r.name))
+    : US_SECTORS.filter(r => GROWTH_SECTORS.includes(r.name));
 
   return (
     <div className="pb-8">
       {/* Major Indices */}
       <div className="px-5 pt-5">
         <SectionHeader
-          title="Major Indices"
-          subtitle="Real-time US equity index performance"
+          title="Indices"
+          subtitle="Real-time index performance"
         />
-        <MarketTable columns={perfColumns} data={US_INDICES} />
+        <div className="mb-3 -mx-5 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 px-5 py-0.5">
+            {INDEX_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setIndexFilter(f)}
+                className={cn(
+                  "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+                  indexFilter === f
+                    ? "bg-foreground text-background"
+                    : "border border-border/60 text-muted-foreground"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={`idx-${indexFilter}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+            <MarketTable columns={perfColumns} data={filteredIndices} />
+          </motion.div>
+        </AnimatePresence>
+        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+          View All Indices
+          <ChevronRight size={14} />
+        </button>
       </div>
 
-      <SectionDivider />
+      <div className="h-6" />
 
       {/* Sectors */}
       <div className="px-5">
         <SectionHeader
           title="Sectors"
-          subtitle="Sector ETF performance across US markets"
+          subtitle="Sector ETF performance"
         />
-        <MarketTable columns={perfColumns} data={US_SECTORS} />
-      </div>
-
-      <SectionDivider />
-
-      {/* Top 5 Stocks — What's Moving style */}
-      <div className="px-5">
-        <div className="mb-3.5 flex items-center justify-between">
-          <h2 className="text-[18px] font-bold tracking-tight">Top 5 Stocks</h2>
-          <button
-            onClick={cycleCapSize}
-            className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={capSize}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.15 }}
-                className="block"
-              >
-                {capSize}
-              </motion.span>
-            </AnimatePresence>
-            <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-          </button>
-        </div>
-
-        {/* Mover-type tabs */}
-        <div className="mb-4 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 pb-0.5">
-            {MOVER_TABS.map((tab) => (
+        <div className="mb-3 -mx-5 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 px-5 py-0.5">
+            {SECTOR_FILTERS.map((f) => (
               <button
-                key={tab}
-                onClick={() => setMoverType(tab)}
+                key={f}
+                onClick={() => setSectorFilter(f)}
                 className={cn(
                   "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  moverType === tab
+                  sectorFilter === f
                     ? "bg-foreground text-background"
                     : "border border-border/60 text-muted-foreground"
                 )}
               >
-                {tab}
+                {f}
               </button>
             ))}
           </div>
         </div>
-
         <AnimatePresence mode="wait">
-          <motion.div
-            key={`stocks-${moverType}-${capSize}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <MarketTable columns={stockColumns} data={top5Stocks} />
+          <motion.div key={`sec-${sectorFilter}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+            <MarketTable columns={perfColumns} data={filteredSectors} />
           </motion.div>
         </AnimatePresence>
+        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+          View All Sectors
+          <ChevronRight size={14} />
+        </button>
       </div>
 
-      <SectionDivider />
-
-      {/* Top 5 ETFs */}
-      <div className="px-5">
-        <h2 className="mb-1 text-[18px] font-bold tracking-tight">Top 5 ETFs</h2>
-        <p className="mb-3 text-[14px] text-muted-foreground">Filter by category or activity</p>
-
-        {/* ETF filter tabs */}
-        <div className="mb-4 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 pb-0.5">
-            {ETF_TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setEtfFilter(tab)}
-                className={cn(
-                  "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  etfFilter === tab
-                    ? "bg-foreground text-background"
-                    : "border border-border/60 text-muted-foreground"
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`etfs-${etfFilter}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <MarketTable columns={etfColumns} data={top5ETFs} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <SectionDivider />
-
-      {/* Dividend ETFs */}
-      <div className="px-5">
-        <SectionHeader
-          title="Dividend ETFs"
-          subtitle="Income-focused ETFs sorted by yield"
-        />
-        <DividendETFsMarket />
-      </div>
-
-      <SectionDivider />
+      <div className="h-6" />
 
       {/* Economic Overview */}
       <div className="px-5">
         <SectionHeader
           title="Economic Overview"
           subtitle="Key macroeconomic indicators for the US economy"
-          action={{ label: "More →", onClick: () => {} }}
         />
         <EconomicOverview data={US_ECONOMIC} />
+        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+          View More
+          <ChevronRight size={14} />
+        </button>
       </div>
 
-      <SectionDivider />
+      <div className="h-6" />
 
       {/* Market Summary */}
       <div className="px-5">
@@ -258,30 +162,6 @@ export function USMarketsTab() {
         />
       </div>
 
-      <SectionDivider />
-
-      {/* Stock Screener */}
-      <div className="px-5">
-        <SectionHeader
-          title="Stock Screener"
-          subtitle="Find stocks matching your investment criteria"
-        />
-        <StockScreener />
-      </div>
-
-      <SectionDivider />
-
-      {/* Earnings Calendar */}
-      <div className="px-5">
-        <EarningsCalendar />
-      </div>
-
-      <SectionDivider />
-
-      {/* Dividend Calendar */}
-      <div className="px-5">
-        <DividendCalendar />
-      </div>
     </div>
   );
 }

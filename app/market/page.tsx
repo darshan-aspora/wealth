@@ -9,17 +9,20 @@ import { BottomNavV2 } from "@/components/bottom-nav";
 import { cn } from "@/lib/utils";
 import { USMarketsTab } from "./components/us-markets-tab";
 import { GlobalMarketsTab } from "./components/global-markets-tab";
-import { NewsTab } from "./components/news-tab";
 import { IndiaTab } from "./components/india-tab";
-import { UAETab } from "./components/uae-tab";
 import { UKTab } from "./components/uk-tab";
+import { NewsTab } from "./components/news-tab";
+import { CryptoTab } from "./components/crypto-tab";
+import { CommodityTab } from "./components/commodity-tab";
+import { ForexTab } from "./components/forex-tab";
+import { UAETab } from "./components/uae-tab";
 import { SettingsTab } from "./components/settings-tab";
 
-const MARKET_TABS = ["US Markets", "Global", "News", "India", "UAE", "UK", "Settings"] as const;
+const MARKET_TABS = ["US", "Global", "India", "UK", "News", "Crypto", "Commodity", "Forex", "UAE", "Customize"] as const;
 type MarketTab = (typeof MARKET_TABS)[number];
 
 export default function MarketPage() {
-  const [activeTab, setActiveTab] = useState<MarketTab>("US Markets");
+  const [activeTab, setActiveTab] = useState<MarketTab>("US");
 
   // Collapsible header on scroll
   const [headerHidden, setHeaderHidden] = useState(false);
@@ -61,7 +64,7 @@ export default function MarketPage() {
       {/* Sticky top-level tabs */}
       <div className="border-b border-border/40 bg-background">
         <div className="no-scrollbar overflow-x-auto">
-          <div className="flex gap-0.5 px-4">
+          <div className="flex gap-0.5 px-5">
             {MARKET_TABS.map((tab, i) => (
               <button
                 key={tab}
@@ -95,13 +98,16 @@ export default function MarketPage() {
         className="no-scrollbar flex-1 overflow-y-auto"
         onScroll={handleScroll}
       >
-        {activeTab === "US Markets" && <USMarketsTab />}
+        {activeTab === "US" && <USMarketsTab />}
         {activeTab === "Global" && <GlobalMarketsTab />}
-        {activeTab === "News" && <NewsTab />}
         {activeTab === "India" && <IndiaTab />}
-        {activeTab === "UAE" && <UAETab />}
         {activeTab === "UK" && <UKTab />}
-        {activeTab === "Settings" && <SettingsTab />}
+        {activeTab === "News" && <NewsTab />}
+        {activeTab === "Crypto" && <CryptoTab />}
+        {activeTab === "Commodity" && <CommodityTab />}
+        {activeTab === "Forex" && <ForexTab />}
+        {activeTab === "UAE" && <UAETab />}
+        {activeTab === "Customize" && <SettingsTab />}
       </main>
 
       <BottomNavV2 />

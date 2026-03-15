@@ -2,27 +2,19 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Download,
   Share2,
   Shield,
-  TrendingUp,
   Clock,
   RefreshCw,
-  Lock,
-  Scale,
   FileText,
   AlertTriangle,
   Gem,
-  Target,
   Zap,
   Layers,
   Cpu,
-  HeartPulse,
-  Leaf,
-  Globe,
   ChevronRight,
   CalendarDays,
   type LucideIcon,
@@ -327,7 +319,7 @@ export default function BasketDetailPage() {
       <StatusBar />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40">
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/40">
         <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center -ml-2 active:opacity-60">
           <ArrowLeft size={22} className="text-foreground" />
         </button>
@@ -450,7 +442,7 @@ export default function BasketDetailPage() {
               { label: "AUM", value: basket.aum },
               { label: "Inception", value: basket.inception },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between px-4 py-3">
+              <div key={item.label} className="flex items-center justify-between px-5 py-3">
                 <span className="text-[14px] text-muted-foreground">{item.label}</span>
                 <span className="text-[14px] font-semibold text-foreground">{item.value}</span>
               </div>
@@ -467,7 +459,7 @@ export default function BasketDetailPage() {
         <section>
           <SectionTitle>Rebalance Schedule</SectionTitle>
           <div className="mx-5 rounded-2xl bg-card border border-border/40 divide-y divide-border/40">
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex items-center gap-3 px-5 py-3.5">
               <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
                 <RefreshCw size={16} className="text-blue-400" />
               </div>
@@ -476,7 +468,7 @@ export default function BasketDetailPage() {
                 <p className="text-[13px] text-muted-foreground">{basket.rebalance}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex items-center gap-3 px-5 py-3.5">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
                 <CalendarDays size={16} className="text-emerald-400" />
               </div>
@@ -485,7 +477,7 @@ export default function BasketDetailPage() {
                 <p className="text-[13px] text-muted-foreground">{basket.lastRebalance}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex items-center gap-3 px-5 py-3.5">
               <div className="w-9 h-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
                 <Clock size={16} className="text-amber-400" />
               </div>
@@ -506,7 +498,7 @@ export default function BasketDetailPage() {
         <section>
           <SectionTitle>Fee Structure</SectionTitle>
           <div className="mx-5 rounded-2xl bg-card border border-border/40 divide-y divide-border/40">
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center justify-between px-5 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
                   <FileText size={15} className="text-blue-400" />
@@ -518,7 +510,7 @@ export default function BasketDetailPage() {
               </div>
               <p className="text-[17px] font-bold text-foreground">0.6%<span className="text-[12px] font-normal text-muted-foreground">/yr</span></p>
             </div>
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center justify-between px-5 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
                   <AlertTriangle size={15} className="text-amber-400" />
@@ -530,7 +522,7 @@ export default function BasketDetailPage() {
               </div>
               <p className="text-[17px] font-bold text-foreground">0.5%</p>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex items-center gap-3 px-5 py-3.5">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center">
                 <Shield size={15} className="text-emerald-400" />
               </div>
@@ -570,7 +562,7 @@ export default function BasketDetailPage() {
         <section className="px-5 mb-6">
           <SectionTitle>Documents</SectionTitle>
           <div className="space-y-2 mt-3">
-            <button className="w-full flex items-center gap-3 rounded-xl bg-card border border-border/40 px-4 py-3.5 active:scale-[0.98] transition-transform">
+            <button className="w-full flex items-center gap-3 rounded-xl bg-card border border-border/40 px-5 py-3.5 active:scale-[0.98] transition-transform">
               <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
                 <Download size={16} className="text-blue-400" />
               </div>
@@ -580,7 +572,7 @@ export default function BasketDetailPage() {
               </div>
               <ChevronRight size={16} className="text-muted-foreground shrink-0" />
             </button>
-            <button className="w-full flex items-center gap-3 rounded-xl bg-card border border-border/40 px-4 py-3.5 active:scale-[0.98] transition-transform">
+            <button className="w-full flex items-center gap-3 rounded-xl bg-card border border-border/40 px-5 py-3.5 active:scale-[0.98] transition-transform">
               <div className="w-9 h-9 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0">
                 <FileText size={16} className="text-violet-400" />
               </div>

@@ -403,7 +403,7 @@ export function AlgoStrategies() {
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="flex items-center justify-between px-4 py-3.5">
+              <div key={stat.label} className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-3">
                   <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", stat.color)}>
                     <Icon size={15} />
@@ -483,7 +483,7 @@ export function AlgoStrategies() {
                   key={opt}
                   onClick={() => { setSortBy(opt); setShowSortSheet(false); }}
                   className={cn(
-                    "w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-left transition-colors",
+                    "w-full flex items-center justify-between rounded-xl px-5 py-3.5 text-left transition-colors",
                     sortBy === opt ? "bg-muted text-foreground" : "text-muted-foreground active:bg-muted/50"
                   )}
                 >

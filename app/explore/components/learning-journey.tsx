@@ -68,7 +68,7 @@ export function LearningJourney() {
 
   return (
     <section className="bg-background py-8">
-      <div ref={sectionRef} className="px-4">
+      <div ref={sectionRef} className="px-5">
         <motion.div
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}

@@ -16,7 +16,7 @@ export function Financials({ symbol }: FinancialsProps) {
 
   if (!data) {
     return (
-      <div className="px-4 py-4">
+      <div className="px-5 py-4">
         <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
           Financials
         </h2>
@@ -26,7 +26,7 @@ export function Financials({ symbol }: FinancialsProps) {
   }
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
           Financials

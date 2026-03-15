@@ -4,33 +4,42 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Search, Bell } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { OptionsMenu } from "@/components/header";
+import { Button } from "@/components/ui/button";
 
 function StocksHeader() {
   const router = useRouter();
 
   return (
-    <header className="flex items-center justify-between px-4 py-3">
-      <button
+    <header className="flex items-center justify-between px-5 py-3">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-full text-muted-foreground"
         onClick={() => router.back()}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
         <ArrowLeft size={20} strokeWidth={2} />
-      </button>
+      </Button>
 
       <div className="flex items-center gap-1">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
           onClick={() => router.push("/search")}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
         >
           <Search size={20} strokeWidth={1.8} />
-        </button>
+        </Button>
 
-        <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="relative rounded-full text-muted-foreground"
+        >
           <Bell size={20} strokeWidth={1.8} />
           <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
             3
           </span>
-        </button>
+        </Button>
 
         <OptionsMenu />
       </div>

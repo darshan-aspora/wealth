@@ -1,31 +1,26 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
+import { EarningsCalendar } from "@/app/market/components/earnings-calendar";
+import { DividendCalendar } from "@/app/market/components/dividend-calendar";
 import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
   Brain,
   Zap,
   Coins,
-  Dna,
   Layers,
-  Cpu,
-  CreditCard,
   TrendingUp,
   ArrowUpDown,
   ChevronRight,
   Target,
   Plus,
-  Filter,
-  TrendingDown,
   ArrowDown,
   BarChart3,
   Gem,
   Rocket,
-  Lock,
   Maximize2,
   Wrench,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -130,7 +125,7 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
 
   return (
     <div className="flex items-baseline gap-1.5 w-full">
-      <span className="text-[13px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+      <span className="text-[14px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {low.toFixed(0)}
       </span>
       <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
@@ -139,7 +134,7 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
           style={{ left: `${pct}%`, width: 2, bottom: 0 }}
         />
       </div>
-      <span className="text-[13px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+      <span className="text-[14px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {high.toFixed(0)}
       </span>
     </div>
@@ -154,7 +149,7 @@ function RatingBadge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
   return (
     <span
       className={cn(
-        "inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
+        "inline-block rounded-full px-2.5 py-0.5 text-[14px] font-semibold whitespace-nowrap",
         rating === "Buy" && "bg-emerald-500/15 text-emerald-500",
         rating === "Sell" && "bg-red-500/15 text-red-500",
         rating === "Hold" && "bg-muted text-muted-foreground"
@@ -164,36 +159,6 @@ function RatingBadge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
     </span>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Rating Gauge                                                       */
-/* ------------------------------------------------------------------ */
-
-function RatingGauge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
-  const position = rating === "Sell" ? 15 : rating === "Hold" ? 50 : 85;
-
-  return (
-    <div className="w-[52px] flex-shrink-0">
-      <div className="relative flex h-[5px] overflow-hidden rounded-full">
-        <div className="flex-1 bg-red-500/25" />
-        <div className="flex-1 bg-muted" />
-        <div className="flex-1 bg-emerald-500/25" />
-      </div>
-      <div className="relative mt-0.5 h-2">
-        <div
-          className={cn(
-            "absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full",
-            rating === "Buy" && "bg-emerald-500",
-            rating === "Sell" && "bg-red-500",
-            rating === "Hold" && "bg-muted-foreground"
-          )}
-          style={{ left: `${position}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                          */
@@ -399,14 +364,16 @@ function TopMoversWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
   const cycleCapSize = () =>
     setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
 
-  const thCls = "px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground";
+  const thCls = "px-3 text-[14px] font-medium text-muted-foreground";
+  // 2 visible cols: (viewport − padding − border − frozenCol − watchCol) / 2
+  const colW = "w-[calc((min(430px,100vw)-40px-196px-48px)/2)]";
 
   return (
     <div>
@@ -417,7 +384,7 @@ function TopMoversWidget() {
         </h2>
         <button
           onClick={cycleCapSize}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -436,14 +403,14 @@ function TopMoversWidget() {
       </div>
 
       {/* Mover-type tabs — scrollable pills */}
-      <div className="mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 pb-0.5">
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
           {moverTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setMoverType(tab.id)}
               className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
                 moverType === tab.id
                   ? "bg-foreground text-background"
                   : "border border-border/60 text-muted-foreground"
@@ -465,31 +432,26 @@ function TopMoversWidget() {
             transition={{ duration: 0.15 }}
             className="flex"
           >
-            {/* ---- Frozen left column: symbol + name (no bookmark) ---- */}
-            <div className="z-10 w-[148px] flex-shrink-0 border-r border-border/20 bg-card">
-              <div className={cn("flex h-[40px] items-center px-4", thCls)}>Stock</div>
+            {/* ---- Frozen left column: name only ---- */}
+            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
+              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
               {stocks.map((stock) => (
-                <div key={stock.symbol} className="flex h-[64px] items-center px-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
-                    <div className="min-w-0">
-                      <p className="text-[14px] font-bold leading-tight text-foreground">{stock.symbol}</p>
-                      <p className="max-w-[72px] truncate text-[12px] leading-tight text-muted-foreground">{stock.name}</p>
-                    </div>
-                  </div>
+                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
+                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
+                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
                 </div>
               ))}
             </div>
 
-            {/* ---- Scrollable right columns ---- */}
+            {/* ---- Scrollable right columns (first 2 visible by default) ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: isGainersLosers ? 780 : 560 }}>
+              <table className="w-full" style={{ minWidth: isGainersLosers ? 780 : 560 }}>
                 <thead>
                   <tr className="h-[40px]">
 
                     {isGainersLosers && (<>
-                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
-                      <th className={cn(thCls, "w-[72px] min-w-[72px] text-right")}>
+                      <th className={cn(thCls, colW, "text-right")}>Price</th>
+                      <th className={cn(thCls, colW, "text-right")}>
                         <span className="inline-flex items-center justify-end gap-1">
                           <ArrowDown size={10} className="text-foreground" />Chg%
                         </span>
@@ -504,8 +466,8 @@ function TopMoversWidget() {
                     </>)}
 
                     {moverType === "most-active" && (<>
-                      <th className={cn(thCls, "min-w-[76px] text-right")}>Volume</th>
-                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, colW, "text-right")}>Volume</th>
+                      <th className={cn(thCls, colW, "text-right")}>Price</th>
                       <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
                       <th className={cn(thCls, "min-w-[64px] text-center")}>1Y</th>
                       <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
@@ -513,8 +475,8 @@ function TopMoversWidget() {
                     </>)}
 
                     {moverType === "near-52w-high" && (<>
-                      <th className={cn(thCls, "min-w-[82px] text-right")}>From High</th>
-                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, colW, "text-right")}>From High</th>
+                      <th className={cn(thCls, colW, "text-right")}>Price</th>
                       <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
                       <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
                       <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
@@ -522,8 +484,8 @@ function TopMoversWidget() {
                     </>)}
 
                     {moverType === "near-52w-low" && (<>
-                      <th className={cn(thCls, "min-w-[82px] text-right")}>From Low</th>
-                      <th className={cn(thCls, "w-[86px] min-w-[86px] text-right")}>Price</th>
+                      <th className={cn(thCls, colW, "text-right")}>From Low</th>
+                      <th className={cn(thCls, colW, "text-right")}>Price</th>
                       <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
                       <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
                       <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
@@ -531,7 +493,7 @@ function TopMoversWidget() {
                     </>)}
 
                     {/* Watchlist — always rightmost */}
-                    <th className={cn(thCls, "w-[48px] min-w-[48px] text-center")}>Watch</th>
+                    <th className={cn(thCls, "w-[48px] min-w-[48px] text-center")}>Watchlist</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -543,10 +505,10 @@ function TopMoversWidget() {
                       <tr key={stock.symbol} className="h-[64px]">
 
                         {isGainersLosers && (<>
-                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
                             {stock.price.toFixed(1)}
                           </td>
-                          <td className={cn("w-[72px] min-w-[72px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
                             {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
                           </td>
                           <td className="px-3">
@@ -554,16 +516,16 @@ function TopMoversWidget() {
                               <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.pe != null ? Math.round(stock.pe) : "—"}
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.marketCap.replace("$", "")}
                           </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
                             {stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%
                           </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
                             {stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%
                           </td>
                           <td className="min-w-[136px] px-3">
@@ -579,13 +541,13 @@ function TopMoversWidget() {
                         </>)}
 
                         {moverType === "most-active" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-foreground">
                             {stock.volume}
                           </td>
-                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
                             {stock.price.toFixed(1)}
                           </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
                             {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
                           </td>
                           <td className="px-3">
@@ -593,52 +555,52 @@ function TopMoversWidget() {
                               <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.marketCap.replace("$", "")}
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.pe != null ? Math.round(stock.pe) : "—"}
                           </td>
                         </>)}
 
                         {moverType === "near-52w-high" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-amber-500">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-amber-500">
                             -{fromHigh.toFixed(1)}%
                           </td>
-                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
                             {stock.price.toFixed(1)}
                           </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
                             {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
                           </td>
                           <td className="min-w-[136px] px-3">
                             <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.volume}
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.marketCap.replace("$", "")}
                           </td>
                         </>)}
 
                         {moverType === "near-52w-low" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold text-sky-500">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-sky-500">
                             +{fromLow.toFixed(1)}%
                           </td>
-                          <td className="w-[86px] min-w-[86px] whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
                             {stock.price.toFixed(1)}
                           </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold", chgColor)}>
+                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
                             {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
                           </td>
                           <td className="min-w-[136px] px-3">
                             <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.volume}
                           </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] text-muted-foreground">
+                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                             {stock.marketCap.replace("$", "")}
                           </td>
                         </>)}
@@ -651,7 +613,7 @@ function TopMoversWidget() {
                               className="transition-transform active:scale-90"
                             >
                               <Bookmark
-                                size={15}
+                                size={20}
                                 strokeWidth={1.8}
                                 className={cn(
                                   "transition-colors",
@@ -894,37 +856,40 @@ function AnalystRatingsWidget() {
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
   const stocks = ratedStocks[ratingTab];
-  const isBullish = ratingTab === "strong-buy" || ratingTab === "buy";
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
   return (
     <div>
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">
-        Stocks by Analyst Ratings
-      </h2>
+      <div className="mb-3.5">
+        <h2 className="text-[18px] font-bold tracking-tight">
+          Stocks by Analyst Ratings
+        </h2>
+      </div>
 
       {/* Rating pills */}
-      <div className="mb-2.5 flex gap-2">
-        {ratingTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setRatingTab(tab.id)}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-              ratingTab === tab.id
-                ? "bg-foreground text-background"
-                : "border border-border/60 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {ratingTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setRatingTab(tab.id)}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                ratingTab === tab.id
+                  ? "bg-foreground text-background"
+                  : "border border-border/60 text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
@@ -939,13 +904,13 @@ function AnalystRatingsWidget() {
           >
             {/* ---- Frozen left column ---- */}
             <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Stock
               </div>
               {stocks.map((stock) => (
                 <div
                   key={stock.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-4"
+                  className="flex h-[56px] items-center border-t border-border/20 px-5"
                 >
                   <div className="flex items-center gap-2.5">
                     <button
@@ -1154,32 +1119,36 @@ function DividendStocksWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
   return (
     <div>
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">
-        Dividend Stocks
-      </h2>
+      <div className="mb-3.5">
+        <h2 className="text-[18px] font-bold tracking-tight">
+          Dividend Stocks
+        </h2>
+      </div>
 
       {/* Pill tabs */}
-      <div className="mb-2.5 flex gap-2 overflow-x-auto no-scrollbar">
-        {divTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setDivTab(tab.id)}
-            className={cn(
-              "flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-              divTab === tab.id
-                ? "bg-foreground text-background"
-                : "border border-border/60 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {divTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setDivTab(tab.id)}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                divTab === tab.id
+                  ? "bg-foreground text-background"
+                  : "border border-border/60 text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
@@ -1194,13 +1163,13 @@ function DividendStocksWidget() {
           >
             {/* ---- Frozen left column ---- */}
             <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Stock
               </div>
               {stocks.map((stock) => (
                 <div
                   key={stock.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-4"
+                  className="flex h-[56px] items-center border-t border-border/20 px-5"
                 >
                   <div className="flex items-center gap-2.5">
                     <button
@@ -1310,283 +1279,120 @@ function DividendStocksWidget() {
 /*  Level Up Widget                                                    */
 /* ------------------------------------------------------------------ */
 
-interface StorySlide {
-  emoji: string;
-  title: string;
-  body: string;
-}
-
-interface LevelUpStory {
-  title: string;
-  subtitle: string;
-  emoji: string;
-  color: string;
-  slides: StorySlide[];
-}
-
-const levelUpStories: LevelUpStory[] = [
+const levelUpStages = [
   {
-    title: "Confident\nInvestor",
-    subtitle: "Stage 1",
-    emoji: "📊",
-    color: "#6366f1",
-    slides: [
-      { emoji: "📋", title: "Read Earnings Reports", body: "Every quarter, companies reveal their truth. Revenue, profit, guidance — three numbers that move stock prices more than any tweet." },
-      { emoji: "⚖️", title: "The P/E Ratio", body: "Price divided by earnings. Is 30x PE cheap or expensive? It depends on growth. Fast growers earn high multiples. Slow ones don't." },
-      { emoji: "🔄", title: "Sector Rotation", body: "Money flows between sectors like tides. Tech leads bull runs. Defensives shine in downturns. Knowing the cycle is half the edge." },
-      { emoji: "💡", title: "Your First Insight", body: "Start with companies you use every day. You already know their products. Now learn to read their numbers." },
+    title: "The Confident Investor",
+    body: "Read earnings reports. Understand P/E ratios. Spot sector rotation.",
+    videos: [
+      { title: "How to read earnings", duration: "5 min" },
+      { title: "P/E ratios explained", duration: "4 min" },
+      { title: "Sector rotation strategies", duration: "5 min" },
     ],
   },
   {
-    title: "Strategic\nInvestor",
-    subtitle: "Stage 2",
-    emoji: "📈",
-    color: "#10b981",
-    slides: [
-      { emoji: "📈", title: "Reading a Chart", body: "Price tells a story. Higher highs and higher lows = uptrend. Lower highs and lower lows = downtrend. Everything else is noise." },
-      { emoji: "🧱", title: "Support & Resistance", body: "Prices remember. Where buyers stepped in before is support. Where sellers pushed back is resistance. These levels matter." },
-      { emoji: "📦", title: "Volume Confirms", body: "A breakout on low volume is suspect. A breakout on 3x average volume? That's conviction. Volume never lies." },
-      { emoji: "⏰", title: "Timing Your Entry", body: "Patience is a strategy. Waiting for a pullback to support before entering can dramatically improve your risk/reward ratio." },
+    title: "The Strategic Investor",
+    body: "Read charts. Spot patterns. Make your first swing trade.",
+    videos: [
+      { title: "Reading a stock chart", duration: "5 min" },
+      { title: "Support & resistance", duration: "4 min" },
+      { title: "Volume: the hidden signal", duration: "3 min" },
     ],
   },
   {
-    title: "Options\nExplorer",
-    subtitle: "Stage 3",
-    emoji: "🎯",
-    color: "#a855f7",
-    slides: [
-      { emoji: "📞", title: "What is a Call?", body: "A call option gives you the right to buy 100 shares at a set price before expiry. You profit when the stock rises above your strike." },
-      { emoji: "📉", title: "What is a Put?", body: "A put gives you the right to sell at a set price. Traders use puts to profit from falling stocks or to protect existing positions." },
-      { emoji: "🛡️", title: "Covered Calls", body: "Own 100 shares? Sell a call against them. You collect premium immediately. If the stock stays flat, you keep both the shares and the cash." },
-      { emoji: "⚡", title: "The Greeks", body: "Delta, theta, vega — options move differently than stocks. Delta measures direction, theta measures time decay. Master these first." },
+    title: "The Options Explorer",
+    body: "Calls, puts, covered calls. Trade options with confidence.",
+    videos: [
+      { title: "Options 101: Calls", duration: "3 min" },
+      { title: "Options 102: Puts", duration: "4 min" },
+      { title: "Covered calls for income", duration: "5 min" },
     ],
   },
   {
-    title: "Power\nMode",
-    subtitle: "Stage 4",
-    emoji: "⚡",
-    color: "#f59e0b",
-    slides: [
-      { emoji: "🤖", title: "Algo Trading Basics", body: "Algorithms execute at speeds and precision humans can't match. Even simple rules — buy when RSI < 30 — beat emotional trading." },
-      { emoji: "🔗", title: "Bracket Orders", body: "Set your entry, stop-loss, and target in one click. Your risk is fully defined before you even enter the trade." },
-      { emoji: "🌙", title: "Extended Hours", body: "Earnings happen after the bell. Extended hours let you react before the main session opens. Spreads are wider — size down." },
-      { emoji: "🏆", title: "Find Your Edge", body: "Every pro has a defined edge: a strategy that works more than it fails. Find yours, test it small, and execute without emotion." },
+    title: "Power Mode",
+    body: "Algo strategies. Advanced orders. Extended-hours trading.",
+    videos: [
+      { title: "How algo trading works", duration: "4 min" },
+      { title: "Bracket & OCO orders", duration: "5 min" },
+      { title: "From investor to trader", duration: "6 min" },
     ],
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Story Viewer — full-frame overlay                                  */
-/* ------------------------------------------------------------------ */
-
-function StoryViewer({ story, onClose }: { story: LevelUpStory; onClose: () => void }) {
-  const [slideIdx, setSlideIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const slide = story.slides[slideIdx];
-
-  const advance = () => {
-    if (slideIdx < story.slides.length - 1) setSlideIdx((s) => s + 1);
-    else onClose();
-  };
-
-  const retreat = () => {
-    if (slideIdx > 0) setSlideIdx((s) => s - 1);
-  };
-
-  useEffect(() => {
-    setProgress(0);
-    const t0 = Date.now();
-    timerRef.current = setInterval(() => {
-      const pct = Math.min(((Date.now() - t0) / 5000) * 100, 100);
-      setProgress(pct);
-      if (pct >= 100) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        if (slideIdx < story.slides.length - 1) setSlideIdx((s) => s + 1);
-        else onClose();
-      }
-    }, 16);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slideIdx]);
-
-  const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const w = rect.width;
-    if (x < w / 3) retreat(); else advance();
-  };
-
-  // Swipe gesture support
-  const touchStartX = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(dx) > 50) {
-      if (dx < 0) advance();
-      else retreat();
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={handleTap}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      className="fixed inset-0 z-[100] mx-auto flex max-w-[430px] flex-col bg-background"
-    >
-      {/* Colored radial glow */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: `radial-gradient(ellipse at 50% 10%, ${story.color}20 0%, transparent 55%)` }}
-      />
-
-      {/* Progress bars */}
-      <div className="relative z-10 flex gap-1 px-4 pt-4">
-        {story.slides.map((_, i) => (
-          <div key={i} className="h-[2.5px] flex-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full"
-              style={{
-                background: story.color,
-                width: i < slideIdx ? "100%" : i === slideIdx ? `${progress}%` : "0%",
-                transition: "none",
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[18px]"
-            style={{ backgroundColor: `${story.color}18` }}
-          >
-            {story.emoji}
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold leading-tight">
-              {story.subtitle} · {story.title.replace("\n", " ")}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {slideIdx + 1} of {story.slides.length}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/60"
-        >
-          <X size={16} className="text-foreground" />
-        </button>
-      </div>
-
-      {/* Slide content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={slideIdx}
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.04 }}
-          transition={{ duration: 0.18 }}
-          className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 text-center"
-        >
-          <span className="mb-5 select-none text-[64px] leading-none">{slide.emoji}</span>
-          <h3
-            className="mb-4 text-[26px] font-bold leading-tight tracking-tight"
-            style={{ color: story.color }}
-          >
-            {slide.title}
-          </h3>
-          <p className="max-w-[300px] text-[16px] leading-relaxed text-muted-foreground">
-            {slide.body}
-          </p>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Tap hint */}
-      <div className="relative z-10 flex justify-between px-8 pb-8">
-        <div className="flex items-center gap-1 text-muted-foreground/30">
-          <ChevronRight size={13} className="rotate-180" />
-          <span className="text-[11px]">Back</span>
-        </div>
-        <div className="flex items-center gap-1 text-muted-foreground/30">
-          <span className="text-[11px]">Next</span>
-          <ChevronRight size={13} />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Level Up Widget — stories format                                   */
-/* ------------------------------------------------------------------ */
-
 function LevelUpWidget() {
-  const [openStory, setOpenStory] = useState<LevelUpStory | null>(null);
-  const [viewed, setViewed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState(0);
 
   return (
-    <>
-      <div>
-        <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">Level Up</h2>
-        <p className="mb-4 text-[14px] text-muted-foreground">
-          Every great trader started as a curious investor. Here&apos;s the path.
-        </p>
+    <div>
+      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
+        Level Up
+      </h2>
+      <p className="mb-3 text-[14px] text-muted-foreground">
+        Every great trader started as a curious investor. Here&apos;s the path.
+      </p>
 
-        <div className="flex gap-5">
-          {levelUpStories.map((story) => {
-            const isViewed = viewed.has(story.title);
-            return (
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+        {levelUpStages.map((stage, i) => {
+          const isOpen = expanded === i;
+          return (
+            <div
+              key={stage.title}
+              className={cn(i > 0 && "border-t border-border/40")}
+            >
               <button
-                key={story.title}
-                onClick={() => {
-                  setOpenStory(story);
-                  setViewed((p) => { const n = new Set(p); n.add(story.title); return n; });
-                }}
-                className="flex flex-shrink-0 flex-col items-center gap-1.5"
+                onClick={() => setExpanded(isOpen ? -1 : i)}
+                className="flex w-full items-center gap-3 p-3.5 text-left"
               >
-                {/* Ring + avatar */}
-                <div
-                  className="rounded-full p-[2.5px]"
-                  style={isViewed
-                    ? { border: "2.5px solid rgba(128,128,128,0.25)" }
-                    : { background: `linear-gradient(135deg, ${story.color}, ${story.color}66)`, padding: "2.5px" }
-                  }
-                >
-                  <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-background text-[28px]">
-                    {story.emoji}
-                  </div>
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-[13px] font-bold text-foreground">
+                  {i + 1}
                 </div>
-                <p className="max-w-[68px] text-center text-[11px] font-semibold leading-tight text-foreground">
-                  {story.title.replace("\n", " ")}
-                </p>
-                <p className="text-[10px] text-muted-foreground/70">{story.subtitle}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold text-foreground">{stage.title}</p>
+                  {!isOpen && (
+                    <p className="text-[12px] text-muted-foreground truncate">{stage.body}</p>
+                  )}
+                </div>
+                <ChevronRight
+                  size={16}
+                  className={cn(
+                    "flex-shrink-0 text-muted-foreground transition-transform duration-200",
+                    isOpen && "rotate-90"
+                  )}
+                />
               </button>
-            );
-          })}
-        </div>
-      </div>
 
-      <AnimatePresence>
-        {openStory && (
-          <StoryViewer story={openStory} onClose={() => setOpenStory(null)} />
-        )}
-      </AnimatePresence>
-    </>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-3.5 pb-3.5 pt-0">
+                      <p className="text-[13px] text-muted-foreground mb-3">{stage.body}</p>
+                      <div className="space-y-2">
+                        {stage.videos.map((v) => (
+                          <div key={v.title} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-0.5">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                            <p className="text-[13px] font-medium text-foreground flex-1">{v.title}</p>
+                            <span className="text-[12px] text-muted-foreground">{v.duration}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -1634,32 +1440,36 @@ function ScreenerWidget() {
 
   return (
     <div>
-      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
-        Stock Screeners
-      </h2>
-      <p className="mb-3 text-[14px] text-muted-foreground">
-        Find stocks that match your criteria
-      </p>
+      <div className="mb-3.5">
+        <h2 className="text-[18px] font-bold tracking-tight">
+          Stock Screeners
+        </h2>
+        <p className="mt-0.5 text-[14px] text-muted-foreground">
+          Find stocks that match your criteria
+        </p>
+      </div>
 
       {/* Tabs */}
-      <div className="mb-3 flex gap-2">
-        {screenerTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => !tab.disabled && setActiveTab(tab.id)}
-            disabled={tab.disabled}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-              tab.disabled
-                ? "border border-border/30 text-muted-foreground/40 cursor-not-allowed"
-                : activeTab === tab.id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {screenerTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => !tab.disabled && setActiveTab(tab.id)}
+              disabled={tab.disabled}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                tab.disabled
+                  ? "border border-border/30 text-muted-foreground/40 cursor-not-allowed"
+                  : activeTab === tab.id
+                    ? "bg-foreground text-background"
+                    : "border border-border/60 text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Screener list */}
@@ -1676,7 +1486,7 @@ function ScreenerWidget() {
             <button
               key={screener.name}
               className={cn(
-                "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/30",
+                "flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-muted/30",
                 i > 0 && "border-t border-border/30"
               )}
             >
@@ -1933,30 +1743,12 @@ function HeatmapWidget() {
 
   return (
     <div>
-      <h2 className="mb-3.5 text-[18px] font-bold tracking-tight">Market at a Glance</h2>
-
-      {/* Index pills + view flipper */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex gap-2">
-          {(["sp500", "nasdaq100"] as const).map((id) => (
-            <button
-              key={id}
-              onClick={() => setIndex(id)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                index === id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {id === "sp500" ? "S&P 500" : "NASDAQ 100"}
-            </button>
-          ))}
-        </div>
-
+      {/* Title row: title + view flipper */}
+      <div className="mb-3.5 flex items-center justify-between">
+        <h2 className="text-[18px] font-bold tracking-tight">Market at a Glance</h2>
         <button
           onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
+          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -1972,6 +1764,26 @@ function HeatmapWidget() {
           </AnimatePresence>
           <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
         </button>
+      </div>
+
+      {/* Index pills */}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {(["sp500", "nasdaq100"] as const).map((id) => (
+            <button
+              key={id}
+              onClick={() => setIndex(id)}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                index === id
+                  ? "bg-foreground text-background"
+                  : "border border-border/60 text-muted-foreground"
+              )}
+            >
+              {id === "sp500" ? "S&P 500" : "NASDAQ 100"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Treemap */}
@@ -2056,7 +1868,7 @@ const bannerLabels: Record<BannerMode, string> = {
 };
 
 function PromoBanner() {
-  const [mode, setMode] = useState<BannerMode>("big-full");
+  const [mode, setMode] = useState<BannerMode>("big");
 
   const cycle = () =>
     setMode((p) => bannerOrder[(bannerOrder.indexOf(p) + 1) % bannerOrder.length]);
@@ -2079,7 +1891,7 @@ function PromoBanner() {
       className={cn(
         "flex w-full items-center justify-center bg-muted transition-all active:scale-[0.99]",
         heights[mode],
-        isFull ? "-mx-4 w-[calc(100%+2rem)]" : "rounded-2xl"
+        isFull ? "-mx-5 w-[calc(100%+2.5rem)]" : "rounded-2xl"
       )}
     >
       <p className="text-[14px] font-semibold text-muted-foreground">{label}</p>
@@ -2093,7 +1905,7 @@ function PromoBanner() {
 
 export function ExploreFundedNotTraded() {
   return (
-    <div className="space-y-8 px-4 pt-5 pb-4">
+    <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
       <TopMoversWidget />
       <HeatmapWidget />
@@ -2102,6 +1914,8 @@ export function ExploreFundedNotTraded() {
       <DividendStocksWidget />
       <ScreenerWidget />
       <LevelUpWidget />
+      <EarningsCalendar />
+      <DividendCalendar />
     </div>
   );
 }

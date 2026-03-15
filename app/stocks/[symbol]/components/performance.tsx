@@ -17,7 +17,7 @@ export function Performance({ symbol }: PerformanceProps) {
   const beatBench = benchDelta > 0;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
         Performance
       </h2>

@@ -152,7 +152,7 @@ function CaseCard({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles size={14} className="text-muted-foreground/40" />
         <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">

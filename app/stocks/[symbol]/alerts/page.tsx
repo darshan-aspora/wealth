@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { Button } from "@/components/ui/button";
 import {
   ALL_TICKERS,
   TickerLogo,
@@ -93,12 +94,14 @@ function AlertRow({
         <p className="text-[15px] font-semibold text-foreground mt-0.5 leading-snug">{label}</p>
       </div>
 
-      <button
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        className="rounded-full text-muted-foreground/40 active:bg-red-500/10 active:text-red-400"
         onClick={onDelete}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground/40 transition-colors active:bg-red-500/10 active:text-red-400"
       >
         <Trash2 size={16} strokeWidth={1.8} />
-      </button>
+      </Button>
     </motion.div>
   );
 }
@@ -160,12 +163,14 @@ function PriceAlertSheet({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-4 pt-2">
           <h2 className="text-[20px] font-bold text-foreground">Add Price Alert</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="rounded-full bg-muted/40 text-muted-foreground active:bg-muted/60"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/40 text-muted-foreground active:bg-muted/60"
           >
             <X size={16} strokeWidth={2.5} />
-          </button>
+          </Button>
         </div>
 
         {/* Input */}
@@ -196,18 +201,13 @@ function PriceAlertSheet({
 
         {/* Add Button */}
         <div className="px-5 pb-8">
-          <button
+          <Button
             onClick={handleAdd}
             disabled={!canAdd}
-            className={cn(
-              "flex w-full items-center justify-center rounded-2xl py-4 text-[16px] font-bold transition-all",
-              canAdd
-                ? "bg-foreground text-background active:scale-[0.98]"
-                : "bg-muted/20 text-muted-foreground/25 cursor-not-allowed"
-            )}
+            className="w-full rounded-2xl py-4 text-[16px] font-bold active:scale-[0.98]"
           >
             Add Alert
-          </button>
+          </Button>
         </div>
       </motion.div>
     </>
@@ -279,17 +279,23 @@ export default function SetAlertPage() {
       <StatusBar />
 
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3">
-        <button
+      <header className="flex items-center gap-3 px-5 py-3">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
           onClick={() => router.back()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
         >
           <ArrowLeft size={22} strokeWidth={2} />
-        </button>
+        </Button>
         <div className="flex-1" />
-        <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
+        >
           <Bell size={20} strokeWidth={1.8} />
-        </button>
+        </Button>
       </header>
 
       {/* Stock Hero — logo, full name, price, delta */}
@@ -356,12 +362,13 @@ export default function SetAlertPage() {
           />
 
           {/* Add Price Alert button */}
-          <button
+          <Button
+            variant="outline"
             onClick={() => setShowCustomSheet(true)}
-            className="flex w-full items-center justify-center gap-2 mt-3 rounded-xl border border-border/40 py-3 text-[15px] font-semibold text-muted-foreground transition-colors active:bg-muted/30"
+            className="w-full mt-3 rounded-xl border-border/40 py-3 text-[15px] font-semibold text-muted-foreground active:bg-muted/30"
           >
             Add Price Alert
-          </button>
+          </Button>
         </div>
 
         {/* ── Active Alerts ── */}

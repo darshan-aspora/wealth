@@ -46,12 +46,12 @@ function RotatingText({ prefix = "Search " }: { prefix?: string }) {
 // Rounded-full pill search bar — iOS-inspired, soft and approachable
 function HeaderV1() {
   return (
-    <header className="flex items-center gap-2.5 px-4 py-3">
+    <header className="flex items-center gap-2.5 px-5 py-3">
       <button className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
         <ChevronLeft size={24} strokeWidth={2} />
       </button>
 
-      <div className="relative flex h-12 flex-1 items-center rounded-full bg-muted/50 px-4">
+      <div className="relative flex h-12 flex-1 items-center rounded-full bg-muted/50 px-5">
         <Search size={18} className="shrink-0 text-muted-foreground/60" />
         <div className="ml-2 text-[16px] text-muted-foreground/60">
           <RotatingText />
@@ -69,7 +69,7 @@ function HeaderV1() {
 // No background on search — just a bottom border, editorial/magazine feel
 function HeaderV2() {
   return (
-    <header className="flex items-center gap-3 px-4 py-3">
+    <header className="flex items-center gap-3 px-5 py-3">
       <button className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
         <ArrowLeft size={22} strokeWidth={1.8} />
       </button>
@@ -92,7 +92,7 @@ function HeaderV2() {
 // Frosted glass search bar with border glow — dark, premium feel
 function HeaderV3() {
   return (
-    <header className="flex items-center gap-2.5 px-4 py-3">
+    <header className="flex items-center gap-2.5 px-5 py-3">
       <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
         <ChevronLeft size={22} strokeWidth={2} />
       </button>
@@ -117,7 +117,7 @@ function HeaderV3() {
 // Search takes full width, action buttons are tight and small — Zerodha-density
 function HeaderV4() {
   return (
-    <header className="px-4 py-3">
+    <header className="px-5 py-3">
       <div className="flex items-center gap-2">
         <button className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground active:bg-muted/30">
           <ArrowLeft size={20} strokeWidth={2} />
@@ -143,12 +143,12 @@ function HeaderV4() {
 // Large search presence, icon-heavy, confident trading-app energy
 function HeaderV5() {
   return (
-    <header className="flex items-center gap-3 px-4 py-3.5">
+    <header className="flex items-center gap-3 px-5 py-3.5">
       <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/40 text-foreground transition-colors hover:bg-muted/60 active:scale-95">
         <ChevronLeft size={24} strokeWidth={2.2} />
       </button>
 
-      <div className="relative flex h-12 flex-1 items-center rounded-xl bg-muted/30 ring-1 ring-border/50 px-4">
+      <div className="relative flex h-12 flex-1 items-center rounded-xl bg-muted/30 ring-1 ring-border/50 px-5">
         <Search size={19} className="shrink-0 text-foreground/40" />
         <div className="ml-2.5 text-[17px] font-medium text-foreground/30">
           <RotatingText />
@@ -166,12 +166,12 @@ function HeaderV5() {
 // Current production header — X back, pill search, bell with badge, profile avatar
 function HeaderV6() {
   return (
-    <header className="flex items-center gap-3 px-4 py-3">
+    <header className="flex items-center gap-3 px-5 py-3">
       <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
         <X size={20} strokeWidth={2} />
       </button>
 
-      <div className="relative flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4">
+      <div className="relative flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-5">
         <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
           <RotatingText />
         </div>
@@ -185,6 +185,7 @@ function HeaderV6() {
       </button>
 
       <button className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full transition-opacity hover:opacity-90 active:opacity-80">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/profile.png" alt="Profile" className="h-full w-full object-cover" />
       </button>
     </header>

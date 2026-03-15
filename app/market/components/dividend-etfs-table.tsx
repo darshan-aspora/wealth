@@ -109,7 +109,7 @@ export function DividendETFsMarket() {
     <div>
       {/* Pill tabs */}
       <div className="mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 pb-0.5">
+        <div className="flex gap-2 p-0.5">
           {DIV_ETF_TABS.map((tab) => (
             <button
               key={tab}

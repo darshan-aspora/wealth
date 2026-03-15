@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAI } from "@/contexts/ai-context";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Header } from "@/components/header";
@@ -105,7 +106,7 @@ function ExploreContent() {
       {/* Sticky overflowing tabs */}
       <div className="border-b border-border/40 bg-background">
         <div className="overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 px-4">
+          <div className="flex gap-2 px-5">
             {exploreTabs.map((tab, i) => (
               <button
                 key={tab.id}
@@ -123,10 +124,14 @@ function ExploreContent() {
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <span className={cn(
-                    "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
-                    i === 0 ? "left-0" : "left-3"
-                  )} />
+                  <motion.span
+                    layoutId="tab-underline"
+                    className={cn(
+                      "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
+                      i === 0 ? "left-0" : "left-3"
+                    )}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
                 )}
               </button>
             ))}
@@ -193,7 +198,7 @@ function ExploreContent() {
                   setShowVersionPicker(false);
                 }}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-xl px-5 py-3.5 text-left transition-colors",
                   currentVersion === v.id
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:bg-muted/50"

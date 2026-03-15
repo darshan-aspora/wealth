@@ -99,7 +99,7 @@ export function MarketPulse() {
       </div>
 
       {/* Subtext */}
-      <p className="text-muted-foreground text-xs text-center mt-3 px-4">
+      <p className="text-muted-foreground text-xs text-center mt-3 px-5">
         Markets are live. Prices update in real-time. Pre-market opens at 4:00
         AM ET.
       </p>

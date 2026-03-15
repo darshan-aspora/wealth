@@ -80,7 +80,7 @@ export function StockScreener() {
             <button
               key={screener.name}
               className={cn(
-                "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/30",
+                "flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-muted/30",
                 i > 0 && "border-t border-border/30"
               )}
             >

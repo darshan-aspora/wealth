@@ -296,7 +296,7 @@ function StatsCard({
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex-1 rounded-xl border border-border/60 px-4 py-3"
+          className="flex-1 rounded-xl border border-border/60 px-5 py-3"
         >
           <p className="text-[13px] text-muted-foreground">{item.label}</p>
           <p

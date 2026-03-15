@@ -13,7 +13,7 @@ export function NewsEvents({ symbol }: NewsEventsProps) {
   const data = NEWS_EVENTS[symbol];
   if (!data) {
     return (
-      <div className="px-4 py-4">
+      <div className="px-5 py-4">
         <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
           News & Events
         </h2>
@@ -23,7 +23,7 @@ export function NewsEvents({ symbol }: NewsEventsProps) {
   }
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       {/* Events */}
       {data.events.length > 0 && (
         <div className="mb-6">

@@ -1,7 +1,6 @@
 "use client";
 
 import { RefreshCw, XCircle, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const activeData = [
   { symbol: "VOO", name: "Vanguard S&P 500", amount: 500, frequency: "Monthly", nextDate: "Mar 15" },
@@ -20,9 +19,9 @@ export function RecurringTab() {
   const totalMonthly = activeData.reduce((s, r) => s + r.amount, 0);
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-5 pb-6">
       {/* Summary */}
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3">
         <div>
           <p className="text-[13px] text-muted-foreground">Active</p>
           <p className="text-[20px] font-bold tabular-nums text-foreground">{activeData.length}</p>
@@ -41,7 +40,7 @@ export function RecurringTab() {
         {activeData.map((r) => (
           <div
             key={r.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3.5"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -75,7 +74,7 @@ export function RecurringTab() {
         {cancelledData.map((r) => (
           <div
             key={r.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3.5 opacity-60"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 opacity-60"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">

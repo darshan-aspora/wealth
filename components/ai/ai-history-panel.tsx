@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useAI } from "@/contexts/ai-context";
 
 function formatRelativeTime(date: Date): string {

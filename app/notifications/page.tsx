@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { Button } from "@/components/ui/button";
 
 /* ------------------------------------------------------------------ */
 /*  Notification types & data                                          */
@@ -183,7 +184,7 @@ function NotificationCard({ notification, index }: { notification: Notification;
       transition={{ duration: 0.25, delay: index * 0.04 }}
       onClick={() => router.push(`/stocks/${notification.symbol}`)}
       className={cn(
-        "flex gap-3 px-4 py-4 cursor-pointer transition-colors active:bg-muted/30",
+        "flex gap-3 px-5 py-4 cursor-pointer transition-colors active:bg-muted/30",
         !notification.read && "bg-card/60"
       )}
     >
@@ -235,13 +236,15 @@ export default function NotificationsPage() {
       <StatusBar />
 
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-border/30">
-        <button
+      <header className="flex items-center gap-3 px-5 py-3 border-b border-border/30">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
           onClick={() => router.back()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
         >
           <ArrowLeft size={22} strokeWidth={2} />
-        </button>
+        </Button>
         <div className="flex-1">
           <h1 className="text-[20px] font-bold text-foreground">Notifications</h1>
           {unreadCount > 0 && (
@@ -250,15 +253,19 @@ export default function NotificationsPage() {
             </p>
           )}
         </div>
-        <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
+        >
           <Settings size={20} strokeWidth={1.8} />
-        </button>
+        </Button>
       </header>
 
       {/* Content */}
       <main className="no-scrollbar flex-1 overflow-y-auto pb-8">
         {/* Today */}
-        <div className="px-4 pt-3 pb-1.5">
+        <div className="px-5 pt-3 pb-1.5">
           <div className="flex items-center gap-2">
             <Clock size={14} strokeWidth={2} className="text-muted-foreground/50" />
             <span className="text-[14px] font-semibold text-muted-foreground/60 uppercase tracking-wide">
@@ -275,7 +282,7 @@ export default function NotificationsPage() {
         {/* Yesterday */}
         {yesterdayNotifs.length > 0 && (
           <>
-            <div className="px-4 pt-5 pb-1.5">
+            <div className="px-5 pt-5 pb-1.5">
               <div className="flex items-center gap-2">
                 <Clock size={14} strokeWidth={2} className="text-muted-foreground/50" />
                 <span className="text-[14px] font-semibold text-muted-foreground/60 uppercase tracking-wide">

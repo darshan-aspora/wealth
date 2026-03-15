@@ -119,7 +119,7 @@ function FeedbackInput({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-2 rounded-2xl bg-emerald-500/15 px-4 py-3"
+        className="flex items-center gap-2 rounded-2xl bg-emerald-500/15 px-5 py-3"
       >
         <div className="h-2 w-2 rounded-full bg-emerald-400" />
         <span className="text-[14px] font-medium text-emerald-400">Thanks! We&apos;ll review this.</span>
@@ -239,7 +239,7 @@ const stories: Story[] = [
           { name: "AI Assistant", detail: "ARIA — context-aware market chat" },
           { name: "Stock Deep Dives", detail: "Charts, metrics, events, revenue" },
         ].map((feat) => (
-          <div key={feat.name} className="flex items-start gap-3 rounded-2xl bg-white/8 px-4 py-2.5">
+          <div key={feat.name} className="flex items-start gap-3 rounded-2xl bg-white/8 px-5 py-2.5">
             <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             </div>
@@ -273,7 +273,7 @@ const stories: Story[] = [
           { name: "Advisory Baskets", progress: 45, status: "In progress" },
           { name: "Price Alerts", progress: 30, status: "Early stage" },
         ].map((feat) => (
-          <div key={feat.name} className="rounded-2xl bg-white/8 px-4 py-3">
+          <div key={feat.name} className="rounded-2xl bg-white/8 px-5 py-3">
             <div className="flex items-center justify-between">
               <span className="text-[14px] font-semibold text-white">{feat.name}</span>
               <span className="rounded-lg bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
@@ -321,7 +321,7 @@ const stories: Story[] = [
             action: "Advanced charts shipping in v2.1",
           },
         ].map((item, i) => (
-          <div key={i} className="rounded-2xl bg-white/8 px-4 py-3">
+          <div key={i} className="rounded-2xl bg-white/8 px-5 py-3">
             <p className="text-[14px] font-medium leading-snug text-white/85">
               &ldquo;{item.quote}&rdquo;
             </p>
@@ -445,17 +445,16 @@ interface StoryRingProps {
 }
 
 export function StoryRing({ totalStories, readCount, size = 42, children, onClick }: StoryRingProps) {
-  const strokeWidth = 2.5;
-  const gap = 4;
+  const strokeWidth = 2;
+  const gapDeg = 12; // degrees of gap between each dash
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const center = size / 2;
 
-  const totalGapDeg = gap * totalStories;
-  const segmentDeg = (360 - totalGapDeg) / totalStories;
+  const segmentDeg = (360 - gapDeg * totalStories) / totalStories;
 
   const segments = Array.from({ length: totalStories }, (_, i) => {
-    const startDeg = i * (segmentDeg + gap) - 90;
+    const startDeg = i * (segmentDeg + gapDeg) - 90;
     const segLen = (segmentDeg / 360) * circumference;
     const offset = ((startDeg + 90) / 360) * circumference;
     const isRead = i < readCount;
@@ -469,13 +468,6 @@ export function StoryRing({ totalStories, readCount, size = 42, children, onClic
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="absolute inset-0">
-        <defs>
-          <linearGradient id="story-ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#a855f7" />
-          </linearGradient>
-        </defs>
         {segments.map((seg) => (
           <circle
             key={seg.index}
@@ -483,9 +475,9 @@ export function StoryRing({ totalStories, readCount, size = 42, children, onClic
             cy={center}
             r={radius}
             fill="none"
-            stroke={seg.isRead ? "hsl(var(--muted-foreground) / 0.3)" : "url(#story-ring-gradient)"}
+            stroke={seg.isRead ? "hsl(var(--muted-foreground) / 0.25)" : "hsl(var(--foreground))"}
             strokeWidth={strokeWidth}
-            strokeLinecap="round"
+            strokeLinecap="butt"
             strokeDasharray={`${seg.segLen} ${circumference - seg.segLen}`}
             strokeDashoffset={-seg.offset}
             className="transition-all duration-300"
@@ -672,13 +664,10 @@ export function StoriesViewer({ isOpen, onClose, initialIndex = 0, onStorySeen }
             </div>
 
             {/* Header */}
-            <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between px-4 pt-8">
+            <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between px-5 pt-8">
               <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-full"
-                  style={{ background: "linear-gradient(135deg, #7c5af5 0%, #5b3fd4 100%)" }}
-                >
-                  <AsporaLogo size={20} className="text-white" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
+                  <AsporaLogo size={20} className="text-black" />
                 </div>
                 <div>
                   <div className="text-[15px] font-semibold text-white">{story.title}</div>

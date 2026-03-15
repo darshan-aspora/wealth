@@ -22,14 +22,14 @@ export function OptionsChain({ symbol, currentPrice }: OptionsChainProps) {
 
   return (
     <div className="py-4">
-      <div className="px-4">
+      <div className="px-5">
         <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
           Options Chain
         </h2>
       </div>
 
       {/* Expiry selector */}
-      <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto px-4">
+      <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto px-5">
         {EXPIRY_DATES.map((date) => {
           const active = date === selectedExpiry;
           return (
@@ -146,7 +146,7 @@ export function OptionsChain({ symbol, currentPrice }: OptionsChainProps) {
         </div>
 
         {/* Current price indicator */}
-        <div className="px-4 py-2 text-center">
+        <div className="px-5 py-2 text-center">
           <span className="rounded-full bg-foreground/10 px-3 py-1 font-mono text-[13px] font-medium tabular-nums text-foreground">
             Current: ${currentPrice.toFixed(2)}
           </span>

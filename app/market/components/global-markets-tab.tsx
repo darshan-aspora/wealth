@@ -1,103 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { MarketTable, ChangeCell, type TableColumn } from "./market-table";
-import { SubTabs } from "./sub-tabs";
-import { SectionHeader, SectionDivider } from "./section-header";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MarketTable, PctCell, RangeBar, type TableColumn } from "./market-table";
+import { SectionHeader } from "./section-header";
 import { NewsAccordion } from "./news-accordion";
-import { GLOBAL_INDICES, COMMODITIES, CURRENCIES, GLOBAL_NEWS, type GlobalRow } from "../data";
-
-// ---- Global table columns (Name+subtitle, Last, Change, Change%, DayRange) ----
-function makeGlobalColumns(nameLabel: string): TableColumn<GlobalRow>[] {
-  return [
-    {
-      key: "name", label: nameLabel, align: "left", frozen: true, minWidth: 160,
-      render: (r) => (
-        <div>
-          <div className="text-[14px] font-semibold text-foreground">{r.name}</div>
-          <div className="text-[12px] text-muted-foreground">{r.subtitle}</div>
-        </div>
-      ),
-    },
-    { key: "last", label: "Last", align: "right", render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last}</span> },
-    { key: "change", label: "Change", align: "right", render: (r) => <ChangeCell value={r.change} isUp={r.isUp} /> },
-    { key: "changePct", label: "Change %", align: "right", render: (r) => <ChangeCell value={r.changePct} isUp={r.isUp} /> },
-    { key: "dayRange", label: "Day Range", align: "right", render: (r) => <span className="text-[12px] font-mono tabular-nums text-muted-foreground">{r.dayRange}</span> },
-  ];
-}
-
-// Crypto has Market Cap instead of Day Range
-const cryptoColumns: TableColumn<GlobalRow>[] = [
-  {
-    key: "name", label: "Name", align: "left", frozen: true, minWidth: 150,
-    render: (r) => (
-      <div>
-        <div className="text-[14px] font-semibold text-foreground">{r.name}</div>
-        <div className="text-[12px] text-muted-foreground">{r.subtitle}</div>
-      </div>
-    ),
-  },
-  { key: "last", label: "Price", align: "right", render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last}</span> },
-  { key: "change", label: "Change", align: "right", render: (r) => <ChangeCell value={r.change} isUp={r.isUp} /> },
-  { key: "changePct", label: "Change %", align: "right", render: (r) => <ChangeCell value={r.changePct} isUp={r.isUp} /> },
-  { key: "mktcap", label: "Mkt Cap", align: "right", render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.marketCap || r.dayRange}</span> },
-];
+import { GLOBAL_INDICES, GLOBAL_NEWS, type PerformanceRow } from "../data";
 
 const INDEX_TABS = Object.keys(GLOBAL_INDICES);
-const COMMODITY_TABS = Object.keys(COMMODITIES);
-const CURRENCY_TABS = Object.keys(CURRENCIES);
 
-const indicesColumns = makeGlobalColumns("Name");
-const commodityColumns = makeGlobalColumns("Name");
-const currencyColumns = makeGlobalColumns("Pair");
+// ---- Global Indices columns (same as US) ----
+const indicesColumns: TableColumn<PerformanceRow>[] = [
+  { key: "name", label: "Name", align: "left", frozen: true, width: 200, render: (r) => <span className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</span> },
+  { key: "last", label: "Level", align: "right", render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> },
+  { key: "today", label: "Today", align: "right", render: (r) => <PctCell value={r.today} /> },
+  { key: "5d", label: "5 Days", align: "right", render: (r) => <PctCell value={r.fiveDays} /> },
+  { key: "1m", label: "1 Month", align: "right", render: (r) => <PctCell value={r.oneMonth} /> },
+  { key: "ytd", label: "YTD", align: "right", render: (r) => <PctCell value={r.ytd} /> },
+  { key: "1y", label: "1 Year", align: "right", render: (r) => <PctCell value={r.oneYear} /> },
+  { key: "3y", label: "3 Years", align: "right", render: (r) => <PctCell value={r.threeYears} /> },
+  { key: "dayRange", label: "Day Range", align: "right", render: (r) => <RangeBar low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} /> },
+  { key: "1yRange", label: "1Y Range", align: "right", render: (r) => <RangeBar low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} /> },
+];
 
 export function GlobalMarketsTab() {
   const [idxTab, setIdxTab] = useState(INDEX_TABS[0]);
-  const [commTab, setCommTab] = useState(COMMODITY_TABS[0]);
-  const [currTab, setCurrTab] = useState(CURRENCY_TABS[0]);
-
-  const isCrypto = currTab === "Crypto";
 
   return (
     <div className="pb-8">
       {/* Global Indices */}
       <div className="px-5 pt-5">
         <SectionHeader
-          title="Global Indices"
-          subtitle="Track major indices across world markets"
+          title="Indices"
+          subtitle="Real-time index performance"
         />
-        <SubTabs tabs={INDEX_TABS} activeTab={idxTab} onTabChange={setIdxTab} layoutId="global-idx" />
-        <MarketTable columns={indicesColumns} data={GLOBAL_INDICES[idxTab]} />
+        <div className="mb-3 -mx-5 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 px-5 py-0.5">
+            {INDEX_TABS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setIdxTab(f)}
+                className={cn(
+                  "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+                  idxTab === f
+                    ? "bg-foreground text-background"
+                    : "border border-border/60 text-muted-foreground"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={idxTab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+          >
+            <MarketTable columns={indicesColumns} data={GLOBAL_INDICES[idxTab]} />
+          </motion.div>
+        </AnimatePresence>
+        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+          View All Indices
+          <ChevronRight size={14} />
+        </button>
       </div>
 
-      <SectionDivider />
-
-      {/* Commodities */}
-      <div className="px-5">
-        <SectionHeader
-          title="Commodities"
-          subtitle="Precious metals, energy & industrial commodities"
-        />
-        <SubTabs tabs={COMMODITY_TABS} activeTab={commTab} onTabChange={setCommTab} layoutId="global-comm" />
-        <MarketTable columns={commodityColumns} data={COMMODITIES[commTab]} />
-      </div>
-
-      <SectionDivider />
-
-      {/* Currencies */}
-      <div className="px-5">
-        <SectionHeader
-          title="Currencies"
-          subtitle="Foreign exchange rates & cryptocurrency prices"
-        />
-        <SubTabs tabs={CURRENCY_TABS} activeTab={currTab} onTabChange={setCurrTab} layoutId="global-curr" />
-        <MarketTable
-          columns={isCrypto ? cryptoColumns : currencyColumns}
-          data={CURRENCIES[currTab]}
-        />
-      </div>
-
-      <SectionDivider />
+      <div className="h-6" />
 
       {/* Global Market Summary */}
       <div className="px-5">

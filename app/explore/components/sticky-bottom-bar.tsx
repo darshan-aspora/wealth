@@ -21,7 +21,7 @@ export function StickyBottomBar() {
         visible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-5 sm:px-6">
         <span className="text-foreground font-semibold text-base">
           Aspora Wealth
         </span>

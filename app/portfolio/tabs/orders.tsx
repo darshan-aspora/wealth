@@ -41,7 +41,7 @@ export function OrdersTab() {
   }, [status, asset]);
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-5 pb-6">
       {/* Filter row */}
       <div className="mb-4 flex items-center gap-2">
         <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
@@ -90,7 +90,7 @@ export function OrdersTab() {
                   setSheetOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-[15px] font-medium transition-colors",
+                  "flex w-full items-center justify-between rounded-xl px-5 py-3.5 text-[15px] font-medium transition-colors",
                   asset === f
                     ? "bg-muted/60 text-foreground"
                     : "text-muted-foreground hover:bg-muted/30"
@@ -108,7 +108,7 @@ export function OrdersTab() {
         {filtered.map((o, i) => (
           <div
             key={`${o.symbol}-${i}`}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3.5"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">

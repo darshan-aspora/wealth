@@ -14,7 +14,7 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
   const maxSize = Math.max(...depth.bids.map((b) => b.size), ...depth.asks.map((a) => a.size));
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
         Market Depth
       </h2>
@@ -67,7 +67,7 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
       </div>
 
       {/* Labels */}
-      <div className="mt-2 flex justify-between px-4">
+      <div className="mt-2 flex justify-between px-5">
         <span className="text-[12px] font-medium text-[hsl(var(--gain))]">BIDS</span>
         <span className="text-[12px] font-medium text-[hsl(var(--loss))]">ASKS</span>
       </div>

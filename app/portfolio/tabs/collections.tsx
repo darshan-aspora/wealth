@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderOpen, Plus, ChevronRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { FolderOpen, Plus, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const collectionsData = [
@@ -17,9 +17,9 @@ export function CollectionsTab() {
   const totalPnlPct = totalCurrent > 0 ? (totalPnl / (totalCurrent - totalPnl)) * 100 : 0;
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-5 pb-6">
       {/* Summary */}
-      <div className="mb-4 rounded-xl border border-border/40 bg-card/60 px-4 py-3">
+      <div className="mb-4 rounded-xl border border-border/40 bg-card/60 px-5 py-3">
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-[13px] text-muted-foreground">Total Value</p>
@@ -47,7 +47,7 @@ export function CollectionsTab() {
         {collectionsData.map((c) => (
           <button
             key={c.name}
-            className="flex w-full items-center gap-3.5 rounded-xl border border-border/40 bg-card/60 px-4 py-3.5 text-left active:scale-[0.98] transition-transform"
+            className="flex w-full items-center gap-3.5 rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 text-left active:scale-[0.98] transition-transform"
           >
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.color}/15`}>
               <FolderOpen size={20} className={`${c.color.replace("bg-", "text-")}`} />

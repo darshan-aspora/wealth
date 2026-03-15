@@ -13,7 +13,7 @@ export function ETFHoldings({ symbol }: ETFHoldingsProps) {
   if (!data) return null;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
           ETFs Holding {symbol}

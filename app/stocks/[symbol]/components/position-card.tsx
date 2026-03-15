@@ -15,7 +15,7 @@ export function PositionCard({ symbol }: PositionCardProps) {
   const totalGain = position.totalReturn >= 0;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       {/* Section header */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-[18px] font-bold text-foreground">Investment</h2>
@@ -51,7 +51,7 @@ export function PositionCard({ symbol }: PositionCardProps) {
       </div>
 
       {/* Pending orders */}
-      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-4 py-3 mb-2 transition-colors active:bg-muted/50">
+      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-5 py-3 mb-2 transition-colors active:bg-muted/50">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-[12px] font-bold text-background">
             3
@@ -65,7 +65,7 @@ export function PositionCard({ symbol }: PositionCardProps) {
       </button>
 
       {/* Buying power */}
-      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-4 py-3 transition-colors active:bg-muted/50">
+      <button className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-muted/30 px-5 py-3 transition-colors active:bg-muted/50">
         <div className="flex items-center gap-2">
           <Wallet size={16} className="text-muted-foreground" />
           <span className="text-[15px] font-medium text-foreground">Buying Power</span>

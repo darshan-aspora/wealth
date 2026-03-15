@@ -4,7 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3, ArrowUpDown, Pencil, FolderPlus } from "lucide-react";
 import { useTickerVisibility } from "@/components/ticker-visibility";
-import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 // ─── Rotating search placeholder ─────────────────────────────────────
 export const searchSuffixes = [
@@ -57,116 +64,61 @@ export function SearchPlaceholder() {
 }
 
 export function OptionsMenu({ onSortClick, onEditClick }: { onSortClick?: () => void; onEditClick?: () => void } = {}) {
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const { tickerVisible, showTicker } = useTickerVisibility();
 
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
-
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
-      >
-        <EllipsisVertical size={20} strokeWidth={1.8} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-12 z-50 min-w-[180px] overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
-          >
-            {onSortClick ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground">
+          <EllipsisVertical size={20} strokeWidth={1.8} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[180px]">
+        {onSortClick ? (
+          <>
+            <DropdownMenuItem onSelect={onSortClick}>
+              <ArrowUpDown size={18} strokeWidth={1.8} />
+              Sort
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => onEditClick?.()}>
+              <Pencil size={18} strokeWidth={1.8} />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <FolderPlus size={18} strokeWidth={1.8} />
+              Create section
+            </DropdownMenuItem>
+            {!tickerVisible && (
               <>
-                <button
-                  onClick={() => {
-                    onSortClick();
-                    setOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                >
-                  <ArrowUpDown size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                  Sort
-                </button>
-                <div className="h-px bg-border/60" />
-                <button
-                  onClick={() => {
-                    onEditClick?.();
-                    setOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                >
-                  <Pencil size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                  Edit
-                </button>
-                <div className="h-px bg-border/60" />
-                <button
-                  onClick={() => setOpen(false)}
-                  className="flex w-full items-center gap-2.5 whitespace-nowrap px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                >
-                  <FolderPlus size={18} strokeWidth={1.8} className="shrink-0 text-muted-foreground" />
-                  Create section
-                </button>
-                {!tickerVisible && (
-                  <>
-                    <div className="my-1 h-px bg-border/40" />
-                    <button
-                      onClick={() => {
-                        showTicker();
-                        setOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                    >
-                      <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                      Show Ticker
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                >
-                  <LayoutPanelLeft size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                  Customise
-                </button>
-                {!tickerVisible && (
-                  <>
-                    <div className="h-px bg-border/60" />
-                    <button
-                      onClick={() => {
-                        showTicker();
-                        setOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-3.5 text-[15px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
-                    >
-                      <BarChart3 size={18} strokeWidth={1.8} className="text-muted-foreground" />
-                      Show Ticker
-                    </button>
-                  </>
-                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={showTicker}>
+                  <BarChart3 size={18} strokeWidth={1.8} />
+                  Show Ticker
+                </DropdownMenuItem>
               </>
             )}
-          </motion.div>
+          </>
+        ) : (
+          <>
+            <DropdownMenuItem>
+              <LayoutPanelLeft size={18} strokeWidth={1.8} />
+              Customise
+            </DropdownMenuItem>
+            {!tickerVisible && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={showTicker}>
+                  <BarChart3 size={18} strokeWidth={1.8} />
+                  Show Ticker
+                </DropdownMenuItem>
+              </>
+            )}
+          </>
         )}
-      </AnimatePresence>
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -177,12 +129,14 @@ export function HeaderV1() {
   return (
     <header className="flex items-center gap-1.5 pl-3 pr-4 py-3">
       {/* Close button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-full text-muted-foreground"
         onClick={() => router.push("/")}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
         <X size={22} strokeWidth={2} />
-      </button>
+      </Button>
 
       <div
         onClick={() => router.push("/search")}
@@ -194,18 +148,21 @@ export function HeaderV1() {
       </div>
 
       {/* Notification bell */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="relative rounded-full text-muted-foreground"
         onClick={() => router.push("/notifications")}
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
         <Bell size={20} strokeWidth={1.8} />
         <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
           3
         </span>
-      </button>
+      </Button>
 
       {/* Profile avatar */}
       <button className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-visible rounded-full transition-opacity hover:opacity-90 active:opacity-80">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/profile.png" alt="Profile" className="h-full w-full rounded-full object-cover" />
       </button>
     </header>

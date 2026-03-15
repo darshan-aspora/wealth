@@ -6,6 +6,7 @@ import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { useRotatingSuffix } from "@/components/header";
+import { Button } from "@/components/ui/button";
 
 
 // ─── Mock search data ────────────────────────────────────────────────
@@ -189,15 +190,17 @@ function SearchHeader({
   }, []);
 
   return (
-    <header className="flex items-center gap-2.5 px-4 py-3">
-      <button
+    <header className="flex items-center gap-2.5 px-5 py-3">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-full text-muted-foreground"
         onClick={() => router.back()}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
         <ArrowLeft size={20} strokeWidth={2} />
-      </button>
+      </Button>
 
-      <div className="relative flex h-12 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-muted/50 px-4">
+      <div className="relative flex h-12 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-muted/50 px-5">
         <div className="relative h-full flex-1">
           {!query && <SearchPagePlaceholder />}
           <input
@@ -241,7 +244,7 @@ function SearchTabs({
   onChange: (tab: string) => void;
 }) {
   return (
-    <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-4 py-2">
+    <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 py-2">
       {searchTabs.map((tab) => {
         const isActive = tab === active;
         return (
@@ -317,7 +320,7 @@ function ResultRow({
   onToggleWatchlist: (symbol: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
+    <div className="flex items-center gap-3 px-5 py-3.5">
       {/* Logo circle */}
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted/70">
         <span className="text-[15px] font-semibold text-foreground/80">
@@ -385,7 +388,7 @@ function SearchEmptyState({
   return (
     <div className="space-y-5 pt-3 pb-8">
       {/* Recent searches */}
-      <div className="px-4">
+      <div className="px-5">
         <div className="flex items-center gap-2 mb-2 px-1">
           <Clock size={15} className="text-muted-foreground/50" />
           <h3 className="text-[14px] font-semibold tracking-wide uppercase text-muted-foreground/60">
@@ -405,7 +408,7 @@ function SearchEmptyState({
       </div>
 
       {/* Popular searches */}
-      <div className="px-4">
+      <div className="px-5">
         <div className="flex items-center gap-2 mb-2 px-1">
           <TrendingUp size={15} className="text-muted-foreground/50" />
           <h3 className="text-[14px] font-semibold tracking-wide uppercase text-muted-foreground/60">

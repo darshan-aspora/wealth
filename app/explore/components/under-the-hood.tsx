@@ -48,7 +48,7 @@ export function UnderTheHood() {
 
   return (
     <section className="bg-background py-12">
-      <div className="px-4">
+      <div className="px-5">
           {/* ──── Header ──── */}
           <h2 className="text-2xl font-bold text-foreground text-center">
             Under the Hood

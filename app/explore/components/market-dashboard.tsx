@@ -254,7 +254,7 @@ function TopMoversWidget() {
       <ScrollHint />
 
       {/* Scrollable Table — Symbol is sticky, Price + Chg% visible in default view */}
-      <div ref={scrollRef} className="overflow-x-auto no-scrollbar -mx-4">
+      <div ref={scrollRef} className="overflow-x-auto no-scrollbar -mx-5">
         <table className="text-sm border-collapse" style={{ minWidth: 940 }}>
           <colgroup>
             {/* Symbol: sticky */}
@@ -367,7 +367,7 @@ function TopMoversWidget() {
 export function MarketDashboard() {
   return (
     <section className="bg-background py-12">
-      <div className="px-4">
+      <div className="px-5">
         {/* ──── Header ──── */}
         <h2 className="text-2xl font-bold text-foreground">
           Your Market Dashboard &mdash; Live

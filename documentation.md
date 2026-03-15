@@ -13,7 +13,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 | Next.js | 14.2.35 | App Router, `app/` directory |
 | TypeScript | ^5 | Type safety |
 | Tailwind CSS | ^3.4.1 | Utility-first styling, mobile-first |
-| shadcn/ui | New York style, zinc base | Component library (Sheet, Button, Badge, Checkbox, Switch, ScrollArea) |
+| shadcn/ui | Radix-Vega style, neutral base (preset aIkeyqX) | Component library (Sheet, Button, Badge, Checkbox, Switch, ScrollArea, Tabs, Input, Textarea, DropdownMenu, Label, Separator) |
 | Framer Motion | ^12.34.5 | Transitions, micro-interactions, gestures |
 | TradingView Lightweight Charts | ^5.1.0 | Candlestick, line, area, volume charts (mock data) |
 | Lucide React | ^0.576.0 | Icons (ships with shadcn) |
@@ -33,7 +33,7 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 02-US-Equity/
 ├── app/
 │   ├── page.tsx                    ← Directory — landing page with tabs (Pages / Components)
-│   ├── layout.tsx                  ← Root layout: dark mode, DM Sans + JetBrains Mono, viewport meta
+│   ├── layout.tsx                  ← Root layout: dark mode, Inter + JetBrains Mono, viewport meta
 │   ├── global-error.tsx            ← Global error boundary (required by App Router)
 │   ├── globals.css                 ← Tailwind base + CSS variables (light/dark) + custom utilities
 │   ├── home/

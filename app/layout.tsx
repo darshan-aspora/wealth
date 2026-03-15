@@ -1,21 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Roboto_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
 import { AIProvider } from "@/contexts/ai-context";
 import { AIOverlay } from "@/components/ai-overlay";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
-});
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
-const jetbrainsMono = JetBrains_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -37,9 +34,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light" suppressHydrationWarning>
+    <html lang="en" className={cn("light", "font-sans", inter.variable)} suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${robotoMono.variable} font-sans antialiased`}
       >
         <ThemeProvider>
           <TickerVisibilityProvider>

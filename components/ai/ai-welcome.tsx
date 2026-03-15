@@ -29,7 +29,7 @@ export function AIWelcome({ onSelectSuggestion }: AIWelcomeProps) {
   const suggestions = getSuggestions(source);
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto px-4 py-4" style={{ scrollbarWidth: "none" }}>
+    <div className="flex flex-1 flex-col overflow-y-auto px-5 py-4" style={{ scrollbarWidth: "none" }}>
 
       {/* Last conversation resume card */}
       {lastConversation && lastConversation.messages.length > 0 && (

@@ -73,7 +73,7 @@ function DirectoryCard({
     >
       <Link
         href={item.href}
-        className="group flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-border hover:bg-card/80 active:scale-[0.98]"
+        className="group flex items-center justify-between rounded-xl border border-border/60 bg-card px-5 py-3.5 transition-colors hover:border-border hover:bg-card/80 active:scale-[0.98]"
       >
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-semibold text-foreground">

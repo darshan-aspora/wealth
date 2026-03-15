@@ -21,9 +21,9 @@ export function PositionsTab() {
   const realisedPnl = closedPositions.reduce((s, p) => s + p.pnl, 0);
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-5 pb-6">
       {/* Summary */}
-      <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl border border-border/40 bg-card/60 px-4 py-3">
+      <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl border border-border/40 bg-card/60 px-5 py-3">
         <div>
           <p className="text-[12px] text-muted-foreground">Open</p>
           <p className="text-[18px] font-bold tabular-nums text-foreground">{openPositions.length}</p>
@@ -48,7 +48,7 @@ export function PositionsTab() {
         {openPositions.map((p) => (
           <div
             key={p.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3.5"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5"
           >
             <div className="flex-1 min-w-0">
               <p className="text-[15px] font-semibold text-foreground">{p.symbol}</p>
@@ -78,7 +78,7 @@ export function PositionsTab() {
         {closedPositions.map((p) => (
           <div
             key={p.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-4 py-3.5 opacity-75"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 opacity-75"
           >
             <div className="flex-1 min-w-0">
               <p className="text-[15px] font-semibold text-foreground">{p.symbol}</p>

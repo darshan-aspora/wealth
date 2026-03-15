@@ -25,7 +25,7 @@ export function AnalystRatings({ symbol }: AnalystRatingsProps) {
   ].filter((s) => s.count > 0);
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
         Analyst Consensus
       </h2>

@@ -137,7 +137,7 @@ export default function EventsTab({ symbol }: EventsTabProps) {
   const groups = activeTab === "Upcoming" ? UPCOMING_EVENTS : PAST_EVENTS;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       {/* Heading */}
       <h2 className="mb-4 text-[17px] font-bold text-foreground">
         Corporate Events

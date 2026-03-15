@@ -571,7 +571,7 @@ export function AdvisoryBaskets({ onDismiss }: { onDismiss?: () => void }) {
         />
 
         <div className="mx-5 rounded-2xl bg-card border border-border/40 divide-y divide-border/40">
-          <div className="flex items-center justify-between px-4 py-3.5">
+          <div className="flex items-center justify-between px-5 py-3.5">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
                 <FileText size={15} className="text-blue-400" />
@@ -584,7 +584,7 @@ export function AdvisoryBaskets({ onDismiss }: { onDismiss?: () => void }) {
             <p className="text-[17px] font-bold text-foreground">0.6%<span className="text-[12px] font-normal text-muted-foreground">/yr</span></p>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3.5">
+          <div className="flex items-center justify-between px-5 py-3.5">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
                 <AlertTriangle size={15} className="text-amber-400" />
@@ -597,7 +597,7 @@ export function AdvisoryBaskets({ onDismiss }: { onDismiss?: () => void }) {
             <p className="text-[17px] font-bold text-foreground">0.5%</p>
           </div>
 
-          <div className="flex items-center gap-3 px-4 py-3.5">
+          <div className="flex items-center gap-3 px-5 py-3.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center">
               <Shield size={15} className="text-emerald-400" />
             </div>
@@ -675,7 +675,7 @@ export function AdvisoryBaskets({ onDismiss }: { onDismiss?: () => void }) {
                   key={opt}
                   onClick={() => { setSortBy(opt); setShowSortSheet(false); }}
                   className={cn(
-                    "w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-left transition-colors",
+                    "w-full flex items-center justify-between rounded-xl px-5 py-3.5 text-left transition-colors",
                     sortBy === opt ? "bg-muted text-foreground" : "text-muted-foreground active:bg-muted/50"
                   )}
                 >

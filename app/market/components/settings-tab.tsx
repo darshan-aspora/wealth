@@ -2,27 +2,27 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import {
-  GripVertical, Plus, X,
-  Globe, TrendingUp, Newspaper, Flag,
-} from "lucide-react";
+import { GripVertical, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface MarketItem {
   id: string;
   label: string;
-  icon: React.ElementType;
-  enabled: boolean;
   isCustom?: boolean;
 }
 
 const DEFAULT_MARKETS: MarketItem[] = [
-  { id: "us", label: "US Markets", icon: TrendingUp, enabled: true },
-  { id: "global", label: "Global", icon: Globe, enabled: true },
-  { id: "news", label: "News", icon: Newspaper, enabled: true },
-  { id: "india", label: "India", icon: Flag, enabled: true },
-  { id: "uae", label: "UAE", icon: Flag, enabled: true },
-  { id: "uk", label: "UK", icon: Flag, enabled: true },
+  { id: "us", label: "US" },
+  { id: "global", label: "Global" },
+  { id: "india", label: "India" },
+  { id: "uk", label: "UK" },
+  { id: "news", label: "News" },
+  { id: "crypto", label: "Crypto" },
+  { id: "commodity", label: "Commodity" },
+  { id: "forex", label: "Forex" },
+  { id: "uae", label: "UAE" },
 ];
 
 interface CustomMarketForm {
@@ -33,28 +33,18 @@ interface CustomMarketForm {
 
 function MarketRow({
   item,
-  onToggle,
   onRemove,
 }: {
   item: MarketItem;
-  onToggle: () => void;
   onRemove?: () => void;
 }) {
   return (
     <Reorder.Item
       value={item}
-      className="flex items-center gap-2 border-b border-border/30 bg-card px-4 py-3.5 last:border-b-0"
+      className="flex items-center gap-3 border-b border-border/30 bg-card px-5 py-3.5 last:border-b-0"
       dragListener={true}
       whileDrag={{ scale: 1.02, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", zIndex: 50 }}
     >
-      {/* Drag handle */}
-      <GripVertical size={18} strokeWidth={1.5} className="flex-shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
-
-      {/* Icon */}
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-muted">
-        <item.icon size={18} strokeWidth={1.7} className="text-foreground" />
-      </div>
-
       {/* Label */}
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-semibold text-foreground">{item.label}</p>
@@ -65,29 +55,13 @@ function MarketRow({
 
       {/* Remove (custom only) */}
       {item.isCustom && onRemove && (
-        <button
-          onClick={onRemove}
-          className="mr-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-loss/15 transition-colors active:bg-loss/25"
-        >
-          <X size={14} className="text-loss" />
-        </button>
+        <Button variant="ghost" size="icon-xs" className="rounded-full bg-loss/15 text-loss hover:bg-loss/25" onClick={onRemove}>
+          <X size={14} />
+        </Button>
       )}
 
-      {/* Toggle */}
-      <button
-        onClick={onToggle}
-        className={cn(
-          "relative h-[28px] w-[48px] flex-shrink-0 rounded-full transition-colors duration-200",
-          item.enabled ? "bg-gain" : "bg-muted"
-        )}
-      >
-        <div
-          className={cn(
-            "absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform duration-200",
-            item.enabled ? "translate-x-[23px]" : "translate-x-[3px]"
-          )}
-        />
-      </button>
+      {/* Drag handle (right side) */}
+      <GripVertical size={18} strokeWidth={1.5} className="flex-shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
     </Reorder.Item>
   );
 }
@@ -96,12 +70,6 @@ export function SettingsTab() {
   const [markets, setMarkets] = useState<MarketItem[]>(DEFAULT_MARKETS);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [form, setForm] = useState<CustomMarketForm>({ name: "", indices: "", sectors: "" });
-
-  const toggleMarket = useCallback((id: string) => {
-    setMarkets((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m))
-    );
-  }, []);
 
   const removeMarket = useCallback((id: string) => {
     setMarkets((prev) => prev.filter((m) => m.id !== id));
@@ -112,8 +80,6 @@ export function SettingsTab() {
     const newMarket: MarketItem = {
       id: `custom-${Date.now()}`,
       label: form.name.trim(),
-      icon: Globe,
-      enabled: true,
       isCustom: true,
     };
     setMarkets((prev) => [...prev, newMarket]);
@@ -121,15 +87,13 @@ export function SettingsTab() {
     setShowCreateForm(false);
   };
 
-  const enabledCount = markets.filter((m) => m.enabled).length;
-
   return (
     <div className="pb-8">
       {/* Manage Markets */}
       <div className="px-5 pt-5">
         <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">Manage Markets</h2>
         <p className="mb-4 text-[14px] text-muted-foreground">
-          Drag to reorder, toggle to show or hide. {enabledCount} of {markets.length} visible.
+          Drag to reorder your market tabs.
         </p>
 
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
@@ -143,7 +107,6 @@ export function SettingsTab() {
               <MarketRow
                 key={item.id}
                 item={item}
-                onToggle={() => toggleMarket(item.id)}
                 onRemove={item.isCustom ? () => removeMarket(item.id) : undefined}
               />
             ))}
@@ -151,7 +114,7 @@ export function SettingsTab() {
         </div>
 
         <p className="mt-2 text-[12px] text-muted-foreground/50">
-          Tab order matches the list above. First enabled tab is the default.
+          Tab order matches the list above.
         </p>
       </div>
 
@@ -190,49 +153,46 @@ export function SettingsTab() {
             >
               <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
                 {/* Market Name */}
-                <div className="px-4 pt-4 pb-3">
+                <div className="px-5 pt-4 pb-3">
                   <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Market Name
                   </label>
-                  <input
-                    type="text"
+                  <Input
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="e.g. My Tech Watchlist"
-                    className="w-full rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-foreground/30 focus:outline-none"
+                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
                   />
                 </div>
 
                 {/* Indices */}
-                <div className="border-t border-border/30 px-4 pt-3 pb-3">
+                <div className="border-t border-border/30 px-5 pt-3 pb-3">
                   <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Indices to Track
                   </label>
-                  <input
-                    type="text"
+                  <Input
                     value={form.indices}
                     onChange={(e) => setForm((p) => ({ ...p, indices: e.target.value }))}
                     placeholder="e.g. NASDAQ, S&P 500, FTSE 100"
-                    className="w-full rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-foreground/30 focus:outline-none"
+                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
                   />
                 </div>
 
                 {/* Sectors */}
-                <div className="border-t border-border/30 px-4 pt-3 pb-3">
+                <div className="border-t border-border/30 px-5 pt-3 pb-3">
                   <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Sectors
                   </label>
-                  <input
-                    type="text"
+                  <Input
                     value={form.sectors}
                     onChange={(e) => setForm((p) => ({ ...p, sectors: e.target.value }))}
                     placeholder="e.g. Technology, Healthcare, Energy"
-                    className="w-full rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium text-foreground placeholder:text-muted-foreground/40 focus:border-foreground/30 focus:outline-none"
+                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
                   />
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 border-t border-border/30 px-4 py-3.5">
+                <div className="flex gap-2 border-t border-border/30 px-5 py-3.5">
                   <button
                     onClick={() => {
                       setShowCreateForm(false);

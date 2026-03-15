@@ -21,7 +21,7 @@ export function SimilarStocks({ symbol }: SimilarStocksProps) {
   if (tickers.length === 0) return null;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
         Similar Stocks
       </h2>

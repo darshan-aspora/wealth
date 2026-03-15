@@ -20,7 +20,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -150,7 +150,7 @@ function TabBar({
             </SheetHeader>
 
             {/* Funds card */}
-            <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3.5 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
+            <button className="mb-5 flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card px-5 py-3.5 text-left transition-colors hover:bg-card/80 active:scale-[0.98]">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
                 <Wallet size={22} strokeWidth={1.6} className="text-foreground" />
               </div>

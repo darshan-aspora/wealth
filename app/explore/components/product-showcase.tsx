@@ -559,7 +559,7 @@ export function ProductShowcase() {
                 ref={setTabRef(tab.id)}
                 onClick={() => handleTabClick(tab.id)}
                 className={cn(
-                  "py-3 px-4 whitespace-nowrap text-sm font-medium transition-colors flex items-center shrink-0",
+                  "py-3 px-5 whitespace-nowrap text-sm font-medium transition-colors flex items-center shrink-0",
                   activeTab === tab.id
                     ? "text-foreground border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -574,7 +574,7 @@ export function ProductShowcase() {
 
       {/* CARDS */}
       <div className="py-6 space-y-4">
-        <div className="px-4 space-y-4">
+        <div className="px-5 space-y-4">
           <StockCard sectionRef={setSectionRef("stocks")} />
           <ETFCard sectionRef={setSectionRef("etfs")} />
           <OptionsCard sectionRef={setSectionRef("options")} />

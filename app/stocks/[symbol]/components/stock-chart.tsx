@@ -8,7 +8,7 @@ import {
   HistogramSeries,
   ColorType,
 } from "lightweight-charts";
-import type { IChartApi } from "lightweight-charts";
+import type { IChartApi, UTCTimestamp } from "lightweight-charts";
 import { useTheme } from "@/components/theme-provider";
 import { type CandleData } from "./mock-data";
 
@@ -96,7 +96,7 @@ export function StockChart({ data, chartType, showVolume, isGain }: StockChartPr
 
       candleSeries.setData(
         data.map((d) => ({
-          time: d.time,
+          time: d.time as UTCTimestamp,
           open: d.open,
           high: d.high,
           low: d.low,
@@ -120,7 +120,7 @@ export function StockChart({ data, chartType, showVolume, isGain }: StockChartPr
 
       volumeSeries.setData(
         data.map((d) => ({
-          time: d.time,
+          time: d.time as UTCTimestamp,
           value: d.volume,
           color: d.close >= d.open
             ? (isDark ? "rgba(34,197,94,0.2)" : "rgba(34,197,94,0.3)")

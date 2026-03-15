@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   ALL_TICKERS,
   formatPercent,
@@ -404,13 +405,14 @@ function AiInsightsInner({ onReanalyze }: { onReanalyze: () => void }) {
             <span className="text-[12px] text-muted-foreground/50 font-medium">
               Analyzed just now
             </span>
-            <button
+            <Button
+              variant="outline"
               onClick={onReanalyze}
-              className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-border/60 bg-secondary/30 px-4 py-3 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground active:scale-[0.98]"
+              className="w-full gap-2.5 rounded-xl bg-secondary/30 px-5 py-3 text-[15px] font-medium text-muted-foreground hover:bg-secondary/50 hover:text-foreground active:scale-[0.98]"
             >
               <RefreshCw size={16} />
               Reanalyze
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

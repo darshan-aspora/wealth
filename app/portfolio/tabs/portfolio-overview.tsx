@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowUpRight, ArrowDownRight, ChevronRight, Wallet, Sparkles } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Wallet, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -126,7 +125,7 @@ export function PortfolioOverview() {
   const buyingPower = 12_485.50;
 
   return (
-    <div className="space-y-4 px-4 pb-6">
+    <div className="space-y-4 px-5 pb-6">
       {/* ── Widget 1: Portfolio Summary + Chart ── */}
       <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
         <div className="p-5 pb-3">

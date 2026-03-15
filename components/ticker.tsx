@@ -12,6 +12,7 @@ import {
   Save,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -257,12 +258,11 @@ function EditSheet({
               size={17}
               className="shrink-0 text-muted-foreground/60"
             />
-            <input
-              type="text"
+            <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search stocks, ETFs..."
-              className="min-w-0 flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 outline-none"
+              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
         </div>
@@ -528,7 +528,7 @@ export function TickerMarqueeAuto() {
 
   if (tickers.length === 0) {
     return (
-      <div className="-mt-px flex items-center justify-between bg-[#0f0f11] px-4 py-3">
+      <div className="-mt-px flex items-center justify-between bg-[#0f0f11] px-5 py-3">
         <span className="text-[14px] text-white/50">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
@@ -599,7 +599,7 @@ export function TickerMarquee() {
   if (liveTickers.length === 0) {
     return (
       <div className="border-b border-border/40">
-        <div className="flex items-center justify-between bg-background px-4 py-3">
+        <div className="flex items-center justify-between bg-background px-5 py-3">
           <span className="text-[14px] text-muted-foreground">No tickers selected</span>
           <EditSheet
             selected={selected}
@@ -618,42 +618,34 @@ export function TickerMarquee() {
 
   return (
     <div className="border-b border-border/40">
-      <div className="relative flex items-center">
-        {/* Scrollable ticker items */}
-        <div className="flex-1 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-5 whitespace-nowrap pl-3 pr-2 pt-0.5 pb-2.5">
-            {liveTickers.map((t) => (
-              <div key={t.symbol} className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[15px] font-semibold text-foreground">
-                  {t.symbol}
-                </span>
-                <span className="tnum inline-block min-w-[48px] text-right text-[14px] font-medium text-muted-foreground transition-colors">
-                  {formatPrice(t.price)}
-                </span>
-                <span
-                  className={cn(
-                    "tnum inline-block min-w-[52px] text-right text-[14px] font-semibold transition-colors",
-                    isGain(t) ? "text-gain" : "text-loss"
-                  )}
-                >
-                  {formatPercent(t.changePercent)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="overflow-x-auto no-scrollbar">
+        <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-1 pb-4 font-mono">
+          {liveTickers.map((t) => (
+            <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
+              <span className="font-semibold text-foreground">{t.symbol}</span>
+              {" "}
+              <span className="tabular-nums font-medium text-muted-foreground">
+                {formatPrice(t.price)}
+              </span>
+              {" "}
+              <span
+                className={cn(
+                  "tabular-nums font-semibold",
+                  isGain(t) ? "text-gain" : "text-loss"
+                )}
+              >
+                {formatPercent(t.changePercent)}
+              </span>
+            </span>
+          ))}
 
-        {/* Fade edge before edit button */}
-        <div className="pointer-events-none absolute right-[56px] inset-y-0 w-12 bg-gradient-to-l from-background via-background/40 to-transparent z-10" />
-
-        {/* Edit button — always visible, pinned right */}
-        <div className="relative z-20 shrink-0 pr-3 pl-1 pb-1">
+          {/* Edit button — at end of scroll */}
           <EditSheet
             selected={selected}
             onSave={setSelected}
             trigger={
-              <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground">
-                <Settings2 size={20} strokeWidth={1.8} />
+              <button className="shrink-0 text-muted-foreground transition-colors hover:text-foreground">
+                <Settings2 size={16} strokeWidth={1.8} />
               </button>
             }
           />
@@ -676,7 +668,7 @@ export function TickerPills() {
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent" />
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2.5">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar px-5 py-2.5">
         {tickers.map((t) => (
           <div
             key={t.symbol}
@@ -730,7 +722,7 @@ export function TickerCards() {
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent" />
 
-      <div className="flex gap-2.5 overflow-x-auto no-scrollbar px-4 py-2.5">
+      <div className="flex gap-2.5 overflow-x-auto no-scrollbar px-5 py-2.5">
         {tickers.map((t) => (
           <div
             key={t.symbol}
@@ -798,7 +790,7 @@ export function TickerDense() {
 
   if (tickers.length === 0) {
     return (
-      <div className="flex items-center justify-between px-4 py-2.5 ">
+      <div className="flex items-center justify-between px-5 py-2.5 ">
         <span className="text-[13px] text-muted-foreground">No tickers selected</span>
         <EditButton selected={selected} onSave={setSelected} />
       </div>
@@ -843,7 +835,7 @@ export function TickerDense() {
           {doubled.map((t, i) => (
             <div
               key={`${t.symbol}-${i}`}
-              className="shrink-0 flex flex-col items-center px-4 border-r border-border/30 last:border-r-0"
+              className="shrink-0 flex flex-col items-center px-5 border-r border-border/30 last:border-r-0"
             >
               <span className="text-[13px] font-bold text-foreground tracking-wide">
                 {t.symbol}
@@ -882,12 +874,12 @@ export function TickerGlow() {
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-background to-transparent" />
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 py-3">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar px-5 py-3">
         {tickers.map((t) => (
           <div
             key={t.symbol}
             className={cn(
-              "relative shrink-0 rounded-2xl border px-4 py-3 min-w-[156px] overflow-hidden",
+              "relative shrink-0 rounded-2xl border px-5 py-3 min-w-[156px] overflow-hidden",
               isGain(t) ? "border-gain/20" : "border-loss/20"
             )}
           >

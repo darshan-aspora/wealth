@@ -58,7 +58,7 @@ export function HoldingsTab() {
   const sortBy = sortOptions[sortIdx].key;
 
   const filtered = useMemo(() => {
-    let list = filter === "All" ? [...holdingsData] : holdingsData.filter((h) => h.category === filter);
+    const list = filter === "All" ? [...holdingsData] : holdingsData.filter((h) => h.category === filter);
 
     const getValue = (h: Holding) => {
       switch (sortBy) {
@@ -80,9 +80,9 @@ export function HoldingsTab() {
   const totalXirr = 18.42;
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-5 pb-6">
       {/* Summary card */}
-      <div className="mb-4 rounded-xl border border-border/40 bg-card/60 px-4 py-3">
+      <div className="mb-4 rounded-xl border border-border/40 bg-card/60 px-5 py-3">
         <div className="flex items-baseline justify-between">
           <p className="text-[20px] font-bold tabular-nums text-foreground">
             {totalCurrent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
@@ -140,7 +140,7 @@ export function HoldingsTab() {
           return (
             <div
               key={h.symbol}
-              className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 px-4 py-3.5 active:scale-[0.98] transition-transform"
+              className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 active:scale-[0.98] transition-transform"
             >
               {/* Logo */}
               <div

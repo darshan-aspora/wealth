@@ -5,6 +5,13 @@ import { ArrowLeft, Search, Share2, Heart, MoreHorizontal, BarChart3, Bell } fro
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { formatPrice, formatChange, isGain, type TickerItem } from "@/components/ticker";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface StockHeaderProps {
   ticker: TickerItem;
@@ -32,17 +39,19 @@ export function StockHeader({
   return (
     <header
       className={cn(
-        "relative z-30 flex items-center justify-between px-4 py-2 transition-all duration-200",
+        "relative z-30 flex items-center justify-between px-5 py-2 transition-all duration-200",
         showCompact && "border-b border-border/50 bg-background/80 backdrop-blur-xl",
       )}
     >
       {/* Left: Back */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-full text-muted-foreground"
         onClick={() => router.back()}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
       >
         <ArrowLeft size={20} strokeWidth={2} />
-      </button>
+      </Button>
 
       {/* Center: Compact price (shown on scroll) */}
       <motion.div
@@ -69,16 +78,20 @@ export function StockHeader({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-0.5">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted-foreground"
           onClick={onShare}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
         >
           <Share2 size={18} strokeWidth={1.8} />
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full"
           onClick={onToggleWatchlist}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors active:bg-muted/40"
         >
           <Heart
             size={18}
@@ -89,7 +102,7 @@ export function StockHeader({
                 : "text-muted-foreground",
             )}
           />
-        </button>
+        </Button>
 
         <HeaderOptionsMenu
           onCompare={onCompare}
@@ -110,57 +123,27 @@ function HeaderOptionsMenu({
   onSetAlert: () => void;
   onSearch: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
-  }, [open]);
-
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40"
-      >
-        <MoreHorizontal size={18} strokeWidth={1.8} />
-      </button>
-
-      {open && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: -4 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.15 }}
-          className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-border/60 bg-card shadow-lg"
-        >
-          {[
-            { label: "Compare", icon: BarChart3, action: () => { onCompare(); setOpen(false); } },
-            { label: "Set Alert", icon: Bell, action: () => { onSetAlert(); setOpen(false); } },
-            { label: "Search", icon: Search, action: () => { onSearch(); setOpen(false); } },
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={item.action}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-foreground transition-colors hover:bg-muted/40 active:bg-muted/60"
-            >
-              <item.icon size={16} className="text-muted-foreground" />
-              {item.label}
-            </button>
-          ))}
-        </motion.div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground">
+          <MoreHorizontal size={18} strokeWidth={1.8} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onSelect={onCompare}>
+          <BarChart3 size={16} />
+          Compare
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onSetAlert}>
+          <Bell size={16} />
+          Set Alert
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onSearch}>
+          <Search size={16} />
+          Search
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
-
-import { useState, useEffect, useRef } from "react";

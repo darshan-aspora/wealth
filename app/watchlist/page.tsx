@@ -211,7 +211,7 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
     return (
       <button
         onClick={handleGenerate}
-        className="mx-4 mt-2 mb-2 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-4 py-4 text-left transition-all active:scale-[0.98]"
+        className="mx-4 mt-2 mb-2 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-5 py-4 text-left transition-all active:scale-[0.98]"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15">
           <Sparkles size={20} className="text-violet-400" />
@@ -226,7 +226,7 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
   }
 
   return (
-    <div className="mx-4 mt-2 mb-2 rounded-2xl border border-violet-500/20 bg-violet-500/5 px-4 py-4">
+    <div className="mx-4 mt-2 mb-2 rounded-2xl border border-violet-500/20 bg-violet-500/5 px-5 py-4">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
         <Sparkles size={16} className="text-violet-400" />
@@ -301,7 +301,7 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
 function StockRow({ ticker }: { ticker: TickerItem }) {
   const gain = isGain(ticker);
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 px-5 py-3">
       <TickerLogo ticker={ticker} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold leading-tight text-foreground">
@@ -409,7 +409,7 @@ function SwipeableRow({
 
 function NewsSection() {
   return (
-    <div className="mt-4 px-4">
+    <div className="mt-4 px-5">
       <NewsAccordion
         title="News"
         subtitle="Headlines relevant to your watchlist"
@@ -478,7 +478,7 @@ function WatchlistTabContent({
   return (
     <div className="pb-6">
       {/* Stats bar + sort */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30">
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/30">
         <div className="flex items-center gap-3">
           <span className="text-[14px] text-muted-foreground">
             {watchlist.stocks.length} items
@@ -604,7 +604,7 @@ function ToggleRow({
   return (
     <button
       onClick={onToggle}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors"
+      className="flex w-full items-center gap-3 px-5 py-3.5 text-left active:bg-muted/30 transition-colors"
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50">
         <Icon size={18} strokeWidth={1.6} className="text-muted-foreground" />
@@ -737,7 +737,7 @@ function SettingsTab({
   return (
     <div className="pb-6 pt-2">
       {/* ── Manage Watchlists ── */}
-      <div className="px-4">
+      <div className="px-5">
         <h3 className="mb-1 text-[17px] font-bold text-foreground">Manage Watchlists</h3>
         <p className="text-[13px] text-muted-foreground/50 mb-3">
           Drag to reorder. {watchlists.length} watchlist{watchlists.length !== 1 ? "s" : ""}.
@@ -758,14 +758,14 @@ function SettingsTab({
         </Reorder.Group>
       </div>
 
-      <div className="px-4 mt-1">
+      <div className="px-5 mt-1">
         <p className="text-[12px] text-muted-foreground/50">
           Tab order matches the list above. Hold and drag to reorder.
         </p>
       </div>
 
       {/* Add new watchlist */}
-      <div className="px-4">
+      <div className="px-5">
         <button
           onClick={onAdd}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border active:scale-[0.98]"
@@ -776,7 +776,7 @@ function SettingsTab({
       </div>
 
       {/* ── Watchlist Configuration ── */}
-      <div className="mt-6 px-4">
+      <div className="mt-6 px-5">
         <h3 className="mb-1 text-[17px] font-bold text-foreground">Watchlist Configuration</h3>
         <p className="text-[13px] text-muted-foreground/50 mb-3">Customize what you see on each watchlist</p>
       </div>

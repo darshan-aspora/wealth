@@ -29,7 +29,7 @@ export function StockHero({ ticker }: StockHeroProps) {
   );
 
   return (
-    <div className="px-4 pb-3 pt-1">
+    <div className="px-5 pb-3 pt-1">
       {/* Identity */}
       <div className="flex items-center gap-3 mb-3">
         <TickerLogo ticker={ticker} size="md" />
@@ -76,7 +76,7 @@ export function StockHero({ ticker }: StockHeroProps) {
       </div>
 
       {/* Chart */}
-      <div className="mb-3 -mx-4">
+      <div className="mb-3 -mx-5">
         <StockChart
           data={chartData}
           chartType={chartType}

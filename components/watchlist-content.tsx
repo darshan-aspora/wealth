@@ -52,7 +52,7 @@ function SectionHeader({
   return (
     <button
       onClick={onToggle}
-      className="flex w-full items-center justify-between px-4 py-3"
+      className="flex w-full items-center justify-between px-5 py-3"
     >
       <span className="text-[15px] font-semibold text-muted-foreground">
         {label}
@@ -160,7 +160,7 @@ function StockRow({
   const gain = isGain(ticker);
 
   return (
-    <div className="relative flex items-center gap-3 px-4 py-3">
+    <div className="relative flex items-center gap-3 px-5 py-3">
       {/* Flag bar — absolute left edge, same height as logo (40px) */}
       {isFlagged && (
         <motion.div

@@ -19,7 +19,7 @@ export function EarningsCalendar() {
   return (
     <div className="overflow-hidden rounded-xl border border-border/50">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5">
+      <div className="flex items-center justify-between px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <Calendar size={20} className="text-foreground" />
           <span className="text-[15px] font-bold text-foreground">
@@ -95,14 +95,14 @@ export function EarningsCalendar() {
       {/* Company List */}
       <div>
         {companies.length === 0 ? (
-          <div className="px-4 py-6 text-center text-[13px] text-muted-foreground/50">
+          <div className="px-5 py-6 text-center text-[13px] text-muted-foreground/50">
             No earnings reports on this day
           </div>
         ) : (
           companies.map((c) => (
             <div
               key={c.symbol}
-              className="flex items-center border-b border-border/20 px-4 py-3 last:border-b-0"
+              className="flex items-center border-b border-border/20 px-5 py-3 last:border-b-0"
             >
               <div
                 className={cn(
@@ -134,7 +134,7 @@ export function EarningsCalendar() {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border/30 px-4 py-2.5 text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between border-t border-border/30 px-5 py-2.5 text-[10px] text-muted-foreground">
         <span>
           <span className="font-semibold text-foreground">
             {EARNINGS_DAYS.reduce((s, d) => s + d.count, 0)}

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Reorder, useDragControls } from "framer-motion";
 import { GripVertical, Pencil, Check, Minus, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -101,7 +102,7 @@ function EditableSectionHeader({
     <Reorder.Item
       value={value}
       dragListener={false}
-      className="flex items-center gap-3 bg-background px-4 py-3"
+      className="flex items-center gap-3 bg-background px-5 py-3"
     >
       {/* Checkbox */}
       <button onClick={onToggle} className="flex h-5 w-5 shrink-0 items-center justify-center">
@@ -127,7 +128,7 @@ function EditableSectionHeader({
       {/* Label / Edit input */}
       {editing ? (
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <input
+          <Input
             ref={inputRef}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -138,7 +139,7 @@ function EditableSectionHeader({
                 setEditing(false);
               }
             }}
-            className="min-w-0 flex-1 border-b border-foreground/30 bg-transparent text-[15px] font-semibold text-foreground outline-none"
+            className="min-w-0 flex-1 rounded-none border-0 border-b border-foreground/30 bg-transparent p-0 text-[15px] font-semibold text-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           <button
             onClick={save}
@@ -189,7 +190,7 @@ function DraggableStockItem({
   return (
     <Reorder.Item
       value={ticker.symbol}
-      className="flex items-center gap-3 bg-background px-4 py-2.5"
+      className="flex items-center gap-3 bg-background px-5 py-2.5"
       dragListener={false}
       dragControls={dragControls}
     >
@@ -328,7 +329,7 @@ export function EditSheet() {
         className="mx-auto flex max-h-[85dvh] max-w-[430px] flex-col gap-0 rounded-t-2xl border-border/60 bg-background px-0 pb-0 pt-4 [&>button]:hidden"
       >
         {/* Header: Delete (when selected) | Title | Done */}
-        <SheetHeader className="flex-row items-center justify-between border-0 px-4 pb-2">
+        <SheetHeader className="flex-row items-center justify-between border-0 px-5 pb-2">
           {selectedCount > 0 ? (
             <button
               onClick={deleteSelected}

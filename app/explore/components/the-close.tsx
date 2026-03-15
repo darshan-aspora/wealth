@@ -3,7 +3,7 @@
 export function TheClose() {
   return (
     <section className="bg-background py-16 flex items-center justify-center">
-      <div className="px-4 flex flex-col items-center">
+      <div className="px-5 flex flex-col items-center">
         <h2 className="text-2xl font-bold text-foreground text-center">
           Your portfolio starts here.
         </h2>

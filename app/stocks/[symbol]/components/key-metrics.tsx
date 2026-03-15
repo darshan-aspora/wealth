@@ -1,6 +1,7 @@
 "use client";
 
 import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { KEY_METRICS } from "./mock-data";
 
 interface KeyMetricsProps {
@@ -12,12 +13,16 @@ export function KeyMetrics({ symbol }: KeyMetricsProps) {
   if (!metrics) return null;
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-5 py-4">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-[18px] font-bold text-foreground">Performance Metrics</h2>
-        <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/50 transition-colors hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="rounded-full text-muted-foreground/50"
+        >
           <Info size={18} />
-        </button>
+        </Button>
       </div>
 
       {/* 2-column grid matching PDF layout */}

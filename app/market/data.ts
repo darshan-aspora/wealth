@@ -6,6 +6,7 @@
 export interface PerformanceRow {
   name: string;
   ticker?: string;
+  last: number;
   today: number;
   fiveDays: number;
   oneMonth: number;
@@ -117,30 +118,123 @@ export interface GlobalRow {
 // ============================================================
 // US MARKETS — Major Indices
 // ============================================================
-export const US_INDICES: PerformanceRow[] = [
-  { name: "S&P 500", ticker: "SPY", today: 0.88, fiveDays: -1.0, oneMonth: -2.26, ytd: -0.54, oneYear: 17.77, threeYears: 73.22, dayRange: [662.39, 679.92], weekRange52: [481.80, 697.84] },
-  { name: "DJIA", ticker: "DIA", today: 0.56, fiveDays: -2.02, oneMonth: -4.66, ytd: -0.56, oneYear: 11.59, threeYears: 47.91, dayRange: [466.68, 479.38], weekRange52: [366.32, 505.30] },
-  { name: "NASDAQ 100", ticker: "QQQ", today: 1.34, fiveDays: -0.49, oneMonth: -1.07, ytd: -1.07, oneYear: 23.58, threeYears: 107.67, dayRange: [591.33, 609.27], weekRange52: [402.39, 637.01] },
-  { name: "Mid Cap", ticker: "MDY", today: 0.99, fiveDays: -2.74, oneMonth: -4.03, ytd: 4.30, oneYear: 15.20, threeYears: 36.49, dayRange: [608.92, 630.68], weekRange52: [458.82, 662.65] },
-  { name: "Small Cap", ticker: "IJR", today: 0.46, fiveDays: -3.49, oneMonth: -5.02, ytd: 4.32, oneYear: 16.29, threeYears: 27.10, dayRange: [120.98, 125.76], weekRange52: [89.22, 133.52] },
-  { name: "Micro Cap", ticker: "IWC", today: 0.90, fiveDays: -3.08, oneMonth: -3.90, ytd: 4.27, oneYear: 40.53, threeYears: 49.64, dayRange: [159.14, 165.02], weekRange52: [95.25, 176.74] },
+// — Most Popular (8 benchmark indices every investor watches)
+export const US_IDX_POPULAR: PerformanceRow[] = [
+  { name: "S&P 500", ticker: "SPX", last: 5638.94, today: 0.88, fiveDays: -1.0, oneMonth: -2.26, ytd: -0.54, oneYear: 17.77, threeYears: 73.22, dayRange: [5504.65, 5648.40], weekRange52: [4953.56, 6147.43] },
+  { name: "Dow Jones", ticker: "DJIA", last: 41488.19, today: 0.56, fiveDays: -2.02, oneMonth: -4.66, ytd: -0.56, oneYear: 11.59, threeYears: 47.91, dayRange: [40666.14, 41580.72], weekRange52: [36611.78, 45073.63] },
+  { name: "Nasdaq Composite", ticker: "COMP", last: 17754.09, today: 1.22, fiveDays: -0.68, oneMonth: -1.54, ytd: -1.82, oneYear: 21.34, threeYears: 94.18, dayRange: [17322.80, 17798.56], weekRange52: [15222.77, 20204.58] },
+  { name: "Russell 2000", ticker: "RUT", last: 2056.14, today: 0.46, fiveDays: -3.49, oneMonth: -5.02, ytd: -5.84, oneYear: 5.29, threeYears: 12.10, dayRange: [1993.38, 2068.76], weekRange52: [1881.28, 2466.49] },
+  { name: "Nasdaq 100", ticker: "NDX", last: 19432.48, today: 1.34, fiveDays: -0.49, oneMonth: -1.07, ytd: -1.07, oneYear: 23.58, threeYears: 107.67, dayRange: [18942.68, 19488.12], weekRange52: [16973.94, 22222.61] },
+  { name: "S&P MidCap 400", ticker: "MID", last: 2864.32, today: 0.99, fiveDays: -2.74, oneMonth: -4.03, ytd: -4.92, oneYear: 5.20, threeYears: 16.49, dayRange: [2792.56, 2878.44], weekRange52: [2668.14, 3277.95] },
+  { name: "NYSE Composite", ticker: "NYA", last: 19248.76, today: 0.62, fiveDays: -1.84, oneMonth: -3.18, ytd: 0.46, oneYear: 12.86, threeYears: 38.24, dayRange: [18890.42, 19302.18], weekRange52: [17066.14, 20540.33] },
+  { name: "CBOE Volatility (VIX)", ticker: "VIX", last: 21.77, today: -4.32, fiveDays: 12.68, oneMonth: 28.42, ytd: 36.94, oneYear: 42.18, threeYears: -8.64, dayRange: [20.84, 23.56], weekRange52: [10.62, 65.73] },
 ];
+
+// — Sectors (8 S&P sector indices)
+export const US_IDX_SECTORS: PerformanceRow[] = [
+  { name: "S&P 500 Info Tech", ticker: "S5INFT", last: 4012.36, today: 1.80, fiveDays: -0.06, oneMonth: -2.50, ytd: -2.92, oneYear: 27.90, threeYears: 102.26, dayRange: [3896.42, 4028.18], weekRange52: [3214.56, 4402.73] },
+  { name: "S&P 500 Healthcare", ticker: "S5HLTH", last: 1724.48, today: 1.02, fiveDays: -1.78, oneMonth: -1.32, ytd: -0.35, oneYear: 3.34, threeYears: 23.34, dayRange: [1695.26, 1733.84], weekRange52: [1498.42, 1802.19] },
+  { name: "S&P 500 Financials", ticker: "S5FINL", last: 768.92, today: -0.47, fiveDays: -2.27, oneMonth: -6.69, ytd: -8.11, oneYear: 2.46, threeYears: 50.06, dayRange: [758.14, 778.36], weekRange52: [618.78, 872.44] },
+  { name: "S&P 500 Cons Discr", ticker: "S5COND", last: 1648.74, today: 0.13, fiveDays: -1.55, oneMonth: -2.52, ytd: -4.04, oneYear: 11.43, threeYears: 64.18, dayRange: [1607.18, 1664.02], weekRange52: [1382.56, 1814.28] },
+  { name: "S&P 500 Industrials", ticker: "S5INDU", last: 1084.28, today: 0.59, fiveDays: -2.86, oneMonth: -1.59, ytd: -3.80, oneYear: 12.33, threeYears: 49.45, dayRange: [1058.36, 1090.72], weekRange52: [928.14, 1192.66] },
+  { name: "S&P 500 Energy", ticker: "S5ENRS", last: 672.84, today: -0.44, fiveDays: 0.23, oneMonth: 5.00, ytd: 4.97, oneYear: 8.83, threeYears: 84.58, dayRange: [667.12, 680.48], weekRange52: [558.94, 702.38] },
+  { name: "S&P 500 Comm Svcs", ticker: "S5TELS", last: 348.62, today: 0.09, fiveDays: -1.04, oneMonth: 0.58, ytd: -0.14, oneYear: 17.22, threeYears: 121.77, dayRange: [343.48, 350.86], weekRange52: [268.32, 358.44] },
+  { name: "S&P 500 Utilities", ticker: "S5UTIL", last: 418.36, today: 0.24, fiveDays: -0.89, oneMonth: 7.75, ytd: 9.74, oneYear: 21.23, threeYears: 43.16, dayRange: [414.02, 422.18], weekRange52: [332.86, 430.72] },
+];
+
+// — Style (8 growth/value/blend/momentum indices)
+export const US_IDX_STYLE: PerformanceRow[] = [
+  { name: "S&P 500 Growth", ticker: "SGX", last: 3842.56, today: 1.42, fiveDays: -0.32, oneMonth: -1.86, ytd: -1.68, oneYear: 24.92, threeYears: 86.42, dayRange: [3768.14, 3858.92], weekRange52: [3012.48, 4186.72] },
+  { name: "S&P 500 Value", ticker: "SVX", last: 1748.24, today: 0.38, fiveDays: -1.72, oneMonth: -2.84, ytd: 0.62, oneYear: 10.86, threeYears: 42.18, dayRange: [1716.48, 1756.82], weekRange52: [1488.36, 1864.28] },
+  { name: "Russell 1000 Growth", ticker: "RLG", last: 3648.92, today: 1.56, fiveDays: -0.18, oneMonth: -1.42, ytd: -1.24, oneYear: 26.34, threeYears: 92.86, dayRange: [3574.28, 3666.48], weekRange52: [2848.72, 3984.56] },
+  { name: "Russell 1000 Value", ticker: "RLV", last: 1842.48, today: 0.28, fiveDays: -1.94, oneMonth: -3.46, ytd: -0.42, oneYear: 8.64, threeYears: 34.28, dayRange: [1808.14, 1850.72], weekRange52: [1612.48, 1968.34] },
+  { name: "S&P 500 Momentum", ticker: "SPMO", last: 892.36, today: 0.94, fiveDays: -0.86, oneMonth: -0.42, ytd: 2.48, oneYear: 22.64, threeYears: 68.42, dayRange: [876.48, 896.18], weekRange52: [694.28, 924.56] },
+  { name: "S&P 500 Quality", ticker: "SPHQ", last: 62.84, today: 0.78, fiveDays: -0.64, oneMonth: -1.18, ytd: 0.86, oneYear: 18.42, threeYears: 58.24, dayRange: [61.68, 63.12], weekRange52: [48.92, 65.48] },
+  { name: "S&P 500 High Beta", ticker: "SPHB", last: 84.26, today: 1.86, fiveDays: -2.48, oneMonth: -4.82, ytd: -6.24, oneYear: 12.48, threeYears: 28.64, dayRange: [81.42, 85.18], weekRange52: [62.14, 98.72] },
+  { name: "S&P 500 Pure Growth", ticker: "RPG", last: 248.14, today: 1.64, fiveDays: -0.94, oneMonth: -3.26, ytd: -3.82, oneYear: 18.86, threeYears: 52.48, dayRange: [242.36, 250.28], weekRange52: [192.48, 278.62] },
+];
+
+// — Smart Beta (8 factor/strategy indices)
+export const US_IDX_SMART_BETA: PerformanceRow[] = [
+  { name: "S&P 500 Equal Weight", ticker: "SPXEW", last: 7248.62, today: 0.52, fiveDays: -2.14, oneMonth: -3.86, ytd: -2.48, oneYear: 8.92, threeYears: 28.64, dayRange: [7112.48, 7282.36], weekRange52: [6248.14, 7864.28] },
+  { name: "Dow Jones Sel Dividend", ticker: "DVY", last: 128.42, today: 0.18, fiveDays: -1.26, oneMonth: -0.84, ytd: 3.42, oneYear: 8.86, threeYears: 22.48, dayRange: [127.14, 129.08], weekRange52: [108.62, 134.28] },
+  { name: "S&P 500 Low Volatility", ticker: "SPLV", last: 78.64, today: 0.14, fiveDays: -0.48, oneMonth: 1.86, ytd: 6.24, oneYear: 14.48, threeYears: 32.86, dayRange: [77.82, 79.12], weekRange52: [64.28, 80.42] },
+  { name: "S&P 500 High Dividend", ticker: "SPYD", last: 42.86, today: 0.08, fiveDays: -0.92, oneMonth: -1.24, ytd: 2.86, oneYear: 6.42, threeYears: 18.64, dayRange: [42.28, 43.14], weekRange52: [36.48, 44.86] },
+  { name: "S&P 500 Buyback", ticker: "SPYB", last: 98.42, today: 0.34, fiveDays: -1.86, oneMonth: -2.48, ytd: -1.64, oneYear: 12.28, threeYears: 42.86, dayRange: [96.84, 99.08], weekRange52: [82.14, 106.48] },
+  { name: "S&P 500 Min Volatility", ticker: "USMV", last: 86.24, today: 0.22, fiveDays: -0.32, oneMonth: 2.42, ytd: 5.86, oneYear: 16.24, threeYears: 36.48, dayRange: [85.48, 86.82], weekRange52: [72.36, 88.64] },
+  { name: "MSCI USA ESG Leaders", ticker: "SUSL", last: 48.92, today: 0.68, fiveDays: -0.86, oneMonth: -1.92, ytd: -0.48, oneYear: 16.86, threeYears: 54.28, dayRange: [48.14, 49.28], weekRange52: [38.64, 52.14] },
+  { name: "Nasdaq 100 Equal Wt", ticker: "QQQE", last: 92.48, today: 0.82, fiveDays: -1.48, oneMonth: -2.86, ytd: -2.14, oneYear: 14.42, threeYears: 38.64, dayRange: [90.84, 93.12], weekRange52: [74.28, 100.86] },
+];
+
+// — Strategy (combined Style + Smart Beta)
+export const US_IDX_STRATEGY: PerformanceRow[] = [...US_IDX_STYLE, ...US_IDX_SMART_BETA];
+
+// — Thematic (8 thematic/megatrend indices)
+export const US_IDX_THEMATIC: PerformanceRow[] = [
+  { name: "S&P Kensho New Econ", ticker: "KOMP", last: 48.62, today: 1.24, fiveDays: -1.68, oneMonth: -3.42, ytd: -4.86, oneYear: 8.42, threeYears: 12.86, dayRange: [47.14, 49.08], weekRange52: [36.48, 56.28] },
+  { name: "NYSE FANG+", ticker: "NYFANG", last: 12486.42, today: 1.86, fiveDays: -0.24, oneMonth: -0.86, ytd: -2.48, oneYear: 32.64, threeYears: 128.42, dayRange: [12184.28, 12548.86], weekRange52: [8642.14, 14286.48] },
+  { name: "S&P Global Clean Energy", ticker: "SPGTCLEN", last: 968.42, today: 0.86, fiveDays: -2.14, oneMonth: -4.86, ytd: -8.24, oneYear: -12.48, threeYears: -22.86, dayRange: [948.28, 976.14], weekRange52: [842.36, 1248.62] },
+  { name: "Indxx Artificial Intel", ticker: "AIEQ", last: 42.86, today: 1.48, fiveDays: -0.92, oneMonth: -2.14, ytd: -3.42, oneYear: 24.86, threeYears: 86.48, dayRange: [41.68, 43.28], weekRange52: [28.42, 48.64] },
+  { name: "S&P Biotech Select", ticker: "XBI", last: 94.28, today: 1.12, fiveDays: -2.86, oneMonth: -3.68, ytd: -6.42, oneYear: -2.86, threeYears: -14.48, dayRange: [92.14, 95.48], weekRange52: [78.64, 112.86] },
+  { name: "S&P Kensho Cyber Sec", ticker: "HACK", last: 62.48, today: 0.94, fiveDays: -0.48, oneMonth: -1.24, ytd: 1.86, oneYear: 18.42, threeYears: 42.64, dayRange: [61.28, 63.12], weekRange52: [48.86, 66.48] },
+  { name: "Solactive Cloud Tech", ticker: "CLOU", last: 24.86, today: 1.32, fiveDays: -1.42, oneMonth: -3.86, ytd: -5.48, oneYear: 8.64, threeYears: 4.28, dayRange: [24.14, 25.18], weekRange52: [18.42, 28.64] },
+  { name: "S&P Semiconductor", ticker: "SPSISC", last: 6842.48, today: 2.14, fiveDays: -0.86, oneMonth: -4.28, ytd: -6.82, oneYear: 28.42, threeYears: 118.64, dayRange: [6648.14, 6898.72], weekRange52: [4862.48, 7842.36] },
+];
+
+// — Volatility & Sentiment (8 vol/sentiment/risk gauges)
+export const US_IDX_VOL_SENTIMENT: PerformanceRow[] = [
+  { name: "CBOE Volatility (VIX)", ticker: "VIX", last: 21.77, today: -4.32, fiveDays: 12.68, oneMonth: 28.42, ytd: 36.94, oneYear: 42.18, threeYears: -8.64, dayRange: [20.84, 23.56], weekRange52: [10.62, 65.73] },
+  { name: "VIX 9-Day", ticker: "VIX9D", last: 19.86, today: -5.48, fiveDays: 14.24, oneMonth: 32.86, ytd: 42.18, oneYear: 48.64, threeYears: -4.28, dayRange: [18.92, 21.42], weekRange52: [8.86, 72.48] },
+  { name: "VIX 3-Month", ticker: "VIX3M", last: 22.42, today: -2.86, fiveDays: 8.42, oneMonth: 18.64, ytd: 24.86, oneYear: 28.42, threeYears: 2.48, dayRange: [21.68, 23.18], weekRange52: [12.48, 48.62] },
+  { name: "CBOE Nasdaq Vol", ticker: "VXN", last: 24.86, today: -3.92, fiveDays: 10.48, oneMonth: 24.86, ytd: 32.42, oneYear: 38.64, threeYears: -2.86, dayRange: [23.84, 26.12], weekRange52: [12.86, 58.42] },
+  { name: "CBOE Put/Call Ratio", ticker: "CPC", last: 0.92, today: -2.14, fiveDays: 8.86, oneMonth: 12.48, ytd: 4.28, oneYear: -6.42, threeYears: 2.86, dayRange: [0.86, 0.98], weekRange52: [0.62, 1.42] },
+  { name: "CBOE Skew Index", ticker: "SKEW", last: 142.86, today: 0.48, fiveDays: -2.14, oneMonth: -4.86, ytd: -2.48, oneYear: 6.42, threeYears: 8.64, dayRange: [140.28, 144.62], weekRange52: [118.42, 168.86] },
+  { name: "S&P 500 Realized Vol", ticker: "RVOL", last: 18.42, today: -1.86, fiveDays: 6.48, oneMonth: 14.28, ytd: 22.86, oneYear: 12.48, threeYears: -4.64, dayRange: [17.86, 19.28], weekRange52: [8.42, 38.64] },
+  { name: "AAII Bull-Bear Spread", ticker: "AAII", last: -12.48, today: 0.00, fiveDays: -8.42, oneMonth: -24.86, ytd: -32.48, oneYear: -18.64, threeYears: 4.28, dayRange: [-14.86, -10.42], weekRange52: [-42.86, 28.48] },
+];
+
+// — Fixed Income (8 bond/yield indices)
+export const US_IDX_FIXED_INCOME: PerformanceRow[] = [
+  { name: "US 10-Year Yield", ticker: "TNX", last: 4.28, today: -0.46, fiveDays: -2.86, oneMonth: -4.48, ytd: -6.24, oneYear: 0.94, threeYears: 68.42, dayRange: [4.22, 4.36], weekRange52: [3.62, 4.98] },
+  { name: "US 2-Year Yield", ticker: "IRX2", last: 3.96, today: -0.50, fiveDays: -3.42, oneMonth: -6.84, ytd: -8.42, oneYear: -12.86, threeYears: 42.48, dayRange: [3.88, 4.06], weekRange52: [3.42, 5.12] },
+  { name: "US 30-Year Yield", ticker: "TYX", last: 4.62, today: -0.22, fiveDays: -1.94, oneMonth: -2.86, ytd: -2.48, oneYear: 4.28, threeYears: 72.86, dayRange: [4.56, 4.68], weekRange52: [3.94, 5.18] },
+  { name: "Bloomberg US Agg Bond", ticker: "AGG", last: 98.42, today: 0.12, fiveDays: 0.48, oneMonth: 1.24, ytd: 1.86, oneYear: 4.42, threeYears: -6.48, dayRange: [97.86, 98.68], weekRange52: [92.48, 100.86] },
+  { name: "ICE US Treasury 7-10Y", ticker: "IEF", last: 94.86, today: 0.18, fiveDays: 0.64, oneMonth: 1.48, ytd: 2.14, oneYear: 4.86, threeYears: -12.42, dayRange: [94.28, 95.18], weekRange52: [86.42, 98.64] },
+  { name: "ICE US Corp Bond", ticker: "LQD", last: 108.42, today: 0.08, fiveDays: 0.28, oneMonth: 0.86, ytd: 1.42, oneYear: 5.86, threeYears: -4.28, dayRange: [107.86, 108.92], weekRange52: [98.64, 112.48] },
+  { name: "ICE US High Yield", ticker: "HYG", last: 78.86, today: 0.14, fiveDays: -0.42, oneMonth: -0.68, ytd: 0.86, oneYear: 6.42, threeYears: 2.48, dayRange: [78.28, 79.18], weekRange52: [72.14, 82.48] },
+  { name: "Bloomberg US TIPS", ticker: "TIP", last: 108.24, today: 0.10, fiveDays: 0.36, oneMonth: 1.08, ytd: 1.48, oneYear: 4.28, threeYears: -2.86, dayRange: [107.68, 108.62], weekRange52: [100.42, 112.86] },
+];
+
+// Legacy alias for backward compat
+export const US_INDICES: PerformanceRow[] = US_IDX_POPULAR;
 
 // ============================================================
 // US MARKETS — Sectors
 // ============================================================
 export const US_SECTORS: PerformanceRow[] = [
-  { name: "Technology", ticker: "XLK", today: 1.80, fiveDays: -0.06, oneMonth: -2.50, ytd: -2.92, oneYear: 27.90, threeYears: 102.26, dayRange: [135.46, 140.21], weekRange52: [86.23, 153.00] },
-  { name: "Healthcare", ticker: "XLV", today: 1.02, fiveDays: -1.78, oneMonth: -1.32, ytd: -0.35, oneYear: 3.34, threeYears: 23.34, dayRange: [151.13, 154.55], weekRange52: [127.35, 160.59] },
-  { name: "Consumer Staples", ticker: "XLP", today: 0.22, fiveDays: -1.37, oneMonth: -1.67, ytd: 10.67, oneYear: 3.75, threeYears: 20.31, dayRange: [84.80, 86.16], weekRange52: [75.16, 90.14] },
-  { name: "Utilities", ticker: "XLU", today: 0.24, fiveDays: -0.89, oneMonth: 7.75, ytd: 9.74, oneYear: 21.23, threeYears: 43.16, dayRange: [46.04, 46.95], weekRange52: [35.51, 47.80] },
-  { name: "Consumer Discr.", ticker: "XLY", today: 0.13, fiveDays: -1.55, oneMonth: -2.52, ytd: -4.04, oneYear: 11.43, threeYears: 64.18, dayRange: [110.99, 114.93], weekRange52: [86.55, 125.01] },
-  { name: "Comm. Svcs", ticker: "XLC", today: 0.09, fiveDays: -1.04, oneMonth: 0.58, ytd: -0.14, oneYear: 17.22, threeYears: 121.77, dayRange: [115.50, 117.79], weekRange52: [84.02, 120.41] },
-  { name: "Basic Materials", ticker: "XLB", today: 0.26, fiveDays: -3.72, oneMonth: -4.20, ytd: 10.23, oneYear: 13.85, threeYears: 25.16, dayRange: [48.60, 50.19], weekRange52: [36.56, 54.14] },
-  { name: "Financials", ticker: "XLF", today: -0.47, fiveDays: -2.27, oneMonth: -6.69, ytd: -8.11, oneYear: 2.46, threeYears: 50.06, dayRange: [49.18, 50.52], weekRange52: [42.21, 56.52] },
-  { name: "Industrials", ticker: "XLI", today: 0.59, fiveDays: -2.86, oneMonth: -1.59, ytd: 10.20, oneYear: 27.33, threeYears: 69.45, dayRange: [166.17, 171.40], weekRange52: [112.75, 179.31] },
-  { name: "Energy", ticker: "XLE", today: -0.44, fiveDays: 0.23, oneMonth: 5.00, ytd: 25.97, oneYear: 28.83, threeYears: 34.58, dayRange: [55.94, 57.15], weekRange52: [37.25, 57.88] },
-  { name: "Real Estate", ticker: "XLRE", today: 0.21, fiveDays: -1.78, oneMonth: 1.73, ytd: 6.52, oneYear: 1.20, threeYears: 15.26, dayRange: [41.98, 43.13], weekRange52: [35.76, 44.07] },
+  { name: "Technology", ticker: "XLK", last: 139.48, today: 1.80, fiveDays: -0.06, oneMonth: -2.50, ytd: -2.92, oneYear: 27.90, threeYears: 102.26, dayRange: [135.46, 140.21], weekRange52: [86.23, 153.00] },
+  { name: "Healthcare", ticker: "XLV", last: 153.72, today: 1.02, fiveDays: -1.78, oneMonth: -1.32, ytd: -0.35, oneYear: 3.34, threeYears: 23.34, dayRange: [151.13, 154.55], weekRange52: [127.35, 160.59] },
+  { name: "Consumer Staples", ticker: "XLP", last: 85.64, today: 0.22, fiveDays: -1.37, oneMonth: -1.67, ytd: 10.67, oneYear: 3.75, threeYears: 20.31, dayRange: [84.80, 86.16], weekRange52: [75.16, 90.14] },
+  { name: "Utilities", ticker: "XLU", last: 46.52, today: 0.24, fiveDays: -0.89, oneMonth: 7.75, ytd: 9.74, oneYear: 21.23, threeYears: 43.16, dayRange: [46.04, 46.95], weekRange52: [35.51, 47.80] },
+  { name: "Consumer Discr.", ticker: "XLY", last: 113.86, today: 0.13, fiveDays: -1.55, oneMonth: -2.52, ytd: -4.04, oneYear: 11.43, threeYears: 64.18, dayRange: [110.99, 114.93], weekRange52: [86.55, 125.01] },
+  { name: "Comm. Svcs", ticker: "XLC", last: 117.24, today: 0.09, fiveDays: -1.04, oneMonth: 0.58, ytd: -0.14, oneYear: 17.22, threeYears: 121.77, dayRange: [115.50, 117.79], weekRange52: [84.02, 120.41] },
+  { name: "Basic Materials", ticker: "XLB", last: 49.82, today: 0.26, fiveDays: -3.72, oneMonth: -4.20, ytd: 10.23, oneYear: 13.85, threeYears: 25.16, dayRange: [48.60, 50.19], weekRange52: [36.56, 54.14] },
+  { name: "Financials", ticker: "XLF", last: 49.86, today: -0.47, fiveDays: -2.27, oneMonth: -6.69, ytd: -8.11, oneYear: 2.46, threeYears: 50.06, dayRange: [49.18, 50.52], weekRange52: [42.21, 56.52] },
+  { name: "Industrials", ticker: "XLI", last: 170.24, today: 0.59, fiveDays: -2.86, oneMonth: -1.59, ytd: 10.20, oneYear: 27.33, threeYears: 69.45, dayRange: [166.17, 171.40], weekRange52: [112.75, 179.31] },
+  { name: "Energy", ticker: "XLE", last: 56.42, today: -0.44, fiveDays: 0.23, oneMonth: 5.00, ytd: 25.97, oneYear: 28.83, threeYears: 34.58, dayRange: [55.94, 57.15], weekRange52: [37.25, 57.88] },
+  { name: "Real Estate", ticker: "XLRE", last: 42.86, today: 0.21, fiveDays: -1.78, oneMonth: 1.73, ytd: 6.52, oneYear: 1.20, threeYears: 15.26, dayRange: [41.98, 43.13], weekRange52: [35.76, 44.07] },
+];
+
+// ---- Alternative / New-Age Sectors ----
+export const US_SECTORS_ALT: PerformanceRow[] = [
+  { name: "Semiconductors", ticker: "SMH", last: 234.86, today: 2.42, fiveDays: -1.18, oneMonth: -5.84, ytd: -8.42, oneYear: 34.86, threeYears: 142.48, dayRange: [228.14, 236.92], weekRange52: [162.48, 282.64] },
+  { name: "Artificial Intelligence", ticker: "BOTZ", last: 32.48, today: 1.86, fiveDays: -0.92, oneMonth: -3.42, ytd: -4.86, oneYear: 28.42, threeYears: 86.24, dayRange: [31.68, 32.84], weekRange52: [22.14, 38.62] },
+  { name: "Clean Energy", ticker: "ICLN", last: 14.26, today: 0.72, fiveDays: -2.48, oneMonth: -6.84, ytd: -12.42, oneYear: -18.64, threeYears: -42.86, dayRange: [13.92, 14.48], weekRange52: [11.42, 22.86] },
+  { name: "Electric Vehicles", ticker: "DRIV", last: 28.42, today: 0.94, fiveDays: -1.86, oneMonth: -4.28, ytd: -6.24, oneYear: 8.42, threeYears: 14.86, dayRange: [27.68, 28.72], weekRange52: [22.48, 34.86] },
+  { name: "Cybersecurity", ticker: "CIBR", last: 58.64, today: 1.14, fiveDays: -0.48, oneMonth: -1.86, ytd: 2.42, oneYear: 22.86, threeYears: 48.42, dayRange: [57.48, 59.12], weekRange52: [42.86, 62.48] },
+  { name: "Blockchain & Crypto", ticker: "BLOK", last: 42.86, today: 2.86, fiveDays: -3.42, oneMonth: -8.64, ytd: -14.28, oneYear: 62.48, threeYears: 24.86, dayRange: [41.28, 43.48], weekRange52: [22.14, 58.42] },
+  { name: "Cannabis", ticker: "MSOS", last: 8.42, today: -1.24, fiveDays: -4.86, oneMonth: -12.48, ytd: -18.64, oneYear: -28.42, threeYears: -64.86, dayRange: [8.12, 8.78], weekRange52: [4.86, 14.28] },
+  { name: "Space & Aerospace", ticker: "UFO", last: 22.48, today: 0.68, fiveDays: -1.42, oneMonth: -2.86, ytd: -1.24, oneYear: 14.86, threeYears: 8.42, dayRange: [22.08, 22.72], weekRange52: [16.48, 26.42] },
 ];
 
 // ============================================================
@@ -195,16 +289,16 @@ export const TOP_MUTUAL_FUNDS: TopMutualFund[] = [
 // US MARKETS — Economic Overview
 // ============================================================
 export const US_ECONOMIC: EconomicIndicator[] = [
-  { label: "Fed Funds Rate", value: "4.50%", badge: { text: "— 0 bps", direction: "neutral" }, previous: "4.50%", releasedDate: "Jan 29", nextDate: "Mar 19" },
-  { label: "CPI (YoY)", value: "2.8%", badge: { text: "↓ -0.3%", direction: "down" }, previous: "3.1%", releasedDate: "Feb 12", nextDate: "Mar 12" },
-  { label: "Core PCE (YoY)", value: "2.6%", badge: { text: "↓ -0.2%", direction: "down" }, previous: "2.8%", releasedDate: "Feb 28", nextDate: "Mar 28" },
-  { label: "GDP Growth (QoQ)", value: "2.4%", badge: { text: "↓ -0.7%", direction: "down" }, previous: "3.1%", releasedDate: "Jan 30", nextDate: "Apr 30" },
-  { label: "Unemployment Rate", value: "3.9%", badge: { text: "↓ -0.1%", direction: "up" }, previous: "4.0%", releasedDate: "Mar 7", nextDate: "Apr 4" },
-  { label: "Nonfarm Payrolls", value: "+275K", badge: { text: "↓ from 353K", direction: "down" }, previous: "+353K", releasedDate: "Mar 7", nextDate: "Apr 4" },
-  { label: "10Y Treasury Yield", value: "4.12%", badge: { text: "↓ -0.04", direction: "down" }, previous: "4.16%", isLive: true },
-  { label: "US Dollar Index (DXY)", value: "103.84", badge: { text: "↓ -0.32%", direction: "down" }, previous: "104.16", isLive: true },
-  { label: "Consumer Confidence", value: "106.7", badge: { text: "↓ -4.2", direction: "down" }, previous: "110.9", releasedDate: "Feb 25", nextDate: "Mar 25" },
-  { label: "ISM Manufacturing", value: "50.3", badge: { text: "↑ +1.2", direction: "up" }, previous: "49.1", releasedDate: "Mar 3", nextDate: "Apr 1" },
+  { label: "Fed Funds Rate", value: "4.50%", badge: { text: "0%", direction: "neutral" }, previous: "4.50%", releasedDate: "Jan 29", nextDate: "Mar 19" },
+  { label: "CPI (YoY)", value: "2.8%", badge: { text: "-0.3%", direction: "down" }, previous: "3.1%", releasedDate: "Feb 12", nextDate: "Mar 12" },
+  { label: "Core PCE (YoY)", value: "2.6%", badge: { text: "-0.2%", direction: "down" }, previous: "2.8%", releasedDate: "Feb 28", nextDate: "Mar 28" },
+  { label: "GDP Growth (QoQ)", value: "2.4%", badge: { text: "-0.7%", direction: "down" }, previous: "3.1%", releasedDate: "Jan 30", nextDate: "Apr 30" },
+  { label: "Unemployment Rate", value: "3.9%", badge: { text: "-0.1%", direction: "up" }, previous: "4.0%", releasedDate: "Mar 7", nextDate: "Apr 4" },
+  { label: "Nonfarm Payrolls", value: "+275K", badge: { text: "-22.1%", direction: "down" }, previous: "+353K", releasedDate: "Mar 7", nextDate: "Apr 4" },
+  { label: "10Y Treasury Yield", value: "4.12%", badge: { text: "-0.96%", direction: "down" }, previous: "4.16%", isLive: true },
+  { label: "US Dollar Index (DXY)", value: "103.84", badge: { text: "-0.31%", direction: "down" }, previous: "104.16", isLive: true },
+  { label: "Consumer Confidence", value: "106.7", badge: { text: "-3.8%", direction: "down" }, previous: "110.9", releasedDate: "Feb 25", nextDate: "Mar 25" },
+  { label: "ISM Manufacturing", value: "50.3", badge: { text: "+2.4%", direction: "up" }, previous: "49.1", releasedDate: "Mar 3", nextDate: "Apr 1" },
 ];
 
 // ============================================================
@@ -245,6 +339,69 @@ export const US_NEWS: NewsItem[] = [
     tickers: ["ASML", "TSM"],
     sources: [{ name: "Financial Times", logo: "F", color: "#fff1e5" }, { name: "Reuters", logo: "R", color: "#ff8200" }],
     timeAgo: "7h ago",
+  },
+  {
+    headline: "Tesla recalls 1.2M vehicles over Autopilot software, shares dip 2.8%",
+    summary: "Tesla announced a voluntary recall affecting 1.2 million vehicles to update Autopilot software after NHTSA raised concerns about driver monitoring. The recall is executed via over-the-air update.",
+    tickers: ["TSLA"],
+    sources: [{ name: "CNBC", logo: "C", color: "#005594" }, { name: "Reuters", logo: "R", color: "#ff8200" }],
+    timeAgo: "8h ago",
+  },
+  {
+    headline: "Microsoft Azure revenue beats estimates by 8%, cloud growth reaccelerates",
+    summary: "Microsoft reported Azure revenue growth of 31%, beating consensus of 28.5%. Management credited AI workloads and enterprise migration for the acceleration, guiding for continued momentum through FY26.",
+    tickers: ["MSFT", "AMZN"],
+    sources: [{ name: "Bloomberg", logo: "B", color: "#2800d7" }, { name: "Barrons", logo: "B", color: "#336b87" }],
+    timeAgo: "9h ago",
+  },
+  {
+    headline: "Eli Lilly obesity drug Mounjaro approved for new indications, expanding TAM",
+    summary: "FDA approved Mounjaro for sleep apnea treatment alongside obesity, significantly expanding the addressable market. Analysts raised price targets across the board, with some seeing 30%+ upside.",
+    tickers: ["LLY", "NVO"],
+    sources: [{ name: "Reuters", logo: "R", color: "#ff8200" }, { name: "STAT News", logo: "S", color: "#d32f2f" }],
+    timeAgo: "10h ago",
+  },
+  {
+    headline: "JPMorgan raises S&P 500 target to 6,500 citing resilient earnings cycle",
+    summary: "JPMorgan strategist Marko Kolanovic raised the year-end S&P 500 target to 6,500 from 5,800, citing better-than-expected Q4 earnings, strong consumer spending, and AI-driven productivity gains.",
+    tickers: ["JPM", "SPY"],
+    sources: [{ name: "Bloomberg", logo: "B", color: "#2800d7" }, { name: "CNBC", logo: "C", color: "#005594" }],
+    timeAgo: "11h ago",
+  },
+  {
+    headline: "Meta launches AI-powered ad platform, early adopters report 40% better ROAS",
+    summary: "Meta rolled out its Advantage+ AI creative suite globally, automating ad creation and targeting. Early enterprise adopters report 40% improvement in return on ad spend, boosting advertiser sentiment.",
+    tickers: ["META", "SNAP"],
+    sources: [{ name: "The Verge", logo: "T", color: "#e6127d" }, { name: "Financial Times", logo: "F", color: "#fff1e5" }],
+    timeAgo: "12h ago",
+  },
+  {
+    headline: "Boeing secures record 42B order from United Airlines for 737 MAX and 787",
+    summary: "United Airlines placed the largest single aircraft order in aviation history, committing to 200 Boeing 737 MAX and 100 787 Dreamliners. Boeing shares rose 3.1% on the announcement.",
+    tickers: ["BA", "UAL"],
+    sources: [{ name: "Reuters", logo: "R", color: "#ff8200" }, { name: "Bloomberg", logo: "B", color: "#2800d7" }],
+    timeAgo: "13h ago",
+  },
+  {
+    headline: "Coinbase revenue surges 65% as institutional crypto adoption hits record levels",
+    summary: "Coinbase reported quarterly revenue of 1.64B, up 65% YoY, driven by institutional trading volume and staking revenue. The exchange now custodies over 180B in assets.",
+    tickers: ["COIN", "MSTR"],
+    sources: [{ name: "CNBC", logo: "C", color: "#005594" }, { name: "The Block", logo: "T", color: "#1a1a1a" }],
+    timeAgo: "14h ago",
+  },
+  {
+    headline: "Amazon expands same-day delivery to 50 new metros, logistics capex up 25%",
+    summary: "Amazon announced a major logistics expansion covering 50 additional metro areas for same-day delivery. The company is investing 15B in fulfillment infrastructure this year, intensifying competition with Walmart.",
+    tickers: ["AMZN", "WMT"],
+    sources: [{ name: "Reuters", logo: "R", color: "#ff8200" }, { name: "CNBC", logo: "C", color: "#005594" }],
+    timeAgo: "15h ago",
+  },
+  {
+    headline: "Visa reports 12% payment volume growth, cross-border travel fully recovered",
+    summary: "Visa's quarterly results showed payment volume growth of 12%, with cross-border transactions exceeding pre-pandemic levels for the first time. International travel spending was the key driver.",
+    tickers: ["V", "MA"],
+    sources: [{ name: "Bloomberg", logo: "B", color: "#2800d7" }, { name: "Barrons", logo: "B", color: "#336b87" }],
+    timeAgo: "16h ago",
   },
 ];
 
@@ -297,57 +454,102 @@ export const EARNINGS_COMPANIES: Record<number, EarningsCompany[]> = {
 // ============================================================
 // GLOBAL MARKETS — Indices by Region
 // ============================================================
-export const GLOBAL_INDICES: Record<string, GlobalRow[]> = {
-  "Most Popular": [
-    { name: "S&P 500", subtitle: "United States", last: "6,003.63", change: "+27.34", changePct: "+0.46%", dayRange: "5,952 — 6,018", isUp: true },
-    { name: "NASDAQ", subtitle: "United States", last: "19,643.86", change: "-78.24", changePct: "-0.40%", dayRange: "19,520 — 19,748", isUp: false },
-    { name: "FTSE 100", subtitle: "United Kingdom", last: "8,412.30", change: "+23.46", changePct: "+0.28%", dayRange: "8,368 — 8,430", isUp: true },
-    { name: "DAX", subtitle: "Germany", last: "18,892.14", change: "+95.80", changePct: "+0.51%", dayRange: "18,742 — 18,920", isUp: true },
-    { name: "Nikkei 225", subtitle: "Japan", last: "39,412.80", change: "+445.62", changePct: "+1.14%", dayRange: "38,840 — 39,480", isUp: true },
-    { name: "Hang Seng", subtitle: "Hong Kong", last: "19,845.30", change: "-124.20", changePct: "-0.62%", dayRange: "19,720 — 19,940", isUp: false },
-    { name: "SENSEX", subtitle: "India", last: "82,648.40", change: "+386.20", changePct: "+0.47%", dayRange: "82,120 — 82,780", isUp: true },
-    { name: "Shanghai Comp.", subtitle: "China", last: "3,086.42", change: "+18.64", changePct: "+0.61%", dayRange: "3,052 — 3,094", isUp: true },
-  ],
-  Americas: [
-    { name: "S&P 500", subtitle: "United States", last: "6,003.63", change: "+27.34", changePct: "+0.46%", dayRange: "5,952 — 6,018", isUp: true },
-    { name: "Dow Jones", subtitle: "United States", last: "44,128.50", change: "+316.02", changePct: "+0.72%", dayRange: "43,684 — 44,185", isUp: true },
-    { name: "NASDAQ", subtitle: "United States", last: "19,643.86", change: "-78.24", changePct: "-0.40%", dayRange: "19,520 — 19,748", isUp: false },
-    { name: "S&P/TSX", subtitle: "Canada", last: "24,862.40", change: "+112.60", changePct: "+0.45%", dayRange: "24,710 — 24,890", isUp: true },
-    { name: "Bovespa", subtitle: "Brazil", last: "128,450.00", change: "-440.28", changePct: "-0.34%", dayRange: "127,820 — 129,100", isUp: false },
-    { name: "IPC Mexico", subtitle: "Mexico", last: "54,286.40", change: "+186.20", changePct: "+0.34%", dayRange: "53,980 — 54,420", isUp: true },
-    { name: "Merval", subtitle: "Argentina", last: "1,842,560", change: "+24,680", changePct: "+1.36%", dayRange: "1,810,400 — 1,848,200", isUp: true },
+export const GLOBAL_INDICES: Record<string, PerformanceRow[]> = {
+  Popular: [
+    { name: "S&P 500", last: 6004, today: 0.46, fiveDays: 1.12, oneMonth: 2.84, ytd: 4.62, oneYear: 12.48, threeYears: 28.64, dayRange: [5952, 6018], weekRange52: [4954, 6088] },
+    { name: "NASDAQ Composite", last: 19644, today: -0.40, fiveDays: -0.82, oneMonth: 1.96, ytd: 3.18, oneYear: 18.24, threeYears: 32.10, dayRange: [19520, 19748], weekRange52: [15480, 20210] },
+    { name: "FTSE 100", last: 8412, today: 0.28, fiveDays: 0.64, oneMonth: 1.42, ytd: 2.86, oneYear: 8.24, threeYears: 18.46, dayRange: [8368, 8430], weekRange52: [7410, 8540] },
+    { name: "DAX 40", last: 18892, today: 0.51, fiveDays: 1.28, oneMonth: 3.16, ytd: 6.42, oneYear: 14.86, threeYears: 34.20, dayRange: [18742, 18920], weekRange52: [15480, 19240] },
+    { name: "Nikkei 225", last: 39413, today: 1.14, fiveDays: 2.46, oneMonth: 4.82, ytd: 8.24, oneYear: 22.68, threeYears: 42.16, dayRange: [38840, 39480], weekRange52: [30480, 40280] },
+    { name: "Hang Seng", last: 19845, today: -0.62, fiveDays: -1.84, oneMonth: -3.42, ytd: -5.86, oneYear: -8.24, threeYears: -22.40, dayRange: [19720, 19940], weekRange52: [16280, 22480] },
+    { name: "SENSEX", last: 82648, today: 0.47, fiveDays: 0.92, oneMonth: 2.18, ytd: 3.86, oneYear: 10.42, threeYears: 32.80, dayRange: [82120, 82780], weekRange52: [70240, 84620] },
+    { name: "Shanghai Composite", last: 3086, today: 0.61, fiveDays: 1.46, oneMonth: 2.84, ytd: 4.12, oneYear: 6.48, threeYears: -2.86, dayRange: [3052, 3094], weekRange52: [2820, 3280] },
+    { name: "EURO STOXX 50", last: 5124, today: 0.34, fiveDays: 0.86, oneMonth: 2.48, ytd: 5.14, oneYear: 12.86, threeYears: 28.42, dayRange: [5088, 5142], weekRange52: [4320, 5240] },
+    { name: "Tadawul All Share", last: 12149, today: 0.42, fiveDays: 0.86, oneMonth: 1.92, ytd: 3.48, oneYear: 8.64, threeYears: 22.40, dayRange: [12060, 12180], weekRange52: [10480, 12640] },
+    { name: "Bovespa", last: 128450, today: -0.34, fiveDays: -1.26, oneMonth: -2.48, ytd: -4.12, oneYear: 6.84, threeYears: 14.62, dayRange: [127820, 129100], weekRange52: [112640, 136480] },
+    { name: "ASX 200", last: 8102, today: 0.33, fiveDays: 0.74, oneMonth: 1.86, ytd: 3.42, oneYear: 9.64, threeYears: 20.18, dayRange: [8058, 8120], weekRange52: [7040, 8280] },
   ],
   Europe: [
-    { name: "FTSE 100", subtitle: "United Kingdom", last: "8,412.30", change: "+23.46", changePct: "+0.28%", dayRange: "8,368 — 8,430", isUp: true },
-    { name: "DAX", subtitle: "Germany", last: "18,892.14", change: "+95.80", changePct: "+0.51%", dayRange: "18,742 — 18,920", isUp: true },
-    { name: "CAC 40", subtitle: "France", last: "8,124.68", change: "-14.62", changePct: "-0.18%", dayRange: "8,086 — 8,152", isUp: false },
-    { name: "IBEX 35", subtitle: "Spain", last: "11,486.20", change: "+42.80", changePct: "+0.37%", dayRange: "11,410 — 11,510", isUp: true },
-    { name: "SMI", subtitle: "Switzerland", last: "12,284.60", change: "+28.40", changePct: "+0.23%", dayRange: "12,230 — 12,310", isUp: true },
-    { name: "AEX", subtitle: "Netherlands", last: "896.42", change: "-3.18", changePct: "-0.35%", dayRange: "892 — 901", isUp: false },
-    { name: "STOXX 600", subtitle: "Pan-European", last: "524.86", change: "+1.42", changePct: "+0.27%", dayRange: "522 — 526", isUp: true },
-  ],
-  "Asia Pacific": [
-    { name: "Nikkei 225", subtitle: "Japan", last: "39,412.80", change: "+445.62", changePct: "+1.14%", dayRange: "38,840 — 39,480", isUp: true },
-    { name: "Hang Seng", subtitle: "Hong Kong", last: "19,845.30", change: "-124.20", changePct: "-0.62%", dayRange: "19,720 — 19,940", isUp: false },
-    { name: "Shanghai Comp.", subtitle: "China", last: "3,086.42", change: "+18.64", changePct: "+0.61%", dayRange: "3,052 — 3,094", isUp: true },
-    { name: "ASX 200", subtitle: "Australia", last: "8,102.40", change: "+26.60", changePct: "+0.33%", dayRange: "8,058 — 8,120", isUp: true },
-    { name: "KOSPI", subtitle: "South Korea", last: "2,684.20", change: "-12.40", changePct: "-0.46%", dayRange: "2,668 — 2,698", isUp: false },
-    { name: "SENSEX", subtitle: "India", last: "82,648.40", change: "+386.20", changePct: "+0.47%", dayRange: "82,120 — 82,780", isUp: true },
-    { name: "STI", subtitle: "Singapore", last: "3,842.60", change: "+14.80", changePct: "+0.39%", dayRange: "3,818 — 3,850", isUp: true },
+    { name: "EURO STOXX 50", last: 5124, today: 0.34, fiveDays: 0.86, oneMonth: 2.48, ytd: 5.14, oneYear: 12.86, threeYears: 28.42, dayRange: [5088, 5142], weekRange52: [4320, 5240] },
+    { name: "STOXX 600", last: 525, today: 0.27, fiveDays: 0.62, oneMonth: 1.48, ytd: 3.14, oneYear: 9.86, threeYears: 22.40, dayRange: [522, 526], weekRange52: [460, 534] },
+    { name: "DAX 40", last: 18892, today: 0.51, fiveDays: 1.28, oneMonth: 3.16, ytd: 6.42, oneYear: 14.86, threeYears: 34.20, dayRange: [18742, 18920], weekRange52: [15480, 19240] },
+    { name: "CAC 40", last: 8125, today: -0.18, fiveDays: -0.54, oneMonth: -1.28, ytd: -2.46, oneYear: 4.86, threeYears: 16.42, dayRange: [8086, 8152], weekRange52: [7240, 8480] },
+    { name: "IBEX 35", last: 11486, today: 0.37, fiveDays: 0.84, oneMonth: 2.46, ytd: 4.82, oneYear: 12.64, threeYears: 28.40, dayRange: [11410, 11510], weekRange52: [9680, 11840] },
+    { name: "SMI", last: 12285, today: 0.23, fiveDays: 0.52, oneMonth: 1.18, ytd: 2.64, oneYear: 7.42, threeYears: 14.86, dayRange: [12230, 12310], weekRange52: [10840, 12520] },
+    { name: "AEX", last: 896, today: -0.35, fiveDays: -0.72, oneMonth: -1.46, ytd: -2.18, oneYear: 6.84, threeYears: 18.24, dayRange: [892, 901], weekRange52: [780, 924] },
+    { name: "FTSE MIB", last: 34286, today: 0.42, fiveDays: 1.14, oneMonth: 2.86, ytd: 5.86, oneYear: 14.42, threeYears: 42.86, dayRange: [34042, 34348], weekRange52: [28420, 35120] },
+    { name: "OMX Stockholm 30", last: 2548, today: -0.28, fiveDays: -0.86, oneMonth: -1.64, ytd: -0.42, oneYear: 8.86, threeYears: 12.48, dayRange: [2532, 2562], weekRange52: [2180, 2680] },
+    { name: "PSI 20", last: 6842, today: 0.32, fiveDays: 0.74, oneMonth: 1.86, ytd: 4.24, oneYear: 10.86, threeYears: 32.48, dayRange: [6804, 6870], weekRange52: [5840, 7120] },
+    { name: "WIG 20", last: 2486, today: 0.56, fiveDays: 1.42, oneMonth: 3.86, ytd: 8.42, oneYear: 18.64, threeYears: 28.42, dayRange: [2462, 2502], weekRange52: [1940, 2640] },
+    { name: "ATX", last: 3648, today: 0.38, fiveDays: 0.92, oneMonth: 2.14, ytd: 4.86, oneYear: 12.48, threeYears: 22.86, dayRange: [3620, 3668], weekRange52: [3080, 3780] },
   ],
   "Middle East": [
-    { name: "Tadawul", subtitle: "Saudi Arabia", last: "12,148.50", change: "+50.80", changePct: "+0.42%", dayRange: "12,060 — 12,180", isUp: true },
-    { name: "ADX General", subtitle: "Abu Dhabi", last: "9,856.20", change: "+17.60", changePct: "+0.18%", dayRange: "9,812 — 9,878", isUp: true },
-    { name: "DFM General", subtitle: "Dubai", last: "4,284.50", change: "+32.40", changePct: "+0.76%", dayRange: "4,228 — 4,296", isUp: true },
-    { name: "QE Index", subtitle: "Qatar", last: "10,486.80", change: "-28.40", changePct: "-0.27%", dayRange: "10,440 — 10,520", isUp: false },
-    { name: "Muscat MSM30", subtitle: "Oman", last: "4,682.40", change: "+12.20", changePct: "+0.26%", dayRange: "4,662 — 4,694", isUp: true },
+    { name: "Tadawul All Share", last: 12149, today: 0.42, fiveDays: 0.86, oneMonth: 1.92, ytd: 3.48, oneYear: 8.64, threeYears: 22.40, dayRange: [12060, 12180], weekRange52: [10480, 12640] },
+    { name: "ADX General", last: 9856, today: 0.18, fiveDays: 0.42, oneMonth: 1.14, ytd: 2.26, oneYear: 6.42, threeYears: 18.86, dayRange: [9812, 9878], weekRange52: [8640, 10240] },
+    { name: "DFM General", last: 4285, today: 0.76, fiveDays: 1.64, oneMonth: 3.42, ytd: 6.18, oneYear: 14.86, threeYears: 36.42, dayRange: [4228, 4296], weekRange52: [3480, 4420] },
+    { name: "QE Index", last: 10487, today: -0.27, fiveDays: -0.64, oneMonth: -1.42, ytd: -2.86, oneYear: 4.24, threeYears: 12.80, dayRange: [10440, 10520], weekRange52: [9240, 11080] },
+    { name: "Muscat MSM 30", last: 4682, today: 0.26, fiveDays: 0.54, oneMonth: 1.28, ytd: 2.42, oneYear: 6.86, threeYears: 16.24, dayRange: [4662, 4694], weekRange52: [4120, 4840] },
+    { name: "Kuwait Premier", last: 8248, today: 0.35, fiveDays: 0.76, oneMonth: 2.18, ytd: 4.42, oneYear: 10.86, threeYears: 28.42, dayRange: [8204, 8272], weekRange52: [7120, 8680] },
+    { name: "Bahrain All Share", last: 2085, today: 0.20, fiveDays: 0.42, oneMonth: 1.24, ytd: 2.86, oneYear: 7.42, threeYears: 18.86, dayRange: [2074, 2092], weekRange52: [1840, 2200] },
+    { name: "EGX 30", last: 28643, today: -0.65, fiveDays: -1.42, oneMonth: -3.18, ytd: -5.42, oneYear: 18.64, threeYears: 62.40, dayRange: [28480, 28860], weekRange52: [22840, 32480] },
+    { name: "Amman ASE", last: 2486, today: 0.14, fiveDays: 0.32, oneMonth: 0.86, ytd: 1.64, oneYear: 4.86, threeYears: 10.42, dayRange: [2478, 2498], weekRange52: [2240, 2580] },
+    { name: "Tel Aviv 125", last: 2148, today: -0.42, fiveDays: -1.24, oneMonth: -2.86, ytd: -4.42, oneYear: 2.86, threeYears: 8.64, dayRange: [2128, 2168], weekRange52: [1820, 2340] },
+    { name: "Casablanca MASI", last: 14287, today: -0.29, fiveDays: -0.64, oneMonth: -1.42, ytd: -2.18, oneYear: 6.84, threeYears: 18.42, dayRange: [14220, 14340], weekRange52: [12240, 14860] },
+    { name: "S&P Pan Arab", last: 1249, today: 0.52, fiveDays: 1.14, oneMonth: 2.86, ytd: 5.28, oneYear: 12.64, threeYears: 32.80, dayRange: [1238, 1254], weekRange52: [1060, 1320] },
   ],
-  Africa: [
-    { name: "JSE Top 40", subtitle: "South Africa", last: "74,286.40", change: "+342.80", changePct: "+0.46%", dayRange: "73,810 — 74,420", isUp: true },
-    { name: "EGX 30", subtitle: "Egypt", last: "28,642.80", change: "-186.40", changePct: "-0.65%", dayRange: "28,480 — 28,860", isUp: false },
-    { name: "NSE All-Share", subtitle: "Nigeria", last: "102,486.20", change: "+864.40", changePct: "+0.85%", dayRange: "101,420 — 102,680", isUp: true },
-    { name: "NSE 20", subtitle: "Kenya", last: "1,842.60", change: "+8.40", changePct: "+0.46%", dayRange: "1,828 — 1,848", isUp: true },
-    { name: "Casablanca MASI", subtitle: "Morocco", last: "14,286.80", change: "-42.20", changePct: "-0.29%", dayRange: "14,220 — 14,340", isUp: false },
+  UK: [
+    { name: "FTSE 100", last: 8412, today: 0.28, fiveDays: 0.64, oneMonth: 1.42, ytd: 2.86, oneYear: 8.24, threeYears: 18.46, dayRange: [8368, 8430], weekRange52: [7410, 8540] },
+    { name: "FTSE 250", last: 20486, today: -0.21, fiveDays: -0.68, oneMonth: 0.94, ytd: 3.86, oneYear: 12.40, threeYears: 14.20, dayRange: [20380, 20560], weekRange52: [17840, 21200] },
+    { name: "FTSE All-Share", last: 4625, today: 0.18, fiveDays: 0.72, oneMonth: 1.48, ytd: 5.12, oneYear: 9.86, threeYears: 17.40, dayRange: [4608, 4638], weekRange52: [4120, 4720] },
+    { name: "FTSE 350", last: 4286, today: -0.16, fiveDays: 0.42, oneMonth: 1.24, ytd: 4.68, oneYear: 9.42, threeYears: 16.80, dayRange: [4274, 4302], weekRange52: [3840, 4380] },
+    { name: "FTSE AIM All-Share", last: 743, today: 0.57, fiveDays: 1.24, oneMonth: 2.86, ytd: 8.42, oneYear: 16.80, threeYears: -4.20, dayRange: [736, 746], weekRange52: [620, 780] },
+    { name: "FTSE SmallCap", last: 6842, today: 0.27, fiveDays: 0.92, oneMonth: 2.14, ytd: 6.80, oneYear: 14.60, threeYears: 12.40, dayRange: [6812, 6868], weekRange52: [5980, 7040] },
+    { name: "FTSE AIM 100", last: 4249, today: 0.67, fiveDays: 1.48, oneMonth: 3.24, ytd: 9.60, oneYear: 18.40, threeYears: -2.80, dayRange: [4208, 4262], weekRange52: [3560, 4420] },
+    { name: "FTSE 100 ESG Select", last: 8149, today: 0.23, fiveDays: 0.68, oneMonth: 1.42, ytd: 5.12, oneYear: 10.20, threeYears: 19.80, dayRange: [8118, 8168], weekRange52: [7240, 8340] },
+    { name: "FTSE 350 Financials", last: 6248, today: -0.30, fiveDays: -1.12, oneMonth: 0.86, ytd: 4.24, oneYear: 12.80, threeYears: 22.40, dayRange: [6212, 6284], weekRange52: [5480, 6520] },
+    { name: "FTSE 350 Technology", last: 3249, today: 1.33, fiveDays: 2.86, oneMonth: 4.68, ytd: 14.20, oneYear: 28.40, threeYears: 42.80, dayRange: [3198, 3268], weekRange52: [2640, 3480] },
+    { name: "VFTSE", last: 16, today: -4.98, fiveDays: -8.42, oneMonth: -12.60, ytd: -18.40, oneYear: -24.80, threeYears: -32.60, dayRange: [16, 17], weekRange52: [12, 24] },
+  ],
+  "Asia (X China)": [
+    { name: "Nikkei 225", last: 39413, today: 1.14, fiveDays: 2.46, oneMonth: 4.82, ytd: 8.24, oneYear: 22.68, threeYears: 42.16, dayRange: [38840, 39480], weekRange52: [30480, 40280] },
+    { name: "TOPIX", last: 2748, today: 0.86, fiveDays: 1.92, oneMonth: 3.64, ytd: 6.42, oneYear: 18.86, threeYears: 36.48, dayRange: [2720, 2758], weekRange52: [2280, 2840] },
+    { name: "KOSPI", last: 2684, today: -0.46, fiveDays: -1.24, oneMonth: -2.86, ytd: -4.42, oneYear: -2.18, threeYears: -8.64, dayRange: [2668, 2698], weekRange52: [2340, 2860] },
+    { name: "SENSEX", last: 82648, today: 0.47, fiveDays: 0.92, oneMonth: 2.18, ytd: 3.86, oneYear: 10.42, threeYears: 32.80, dayRange: [82120, 82780], weekRange52: [70240, 84620] },
+    { name: "NIFTY 50", last: 24862, today: 0.52, fiveDays: 1.06, oneMonth: 2.42, ytd: 4.12, oneYear: 11.86, threeYears: 36.42, dayRange: [24680, 24920], weekRange52: [21240, 25480] },
+    { name: "ASX 200", last: 8102, today: 0.33, fiveDays: 0.74, oneMonth: 1.86, ytd: 3.42, oneYear: 9.64, threeYears: 20.18, dayRange: [8058, 8120], weekRange52: [7040, 8280] },
+    { name: "STI", last: 3843, today: 0.39, fiveDays: 0.82, oneMonth: 1.64, ytd: 2.86, oneYear: 7.84, threeYears: 14.26, dayRange: [3818, 3850], weekRange52: [3320, 3920] },
+    { name: "TAIEX", last: 22486, today: 0.68, fiveDays: 1.42, oneMonth: 3.24, ytd: 6.86, oneYear: 24.42, threeYears: 48.86, dayRange: [22280, 22540], weekRange52: [18240, 23480] },
+    { name: "SET Index", last: 1386, today: -0.34, fiveDays: -0.86, oneMonth: -2.14, ytd: -3.86, oneYear: -6.42, threeYears: -14.86, dayRange: [1378, 1394], weekRange52: [1240, 1520] },
+    { name: "Jakarta Composite", last: 7248, today: 0.24, fiveDays: 0.58, oneMonth: 1.42, ytd: 2.86, oneYear: 6.42, threeYears: 12.48, dayRange: [7210, 7268], weekRange52: [6440, 7520] },
+    { name: "PSEi", last: 6842, today: -0.52, fiveDays: -1.48, oneMonth: -3.24, ytd: -5.86, oneYear: -2.42, threeYears: -8.86, dayRange: [6808, 6880], weekRange52: [6040, 7280] },
+    { name: "NZX 50", last: 12486, today: 0.18, fiveDays: 0.42, oneMonth: 0.86, ytd: 1.64, oneYear: 4.86, threeYears: 8.42, dayRange: [12448, 12520], weekRange52: [11240, 12840] },
+  ],
+  China: [
+    { name: "Shanghai Composite", last: 3086, today: 0.61, fiveDays: 1.46, oneMonth: 2.84, ytd: 4.12, oneYear: 6.48, threeYears: -2.86, dayRange: [3052, 3094], weekRange52: [2820, 3280] },
+    { name: "Shenzhen Component", last: 9486, today: 0.78, fiveDays: 1.86, oneMonth: 3.42, ytd: 5.86, oneYear: 8.42, threeYears: -8.64, dayRange: [9380, 9520], weekRange52: [8240, 10480] },
+    { name: "CSI 300", last: 3648, today: 0.52, fiveDays: 1.24, oneMonth: 2.86, ytd: 4.42, oneYear: 5.86, threeYears: -6.42, dayRange: [3612, 3668], weekRange52: [3240, 3920] },
+    { name: "Hang Seng", last: 19845, today: -0.62, fiveDays: -1.84, oneMonth: -3.42, ytd: -5.86, oneYear: -8.24, threeYears: -22.40, dayRange: [19720, 19940], weekRange52: [16280, 22480] },
+    { name: "Hang Seng Tech", last: 4286, today: -1.24, fiveDays: -3.42, oneMonth: -6.86, ytd: -10.42, oneYear: -14.86, threeYears: -42.48, dayRange: [4228, 4348], weekRange52: [3480, 5640] },
+    { name: "STAR 50", last: 986, today: 0.92, fiveDays: 2.14, oneMonth: 4.86, ytd: 8.42, oneYear: 12.64, threeYears: -18.42, dayRange: [972, 992], weekRange52: [780, 1140] },
+    { name: "ChiNext", last: 1948, today: 0.86, fiveDays: 2.48, oneMonth: 5.24, ytd: 9.86, oneYear: 14.42, threeYears: -12.86, dayRange: [1918, 1962], weekRange52: [1580, 2240] },
+    { name: "CSI 500", last: 5486, today: 0.64, fiveDays: 1.48, oneMonth: 3.24, ytd: 5.42, oneYear: 4.86, threeYears: -14.42, dayRange: [5432, 5512], weekRange52: [4840, 5920] },
+    { name: "CSI 1000", last: 6248, today: 0.72, fiveDays: 1.86, oneMonth: 4.42, ytd: 7.86, oneYear: 6.42, threeYears: -18.86, dayRange: [6178, 6284], weekRange52: [5320, 6840] },
+    { name: "MSCI China", last: 58, today: -0.48, fiveDays: -1.64, oneMonth: -3.86, ytd: -6.42, oneYear: -10.24, threeYears: -28.64, dayRange: [57, 59], weekRange52: [48, 68] },
+    { name: "FTSE China A50", last: 12486, today: 0.56, fiveDays: 1.32, oneMonth: 2.86, ytd: 4.64, oneYear: 6.24, threeYears: -4.86, dayRange: [12380, 12540], weekRange52: [10840, 13280] },
+    { name: "Hang Seng China Ent.", last: 6842, today: -0.86, fiveDays: -2.42, oneMonth: -4.86, ytd: -8.24, oneYear: -12.48, threeYears: -32.86, dayRange: [6784, 6920], weekRange52: [5680, 7840] },
+  ],
+  "Latin America": [
+    { name: "Bovespa", last: 128450, today: -0.34, fiveDays: -1.26, oneMonth: -2.48, ytd: -4.12, oneYear: 6.84, threeYears: 14.62, dayRange: [127820, 129100], weekRange52: [112640, 136480] },
+    { name: "IPC Mexico", last: 54286, today: 0.34, fiveDays: 0.72, oneMonth: 1.86, ytd: 2.48, oneYear: 8.42, threeYears: 16.84, dayRange: [53980, 54420], weekRange52: [48240, 56120] },
+    { name: "Merval", last: 1842560, today: 1.36, fiveDays: 3.84, oneMonth: 12.46, ytd: 28.64, oneYear: 142.80, threeYears: 486.20, dayRange: [1810400, 1848200], weekRange52: [684200, 1920400] },
+    { name: "S&P/CLX IPSA", last: 6842, today: 0.28, fiveDays: 0.64, oneMonth: 1.48, ytd: 3.86, oneYear: 12.42, threeYears: 24.86, dayRange: [6808, 6868], weekRange52: [5840, 7120] },
+    { name: "COLCAP", last: 1486, today: 0.42, fiveDays: 0.86, oneMonth: 2.14, ytd: 4.42, oneYear: 18.86, threeYears: 28.42, dayRange: [1472, 1498], weekRange52: [1180, 1560] },
+    { name: "S&P/BVL Peru General", last: 24862, today: 0.18, fiveDays: 0.42, oneMonth: 1.24, ytd: 2.86, oneYear: 8.42, threeYears: 14.86, dayRange: [24780, 24920], weekRange52: [21480, 25640] },
+    { name: "BVPSI Panama", last: 486, today: 0.12, fiveDays: 0.28, oneMonth: 0.64, ytd: 1.42, oneYear: 4.86, threeYears: 8.42, dayRange: [484, 488], weekRange52: [440, 508] },
+    { name: "MSCI LatAm", last: 2248, today: -0.24, fiveDays: -0.86, oneMonth: -1.64, ytd: -2.86, oneYear: 8.42, threeYears: 16.86, dayRange: [2232, 2264], weekRange52: [1920, 2420] },
+    { name: "S&P Latin America 40", last: 2648, today: -0.18, fiveDays: -0.72, oneMonth: -1.42, ytd: -2.48, oneYear: 6.86, threeYears: 12.42, dayRange: [2632, 2668], weekRange52: [2280, 2840] },
+    { name: "BVC Ecuador", last: 1842, today: 0.08, fiveDays: 0.24, oneMonth: 0.56, ytd: 1.24, oneYear: 3.86, threeYears: 6.42, dayRange: [1838, 1848], weekRange52: [1680, 1920] },
+    { name: "Bolsa de Valores CR", last: 36248, today: 0.14, fiveDays: 0.36, oneMonth: 0.82, ytd: 1.86, oneYear: 5.42, threeYears: 10.86, dayRange: [36180, 36320], weekRange52: [32480, 37640] },
   ],
 };
 
@@ -489,14 +691,56 @@ export interface IndiaIndex {
   isUp: boolean;
 }
 
-export const INDIA_INDICES: IndiaIndex[] = [
-  { name: "SENSEX", last: "81,245.30", change: "+412.50", changePct: "+0.51%", dayRange: "80,620 — 81,380", isUp: true },
-  { name: "NIFTY 50", last: "24,682.10", change: "+128.40", changePct: "+0.52%", dayRange: "24,480 — 24,720", isUp: true },
-  { name: "NIFTY Bank", last: "52,148.60", change: "-186.20", changePct: "-0.36%", dayRange: "51,840 — 52,460", isUp: false },
-  { name: "NIFTY IT", last: "38,924.50", change: "+482.30", changePct: "+1.25%", dayRange: "38,340 — 39,010", isUp: true },
-  { name: "NIFTY Midcap 100", last: "56,842.00", change: "+224.80", changePct: "+0.40%", dayRange: "56,480 — 56,920", isUp: true },
-  { name: "NIFTY Smallcap 100", last: "18,246.40", change: "-82.60", changePct: "-0.45%", dayRange: "18,120 — 18,380", isUp: false },
+// — Popular (8 benchmark indices)
+export const INDIA_IDX_POPULAR: PerformanceRow[] = [
+  { name: "Nifty 50", last: 24682, today: 0.52, fiveDays: 1.18, oneMonth: 2.34, ytd: 4.82, oneYear: 12.46, threeYears: 38.24, dayRange: [24480, 24720], weekRange52: [20980, 25340] },
+  { name: "S&P BSE Sensex", last: 81245, today: 0.51, fiveDays: 1.12, oneMonth: 2.28, ytd: 4.64, oneYear: 11.82, threeYears: 36.48, dayRange: [80620, 81380], weekRange52: [69060, 83480] },
+  { name: "Nifty Bank", last: 52148, today: -0.36, fiveDays: -0.84, oneMonth: 1.46, ytd: 3.12, oneYear: 8.64, threeYears: 28.92, dayRange: [51840, 52460], weekRange52: [43520, 54680] },
+  { name: "Nifty IT", last: 38924, today: 1.25, fiveDays: 2.48, oneMonth: 4.82, ytd: 8.36, oneYear: 18.24, threeYears: 22.64, dayRange: [38340, 39010], weekRange52: [31140, 41280] },
+  { name: "Nifty Midcap 150", last: 21486, today: 0.44, fiveDays: 0.92, oneMonth: 3.18, ytd: 6.84, oneYear: 24.62, threeYears: 68.42, dayRange: [21280, 21540], weekRange52: [17190, 23640] },
+  { name: "Nifty Smallcap 250", last: 16842, today: -0.37, fiveDays: -0.62, oneMonth: 2.84, ytd: 5.46, oneYear: 28.34, threeYears: 72.86, dayRange: [16710, 16920], weekRange52: [13470, 18940] },
+  { name: "Nifty Financial Svcs", last: 24386, today: 0.28, fiveDays: 0.64, oneMonth: 1.82, ytd: 3.48, oneYear: 10.24, threeYears: 32.68, dayRange: [24180, 24440], weekRange52: [20240, 25620] },
+  { name: "India VIX", last: 15, today: -4.14, fiveDays: -8.42, oneMonth: -12.64, ytd: -18.36, oneYear: -22.48, threeYears: -34.82, dayRange: [14, 16], weekRange52: [11, 22] },
 ];
+
+// — Sectors (8 key sectoral indices)
+export const INDIA_IDX_SECTORS: PerformanceRow[] = [
+  { name: "Nifty Auto", last: 26842, today: 0.84, fiveDays: 1.62, oneMonth: 3.48, ytd: 7.24, oneYear: 22.86, threeYears: 64.28, dayRange: [26520, 26920], weekRange52: [21470, 28640] },
+  { name: "Nifty Pharma", last: 22148, today: 1.22, fiveDays: 2.84, oneMonth: 5.42, ytd: 9.86, oneYear: 26.48, threeYears: 52.64, dayRange: [21840, 22210], weekRange52: [17720, 24360] },
+  { name: "Nifty Healthcare", last: 14682, today: 1.02, fiveDays: 2.36, oneMonth: 4.84, ytd: 8.62, oneYear: 24.36, threeYears: 48.92, dayRange: [14480, 14740], weekRange52: [11750, 16150] },
+  { name: "Nifty FMCG", last: 56924, today: -0.32, fiveDays: -0.68, oneMonth: 0.84, ytd: 2.46, oneYear: 6.82, threeYears: 18.64, dayRange: [56640, 57120], weekRange52: [48390, 59480] },
+  { name: "Nifty Metal", last: 9486, today: 1.64, fiveDays: 3.42, oneMonth: 6.84, ytd: 12.48, oneYear: 32.64, threeYears: 86.42, dayRange: [9280, 9520], weekRange52: [7110, 10920] },
+  { name: "Nifty Realty", last: 1084, today: 0.92, fiveDays: 1.84, oneMonth: 4.28, ytd: 8.64, oneYear: 36.42, threeYears: 124.86, dayRange: [1068, 1092], weekRange52: [812, 1248] },
+  { name: "Nifty Energy", last: 38246, today: -0.48, fiveDays: -1.24, oneMonth: 0.62, ytd: 2.84, oneYear: 8.46, threeYears: 42.68, dayRange: [37960, 38480], weekRange52: [31640, 41280] },
+  { name: "Nifty PSU Bank", last: 7648, today: 0.56, fiveDays: 1.28, oneMonth: 3.64, ytd: 6.42, oneYear: 18.86, threeYears: 142.48, dayRange: [7580, 7690], weekRange52: [5960, 8640] },
+];
+
+// — Thematic (8 thematic/megatrend indices)
+export const INDIA_IDX_THEMATIC: PerformanceRow[] = [
+  { name: "Nifty India Digital", last: 8486, today: 1.49, fiveDays: 2.86, oneMonth: 5.64, ytd: 11.42, oneYear: 34.86, threeYears: 82.46, dayRange: [8320, 8520], weekRange52: [6360, 9840] },
+  { name: "Nifty India Defence", last: 6942, today: 1.20, fiveDays: 2.48, oneMonth: 6.24, ytd: 14.86, oneYear: 42.64, threeYears: 186.42, dayRange: [6820, 6980], weekRange52: [5210, 8240] },
+  { name: "Nifty Consumption", last: 12248, today: -0.35, fiveDays: -0.72, oneMonth: 1.24, ytd: 3.46, oneYear: 8.82, threeYears: 24.64, dayRange: [12140, 12320], weekRange52: [10410, 13480] },
+  { name: "Nifty Mobility", last: 4286, today: 1.14, fiveDays: 2.36, oneMonth: 4.82, ytd: 9.64, oneYear: 28.46, threeYears: 74.82, dayRange: [4218, 4310], weekRange52: [3430, 4940] },
+  { name: "Nifty India Mfg", last: 14842, today: 0.58, fiveDays: 1.24, oneMonth: 3.48, ytd: 7.86, oneYear: 22.64, threeYears: 68.42, dayRange: [14680, 14890], weekRange52: [11870, 16330] },
+  { name: "Nifty MNC", last: 28462, today: 0.50, fiveDays: 0.98, oneMonth: 2.64, ytd: 5.42, oneYear: 14.86, threeYears: 36.28, dayRange: [28240, 28520], weekRange52: [24190, 31310] },
+  { name: "Nifty Infra", last: 8924, today: 0.38, fiveDays: 0.84, oneMonth: 2.46, ytd: 5.82, oneYear: 16.48, threeYears: 52.86, dayRange: [8842, 8960], weekRange52: [7140, 9820] },
+  { name: "Nifty EV & New Energy", last: 2148, today: -1.31, fiveDays: -2.64, oneMonth: -0.48, ytd: 4.86, oneYear: 18.42, threeYears: 62.84, dayRange: [2108, 2186], weekRange52: [1720, 2580] },
+];
+
+// — Strategy / Factor (8 factor-based indices)
+export const INDIA_IDX_STRATEGY: PerformanceRow[] = [
+  { name: "Nifty Alpha 50", last: 48642, today: 0.59, fiveDays: 1.36, oneMonth: 3.84, ytd: 8.42, oneYear: 28.64, threeYears: 82.46, dayRange: [48280, 48780], weekRange52: [38910, 54960] },
+  { name: "Nifty High Beta 50", last: 14286, today: 1.31, fiveDays: 2.84, oneMonth: 5.62, ytd: 12.48, oneYear: 36.84, threeYears: 94.62, dayRange: [14040, 14340], weekRange52: [10710, 16430] },
+  { name: "Nifty Quality 30", last: 5842, today: 0.56, fiveDays: 1.08, oneMonth: 2.42, ytd: 4.86, oneYear: 12.64, threeYears: 34.28, dayRange: [5784, 5868], weekRange52: [4960, 6430] },
+  { name: "Nifty200 Momentum 30", last: 24486, today: 0.61, fiveDays: 1.42, oneMonth: 3.64, ytd: 8.24, oneYear: 32.48, threeYears: 96.84, dayRange: [24280, 24540], weekRange52: [19590, 27420] },
+  { name: "Nifty Low Volatility 50", last: 20842, today: 0.30, fiveDays: 0.68, oneMonth: 1.84, ytd: 3.62, oneYear: 10.48, threeYears: 28.64, dayRange: [20720, 20890], weekRange52: [17720, 22930] },
+  { name: "Nifty Div Opp 50", last: 4682, today: 0.39, fiveDays: 0.82, oneMonth: 2.24, ytd: 4.64, oneYear: 14.82, threeYears: 42.86, dayRange: [4648, 4710], weekRange52: [3980, 5150] },
+  { name: "Nifty100 Equal Weight", last: 28248, today: 0.33, fiveDays: 0.74, oneMonth: 2.18, ytd: 4.82, oneYear: 14.24, threeYears: 38.62, dayRange: [28080, 28320], weekRange52: [24010, 31070] },
+  { name: "Nifty200 Value 30", last: 12486, today: -0.38, fiveDays: -0.86, oneMonth: 1.64, ytd: 3.82, oneYear: 16.48, threeYears: 54.62, dayRange: [12380, 12540], weekRange52: [10610, 14360] },
+];
+
+// Legacy alias
+export const INDIA_INDICES = INDIA_IDX_POPULAR;
 
 // India Sectors
 export interface IndiaSector {
@@ -516,6 +760,18 @@ export const INDIA_SECTORS: IndiaSector[] = [
   { name: "NIFTY Energy", today: -0.48, oneMonth: 2.80, ytd: 14.60, oneYear: 36.80 },
   { name: "NIFTY PSU Bank", today: 0.56, oneMonth: -4.20, ytd: -8.60, oneYear: 18.20 },
   { name: "NIFTY Infra", today: 0.38, oneMonth: -1.60, ytd: 4.80, oneYear: 24.40 },
+];
+
+// ---- India Alternative / New-Age Sectors ----
+export const INDIA_SECTORS_ALT: PerformanceRow[] = [
+  { name: "Nifty India Digital", ticker: "DIGITAL", last: 8486, today: 1.49, fiveDays: 2.86, oneMonth: 5.64, ytd: 11.42, oneYear: 34.86, threeYears: 82.46, dayRange: [8320, 8520], weekRange52: [6360, 9840] },
+  { name: "Nifty India Defence", ticker: "DEFENCE", last: 6942, today: 1.20, fiveDays: 2.48, oneMonth: 6.24, ytd: 14.86, oneYear: 42.64, threeYears: 186.42, dayRange: [6820, 6980], weekRange52: [5210, 8240] },
+  { name: "Nifty EV & New Energy", ticker: "EVNEWENRG", last: 2148, today: -1.31, fiveDays: -2.64, oneMonth: -0.48, ytd: 4.86, oneYear: 18.42, threeYears: 62.84, dayRange: [2108, 2186], weekRange52: [1720, 2580] },
+  { name: "Nifty IT", ticker: "NIFTYIT", last: 34286, today: 0.92, fiveDays: 1.68, oneMonth: 3.42, ytd: 8.64, oneYear: 24.86, threeYears: 42.68, dayRange: [33980, 34420], weekRange52: [28460, 38240] },
+  { name: "Nifty India Mfg", ticker: "INDIAMFG", last: 14842, today: 0.58, fiveDays: 1.24, oneMonth: 3.48, ytd: 7.86, oneYear: 22.64, threeYears: 68.42, dayRange: [14680, 14890], weekRange52: [11870, 16330] },
+  { name: "Nifty Mobility", ticker: "MOBILITY", last: 4286, today: 1.14, fiveDays: 2.36, oneMonth: 4.82, ytd: 9.64, oneYear: 28.46, threeYears: 74.82, dayRange: [4218, 4310], weekRange52: [3430, 4940] },
+  { name: "Nifty Consumption", ticker: "CONSUMPTION", last: 12248, today: -0.35, fiveDays: -0.72, oneMonth: 1.24, ytd: 3.46, oneYear: 8.82, threeYears: 24.64, dayRange: [12140, 12320], weekRange52: [10410, 13480] },
+  { name: "Nifty MNC", ticker: "MNC", last: 28462, today: 0.50, fiveDays: 0.98, oneMonth: 2.64, ytd: 5.42, oneYear: 14.86, threeYears: 36.28, dayRange: [28240, 28520], weekRange52: [24190, 31310] },
 ];
 
 // India Top 10 Stocks
@@ -607,13 +863,56 @@ export const INDIA_COMMODITIES: GlobalRow[] = [
 // ============================================================
 // UAE — Key Market Data (Indices)
 // ============================================================
-export const UAE_INDICES: GlobalRow[] = [
-  { name: "ADX General", subtitle: "Abu Dhabi", last: "9,856.20", change: "+17.60", changePct: "+0.18%", dayRange: "9,812 — 9,878", isUp: true },
-  { name: "DFM General", subtitle: "Dubai", last: "4,284.50", change: "+32.40", changePct: "+0.76%", dayRange: "4,228 — 4,296", isUp: true },
-  { name: "FTSE ADX 15", subtitle: "Abu Dhabi", last: "5,842.60", change: "+24.80", changePct: "+0.43%", dayRange: "5,806 — 5,860", isUp: true },
-  { name: "DFM Real Estate", subtitle: "Dubai", last: "6,124.30", change: "-18.40", changePct: "-0.30%", dayRange: "6,086 — 6,180", isUp: false },
-  { name: "ADX Banks", subtitle: "Abu Dhabi", last: "4,486.80", change: "+12.60", changePct: "+0.28%", dayRange: "4,462 — 4,502", isUp: true },
+// — UAE Popular (8 key UAE indices)
+export const UAE_IDX_POPULAR: PerformanceRow[] = [
+  { name: "ADX General", last: 9856, today: 0.18, fiveDays: 0.62, oneMonth: 1.84, ytd: 8.42, oneYear: 14.26, threeYears: 38.50, dayRange: [9812, 9878], weekRange52: [8520, 10240] },
+  { name: "DFM General", last: 4285, today: 0.76, fiveDays: 1.24, oneMonth: 3.18, ytd: 12.86, oneYear: 22.40, threeYears: 58.20, dayRange: [4228, 4296], weekRange52: [3480, 4520] },
+  { name: "FTSE ADX 15", last: 5843, today: 0.43, fiveDays: 0.88, oneMonth: 2.14, ytd: 9.68, oneYear: 16.82, threeYears: 42.60, dayRange: [5806, 5860], weekRange52: [5020, 6080] },
+  { name: "DFM Real Estate", last: 6124, today: -0.30, fiveDays: -0.86, oneMonth: 1.42, ytd: 14.52, oneYear: 28.64, threeYears: 72.40, dayRange: [6086, 6180], weekRange52: [4760, 6480] },
+  { name: "ADX Banks", last: 4487, today: 0.28, fiveDays: 0.54, oneMonth: 1.68, ytd: 7.24, oneYear: 12.86, threeYears: 34.20, dayRange: [4462, 4502], weekRange52: [3920, 4680] },
+  { name: "DFM Insurance", last: 2148, today: 0.38, fiveDays: 0.72, oneMonth: 2.46, ytd: 6.84, oneYear: 10.28, threeYears: 24.60, dayRange: [2128, 2156], weekRange52: [1880, 2320] },
+  { name: "ADX Telecom", last: 3249, today: -0.45, fiveDays: -1.12, oneMonth: -0.68, ytd: 3.42, oneYear: 8.64, threeYears: 18.40, dayRange: [3218, 3272], weekRange52: [2860, 3480] },
+  { name: "FTSE NASDAQ Dubai", last: 4086, today: 0.56, fiveDays: 1.08, oneMonth: 2.86, ytd: 10.42, oneYear: 18.24, threeYears: 46.80, dayRange: [4048, 4102], weekRange52: [3440, 4280] },
 ];
+
+// — UAE Sectors (8 sector indices)
+export const UAE_IDX_SECTORS: PerformanceRow[] = [
+  { name: "ADX Banks", last: 4487, today: 0.28, fiveDays: 0.54, oneMonth: 1.68, ytd: 7.24, oneYear: 12.86, threeYears: 34.20, dayRange: [4462, 4502], weekRange52: [3920, 4680] },
+  { name: "DFM Real Estate", last: 6124, today: -0.30, fiveDays: -0.86, oneMonth: 1.42, ytd: 14.52, oneYear: 28.64, threeYears: 72.40, dayRange: [6086, 6180], weekRange52: [4760, 6480] },
+  { name: "ADX Energy", last: 8462, today: 0.51, fiveDays: 1.36, oneMonth: 3.42, ytd: 11.28, oneYear: 19.86, threeYears: 52.40, dayRange: [8398, 8486], weekRange52: [7080, 8840] },
+  { name: "ADX Telecom", last: 3249, today: -0.45, fiveDays: -1.12, oneMonth: -0.68, ytd: 3.42, oneYear: 8.64, threeYears: 18.40, dayRange: [3218, 3272], weekRange52: [2860, 3480] },
+  { name: "DFM Insurance", last: 2148, today: 0.38, fiveDays: 0.72, oneMonth: 2.46, ytd: 6.84, oneYear: 10.28, threeYears: 24.60, dayRange: [2128, 2156], weekRange52: [1880, 2320] },
+  { name: "ADX Industrial", last: 1843, today: 0.35, fiveDays: 0.68, oneMonth: 1.92, ytd: 5.86, oneYear: 9.42, threeYears: 22.80, dayRange: [1828, 1856], weekRange52: [1620, 1940] },
+  { name: "DFM Services", last: 2486, today: -0.34, fiveDays: -0.78, oneMonth: 0.86, ytd: 4.28, oneYear: 7.64, threeYears: 16.40, dayRange: [2468, 2502], weekRange52: [2180, 2640] },
+  { name: "ADX Consumer Staples", last: 1648, today: 0.29, fiveDays: 0.48, oneMonth: 1.56, ytd: 4.86, oneYear: 8.24, threeYears: 20.60, dayRange: [1636, 1658], weekRange52: [1440, 1740] },
+];
+
+// — UAE GCC Peers (8 regional indices)
+export const UAE_IDX_GCC: PerformanceRow[] = [
+  { name: "Tadawul All Share", last: 12486, today: 0.34, fiveDays: 0.82, oneMonth: 2.46, ytd: 9.84, oneYear: 16.42, threeYears: 44.20, dayRange: [12418, 12520], weekRange52: [10640, 13120] },
+  { name: "S&P Pan Arab", last: 1249, today: 0.52, fiveDays: 1.14, oneMonth: 2.86, ytd: 10.28, oneYear: 17.64, threeYears: 46.80, dayRange: [1238, 1254], weekRange52: [1060, 1320] },
+  { name: "MSM 30", last: 4843, today: -0.26, fiveDays: -0.64, oneMonth: 0.42, ytd: 3.86, oneYear: 6.24, threeYears: 14.80, dayRange: [4818, 4868], weekRange52: [4380, 5120] },
+  { name: "Bahrain All Share", last: 2085, today: 0.20, fiveDays: 0.42, oneMonth: 1.24, ytd: 4.62, oneYear: 7.86, threeYears: 18.40, dayRange: [2074, 2092], weekRange52: [1840, 2200] },
+  { name: "Kuwait Premier Market", last: 8248, today: 0.35, fiveDays: 0.76, oneMonth: 2.18, ytd: 8.42, oneYear: 14.86, threeYears: 40.20, dayRange: [8204, 8272], weekRange52: [7120, 8680] },
+  { name: "QE 20", last: 10486, today: -0.24, fiveDays: -0.58, oneMonth: 0.64, ytd: 5.28, oneYear: 8.42, threeYears: 22.60, dayRange: [10442, 10520], weekRange52: [9240, 11040] },
+  { name: "EGX 30", last: 28643, today: 0.65, fiveDays: 1.48, oneMonth: 4.26, ytd: 18.64, oneYear: 32.48, threeYears: 86.40, dayRange: [28420, 28780], weekRange52: [21640, 30280] },
+  { name: "Casablanca MASI", last: 14249, today: 0.34, fiveDays: 0.78, oneMonth: 2.14, ytd: 8.86, oneYear: 15.42, threeYears: 42.60, dayRange: [14180, 14286], weekRange52: [12080, 14960] },
+];
+
+// ---- UAE Alternative / New-Age Sectors ----
+export const UAE_SECTORS_ALT: PerformanceRow[] = [
+  { name: "PropTech & Smart Cities", ticker: "PROP", last: 3486, today: 0.86, fiveDays: 1.48, oneMonth: 3.86, ytd: 12.42, oneYear: 28.86, threeYears: 64.42, dayRange: [3442, 3508], weekRange52: [2680, 3840] },
+  { name: "Fintech", ticker: "FNTK", last: 2842, today: 1.24, fiveDays: 2.48, oneMonth: 5.86, ytd: 16.42, oneYear: 36.86, threeYears: 82.48, dayRange: [2788, 2868], weekRange52: [2040, 3240] },
+  { name: "Renewable Energy", ticker: "RENW", last: 1648, today: 0.48, fiveDays: -0.86, oneMonth: -2.42, ytd: -4.86, oneYear: 8.42, threeYears: 24.86, dayRange: [1628, 1668], weekRange52: [1320, 1940] },
+  { name: "Tourism & Hospitality", ticker: "TOUR", last: 4248, today: 0.62, fiveDays: 1.24, oneMonth: 3.42, ytd: 10.86, oneYear: 22.48, threeYears: 58.42, dayRange: [4204, 4272], weekRange52: [3440, 4580] },
+  { name: "Logistics & Free Zones", ticker: "LOGZ", last: 5842, today: 0.38, fiveDays: 0.86, oneMonth: 2.48, ytd: 8.64, oneYear: 18.42, threeYears: 42.86, dayRange: [5798, 5870], weekRange52: [4840, 6240] },
+  { name: "Healthcare & Pharma", ticker: "HLTH", last: 2248, today: 0.56, fiveDays: 1.14, oneMonth: 2.86, ytd: 7.42, oneYear: 14.86, threeYears: 32.48, dayRange: [2228, 2268], weekRange52: [1880, 2480] },
+  { name: "Education & EdTech", ticker: "EDTK", last: 1486, today: 0.34, fiveDays: 0.72, oneMonth: 1.86, ytd: 5.42, oneYear: 12.86, threeYears: 28.42, dayRange: [1472, 1498], weekRange52: [1240, 1640] },
+  { name: "Food & Agritech", ticker: "FOOD", last: 1842, today: -0.24, fiveDays: -0.48, oneMonth: 0.86, ytd: 3.42, oneYear: 8.86, threeYears: 18.42, dayRange: [1828, 1858], weekRange52: [1580, 2040] },
+];
+
+// Legacy alias
+export const UAE_INDICES = UAE_IDX_POPULAR;
 
 export const UAE_TOP_STOCKS: IndiaStock[] = [
   { symbol: "FAB", name: "First Abu Dhabi Bank", logo: "FA", logoColor: "bg-blue-600", price: "14.82", change: "+0.18", changePct: "+1.23%", volume: "28.4M", marketCap: "164.2B AED", isUp: true },
@@ -658,13 +957,56 @@ export const UAE_ECONOMIC: EconomicIndicator[] = [
 // ============================================================
 // UK — Key Market Data (Indices)
 // ============================================================
-export const UK_INDICES: GlobalRow[] = [
-  { name: "FTSE 100", subtitle: "London", last: "8,412.30", change: "+23.46", changePct: "+0.28%", dayRange: "8,368 — 8,430", isUp: true },
-  { name: "FTSE 250", subtitle: "London", last: "20,486.40", change: "-42.80", changePct: "-0.21%", dayRange: "20,380 — 20,560", isUp: false },
-  { name: "FTSE All-Share", subtitle: "London", last: "4,624.80", change: "+8.40", changePct: "+0.18%", dayRange: "4,608 — 4,638", isUp: true },
-  { name: "FTSE AIM", subtitle: "London", last: "742.60", change: "+4.20", changePct: "+0.57%", dayRange: "736 — 746", isUp: true },
-  { name: "FTSE 350", subtitle: "London", last: "4,286.40", change: "-6.80", changePct: "-0.16%", dayRange: "4,274 — 4,302", isUp: false },
+// — UK Popular (8 benchmark indices)
+export const UK_IDX_POPULAR: PerformanceRow[] = [
+  { name: "FTSE 100", last: 8412, today: 0.28, fiveDays: 0.84, oneMonth: 1.62, ytd: 5.48, oneYear: 9.24, threeYears: 18.60, dayRange: [8368, 8430], weekRange52: [7580, 8540] },
+  { name: "FTSE 250", last: 20486, today: -0.21, fiveDays: -0.68, oneMonth: 0.94, ytd: 3.86, oneYear: 12.40, threeYears: 14.20, dayRange: [20380, 20560], weekRange52: [17840, 21200] },
+  { name: "FTSE All-Share", last: 4625, today: 0.18, fiveDays: 0.72, oneMonth: 1.48, ytd: 5.12, oneYear: 9.86, threeYears: 17.40, dayRange: [4608, 4638], weekRange52: [4120, 4720] },
+  { name: "FTSE 350", last: 4286, today: -0.16, fiveDays: 0.42, oneMonth: 1.24, ytd: 4.68, oneYear: 9.42, threeYears: 16.80, dayRange: [4274, 4302], weekRange52: [3840, 4380] },
+  { name: "FTSE AIM All-Share", last: 743, today: 0.57, fiveDays: 1.24, oneMonth: 2.86, ytd: 8.42, oneYear: 16.80, threeYears: -4.20, dayRange: [736, 746], weekRange52: [620, 780] },
+  { name: "FTSE SmallCap", last: 6842, today: 0.27, fiveDays: 0.92, oneMonth: 2.14, ytd: 6.80, oneYear: 14.60, threeYears: 12.40, dayRange: [6812, 6868], weekRange52: [5980, 7040] },
+  { name: "FTSE AIM 100", last: 4249, today: 0.67, fiveDays: 1.48, oneMonth: 3.24, ytd: 9.60, oneYear: 18.40, threeYears: -2.80, dayRange: [4208, 4262], weekRange52: [3560, 4420] },
+  { name: "VFTSE", last: 16, today: -4.98, fiveDays: -8.42, oneMonth: -12.60, ytd: -18.40, oneYear: -24.80, threeYears: -32.60, dayRange: [16, 17], weekRange52: [12, 24] },
 ];
+
+// — UK Sectors (8 FTSE sector supersector indices)
+export const UK_IDX_SECTORS: PerformanceRow[] = [
+  { name: "FTSE 350 Financials", last: 6248, today: -0.30, fiveDays: -1.12, oneMonth: 0.86, ytd: 4.24, oneYear: 12.80, threeYears: 22.40, dayRange: [6212, 6284], weekRange52: [5480, 6520] },
+  { name: "FTSE 350 Industrials", last: 8486, today: 0.29, fiveDays: 0.68, oneMonth: 1.86, ytd: 6.42, oneYear: 14.20, threeYears: 24.80, dayRange: [8442, 8512], weekRange52: [7280, 8740] },
+  { name: "FTSE 350 Healthcare", last: 12843, today: 0.68, fiveDays: 1.42, oneMonth: 3.24, ytd: 8.86, oneYear: 16.40, threeYears: 28.60, dayRange: [12740, 12886], weekRange52: [10840, 13200] },
+  { name: "FTSE 350 Technology", last: 3249, today: 1.33, fiveDays: 2.86, oneMonth: 4.68, ytd: 14.20, oneYear: 28.40, threeYears: 42.80, dayRange: [3198, 3268], weekRange52: [2640, 3480] },
+  { name: "FTSE 350 Consumer Staples", last: 14486, today: -0.17, fiveDays: -0.42, oneMonth: 0.68, ytd: 2.86, oneYear: 6.40, threeYears: 12.20, dayRange: [14442, 14528], weekRange52: [13240, 14880] },
+  { name: "FTSE 350 Energy", last: 9843, today: -0.43, fiveDays: -1.86, oneMonth: -0.92, ytd: 1.48, oneYear: 8.60, threeYears: 36.40, dayRange: [9784, 9898], weekRange52: [8480, 10640] },
+  { name: "FTSE 350 Mining", last: 18248, today: 0.69, fiveDays: 2.14, oneMonth: 4.86, ytd: 12.40, oneYear: 24.80, threeYears: 38.60, dayRange: [18086, 18312], weekRange52: [14800, 19200] },
+  { name: "FTSE 350 Real Estate", last: 2843, today: 0.44, fiveDays: 0.86, oneMonth: 2.42, ytd: 6.80, oneYear: 10.40, threeYears: -8.60, dayRange: [2824, 2858], weekRange52: [2380, 2960] },
+];
+
+// — UK Style (8 style/factor indices)
+export const UK_IDX_STYLE: PerformanceRow[] = [
+  { name: "FTSE UK Dividend+", last: 3486, today: 0.24, fiveDays: 0.62, oneMonth: 1.48, ytd: 4.86, oneYear: 10.40, threeYears: 18.20, dayRange: [3468, 3498], weekRange52: [3040, 3580] },
+  { name: "FTSE 100 Equal Weight", last: 12843, today: 0.25, fiveDays: 0.74, oneMonth: 1.56, ytd: 5.24, oneYear: 10.80, threeYears: 20.40, dayRange: [12784, 12876], weekRange52: [11280, 13120] },
+  { name: "FTSE UK High Dividend", last: 4248, today: 0.16, fiveDays: 0.48, oneMonth: 1.24, ytd: 4.42, oneYear: 9.60, threeYears: 16.80, dayRange: [4232, 4264], weekRange52: [3720, 4380] },
+  { name: "FTSE UK Low Volatility", last: 2487, today: 0.17, fiveDays: 0.36, oneMonth: 0.86, ytd: 3.24, oneYear: 7.80, threeYears: 14.60, dayRange: [2478, 2498], weekRange52: [2240, 2560] },
+  { name: "FTSE UK Quality Income", last: 1842, today: 0.47, fiveDays: 0.92, oneMonth: 2.14, ytd: 6.42, oneYear: 12.80, threeYears: 22.40, dayRange: [1828, 1852], weekRange52: [1580, 1920] },
+  { name: "FTSE 100 ESG Select", last: 8149, today: 0.23, fiveDays: 0.68, oneMonth: 1.42, ytd: 5.12, oneYear: 10.20, threeYears: 19.80, dayRange: [8118, 8168], weekRange52: [7240, 8340] },
+  { name: "FTSE UK Momentum", last: 5842, today: -0.22, fiveDays: -0.86, oneMonth: -1.42, ytd: 2.86, oneYear: 14.60, threeYears: 26.40, dayRange: [5818, 5876], weekRange52: [4840, 6120] },
+  { name: "FTSE UK Value", last: 3149, today: -0.27, fiveDays: -0.68, oneMonth: -0.42, ytd: 1.86, oneYear: 6.40, threeYears: 10.80, dayRange: [3128, 3168], weekRange52: [2780, 3280] },
+];
+
+// — UK Dividend (8 income-focused indices)
+export const UK_IDX_DIVIDEND: PerformanceRow[] = [
+  { name: "FTSE UK Dividend+", last: 3486, today: 0.24, fiveDays: 0.62, oneMonth: 1.48, ytd: 4.86, oneYear: 10.40, threeYears: 18.20, dayRange: [3468, 3498], weekRange52: [3040, 3580] },
+  { name: "FTSE UK High Dividend", last: 4248, today: 0.16, fiveDays: 0.48, oneMonth: 1.24, ytd: 4.42, oneYear: 9.60, threeYears: 16.80, dayRange: [4232, 4264], weekRange52: [3720, 4380] },
+  { name: "FTSE UK Quality Income", last: 1842, today: 0.47, fiveDays: 0.92, oneMonth: 2.14, ytd: 6.42, oneYear: 12.80, threeYears: 22.40, dayRange: [1828, 1852], weekRange52: [1580, 1920] },
+  { name: "FTSE 100 Yield Weighted", last: 6249, today: 0.23, fiveDays: 0.56, oneMonth: 1.36, ytd: 4.68, oneYear: 9.80, threeYears: 17.40, dayRange: [6224, 6268], weekRange52: [5520, 6440] },
+  { name: "FTSE EPRA Nareit UK", last: 2149, today: 0.60, fiveDays: 1.24, oneMonth: 2.86, ytd: 7.42, oneYear: 12.60, threeYears: -6.40, dayRange: [2128, 2164], weekRange52: [1840, 2280] },
+  { name: "FTSE Gilts All Stocks", last: 243, today: 0.20, fiveDays: 0.42, oneMonth: 0.86, ytd: 1.24, oneYear: 2.80, threeYears: -8.40, dayRange: [242, 243], weekRange52: [228, 252] },
+  { name: "FTSE A Index-Linked", last: 3842, today: 0.16, fiveDays: 0.38, oneMonth: 0.74, ytd: 1.86, oneYear: 3.40, threeYears: -6.80, dayRange: [3828, 3856], weekRange52: [3540, 4020] },
+  { name: "FTSE Actuaries UK Conv Gilts", last: 185, today: 0.17, fiveDays: 0.34, oneMonth: 0.68, ytd: 1.12, oneYear: 2.40, threeYears: -10.20, dayRange: [184, 185], weekRange52: [168, 196] },
+];
+
+// Legacy alias
+export const UK_INDICES = UK_IDX_POPULAR;
 
 export interface UKStock {
   symbol: string;
@@ -695,6 +1037,18 @@ export const UK_SECTORS: IndiaSector[] = [
   { name: "Mining", today: 1.68, oneMonth: 4.24, ytd: 16.40, oneYear: 32.80 },
   { name: "Technology", today: 0.92, oneMonth: -2.48, ytd: -4.20, oneYear: 22.40 },
   { name: "Real Estate", today: -0.56, oneMonth: -3.84, ytd: -2.40, oneYear: 4.80 },
+];
+
+// ---- UK Alternative / New-Age Sectors ----
+export const UK_SECTORS_ALT: PerformanceRow[] = [
+  { name: "Fintech & Digital Banks", ticker: "FTEK", last: 4248, today: 1.42, fiveDays: 2.86, oneMonth: 5.42, ytd: 14.86, oneYear: 32.48, threeYears: 68.42, dayRange: [4182, 4268], weekRange52: [3240, 4680] },
+  { name: "Life Sciences", ticker: "LSCI", last: 8642, today: 0.86, fiveDays: 1.64, oneMonth: 3.86, ytd: 9.42, oneYear: 22.86, threeYears: 42.64, dayRange: [8548, 8680], weekRange52: [6840, 9420] },
+  { name: "Clean Energy", ticker: "CLEN", last: 2486, today: 0.68, fiveDays: -1.42, oneMonth: -3.86, ytd: -6.24, oneYear: -12.48, threeYears: -24.86, dayRange: [2448, 2508], weekRange52: [1940, 3280] },
+  { name: "Luxury & Premium", ticker: "LUXU", last: 6842, today: 0.34, fiveDays: 0.72, oneMonth: 1.86, ytd: 5.42, oneYear: 12.86, threeYears: 28.42, dayRange: [6804, 6870], weekRange52: [5840, 7240] },
+  { name: "Cybersecurity", ticker: "CYBE", last: 3148, today: 1.24, fiveDays: 2.48, oneMonth: 4.86, ytd: 12.64, oneYear: 28.42, threeYears: 56.84, dayRange: [3098, 3168], weekRange52: [2440, 3480] },
+  { name: "Gaming & Betting", ticker: "GAME", last: 5486, today: -0.48, fiveDays: -1.86, oneMonth: -2.42, ytd: 2.86, oneYear: 8.42, threeYears: 14.86, dayRange: [5442, 5520], weekRange52: [4680, 5840] },
+  { name: "Space & Defence", ticker: "SPDF", last: 4842, today: 0.92, fiveDays: 1.86, oneMonth: 4.24, ytd: 10.86, oneYear: 24.42, threeYears: 48.86, dayRange: [4788, 4868], weekRange52: [3840, 5240] },
+  { name: "Green Hydrogen", ticker: "GRNH", last: 1248, today: -0.86, fiveDays: -2.48, oneMonth: -6.42, ytd: -10.86, oneYear: -22.48, threeYears: -38.42, dayRange: [1228, 1268], weekRange52: [980, 1820] },
 ];
 
 export const UK_NEWS: NewsItem[] = [

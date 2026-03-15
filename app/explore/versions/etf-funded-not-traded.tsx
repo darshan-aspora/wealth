@@ -4,11 +4,8 @@ import { useState, useMemo } from "react";
 import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
-  Brain,
   Coins,
   Layers,
-  TrendingUp,
-  Shield,
   Landmark,
   Leaf,
   ArrowUpDown,
@@ -233,7 +230,7 @@ function TopMoversWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
@@ -296,41 +293,23 @@ function TopMoversWidget() {
           >
             {/* ---- Frozen left column ---- */}
             <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 ETF
               </div>
               {etfs.map((etf) => (
                 <div
                   key={etf.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-4"
+                  className="flex h-[56px] items-center border-t border-border/20 px-5"
                 >
                   <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => toggleBookmark(etf.symbol)}
-                      className="flex-shrink-0 transition-transform active:scale-90"
-                    >
-                      <Bookmark
-                        size={16}
-                        strokeWidth={1.8}
-                        className={cn(
-                          "transition-colors",
-                          bookmarks.has(etf.symbol)
-                            ? "fill-foreground text-foreground"
-                            : "text-muted-foreground/60"
-                        )}
-                      />
-                    </button>
                     <div
                       className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground"
                     >
                       {etf.symbol.slice(0, 2)}
                     </div>
                     <div className="min-w-0">
-                      <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
+                      <p className="max-w-[100px] text-[13px] font-semibold leading-[1.25] line-clamp-2">
                         {etf.name}
-                      </p>
-                      <p className="text-[12px] leading-tight text-muted-foreground">
-                        {etf.symbol}
                       </p>
                     </div>
                   </div>
@@ -366,6 +345,9 @@ function TopMoversWidget() {
                     </th>
                     <th className="min-w-[110px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                       52W Range
+                    </th>
+                    <th className="min-w-[52px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+
                     </th>
                   </tr>
                 </thead>
@@ -424,6 +406,25 @@ function TopMoversWidget() {
                             high={etf.high52w}
                             current={etf.price}
                           />
+                        </div>
+                      </td>
+                      <td className="px-3">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => toggleBookmark(etf.symbol)}
+                            className="flex-shrink-0 transition-transform active:scale-90"
+                          >
+                            <Bookmark
+                              size={16}
+                              strokeWidth={1.8}
+                              className={cn(
+                                "transition-colors",
+                                bookmarks.has(etf.symbol)
+                                  ? "fill-foreground text-foreground"
+                                  : "text-muted-foreground/60"
+                              )}
+                            />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -660,13 +661,13 @@ function FrozenETFColumn({
 }) {
   return (
     <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-      <div className="flex h-[37px] items-center px-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
         ETF
       </div>
       {etfs.map((etf) => (
         <div
           key={etf.symbol}
-          className="flex h-[56px] items-center border-t border-border/20 px-4"
+          className="flex h-[56px] items-center border-t border-border/20 px-5"
         >
           <div className="flex items-center gap-2.5">
             <button
@@ -715,7 +716,7 @@ function RiskAdjustedWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
@@ -851,7 +852,7 @@ function ForwardLookingWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
@@ -1050,7 +1051,7 @@ function DividendETFsWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
       const n = new Set(p);
-      n.has(sym) ? n.delete(sym) : n.add(sym);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
       return n;
     });
 
@@ -1214,7 +1215,7 @@ function ScreenerWidget() {
             <button
               key={screener.name}
               className={cn(
-                "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/30",
+                "flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-muted/30",
                 i > 0 && "border-t border-border/30"
               )}
             >
@@ -1699,7 +1700,7 @@ const bannerLabels: Record<BannerMode, string> = {
 };
 
 function PromoBanner() {
-  const [mode, setMode] = useState<BannerMode>("big-full");
+  const [mode, setMode] = useState<BannerMode>("big");
 
   const cycle = () =>
     setMode((p) => bannerOrder[(bannerOrder.indexOf(p) + 1) % bannerOrder.length]);
@@ -1722,7 +1723,7 @@ function PromoBanner() {
       className={cn(
         "flex w-full items-center justify-center bg-muted transition-all active:scale-[0.99]",
         heights[mode],
-        isFull ? "-mx-4 w-[calc(100%+2rem)]" : "rounded-2xl"
+        isFull ? "-mx-5 w-[calc(100%+2.5rem)]" : "rounded-2xl"
       )}
     >
       <p className="text-[14px] font-semibold text-muted-foreground">{label}</p>
@@ -1736,7 +1737,7 @@ function PromoBanner() {
 
 export function ETFFundedNotTraded() {
   return (
-    <div className="space-y-8 px-4 pt-5 pb-4">
+    <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
       <TopMoversWidget />
       <HeatmapWidget />

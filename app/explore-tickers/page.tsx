@@ -28,7 +28,7 @@ export default function ExploreTickersPage() {
       <StatusBar />
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-2 pb-3">
+      <div className="flex items-center gap-3 px-5 pt-2 pb-3">
         <Link
           href="/"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/60 transition-colors hover:bg-secondary"
@@ -49,7 +49,7 @@ export default function ExploreTickersPage() {
       <div className="mx-4 h-px bg-border/60" />
 
       {/* All variations */}
-      <div className="flex-1 px-4 pt-5 pb-4 space-y-6">
+      <div className="flex-1 px-5 pt-5 pb-4 space-y-6">
         {variations.map((v, i) => {
           const Component = v.component;
           return (

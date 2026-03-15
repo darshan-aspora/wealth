@@ -33,7 +33,7 @@ export function NewsAccordion({ title, subtitle, items, sourceCount }: NewsAccor
           <div
             key={i}
             className={cn(
-              "px-4",
+              "px-5",
               i < items.length - 1 && "border-b border-border/30"
             )}
           >
@@ -114,7 +114,7 @@ export function NewsAccordion({ title, subtitle, items, sourceCount }: NewsAccor
         ))}
 
         {sourceCount && (
-          <div className="flex items-center gap-1.5 border-t border-border/30 px-4 py-2.5 text-[12px] font-medium text-muted-foreground/50">
+          <div className="flex items-center gap-1.5 border-t border-border/30 px-5 py-2.5 text-[12px] font-medium text-muted-foreground/50">
             <Info size={14} />
             {sourceCount} sources
           </div>
