@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { Settings } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Header } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
@@ -16,9 +17,10 @@ import { CryptoTab } from "./components/crypto-tab";
 import { CommodityTab } from "./components/commodity-tab";
 import { ForexTab } from "./components/forex-tab";
 import { UAETab } from "./components/uae-tab";
+import { VixTab } from "./components/vix-tab";
 import { SettingsTab } from "./components/settings-tab";
 
-const MARKET_TABS = ["US", "Global", "India", "UK", "News", "Crypto", "Commodity", "Forex", "UAE", "Customize"] as const;
+const MARKET_TABS = ["US", "Global", "VIX", "India", "UK", "News", "Crypto", "Commodity", "Forex", "UAE", "Customize"] as const;
 type MarketTab = (typeof MARKET_TABS)[number];
 
 export default function MarketPage() {
@@ -77,7 +79,12 @@ export default function MarketPage() {
                     : "text-muted-foreground"
                 )}
               >
-                {tab}
+                {tab === "Customize" ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Settings size={14} />
+                    {tab}
+                  </span>
+                ) : tab}
                 {activeTab === tab && (
                   <motion.div
                     layoutId="market-tab-indicator"
@@ -100,6 +107,7 @@ export default function MarketPage() {
       >
         {activeTab === "US" && <USMarketsTab />}
         {activeTab === "Global" && <GlobalMarketsTab />}
+        {activeTab === "VIX" && <VixTab />}
         {activeTab === "India" && <IndiaTab />}
         {activeTab === "UK" && <UKTab />}
         {activeTab === "News" && <NewsTab />}

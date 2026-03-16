@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { GripVertical, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Reorder } from "framer-motion";
+import { GripVertical, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface MarketItem {
   id: string;
@@ -16,6 +14,7 @@ interface MarketItem {
 const DEFAULT_MARKETS: MarketItem[] = [
   { id: "us", label: "US" },
   { id: "global", label: "Global" },
+  { id: "vix", label: "VIX" },
   { id: "india", label: "India" },
   { id: "uk", label: "UK" },
   { id: "news", label: "News" },
@@ -24,12 +23,6 @@ const DEFAULT_MARKETS: MarketItem[] = [
   { id: "forex", label: "Forex" },
   { id: "uae", label: "UAE" },
 ];
-
-interface CustomMarketForm {
-  name: string;
-  indices: string;
-  sectors: string;
-}
 
 function MarketRow({
   item,
@@ -68,24 +61,10 @@ function MarketRow({
 
 export function SettingsTab() {
   const [markets, setMarkets] = useState<MarketItem[]>(DEFAULT_MARKETS);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [form, setForm] = useState<CustomMarketForm>({ name: "", indices: "", sectors: "" });
 
   const removeMarket = useCallback((id: string) => {
     setMarkets((prev) => prev.filter((m) => m.id !== id));
   }, []);
-
-  const createMarket = () => {
-    if (!form.name.trim()) return;
-    const newMarket: MarketItem = {
-      id: `custom-${Date.now()}`,
-      label: form.name.trim(),
-      isCustom: true,
-    };
-    setMarkets((prev) => [...prev, newMarket]);
-    setForm({ name: "", indices: "", sectors: "" });
-    setShowCreateForm(false);
-  };
 
   return (
     <div className="pb-8">
@@ -112,113 +91,6 @@ export function SettingsTab() {
             ))}
           </Reorder.Group>
         </div>
-
-        <p className="mt-2 text-[12px] text-muted-foreground/50">
-          Tab order matches the list above.
-        </p>
-      </div>
-
-      {/* Create My Market */}
-      <div className="mt-6 px-5">
-        <div className="mb-3.5 flex items-center justify-between">
-          <div>
-            <h2 className="text-[18px] font-bold tracking-tight">Create My Market</h2>
-            <p className="mt-0.5 text-[14px] text-muted-foreground">
-              Build a custom market tab with your own data
-            </p>
-          </div>
-        </div>
-
-        <AnimatePresence initial={false}>
-          {!showCreateForm ? (
-            <motion.button
-              key="create-btn"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowCreateForm(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 bg-card py-4 text-[15px] font-semibold text-muted-foreground transition-colors active:bg-muted/30"
-            >
-              <Plus size={18} />
-              New Custom Market
-            </motion.button>
-          ) : (
-            <motion.div
-              key="create-form"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-                {/* Market Name */}
-                <div className="px-5 pt-4 pb-3">
-                  <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Market Name
-                  </label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                    placeholder="e.g. My Tech Watchlist"
-                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
-                  />
-                </div>
-
-                {/* Indices */}
-                <div className="border-t border-border/30 px-5 pt-3 pb-3">
-                  <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Indices to Track
-                  </label>
-                  <Input
-                    value={form.indices}
-                    onChange={(e) => setForm((p) => ({ ...p, indices: e.target.value }))}
-                    placeholder="e.g. NASDAQ, S&P 500, FTSE 100"
-                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
-                  />
-                </div>
-
-                {/* Sectors */}
-                <div className="border-t border-border/30 px-5 pt-3 pb-3">
-                  <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Sectors
-                  </label>
-                  <Input
-                    value={form.sectors}
-                    onChange={(e) => setForm((p) => ({ ...p, sectors: e.target.value }))}
-                    placeholder="e.g. Technology, Healthcare, Energy"
-                    className="rounded-xl border-border/60 bg-background px-3.5 py-2.5 text-[15px] font-medium placeholder:text-muted-foreground/40 focus:border-foreground/30"
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 border-t border-border/30 px-5 py-3.5">
-                  <button
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setForm({ name: "", indices: "", sectors: "" });
-                    }}
-                    className="flex-1 rounded-xl border border-border/60 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors active:bg-muted/30"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={createMarket}
-                    disabled={!form.name.trim()}
-                    className={cn(
-                      "flex-1 rounded-xl py-2.5 text-[14px] font-semibold transition-colors",
-                      form.name.trim()
-                        ? "bg-foreground text-background active:opacity-80"
-                        : "bg-muted text-muted-foreground/40 cursor-not-allowed"
-                    )}
-                  >
-                    Create Market
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MarketTable, PctCell, RangeBar, type TableColumn } from "./market-table";
+import { MarketTable, PctCell, RangeBar, AlertButton, type TableColumn } from "./market-table";
 import { SectionHeader } from "./section-header";
 import { EconomicOverview } from "./economic-overview";
 import { NewsAccordion } from "./news-accordion";
@@ -25,8 +25,9 @@ const perfColumns: TableColumn<PerformanceRow>[] = [
   { key: "ytd", label: "YTD", align: "right", render: (r) => <PctCell value={r.ytd} /> },
   { key: "1y", label: "1 Year", align: "right", render: (r) => <PctCell value={r.oneYear} /> },
   { key: "3y", label: "3 Years", align: "right", render: (r) => <PctCell value={r.threeYears} /> },
-  { key: "dayRange", label: "Day Range", align: "right", render: (r) => <RangeBar low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} /> },
-  { key: "1yRange", label: "1Y Range", align: "right", render: (r) => <RangeBar low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} /> },
+  { key: "dayRange", label: "Day Range", align: "center", render: (r) => <RangeBar low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} /> },
+  { key: "1yRange", label: "1Y Range", align: "center", render: (r) => <RangeBar low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} /> },
+  { key: "alert", label: "Set Alert", align: "center", render: () => <AlertButton /> },
 ];
 
 // ---- Index filter pills ----

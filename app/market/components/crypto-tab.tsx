@@ -34,19 +34,19 @@ type CryptoFilter = (typeof FILTERS)[number];
 
 // ---- Mock data ----
 const CRYPTO_DATA: CryptoRow[] = [
-  { name: "Bitcoin",    symbol: "BTC",  price: "67,842.30", change: "+1,432.10", changePct: "+2.14%",  isUp: true,  marketCap: "1.33T",  volume: "38.2B",  category: ["Layer 1"] },
-  { name: "Ethereum",   symbol: "ETH",  price: "3,521.18",  change: "+64.82",    changePct: "+1.87%",  isUp: true,  marketCap: "423.1B", volume: "18.7B",  category: ["Layer 1"] },
-  { name: "Solana",     symbol: "SOL",  price: "172.45",    change: "+8.71",     changePct: "+5.32%",  isUp: true,  marketCap: "76.8B",  volume: "4.1B",   category: ["Layer 1"] },
-  { name: "BNB",        symbol: "BNB",  price: "584.20",    change: "-2.52",     changePct: "-0.43%",  isUp: false, marketCap: "87.2B",  volume: "2.3B",   category: [] },
-  { name: "XRP",        symbol: "XRP",  price: "0.6234",    change: "-0.0071",   changePct: "-1.12%",  isUp: false, marketCap: "34.1B",  volume: "1.8B",   category: [] },
-  { name: "Cardano",    symbol: "ADA",  price: "0.4521",    change: "+0.0135",   changePct: "+3.08%",  isUp: true,  marketCap: "16.0B",  volume: "892M",   category: ["Layer 1"] },
-  { name: "Avalanche",  symbol: "AVAX", price: "38.72",     change: "+1.56",     changePct: "+4.21%",  isUp: true,  marketCap: "14.6B",  volume: "743M",   category: ["Layer 1"] },
-  { name: "Dogecoin",   symbol: "DOGE", price: "0.1542",    change: "-0.0037",   changePct: "-2.34%",  isUp: false, marketCap: "22.1B",  volume: "1.4B",   category: ["Meme"] },
-  { name: "Chainlink",  symbol: "LINK", price: "14.82",     change: "+0.42",     changePct: "+2.91%",  isUp: true,  marketCap: "8.7B",   volume: "612M",   category: ["DeFi"] },
-  { name: "Polkadot",   symbol: "DOT",  price: "7.34",      change: "+0.18",     changePct: "+2.51%",  isUp: true,  marketCap: "10.2B",  volume: "421M",   category: ["Layer 1"] },
-  { name: "Uniswap",    symbol: "UNI",  price: "12.47",     change: "+0.63",     changePct: "+5.32%",  isUp: true,  marketCap: "7.5B",   volume: "318M",   category: ["DeFi"] },
-  { name: "Aave",       symbol: "AAVE", price: "92.18",     change: "-1.84",     changePct: "-1.96%",  isUp: false, marketCap: "1.4B",   volume: "187M",   category: ["DeFi"] },
-  { name: "Shiba Inu",  symbol: "SHIB", price: "0.00002341",change: "+0.0000008",changePct: "+3.54%",  isUp: true,  marketCap: "13.8B",  volume: "982M",   category: ["Meme"] },
+  { name: "Bitcoin",    symbol: "BTC",  price: "67,842", change: "+1,432", changePct: "+2.14%",  isUp: true,  marketCap: "1.33T",  volume: "38.2B",  category: ["Layer 1"] },
+  { name: "Ethereum",   symbol: "ETH",  price: "3,521",  change: "+64",    changePct: "+1.87%",  isUp: true,  marketCap: "423.1B", volume: "18.7B",  category: ["Layer 1"] },
+  { name: "Solana",     symbol: "SOL",  price: "172",    change: "+8",     changePct: "+5.32%",  isUp: true,  marketCap: "76.8B",  volume: "4.1B",   category: ["Layer 1"] },
+  { name: "BNB",        symbol: "BNB",  price: "584",    change: "-2",     changePct: "-0.43%",  isUp: false, marketCap: "87.2B",  volume: "2.3B",   category: [] },
+  { name: "XRP",        symbol: "XRP",  price: "0.62",   change: "-0.007", changePct: "-1.12%",  isUp: false, marketCap: "34.1B",  volume: "1.8B",   category: [] },
+  { name: "Cardano",    symbol: "ADA",  price: "0.45",   change: "+0.013", changePct: "+3.08%",  isUp: true,  marketCap: "16.0B",  volume: "892M",   category: ["Layer 1"] },
+  { name: "Avalanche",  symbol: "AVAX", price: "38",     change: "+1",     changePct: "+4.21%",  isUp: true,  marketCap: "14.6B",  volume: "743M",   category: ["Layer 1"] },
+  { name: "Dogecoin",   symbol: "DOGE", price: "0.15",   change: "-0.003", changePct: "-2.34%",  isUp: false, marketCap: "22.1B",  volume: "1.4B",   category: ["Meme"] },
+  { name: "Chainlink",  symbol: "LINK", price: "14",     change: "+0.42",  changePct: "+2.91%",  isUp: true,  marketCap: "8.7B",   volume: "612M",   category: ["DeFi"] },
+  { name: "Polkadot",   symbol: "DOT",  price: "7",      change: "+0.18",  changePct: "+2.51%",  isUp: true,  marketCap: "10.2B",  volume: "421M",   category: ["Layer 1"] },
+  { name: "Uniswap",    symbol: "UNI",  price: "12",     change: "+0.63",  changePct: "+5.32%",  isUp: true,  marketCap: "7.5B",   volume: "318M",   category: ["DeFi"] },
+  { name: "Aave",       symbol: "AAVE", price: "92",     change: "-1",     changePct: "-1.96%",  isUp: false, marketCap: "1.4B",   volume: "187M",   category: ["DeFi"] },
+  { name: "Shiba Inu",  symbol: "SHIB", price: "0.00002",change: "+0.000001",changePct: "+3.54%", isUp: true,  marketCap: "13.8B",  volume: "982M",   category: ["Meme"] },
 ];
 
 const TRENDING_COINS: TrendingCoin[] = [
@@ -70,10 +70,7 @@ const cryptoColumns: TableColumn<CryptoRow>[] = [
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold">
           {r.symbol.slice(0, 2)}
         </div>
-        <div>
-          <div className="text-[14px] font-bold text-foreground">{r.name}</div>
-          <div className="text-[12px] text-muted-foreground">{r.symbol}</div>
-        </div>
+        <div className="text-[14px] font-bold text-foreground">{r.name}</div>
       </div>
     ),
   },
@@ -86,16 +83,16 @@ const cryptoColumns: TableColumn<CryptoRow>[] = [
     ),
   },
   {
-    key: "change",
-    label: "Change",
-    align: "right",
-    render: (r) => <ChangeCell value={r.change} isUp={r.isUp} />,
-  },
-  {
     key: "changePct",
     label: "% Chg",
     align: "right",
     render: (r) => <ChangeCell value={r.changePct} isUp={r.isUp} />,
+  },
+  {
+    key: "change",
+    label: "Change",
+    align: "right",
+    render: (r) => <ChangeCell value={r.change} isUp={r.isUp} />,
   },
   {
     key: "marketCap",

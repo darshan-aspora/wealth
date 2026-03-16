@@ -1,11 +1,12 @@
 "use client";
 
+import { AlarmClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface TableColumn<T> {
   key: string;
   label: string;
-  align?: "left" | "right";
+  align?: "left" | "right" | "center";
   frozen?: boolean;
   minWidth?: number;
   width?: number;
@@ -33,7 +34,7 @@ export function MarketTable<T>({ columns, data, onRowClick }: MarketTableProps<T
                     col.frozen
                       ? "sticky left-0 z-[2] bg-card shadow-[2px_0_8px_rgba(0,0,0,0.12)]"
                       : "",
-                    col.align === "left" ? "text-left" : "text-right"
+                    col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"
                   )}
                   style={{
                     ...(col.minWidth ? { minWidth: col.minWidth } : {}),
@@ -63,7 +64,7 @@ export function MarketTable<T>({ columns, data, onRowClick }: MarketTableProps<T
                       col.frozen
                         ? "sticky left-0 z-[2] bg-card shadow-[2px_0_8px_rgba(0,0,0,0.12)]"
                         : "",
-                      col.align === "left" ? "text-left" : "text-right font-mono tabular-nums"
+                      col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right font-mono tabular-nums"
                     )}
                     style={{
                       ...(col.minWidth ? { minWidth: col.minWidth } : {}),
@@ -101,26 +102,25 @@ export function RangeCell({ low, high }: { low: number; high: number }) {
   );
 }
 
-// Helper: visual range bar with dot indicator (day range / 1Y range)
+// Helper: visual range bar with low/high labels and tick indicator
 export function RangeBar({ low, high, current }: { low: number; high: number; current: number }) {
-  const range = high - low;
-  const pct = range > 0 ? ((current - low) / range) * 100 : 50;
-  const clamped = Math.max(4, Math.min(96, pct));
+  const range = high - low || 1;
+  const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
 
   return (
-    <div className="w-[56px] flex-shrink-0">
-      <div className="relative h-[4px] rounded-full bg-muted overflow-hidden">
+    <div className="flex items-baseline gap-1.5 w-full min-w-[140px]">
+      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none font-mono">
+        {low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </span>
+      <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
         <div
-          className="h-full rounded-full bg-foreground/20"
-          style={{ width: `${clamped}%` }}
+          className="absolute h-[10px] bg-foreground rounded-sm"
+          style={{ left: `${pct}%`, width: 2, bottom: 0 }}
         />
       </div>
-      <div className="relative h-[6px]">
-        <div
-          className="absolute top-0 w-[6px] h-[6px] rounded-full bg-foreground -translate-x-1/2"
-          style={{ left: `${clamped}%` }}
-        />
-      </div>
+      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none font-mono">
+        {high.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </span>
     </div>
   );
 }
@@ -131,5 +131,17 @@ export function ChangeCell({ value, isUp }: { value: string; isUp: boolean }) {
     <span className={cn("font-mono tabular-nums", isUp ? "text-gain" : "text-loss")}>
       {value}
     </span>
+  );
+}
+
+// Helper: alert bell button for index rows
+export function AlertButton() {
+  return (
+    <button
+      className="text-muted-foreground/50 transition-colors hover:text-foreground active:text-foreground"
+      onClick={(e) => { e.stopPropagation(); }}
+    >
+      <AlarmClock size={18} />
+    </button>
   );
 }
