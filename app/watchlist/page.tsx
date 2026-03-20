@@ -409,14 +409,10 @@ function WatchlistTable({
   stocks,
   onDeleteStock,
   onTapStock,
-  showLogos,
-  showSymbol,
 }: {
   stocks: TickerItem[];
   onDeleteStock: (symbol: string) => void;
   onTapStock: (symbol: string) => void;
-  showLogos: boolean;
-  showSymbol: boolean;
 }) {
   /* 52w range bar helper */
   const range52wPct = (price: number, low: number, high: number) => {
@@ -446,13 +442,11 @@ function WatchlistTable({
                 "flex items-center gap-2.5 pl-5 pr-3 border-t border-border/10 cursor-pointer active:bg-muted/20 transition-colors"
               )}
             >
-              {showLogos && (
-                <div className="grayscale shrink-0">
-                  <TickerLogo ticker={stock} size="sm" />
-                </div>
-              )}
+              <div className="grayscale shrink-0">
+                <TickerLogo ticker={stock} size="sm" />
+              </div>
               <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-foreground">
-                {showSymbol ? stock.symbol : stock.name}
+                {stock.name}
               </p>
             </div>
           ))}
@@ -596,13 +590,9 @@ function WatchlistTable({
 function WatchlistTabContent({
   watchlist,
   onDeleteStock,
-  showLogos,
-  showSymbol,
 }: {
   watchlist: WatchlistData;
   onDeleteStock: (symbol: string) => void;
-  showLogos: boolean;
-  showSymbol: boolean;
 }) {
   const router = useRouter();
   const [sortIdx, setSortIdx] = useState(0);
@@ -657,8 +647,6 @@ function WatchlistTabContent({
         stocks={sortedStocks}
         onDeleteStock={onDeleteStock}
         onTapStock={(symbol) => router.push(`/stocks/${symbol}`)}
-        showLogos={showLogos}
-        showSymbol={showSymbol}
       />
 
       {/* Add button */}
@@ -754,44 +742,18 @@ function WatchlistReorderItem({
   );
 }
 
-function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={cn(
-        "relative h-[28px] w-[48px] shrink-0 rounded-full transition-colors",
-        on ? "bg-foreground" : "bg-muted"
-      )}
-    >
-      <motion.div
-        className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-background shadow-sm"
-        animate={{ left: on ? 23 : 3 }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      />
-    </button>
-  );
-}
-
 function CustomizeTab({
   watchlists,
   onRename,
   onDelete,
   onAdd,
   onReorder,
-  showLogos,
-  onToggleLogos,
-  showSymbol,
-  onToggleSymbol,
 }: {
   watchlists: WatchlistData[];
   onRename: (id: string, label: string) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
   onReorder: (reordered: WatchlistData[]) => void;
-  showLogos: boolean;
-  onToggleLogos: () => void;
-  showSymbol: boolean;
-  onToggleSymbol: () => void;
 }) {
   return (
     <div className="pb-6 pt-2">
@@ -827,29 +789,6 @@ function CustomizeTab({
           Create Watchlist
         </button>
       </div>
-
-      {/* ── Display Options ── */}
-      <div className="px-5 mt-6">
-        <h3 className="mb-3 text-[17px] font-bold text-foreground">Display</h3>
-      </div>
-      <div className="mx-4 overflow-hidden rounded-2xl border border-border/60 bg-card">
-        <div className="flex items-center justify-between px-4 py-3.5">
-          <div>
-            <p className="text-[15px] font-medium text-foreground">Show Logos</p>
-            <p className="text-[13px] text-muted-foreground/50">Display stock logos in the table</p>
-          </div>
-          <ToggleSwitch on={showLogos} onToggle={onToggleLogos} />
-        </div>
-        <div className="border-t border-border/30" />
-        <div className="flex items-center justify-between px-4 py-3.5">
-          <div>
-            <p className="text-[15px] font-medium text-foreground">Show Ticker Symbol</p>
-            <p className="text-[13px] text-muted-foreground/50">{showSymbol ? "AAPL" : "Apple Inc."} format</p>
-          </div>
-          <ToggleSwitch on={showSymbol} onToggle={onToggleSymbol} />
-        </div>
-      </div>
-
     </div>
   );
 }
@@ -861,9 +800,6 @@ function CustomizeTab({
 export default function WatchlistPage() {
   const [watchlists, setWatchlists] = useState<WatchlistData[]>(INITIAL_WATCHLISTS);
   const [activeTabId, setActiveTabId] = useState("wl-1");
-  const [showLogos, setShowLogos] = useState(true);
-  const [showSymbol, setShowSymbol] = useState(false); // false = full name, true = ticker symbol
-
   const tabs = useMemo(() => {
     return [
       ...watchlists.map((wl) => ({ id: wl.id, label: wl.label })),
@@ -986,17 +922,11 @@ export default function WatchlistPage() {
                 onDelete={handleDeleteWatchlist}
                 onAdd={handleAddWatchlist}
                 onReorder={handleReorderWatchlist}
-                showLogos={showLogos}
-                onToggleLogos={() => setShowLogos((v) => !v)}
-                showSymbol={showSymbol}
-                onToggleSymbol={() => setShowSymbol((v) => !v)}
               />
             ) : activeWatchlist ? (
               <WatchlistTabContent
                 watchlist={activeWatchlist}
                 onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
-                showLogos={showLogos}
-                showSymbol={showSymbol}
               />
             ) : null}
           </motion.div>

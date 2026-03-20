@@ -4,218 +4,221 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  AlertTriangle,
-  Clock,
-  ChevronRight,
   Settings,
+  Bell,
+  TrendingUp,
+  AlertTriangle,
+  Target,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Button } from "@/components/ui/button";
 
 /* ------------------------------------------------------------------ */
-/*  Notification types & data                                          */
+/*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type AlertType = "price_above" | "price_below" | "percent_up" | "percent_down" | "target_hit" | "stop_loss";
+type NotifIcon = "movers" | "price" | "stoploss" | "target" | "earnings";
+
+interface StockBullet {
+  symbol: string;
+  name: string;
+  logo: string;
+  logoColor: string;
+  change?: number;       // e.g. +5.2 or -5.8 — shows colored badge
+  label?: string;        // e.g. "crossed 195.00" — shows as plain text when no change
+}
 
 interface Notification {
   id: string;
-  type: AlertType;
-  symbol: string;
-  name: string;
-  message: string;
-  detail: string;
+  icon: NotifIcon;
+  title: string;
+  bullets?: StockBullet[];
   time: string;
   read: boolean;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Mock data                                                          */
+/* ------------------------------------------------------------------ */
+
 const NOTIFICATIONS: Notification[] = [
   {
     id: "n1",
-    type: "percent_up",
-    symbol: "NVDA",
-    name: "NVIDIA Corp",
-    message: "NVDA is up +5.2% today",
-    detail: "Price moved from 875.30 to 920.82. Your alert for +5% daily move was triggered.",
-    time: "2m ago",
+    icon: "movers",
+    title: "3 watchlist stocks moved 5%+",
+    bullets: [
+      { symbol: "NVDA", name: "NVIDIA", logo: "NV", logoColor: "bg-emerald-700", change: 5.2 },
+      { symbol: "META", name: "Meta Platforms", logo: "ME", logoColor: "bg-blue-600", change: -5.8 },
+      { symbol: "GOOGL", name: "Alphabet", logo: "GO", logoColor: "bg-red-600", change: -5.1 },
+    ],
+    time: "2m",
     read: false,
   },
   {
     id: "n2",
-    type: "price_above",
-    symbol: "AAPL",
-    name: "Apple Inc",
-    message: "AAPL crossed above 195.00",
-    detail: "Current price: 196.42. Your price alert for above 195.00 was triggered.",
-    time: "18m ago",
+    icon: "price",
+    title: "2 price alerts triggered",
+    bullets: [
+      { symbol: "AAPL", name: "Apple", logo: "AA", logoColor: "bg-neutral-600", label: "crossed 195.00" },
+      { symbol: "AMZN", name: "Amazon", logo: "AM", logoColor: "bg-amber-700", label: "below 178.00" },
+    ],
+    time: "18m",
     read: false,
   },
   {
     id: "n3",
-    type: "stop_loss",
-    symbol: "TSLA",
-    name: "Tesla Inc",
-    message: "TSLA hit your stop-loss at 165.00",
-    detail: "Price dropped to 164.38. Consider reviewing your position or placing a sell order.",
-    time: "45m ago",
+    icon: "stoploss",
+    title: "2 stop-losses hit",
+    bullets: [
+      { symbol: "TSLA", name: "Tesla", logo: "TS", logoColor: "bg-red-700", label: "stop at 165.00" },
+      { symbol: "NFLX", name: "Netflix", logo: "NF", logoColor: "bg-rose-700", label: "stop at 600.00" },
+    ],
+    time: "45m",
     read: false,
   },
   {
     id: "n4",
-    type: "percent_down",
-    symbol: "META",
-    name: "Meta Platforms",
-    message: "META is down -5.8% today",
-    detail: "Price declined from 512.60 to 482.87. Your alert for -5% daily drop was triggered.",
-    time: "1h ago",
+    icon: "target",
+    title: "MSFT reached target at 430.00",
+    time: "2h",
     read: true,
   },
   {
     id: "n5",
-    type: "target_hit",
-    symbol: "MSFT",
-    name: "Microsoft Corp",
-    message: "MSFT reached your target of 430.00",
-    detail: "Current price: 431.15. Your target price alert was triggered. Consider taking profits.",
-    time: "2h ago",
+    icon: "earnings",
+    title: "AMD surged +7.3% on earnings beat",
+    time: "4h",
     read: true,
   },
   {
     id: "n6",
-    type: "price_below",
-    symbol: "AMZN",
-    name: "Amazon.com",
-    message: "AMZN dropped below 178.00",
-    detail: "Current price: 176.54. Your price alert for below 178.00 was triggered.",
-    time: "3h ago",
-    read: true,
-  },
-  {
-    id: "n7",
-    type: "percent_up",
-    symbol: "AMD",
-    name: "Advanced Micro Devices",
-    message: "AMD is up +7.3% today",
-    detail: "Price surged from 158.20 to 169.75 on strong earnings beat. Your +5% alert was triggered.",
-    time: "4h ago",
-    read: true,
-  },
-  {
-    id: "n8",
-    type: "percent_down",
-    symbol: "GOOGL",
-    name: "Alphabet Inc",
-    message: "GOOGL is down -5.1% today",
-    detail: "Price fell from 172.80 to 163.98 amid sector rotation. Your -5% alert was triggered.",
-    time: "5h ago",
-    read: true,
-  },
-  {
-    id: "n9",
-    type: "price_above",
-    symbol: "JPM",
-    name: "JPMorgan Chase",
-    message: "JPM crossed above 200.00",
-    detail: "Current price: 201.30. New all-time high. Your price alert for above 200.00 was triggered.",
-    time: "Yesterday",
-    read: true,
-  },
-  {
-    id: "n10",
-    type: "stop_loss",
-    symbol: "NFLX",
-    name: "Netflix Inc",
-    message: "NFLX hit your stop-loss at 600.00",
-    detail: "Price dropped to 597.25 after disappointing subscriber guidance. Review your position.",
+    icon: "price",
+    title: "JPM crossed above 200.00 — new ATH",
     time: "Yesterday",
     read: true,
   },
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Icon + color helpers                                               */
+/*  Icon helper                                                        */
 /* ------------------------------------------------------------------ */
 
-function alertMeta(type: AlertType) {
-  switch (type) {
-    case "price_above":
-      return { icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-500/15", ring: "ring-emerald-500/20" };
-    case "price_below":
-      return { icon: TrendingDown, color: "text-red-400", bg: "bg-red-500/15", ring: "ring-red-500/20" };
-    case "percent_up":
-      return { icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-500/15", ring: "ring-emerald-500/20" };
-    case "percent_down":
-      return { icon: TrendingDown, color: "text-red-400", bg: "bg-red-500/15", ring: "ring-red-500/20" };
-    case "target_hit":
-      return { icon: Target, color: "text-violet-400", bg: "bg-violet-500/15", ring: "ring-violet-500/20" };
-    case "stop_loss":
-      return { icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/15", ring: "ring-amber-500/20" };
-  }
-}
+function NotifIconEl({ type, read }: { type: NotifIcon; read: boolean }) {
+  const base = cn(
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+    read ? "bg-muted/30" : "bg-foreground/[0.07]"
+  );
+  const iconClass = read ? "text-muted-foreground/40" : "text-foreground/50";
+  const size = 17;
+  const sw = 1.8;
 
-function alertLabel(type: AlertType) {
   switch (type) {
-    case "price_above": return "Price Above";
-    case "price_below": return "Price Below";
-    case "percent_up": return "% Gain Alert";
-    case "percent_down": return "% Drop Alert";
-    case "target_hit": return "Target Hit";
-    case "stop_loss": return "Stop-Loss";
+    case "movers":
+      return <div className={base}><TrendingUp size={size} strokeWidth={sw} className={iconClass} /></div>;
+    case "price":
+      return <div className={base}><Bell size={size} strokeWidth={sw} className={iconClass} /></div>;
+    case "stoploss":
+      return <div className={base}><AlertTriangle size={size} strokeWidth={sw} className={iconClass} /></div>;
+    case "target":
+      return <div className={base}><Target size={size} strokeWidth={sw} className={iconClass} /></div>;
+    case "earnings":
+      return <div className={base}><Zap size={size} strokeWidth={sw} className={iconClass} /></div>;
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Notification Card                                                  */
+/*  Stock badge (borrowed from watchlist AI summary)                    */
 /* ------------------------------------------------------------------ */
 
-function NotificationCard({ notification, index }: { notification: Notification; index: number }) {
+function StockBulletRow({ bullet, read }: { bullet: StockBullet; read: boolean }) {
   const router = useRouter();
-  const meta = alertMeta(notification.type);
-  const Icon = meta.icon;
+  const gain = bullet.change !== undefined ? bullet.change >= 0 : null;
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        router.push(`/stocks/${bullet.symbol}`);
+      }}
+      className="flex items-center gap-2 cursor-pointer active:opacity-70"
+    >
+      <span className={cn(
+        "text-[14px] font-medium",
+        read ? "text-foreground/50" : "text-foreground/70"
+      )}>
+        {bullet.name}
+      </span>
+
+      {bullet.change !== undefined && (
+        <span className={cn(
+          "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+          gain ? "bg-gain/15 text-gain" : "bg-loss/15 text-loss"
+        )}>
+          <span className="text-[10px]">{gain ? "↗" : "↘"}</span>
+          {Math.abs(bullet.change).toFixed(1)}%
+        </span>
+      )}
+      {bullet.label && (
+        <span className="text-[13px] text-muted-foreground/50">{bullet.label}</span>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Notification Row                                                   */
+/* ------------------------------------------------------------------ */
+
+function NotificationRow({ notif, index }: { notif: Notification; index: number }) {
+  const router = useRouter();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
-      onClick={() => router.push(`/stocks/${notification.symbol}`)}
+      transition={{ duration: 0.2, delay: index * 0.03 }}
+      onClick={() => {
+        const symbol = notif.bullets?.[0]?.symbol;
+        if (symbol) router.push(`/stocks/${symbol}`);
+      }}
       className={cn(
-        "flex gap-3 px-5 py-4 cursor-pointer transition-colors active:bg-muted/30",
-        !notification.read && "bg-card/60"
+        "flex gap-3 px-5 py-5 cursor-pointer active:bg-muted/20 transition-colors",
+        !notif.read && "bg-foreground/[0.02]"
       )}
     >
-      {/* Icon */}
-      <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", meta.bg)}>
-        <Icon size={20} strokeWidth={1.8} className={meta.color} />
+      {/* Icon — vertically centered with first line of title */}
+      <div className="flex h-[22px] items-center pt-px">
+        <NotifIconEl type={notif.icon} read={notif.read} />
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1">
+        {/* Title row */}
         <div className="flex items-center gap-2">
-          <span className={cn("text-[12px] font-semibold uppercase tracking-wide", meta.color)}>
-            {alertLabel(notification.type)}
+          <p className={cn(
+            "flex-1 text-[15px] leading-[22px]",
+            !notif.read ? "font-semibold text-foreground" : "font-medium text-foreground/55"
+          )}>
+            {notif.title}
+          </p>
+          <span className="shrink-0 text-[12px] text-muted-foreground/35 tabular-nums">
+            {notif.time}
           </span>
-          <span className="text-[12px] text-muted-foreground/40">{notification.time}</span>
-          {!notification.read && (
-            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+          {!notif.read && (
+            <div className="h-2 w-2 shrink-0 rounded-full bg-foreground/50" />
           )}
         </div>
-        <p className={cn(
-          "mt-1 text-[15px] font-semibold leading-snug",
-          !notification.read ? "text-foreground" : "text-foreground/80"
-        )}>
-          {notification.message}
-        </p>
-        <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground/70">
-          {notification.detail}
-        </p>
-      </div>
 
-      <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground/30" />
+        {/* Stock bullet rows */}
+        {notif.bullets && notif.bullets.length > 0 && (
+          <div className="mt-2 flex flex-col gap-1.5">
+            {notif.bullets.map((b) => (
+              <StockBulletRow key={b.symbol} bullet={b} read={notif.read} />
+            ))}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -236,72 +239,66 @@ export default function NotificationsPage() {
       <StatusBar />
 
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 py-3 border-b border-border/30">
+      <header className="flex items-center gap-3 px-5 py-3 border-b border-border/20">
         <Button
           variant="ghost"
-          size="icon-sm"
-          className="rounded-full text-muted-foreground"
+          size="icon"
+          className="h-9 w-9 rounded-full text-muted-foreground"
           onClick={() => router.back()}
         >
           <ArrowLeft size={22} strokeWidth={2} />
         </Button>
         <div className="flex-1">
           <h1 className="text-[20px] font-bold text-foreground">Notifications</h1>
-          {unreadCount > 0 && (
-            <p className="text-[14px] text-muted-foreground/60">
-              {unreadCount} unread alert{unreadCount > 1 ? "s" : ""}
-            </p>
-          )}
         </div>
         <Button
           variant="ghost"
-          size="icon-sm"
-          className="rounded-full text-muted-foreground"
+          size="icon"
+          className="h-9 w-9 rounded-full text-muted-foreground"
         >
-          <Settings size={20} strokeWidth={1.8} />
+          <Settings size={19} strokeWidth={1.8} />
         </Button>
       </header>
 
       {/* Content */}
       <main className="no-scrollbar flex-1 overflow-y-auto pb-8">
         {/* Today */}
-        <div className="px-5 pt-3 pb-1.5">
-          <div className="flex items-center gap-2">
-            <Clock size={14} strokeWidth={2} className="text-muted-foreground/50" />
-            <span className="text-[14px] font-semibold text-muted-foreground/60 uppercase tracking-wide">
-              Today
-            </span>
-          </div>
-        </div>
-        <div className="divide-y divide-border/20">
-          {todayNotifs.map((n, i) => (
-            <NotificationCard key={n.id} notification={n} index={i} />
-          ))}
-        </div>
-
-        {/* Yesterday */}
-        {yesterdayNotifs.length > 0 && (
+        {todayNotifs.length > 0 && (
           <>
-            <div className="px-5 pt-5 pb-1.5">
-              <div className="flex items-center gap-2">
-                <Clock size={14} strokeWidth={2} className="text-muted-foreground/50" />
-                <span className="text-[14px] font-semibold text-muted-foreground/60 uppercase tracking-wide">
-                  Yesterday
-                </span>
-              </div>
+            <div className="px-5 pt-4 pb-1">
+              <span className="text-[12px] font-semibold text-muted-foreground/40 uppercase tracking-wider">
+                Today
+              </span>
             </div>
-            <div className="divide-y divide-border/20">
-              {yesterdayNotifs.map((n, i) => (
-                <NotificationCard key={n.id} notification={n} index={todayNotifs.length + i} />
+            <div className="divide-y divide-border/15">
+              {todayNotifs.map((n, i) => (
+                <NotificationRow key={n.id} notif={n} index={i} />
               ))}
             </div>
           </>
         )}
 
-        {/* Empty state hint */}
-        <div className="mt-8 flex flex-col items-center gap-2 px-8 text-center">
-          <p className="text-[14px] text-muted-foreground/40 leading-relaxed">
-            Set price alerts from any stock page to get notified when your targets are hit.
+        {/* Yesterday */}
+        {yesterdayNotifs.length > 0 && (
+          <>
+            <div className="px-5 pt-5 pb-1">
+              <span className="text-[12px] font-semibold text-muted-foreground/40 uppercase tracking-wider">
+                Yesterday
+              </span>
+            </div>
+            <div className="divide-y divide-border/15">
+              {yesterdayNotifs.map((n, i) => (
+                <NotificationRow key={n.id} notif={n} index={todayNotifs.length + i} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Footer hint */}
+        <div className="mt-8 flex flex-col items-center gap-1.5 px-8 text-center">
+          <Bell size={15} className="text-muted-foreground/20" />
+          <p className="text-[13px] text-muted-foreground/30 leading-relaxed">
+            Set alerts from any stock page to get notified here.
           </p>
         </div>
       </main>
