@@ -60,6 +60,25 @@ Mobile trading app prototype for US Equity, ETF, and Options trading. Design-fir
 │   │       ├── global-markets-tab.tsx ← Global tab content
 │   │       ├── news-tab.tsx        ← News tab content
 │   │       └── india-tab.tsx       ← India tab content
+│   ├── portfolio/
+│   │   ├── page.tsx                ← Portfolio page — 6 tabs (Portfolio, Holdings, Orders, Positions, Recurring, Collections)
+│   │   ├── tabs/
+│   │   │   ├── portfolio-overview.tsx  ← Portfolio tab orchestrator (imports 8 widgets)
+│   │   │   ├── holdings.tsx        ← Holdings tab with filter/sort
+│   │   │   ├── orders.tsx          ← Orders tab with filter sheets
+│   │   │   ├── positions.tsx       ← Positions tab (open/closed)
+│   │   │   ├── recurring.tsx       ← Recurring investments tab
+│   │   │   └── collections.tsx     ← Collections tab
+│   │   └── components/
+│   │       ├── portfolio-mock-data.ts  ← All portfolio mock data + TypeScript interfaces
+│   │       ├── portfolio-summary.tsx   ← Current value, day change, returns
+│   │       ├── buying-power.tsx        ← Balance + Add Funds/Withdraw sheets
+│   │       ├── top-movers.tsx          ← Gainers/Losers toggle list
+│   │       ├── asset-class-performance.tsx ← By asset class breakdown
+│   │       ├── lumpsum-vs-sip.tsx      ← One-time vs SIP comparison
+│   │       ├── portfolio-vs-benchmark.tsx  ← vs S&P 500 metrics
+│   │       ├── tax-lot-awareness.tsx   ← Tax lot breakdown + harvesting
+│   │       └── pnl-calendar.tsx        ← Daily/monthly P&L calendar
 │   └── watchlist/
 │       └── page.tsx                ← Watchlist page — 4 tabs, stock sections, swipe actions
 ├── components/
@@ -180,6 +199,26 @@ Full watchlist screen with 4 top-level tabs and rich stock management.
 - **Movers tab**: "Watchlist Movers" widget with TradingView multi-line chart comparing top 3 gainers (AMZN, META, AAPL) vs bottom 3 losers (AMD, INTC, TSLA) on a percentage scale, with dashed 0% baseline, stock list below with colored borders matching chart lines, dismiss (×) buttons
 - **AI Insights tab**: AI-powered market analysis with 3 phases — analyzing animation (orbiting dots + cycling messages), typewriter text output with inline stock badges (colored gain/loss pills), and complete state with reanalyze button. Mock prose covers market overview, top movers analysis, sector commentary, and risk factors. Stock badges show symbol + % change inline within flowing text.
 - Wrapped in `WatchlistProvider` context for cross-component state
+
+### 8. Portfolio (`app/portfolio/page.tsx`) — Route: `/portfolio`
+
+Portfolio management page with 6 top-level tabs: Portfolio, Holdings, Orders, Positions, Manage Recurring, My Collections. Horizontal scrollable tab bar with Framer Motion animated underline indicator.
+
+- **Portfolio tab** (`tabs/portfolio-overview.tsx`): Orchestrator importing 8 widget components from `app/portfolio/components/`:
+  1. **PortfolioSummary** — Current value (48,625.80), day change badge, invested amount, XIRR, plus period returns row (1W, 1M, 6M, 1Y)
+  2. **BuyingPower** — Wallet icon + balance (12,485.50) with "Add Funds" and "Withdraw" action buttons. Each opens a bottom Sheet with amount input, quick-select pills (500/1,000/5,000/10,000), and confirm button
+  3. **TopMovers** — Portfolio gainers/losers with pill toggle. Shows top holdings sorted by P&L% with "Buy More"/"Sell" action links per row. AnimatePresence for tab switch
+  4. **AssetClassPerformance** — "By Asset Class" breakdown (Stocks, Collections, Advisory, ETFs). Each row: colored icon, name, count, current value, XIRR%, proportional progress bar
+  5. **LumpsumVsSip** — "Investment Style" side-by-side comparison of one-time vs recurring (SIP) investments. Two mini cards with Invested, Current, XIRR, 1D Change. Better performer highlighted with green top border
+  6. **PortfolioVsBenchmark** — "vs S&P 500" with dual-bar metrics: Return, Alpha, Volatility, Sharpe Ratio, Max Drawdown. Headline verdict ("Beating the market by +1.5%")
+  7. **TaxLotAwareness** — "Tax Lot Breakdown" showing short-term vs long-term unrealized gains, estimated tax, and tax-loss harvesting opportunity alert
+  8. **PnlCalendar** — "P&L Calendar" with month navigation, full calendar grid with green/red dots per trading day, monthly aggregate P&L, tap-to-expand day detail
+- **Holdings tab** (`tabs/holdings.tsx`): Summary card, filter pills (All/Stocks/ETFs/Options), sort cycling, 10 mock holdings with logo, metrics, P&L
+- **Orders tab** (`tabs/orders.tsx`): Status filter pills, asset filter bottom sheet, 9 mock orders
+- **Positions tab** (`tabs/positions.tsx`): Open/closed positions with P&L
+- **Recurring tab** (`tabs/recurring.tsx`): Active recurring investments + cancelled
+- **Collections tab** (`tabs/collections.tsx`): Portfolio collections with P&L summary
+- All mock data for Portfolio tab centralized in `app/portfolio/components/portfolio-mock-data.ts`
 
 ---
 
