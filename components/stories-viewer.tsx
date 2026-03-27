@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { X, Heart, Rocket, Wrench, MessageCircle, Lightbulb, Map, ChevronUp, ChevronDown, Send, ExternalLink } from "lucide-react";
+import { X, Sparkles, Users, Rocket, MessageCircle, FlaskConical, Gift, ChevronUp, ChevronDown, Send, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -186,182 +186,141 @@ export interface Story {
   renderContent: (ctx: { onInteract: () => void; onNavigate: () => void }) => React.ReactNode;
 }
 
-const stories: Story[] = [
-  // ── 1. Why Aspora ──────────────────────────────────────────────────
+export const stories: Story[] = [
+  // ── 1. Advisory Baskets ─────────────────────────────────────────────
   {
-    id: "why-aspora",
-    title: "Aspora",
-    subtitle: "Our story",
-    icon: <Heart size={18} />,
-    gradient: "from-[#1a1a2e] to-[#16213e]",
-    timestamp: "Today",
+    id: "baskets",
+    title: "Advisory Baskets",
+    subtitle: "Curated by experts",
+    icon: <Sparkles size={18} />,
+    gradient: "from-amber-900 to-orange-950",
+    timestamp: "",
     renderContent: ({ onNavigate }) => (
-      <div className="flex flex-col items-center gap-6 px-2 text-center">
-        <AsporaLogo size={56} className="text-white/80" />
-        <div className="text-[34px] font-bold leading-tight tracking-tight text-white">
-          We&apos;re not building <span className="italic text-amber-400">for</span> you.
-          <br />
-          We&apos;re building <span className="italic text-amber-400">with</span> you.
+      <div className="flex flex-col items-center gap-8 px-2 text-center">
+        <div className="text-[32px] font-bold leading-[1.1] tracking-tight text-white">
+          Invest like<br />the <span className="text-amber-400">experts.</span>
         </div>
-        <div className="h-px w-16 bg-white/20" />
-        <p className="text-[15px] leading-relaxed text-white/55">
-          Aspora is a new kind of wealth platform — designed by power users, for power users.
-          We&apos;re early. We&apos;re imperfect. And that&apos;s the point.
+        <div className="h-px w-12 bg-white/15" />
+        <div className="flex items-baseline gap-1">
+          <span className="text-[48px] font-bold tracking-tight text-amber-400">18%+</span>
+          <span className="text-[15px] text-white/40">avg returns</span>
+        </div>
+        <p className="text-[15px] leading-relaxed text-white/45">
+          4 curated baskets. SEBI-registered advisors.<br />Diversified. Rebalanced. Aligned to you.
         </p>
-        <div className="rounded-2xl bg-white/8 px-5 py-3">
-          <p className="text-[14px] font-medium text-white/45">
-            Every feature ships because someone like you asked for it.
-          </p>
-        </div>
-        <ViewAllButton onNavigate={onNavigate} />
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+          className="rounded-full bg-white/10 px-8 py-3 text-[15px] font-semibold text-white transition-colors active:bg-white/20"
+        >
+          Explore Baskets
+        </button>
       </div>
     ),
   },
 
-  // ── 2. What's Live ─────────────────────────────────────────────────
+  // ── 2. Research Group ───────────────────────────────────────────────
   {
-    id: "whats-live",
-    title: "Aspora",
-    subtitle: "What's live",
+    id: "research",
+    title: "Research Group",
+    subtitle: "Join the conversation",
+    icon: <Users size={18} />,
+    gradient: "from-violet-900 to-purple-950",
+    timestamp: "",
+    renderContent: ({ onNavigate }) => (
+      <div className="flex flex-col items-center gap-8 px-2 text-center">
+        <div className="text-[32px] font-bold leading-[1.1] tracking-tight text-white">
+          2,400+ traders.<br /><span className="text-violet-400">One conversation.</span>
+        </div>
+        <div className="h-px w-12 bg-white/15" />
+        <div className="w-full rounded-2xl bg-white/8 px-5 py-4 text-left">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
+            <span className="text-[12px] font-semibold text-orange-400/80">Trending now</span>
+          </div>
+          <p className="mt-2 text-[16px] font-medium leading-snug text-white/85">
+            &ldquo;NVDA earnings — what&apos;s your play?&rdquo;
+          </p>
+          <p className="mt-1 text-[13px] text-white/35">84 replies</p>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+          className="rounded-full bg-white/10 px-8 py-3 text-[15px] font-semibold text-white transition-colors active:bg-white/20"
+        >
+          Join the Group
+        </button>
+      </div>
+    ),
+  },
+
+  // ── 3. Options Trading ──────────────────────────────────────────────
+  {
+    id: "options-launch",
+    title: "Options Trading",
+    subtitle: "Now live",
     icon: <Rocket size={18} />,
     gradient: "from-emerald-900 to-emerald-950",
-    timestamp: "Today",
-    renderContent: ({ onNavigate }) => (
-      <div className="flex flex-col gap-2.5 px-1">
-        <p className="mb-1 text-[13px] font-semibold uppercase tracking-[0.1em] text-emerald-400/80">
-          Shipped & ready
-        </p>
-        {[
-          { name: "US Stock Trading", detail: "500+ stocks, real-time quotes" },
-          { name: "Watchlists", detail: "Custom sections, swipe actions, sort" },
-          { name: "Smart Search", detail: "Stocks, ETFs, options, indices" },
-          { name: "Market Overview", detail: "US, Global, sectors, earnings" },
-          { name: "AI Assistant", detail: "ARIA — context-aware market chat" },
-          { name: "Stock Deep Dives", detail: "Charts, metrics, events, revenue" },
-        ].map((feat) => (
-          <div key={feat.name} className="flex items-start gap-3 rounded-2xl bg-white/8 px-5 py-2.5">
-            <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </div>
-            <div>
-              <div className="text-[14px] font-semibold text-white">{feat.name}</div>
-              <div className="text-[12px] text-white/40">{feat.detail}</div>
-            </div>
+    timestamp: "",
+    renderContent: () => (
+      <div className="flex flex-col items-center gap-8 px-2 text-center">
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex h-3 w-3 items-center justify-center">
+            <div className="absolute h-3 w-3 rounded-full bg-emerald-400 animate-ping opacity-40" />
+            <div className="h-2 w-2 rounded-full bg-emerald-400" />
           </div>
-        ))}
-        <ViewAllButton onNavigate={onNavigate} />
+          <span className="text-[13px] font-semibold text-emerald-400">Live</span>
+        </div>
+        <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+          Options<br />are <span className="text-emerald-400">here.</span>
+        </div>
+        <div className="h-px w-12 bg-white/15" />
+        <p className="text-[17px] leading-relaxed text-white/50">
+          Calls. Puts. Spreads.<br />One clean interface.
+        </p>
       </div>
     ),
   },
 
-  // ── 3. Work in Progress ────────────────────────────────────────────
+  // ── 4. Community ────────────────────────────────────────────────────
   {
-    id: "wip",
-    title: "Aspora",
-    subtitle: "In the workshop",
-    icon: <Wrench size={18} />,
-    gradient: "from-amber-900 to-orange-950",
-    timestamp: "Today",
-    renderContent: ({ onNavigate }) => (
-      <div className="flex flex-col gap-3.5 px-1">
-        <p className="mb-0.5 text-[13px] font-semibold uppercase tracking-[0.1em] text-amber-400/80">
-          Currently building
-        </p>
-        {[
-          { name: "Options Trading", progress: 75, status: "Beta soon" },
-          { name: "Portfolio Analytics", progress: 60, status: "In progress" },
-          { name: "Advisory Baskets", progress: 45, status: "In progress" },
-          { name: "Price Alerts", progress: 30, status: "Early stage" },
-        ].map((feat) => (
-          <div key={feat.name} className="rounded-2xl bg-white/8 px-5 py-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[14px] font-semibold text-white">{feat.name}</span>
-              <span className="rounded-lg bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
-                {feat.status}
-              </span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-400"
-                style={{ width: `${feat.progress}%` }}
-              />
-            </div>
-          </div>
-        ))}
-        <p className="text-center text-[12px] text-white/35">
-          Shipping fast. Shipping rough. Shipping together.
-        </p>
-        <ViewAllButton onNavigate={onNavigate} />
-      </div>
-    ),
-  },
-
-  // ── 4. Community Feedback + Text Input ─────────────────────────────
-  {
-    id: "feedback",
-    title: "Aspora",
-    subtitle: "We hear you",
+    id: "community",
+    title: "Community",
+    subtitle: "Share your ideas",
     icon: <MessageCircle size={18} />,
-    gradient: "from-violet-900 to-purple-950",
-    timestamp: "Today",
-    renderContent: ({ onInteract, onNavigate }) => (
-      <div className="flex flex-col gap-3 px-1">
-        <p className="mb-0.5 text-[13px] font-semibold uppercase tracking-[0.1em] text-violet-400/80">
-          From our community
-        </p>
-        {[
-          {
-            quote: "The watchlist swipe actions feel native. More of this.",
-            user: "Power User",
-            action: "Expanding gestures across the app",
-          },
-          {
-            quote: "Need better charting. Candlestick + indicators.",
-            user: "Day Trader",
-            action: "Advanced charts shipping in v2.1",
-          },
-        ].map((item, i) => (
-          <div key={i} className="rounded-2xl bg-white/8 px-5 py-3">
-            <p className="text-[14px] font-medium leading-snug text-white/85">
-              &ldquo;{item.quote}&rdquo;
-            </p>
-            <p className="mt-1 text-[11px] font-semibold text-violet-400/60">— {item.user}</p>
-            <div className="mt-2 flex items-center gap-2 rounded-xl bg-violet-500/10 px-3 py-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-              <span className="text-[12px] text-white/45">{item.action}</span>
-            </div>
-          </div>
-        ))}
-
-        {/* Open text feedback */}
-        <p className="mt-1 text-[13px] font-medium text-white/60">What should we improve?</p>
-        <FeedbackInput placeholder="Tell us what you think..." onInteract={onInteract} />
-        <ViewAllButton onNavigate={onNavigate} />
+    gradient: "from-[#1a1a2e] to-[#16213e]",
+    timestamp: "",
+    renderContent: ({ onInteract }) => (
+      <div className="flex flex-col items-center gap-8 px-2 text-center">
+        <div className="text-[24px] font-medium italic leading-snug text-white/90">
+          &ldquo;The watchlist swipe actions<br />feel native. More of this.&rdquo;
+        </div>
+        <p className="text-[14px] font-semibold text-blue-400/60">— Power User</p>
+        <div className="h-px w-12 bg-white/15" />
+        <p className="text-[14px] text-white/40">What should we build next?</p>
+        <div className="w-full">
+          <FeedbackInput placeholder="Share your take..." onInteract={onInteract} />
+        </div>
       </div>
     ),
   },
 
-  // ── 5. Feature Voting (upvote / downvote) ──────────────────────────
+  // ── 5. What's Next — Pipeline ──────────────────────────────────────
   {
-    id: "vote",
-    title: "Aspora",
-    subtitle: "You decide",
-    icon: <Lightbulb size={18} />,
+    id: "pipeline",
+    title: "What's Next",
+    subtitle: "On our roadmap",
+    icon: <FlaskConical size={18} />,
     gradient: "from-cyan-900 to-blue-950",
-    timestamp: "Today",
-    renderContent: ({ onInteract, onNavigate }) => (
-      <div className="flex flex-col gap-2 px-1">
-        <p className="text-[18px] font-bold text-white">
-          What should we build next?
-        </p>
-        <p className="mb-2 text-[13px] text-white/45">
-          Upvote or downvote. Top picks ship first.
-        </p>
+    timestamp: "",
+    renderContent: ({ onInteract }) => (
+      <div className="flex flex-col gap-5 px-1">
+        <div className="text-center text-[28px] font-bold leading-[1.1] tracking-tight text-white">
+          You decide<br />what ships <span className="text-cyan-400">next.</span>
+        </div>
+        <div className="mx-auto h-px w-12 bg-white/15" />
         {[
           { name: "Social Trading", desc: "Follow & copy top traders", votes: 342 },
           { name: "Fractional Shares", desc: "Buy any stock from 1", votes: 289 },
           { name: "Paper Trading", desc: "Practice with virtual money", votes: 256 },
-          { name: "Sector Heatmaps", desc: "Visual market overview", votes: 198 },
         ].map((feat) => (
           <VoteRow
             key={feat.name}
@@ -371,64 +330,31 @@ const stories: Story[] = [
             onInteract={onInteract}
           />
         ))}
-
-        {/* Suggest your own */}
-        <p className="mt-1.5 text-[13px] font-medium text-white/60">Have a different idea?</p>
-        <FeedbackInput placeholder="Suggest a feature..." onInteract={onInteract} />
-        <ViewAllButton onNavigate={onNavigate} />
       </div>
     ),
   },
 
-  // ── 6. The Road Ahead ──────────────────────────────────────────────
+  // ── 6. Invite Friends ──────────────────────────────────────────────
   {
-    id: "roadmap",
-    title: "Aspora",
-    subtitle: "The road ahead",
-    icon: <Map size={18} />,
+    id: "referral",
+    title: "Invite Friends",
+    subtitle: "Earn rewards",
+    icon: <Gift size={18} />,
     gradient: "from-[#0f172a] to-[#1e1b4b]",
-    timestamp: "Today",
-    renderContent: ({ onNavigate }) => (
-      <div className="flex flex-col gap-4 px-1">
-        <div className="relative ml-3 border-l-2 border-white/15 pl-5">
-          {[
-            { quarter: "Now", items: ["Options beta", "Portfolio analytics"], active: true },
-            { quarter: "Q2 2026", items: ["Social trading", "Advanced charting", "Price alerts"], active: false },
-            { quarter: "Q3 2026", items: ["Fractional shares", "IPO subscriptions"], active: false },
-            { quarter: "Beyond", items: ["API for power users", "Community strategies"], active: false },
-          ].map((phase, i) => (
-            <div key={phase.quarter} className={`relative pb-5 ${i === 3 ? "pb-0" : ""}`}>
-              <div
-                className="absolute -left-[27px] top-0.5 h-3.5 w-3.5 rounded-full border-2"
-                style={{
-                  borderColor: phase.active ? "#818cf8" : "rgba(255,255,255,0.2)",
-                  background: phase.active ? "#818cf8" : "transparent",
-                }}
-              />
-              <div
-                className="text-[13px] font-bold uppercase tracking-[0.08em]"
-                style={{ color: phase.active ? "#818cf8" : "rgba(255,255,255,0.4)" }}
-              >
-                {phase.quarter}
-              </div>
-              <div className="mt-1.5 space-y-1">
-                {phase.items.map((item) => (
-                  <div key={item} className="text-[14px] text-white/65">{item}</div>
-                ))}
-              </div>
-            </div>
-          ))}
+    timestamp: "",
+    renderContent: () => (
+      <div className="flex flex-col items-center gap-8 px-2 text-center">
+        <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+          Give 100.<br /><span className="text-indigo-400">Get 100.</span>
         </div>
-
-        <div className="rounded-2xl bg-white/8 px-5 py-4 text-center">
-          <AsporaLogo size={36} className="mx-auto mb-2 text-white/60" />
-          <p className="text-[16px] font-bold leading-snug text-white">
-            Building Aspora Wealth.
-            <br />
-            <span className="text-white/45">Together.</span>
-          </p>
+        <div className="h-px w-12 bg-white/15" />
+        <p className="text-[16px] leading-relaxed text-white/45">
+          Invite a friend. When they fund their account,<br />you both earn 100 in trading credits.
+        </p>
+        <div className="rounded-2xl bg-indigo-500/15 px-8 py-4">
+          <p className="text-[11px] font-medium uppercase tracking-widest text-indigo-400/60">Your code</p>
+          <p className="mt-1 text-[20px] font-bold tracking-wide text-indigo-300">ASPORA-2026</p>
         </div>
-        <ViewAllButton onNavigate={onNavigate} />
       </div>
     ),
   },

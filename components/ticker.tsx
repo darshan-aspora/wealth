@@ -162,7 +162,7 @@ function getTabItems(tab: EditTab, localSelected: string[], query: string): Tick
   return items;
 }
 
-function EditSheet({
+export function EditSheet({
   selected,
   onSave,
   trigger,

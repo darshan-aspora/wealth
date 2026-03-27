@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useMotionValue, useTransform, animate, AnimatePresence } from "framer-motion";
 import { useAI } from "@/contexts/ai-context";
 import { AIBuddy } from "./ai/ai-buddy";
@@ -15,6 +16,7 @@ const springConfig = { type: "spring" as const, stiffness: 360, damping: 36, mas
 const snapSpring = { type: "spring" as const, stiffness: 400, damping: 32 };
 
 export function AIOverlay() {
+  const pathname = usePathname();
   const { isOpen, openAI, closeAI, sendMessage } = useAI();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -146,6 +148,8 @@ export function AIOverlay() {
 
     snapToEdge(cx + FAB_SIZE / 2, cy);
   };
+
+  if (pathname === "/home-v2") return null;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex justify-center">

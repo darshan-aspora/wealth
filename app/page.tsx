@@ -28,6 +28,12 @@ const pages = [
     href: "/stocks/AAPL/alerts",
     status: "v1",
   },
+  {
+    title: "Home v2",
+    description: "Redesigned home screen",
+    href: "/home-v2",
+    status: "v2",
+  },
 ];
 
 const components = [
