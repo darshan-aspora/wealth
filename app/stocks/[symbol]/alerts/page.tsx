@@ -8,11 +8,23 @@ import {
   Bell,
   Trash2,
   Check,
-  X,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   ALL_TICKERS,
   TickerLogo,
@@ -62,19 +74,17 @@ function getInitialAlerts(symbol: string): PriceAlert[] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Alert Row — delete only, no toggle                                 */
+/*  Alert Row                                                          */
 /* ------------------------------------------------------------------ */
 
 function AlertRow({
   alert,
   symbol,
   onDelete,
-  index,
 }: {
   alert: PriceAlert;
   symbol: string;
   onDelete: () => void;
-  index: number;
 }) {
   const label =
     alert.mode === "price"
@@ -82,13 +92,7 @@ function AlertRow({
       : `When ${symbol} moves by ${alert.value > 0 ? "+" : ""}${alert.value}%`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -40, height: 0, paddingTop: 0, paddingBottom: 0, overflow: "hidden" }}
-      transition={{ duration: 0.2, delay: index * 0.03 }}
-      className="flex items-center gap-3 px-5 py-3"
-    >
+    <div className="flex items-center gap-3 py-3">
       <div className="flex-1 min-w-0">
         <p className="text-[13px] text-muted-foreground/50">Set on {alert.setDate}</p>
         <p className="text-[15px] font-semibold text-foreground mt-0.5 leading-snug">{label}</p>
@@ -97,120 +101,12 @@ function AlertRow({
       <Button
         variant="ghost"
         size="icon-xs"
-        className="rounded-full text-muted-foreground/40 active:bg-red-500/10 active:text-red-400"
+        className="rounded-full text-muted-foreground active:bg-destructive/10 active:text-destructive"
         onClick={onDelete}
       >
         <Trash2 size={16} strokeWidth={1.8} />
       </Button>
-    </motion.div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Custom Alert Bottom Sheet                                          */
-/* ------------------------------------------------------------------ */
-
-function PriceAlertSheet({
-  symbol,
-  currentPrice,
-  onClose,
-  onAdd,
-}: {
-  symbol: string;
-  currentPrice: number;
-  onClose: () => void;
-  onAdd: (alert: PriceAlert) => void;
-}) {
-  const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const canAdd = inputValue !== "" && Number(inputValue) > 0;
-
-  function handleAdd() {
-    if (!canAdd) return;
-    onAdd({
-      id: `alert-${Date.now()}`,
-      mode: "price",
-      value: Number(inputValue),
-      setDate: "Mar 11",
-    });
-    onClose();
-  }
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-40 bg-black/50"
-      />
-
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", stiffness: 350, damping: 32 }}
-        style={{ bottom: 0, left: "50%", translateX: "-50%" }}
-        className="fixed z-50 w-full max-w-[430px] rounded-t-3xl bg-card"
-      >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-4 pt-2">
-          <h2 className="text-[20px] font-bold text-foreground">Add Price Alert</h2>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="rounded-full bg-muted/40 text-muted-foreground active:bg-muted/60"
-            onClick={onClose}
-          >
-            <X size={16} strokeWidth={2.5} />
-          </Button>
-        </div>
-
-        {/* Input */}
-        <div className="px-5 pb-5">
-          <p className="text-[14px] text-muted-foreground/60 mb-5">
-            Get notified when {symbol} reaches this price
-          </p>
-          <div
-            className="flex items-center justify-center cursor-text"
-            onClick={() => inputRef.current?.focus()}
-          >
-            <input
-              ref={inputRef}
-              type="number"
-              inputMode="decimal"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={formatPrice(currentPrice)}
-              autoFocus
-              className="w-full bg-transparent text-center font-mono text-[40px] font-bold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="mx-auto w-48 h-px bg-border/50 mt-1 mb-2" />
-          <p className="text-center text-[13px] text-muted-foreground/40">
-            Current: {formatPrice(currentPrice)}
-          </p>
-        </div>
-
-        {/* Add Button */}
-        <div className="px-5 pb-8">
-          <Button
-            onClick={handleAdd}
-            disabled={!canAdd}
-            className="w-full rounded-2xl py-4 text-[16px] font-bold active:scale-[0.98]"
-          >
-            Add Alert
-          </Button>
-        </div>
-      </motion.div>
-    </>
+    </div>
   );
 }
 
@@ -240,8 +136,10 @@ export default function SetAlertPage() {
   const percentChips = [-10, -5, -2.5, +2.5, +5, +10];
 
   const [alerts, setAlerts] = useState<PriceAlert[]>(() => getInitialAlerts(symbol));
-  const [showCustomSheet, setShowCustomSheet] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function togglePercentAlert(value: number) {
     const existing = alerts.find((a) => a.mode === "percent" && a.value === value);
@@ -260,8 +158,17 @@ export default function SetAlertPage() {
     }
   }
 
-  function addAlert(alert: PriceAlert) {
-    setAlerts((prev) => [alert, ...prev]);
+  function handleAddPriceAlert() {
+    if (!inputValue || Number(inputValue) <= 0) return;
+    const newAlert: PriceAlert = {
+      id: `alert-${Date.now()}`,
+      mode: "price",
+      value: Number(inputValue),
+      setDate: "Mar 11",
+    };
+    setAlerts((prev) => [newAlert, ...prev]);
+    setInputValue("");
+    setSheetOpen(false);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   }
@@ -273,6 +180,8 @@ export default function SetAlertPage() {
   const activeChips = new Set(
     alerts.filter((a) => a.mode === "percent").map((a) => a.value)
   );
+
+  const canAdd = inputValue !== "" && Number(inputValue) > 0;
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
@@ -289,27 +198,23 @@ export default function SetAlertPage() {
           <ArrowLeft size={22} strokeWidth={2} />
         </Button>
         <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="rounded-full text-muted-foreground"
-        >
-          <Bell size={20} strokeWidth={1.8} />
-        </Button>
       </header>
 
-      {/* Stock Hero — logo, full name, price, delta */}
-      <div className="flex items-center gap-3.5 px-5 pb-6 pt-1">
-        <TickerLogo ticker={ticker} />
-        <div>
-          <p className="text-[18px] font-bold text-foreground">{ticker.name}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="font-mono text-[16px] font-semibold tabular-nums text-foreground/80">
+      {/* Stock Hero */}
+      <div className="flex items-center gap-3 px-5 pb-5 pt-1">
+        <TickerLogo ticker={ticker} size="sm" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <p className="text-[17px] font-bold text-foreground truncate">{ticker.name}</p>
+            <span className="text-[13px] text-muted-foreground font-medium">{symbol}</span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mt-0.5">
+            <span className="font-mono text-[17px] font-bold tabular-nums text-foreground">
               {formatPrice(ticker.price)}
             </span>
             <span
               className={cn(
-                "font-mono text-[14px] font-semibold tabular-nums",
+                "font-mono text-[13px] font-medium tabular-nums",
                 gain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]"
               )}
             >
@@ -319,94 +224,99 @@ export default function SetAlertPage() {
         </div>
       </div>
 
-      <main className="no-scrollbar flex-1 overflow-y-auto">
-        {/* ── Quick % Alerts ── */}
-        <div className="px-5 mb-5">
-          <p className="text-[17px] font-bold text-foreground mb-1">
-            Quick Alert
-          </p>
-          <p className="text-[13px] text-muted-foreground/50 mb-3">
-            Notify when {symbol} moves by this % in a day
-          </p>
+      <main className="no-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-4">
+        {/* Quick % Alerts Card */}
+        <Card>
+          <CardHeader className="p-4">
+            <CardTitle className="text-[17px]">Quick Alert</CardTitle>
+            <CardDescription>
+              Notify when {symbol} moves by this % in a day
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-0">
+            {/* Badge chips — intensity scales with % magnitude */}
+            <div className="flex gap-1">
+              {percentChips.map((v) => {
+                const isActive = activeChips.has(v);
+                const isPositive = v > 0;
+                const absV = Math.abs(v);
+                const intensity = absV <= 2.5 ? "low" : absV <= 5 ? "mid" : "high";
 
-          {/* Pills row */}
-          <div className="flex gap-1.5 mb-2.5">
-            {percentChips.map((v) => {
-              const isActive = activeChips.has(v);
-              const isPositive = v > 0;
-              return (
-                <button
-                  key={v}
-                  onClick={() => togglePercentAlert(v)}
-                  className={cn(
-                    "flex-1 rounded-full py-2 text-center text-[13px] font-semibold font-mono tabular-nums transition-all relative",
-                    isActive
-                      ? isPositive
-                        ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
-                        : "bg-red-500/20 text-red-400 ring-1 ring-red-500/30"
-                      : "bg-muted/30 text-foreground/60"
-                  )}
-                >
-                  {v > 0 ? "+" : ""}{v}%
-                </button>
-              );
-            })}
-          </div>
+                const activeStyles = isPositive
+                  ? {
+                      low:  "bg-emerald-500/5 text-foreground border-emerald-500/10",
+                      mid:  "bg-emerald-500/10 text-foreground border-emerald-500/15",
+                      high: "bg-emerald-500/15 text-foreground border-emerald-500/20",
+                    }[intensity]
+                  : {
+                      low:  "bg-red-500/5 text-foreground border-red-500/10",
+                      mid:  "bg-red-500/10 text-foreground border-red-500/15",
+                      high: "bg-red-500/15 text-foreground border-red-500/20",
+                    }[intensity];
 
-          {/* Gradient spectrum bar */}
-          <div
-            className="h-1.5 rounded-full"
-            style={{
-              background: "linear-gradient(to right, #ef4444, #f87171, #fca5a5, #d1d5db, #6ee7b7, #34d399, #10b981)",
-            }}
-          />
+                return (
+                  <Badge
+                    key={v}
+                    variant="outline"
+                    onClick={() => togglePercentAlert(v)}
+                    className={cn(
+                      "flex-1 justify-center rounded-full px-1.5 py-2 cursor-pointer text-[12px] font-semibold font-mono tabular-nums transition-all border",
+                      isActive
+                        ? activeStyles
+                        : "bg-muted/30 text-foreground/60 border-transparent"
+                    )}
+                  >
+                    {v > 0 ? "+" : ""}{v}%
+                  </Badge>
+                );
+              })}
+            </div>
+          </CardContent>
+          <CardFooter className="p-4 pt-3">
+            <Button
+              onClick={() => setSheetOpen(true)}
+              className="w-full rounded-xl py-3 text-[15px] font-bold active:scale-[0.98]"
+            >
+              <Plus size={16} strokeWidth={2} className="mr-1.5" />
+              Add Price Alert
+            </Button>
+          </CardFooter>
+        </Card>
 
-          {/* Add Price Alert button */}
-          <Button
-            variant="outline"
-            onClick={() => setShowCustomSheet(true)}
-            className="w-full mt-3 rounded-xl border-border/40 py-3 text-[15px] font-semibold text-muted-foreground active:bg-muted/30"
-          >
-            Add Price Alert
-          </Button>
-        </div>
-
-        {/* ── Active Alerts ── */}
-        <div className="px-5 pb-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px] font-bold text-foreground">Active Alerts</h2>
+        {/* Active Alerts Card */}
+        <Card className="mt-4">
+          <CardHeader className="p-4 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-[17px]">Active Alerts</CardTitle>
             {alerts.length > 0 && (
-              <span className="text-[13px] text-muted-foreground/40 font-mono tabular-nums">
+              <Badge variant="outline" className="rounded-full text-[13px] font-mono tabular-nums px-2.5">
                 {alerts.length}
-              </span>
+              </Badge>
             )}
-          </div>
-        </div>
-
-        {alerts.length > 0 ? (
-          <AnimatePresence mode="popLayout">
-            {alerts.map((alert, i) => (
-              <div key={alert.id}>
-                <AlertRow
-                  alert={alert}
-                  symbol={symbol}
-                  onDelete={() => deleteAlert(alert.id)}
-                  index={i}
-                />
-                {i < alerts.length - 1 && (
-                  <div className="mx-5 border-t border-border/15" />
-                )}
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-4">
+            {alerts.length > 0 ? (
+              alerts.map((alert, i) => (
+                <div key={alert.id}>
+                  <AlertRow
+                    alert={alert}
+                    symbol={symbol}
+                    onDelete={() => deleteAlert(alert.id)}
+                  />
+                  {i < alerts.length - 1 && (
+                    <Separator className="bg-border/15" />
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center gap-1.5 py-6 text-center">
+                <Bell size={22} strokeWidth={1.5} className="text-muted-foreground/25 mb-1" />
+                <p className="text-[15px] text-muted-foreground/35">
+                  No alerts yet for {symbol}
+                </p>
               </div>
-            ))}
-          </AnimatePresence>
-        ) : (
-          <div className="flex flex-col items-center gap-1.5 px-8 py-8 text-center">
-            <Bell size={22} strokeWidth={1.5} className="text-muted-foreground/25 mb-1" />
-            <p className="text-[15px] text-muted-foreground/35">
-              No alerts yet for {symbol}
-            </p>
-          </div>
-        )}
+            )}
+          </CardContent>
+        </Card>
 
         <div className="h-8" />
       </main>
@@ -426,17 +336,47 @@ export default function SetAlertPage() {
         )}
       </AnimatePresence>
 
-      {/* Custom Alert Bottom Sheet */}
-      <AnimatePresence>
-        {showCustomSheet && (
-          <PriceAlertSheet
-            symbol={symbol}
-            currentPrice={ticker.price}
-            onClose={() => setShowCustomSheet(false)}
-            onAdd={addAlert}
-          />
-        )}
-      </AnimatePresence>
+      {/* Price Alert Bottom Sheet — shadcn Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="mx-auto max-w-[430px] rounded-t-3xl border-t-0 px-5 pb-8"
+        >
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-[20px] font-bold">Add Price Alert</SheetTitle>
+            <SheetDescription className="text-[14px] text-muted-foreground/60">
+              Get notified when {symbol} reaches this price
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 flex flex-col items-center">
+            <Input
+              ref={inputRef}
+              type="number"
+              inputMode="decimal"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={formatPrice(ticker.price)}
+              autoFocus
+              className="h-auto border-0 bg-transparent text-center font-mono text-[40px] font-bold tabular-nums text-foreground shadow-none ring-0 focus-visible:ring-0 placeholder:text-muted-foreground/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <Separator className="w-48 my-2 bg-border/50" />
+            <p className="text-center text-[13px] text-muted-foreground/40">
+              Current: {formatPrice(ticker.price)}
+            </p>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <Button
+              onClick={handleAddPriceAlert}
+              disabled={!canAdd}
+              className="w-full rounded-2xl py-4 text-[16px] font-bold active:scale-[0.98]"
+            >
+              Add Alert
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <HomeIndicator />
     </div>

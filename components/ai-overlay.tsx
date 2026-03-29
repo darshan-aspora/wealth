@@ -18,6 +18,9 @@ const snapSpring = { type: "spring" as const, stiffness: 400, damping: 32 };
 export function AIOverlay() {
   const pathname = usePathname();
   const { isOpen, openAI, closeAI, sendMessage } = useAI();
+
+  // Hide AI overlay on certain pages
+  if (pathname?.startsWith("/order-flow") || pathname?.endsWith("/alerts")) return null;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [containerW, setContainerW] = useState(390);

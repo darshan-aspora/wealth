@@ -220,6 +220,21 @@ Portfolio management page with 6 top-level tabs: Portfolio, Holdings, Orders, Po
 - **Collections tab** (`tabs/collections.tsx`): Portfolio collections with P&L summary
 - All mock data for Portfolio tab centralized in `app/portfolio/components/portfolio-mock-data.ts`
 
+### 9. Order Flow (`app/order-flow/page.tsx`) — Route: `/order-flow`
+
+Stock order placement screen with Glass Premium aesthetic — glassmorphism cards, gradient mesh background, frosted glass tabs.
+
+- Header: X close, stock name (Tesla Inc) + price (411.82 +0.03%), Buy/Sell toggle
+- Category tabs inside glass container with sliding glass pill: Delivery | Intraday | Pay Later | Cover
+- Regular Order glass card: Amount input ($10), Order Type pills (Market / Limit / GTC)
+  - Market: amount only
+  - Limit: + Limit Price input (411.30)
+  - GTC: + Trigger Price input (411.30) + Market Price "At Market" toggle
+- Stop-Loss and Trailing Stop-Loss glass checkbox cards with info icons
+- Frosted glass bottom bar: Amount summary + fee | Available balance with refresh
+- Swipe-to-Buy: Framer Motion `drag="x"` thumb with green glow, snaps back or completes
+- Visual: `backdrop-blur-xl`, `bg-card/60`, gradient mesh background (`from-blue-500/5 via-purple-500/5 to-rose-500/5`), glow effects on interactive elements
+
 ---
 
 ## Components Built

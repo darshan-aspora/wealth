@@ -34,6 +34,12 @@ const pages = [
     href: "/home-v2",
     status: "v2",
   },
+  {
+    title: "Order Flow",
+    description: "Stock order placement — buy/sell with swipe",
+    href: "/order-flow",
+    status: "3 versions",
+  },
 ];
 
 const components = [
