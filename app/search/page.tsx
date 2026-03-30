@@ -421,7 +421,7 @@ function ResultRow({
           {item.exchange && <span className="text-muted-foreground/40"> : {item.exchange}</span>}
         </p>
       </div>
-      <TypeBadge type={item.type} />
+      <PriceBlock item={item} />
       {!hideBookmark && <BookmarkBtn symbol={item.symbol} isWatchlisted={isWatchlisted} onToggle={onToggleWatchlist} />}
     </div>
   );

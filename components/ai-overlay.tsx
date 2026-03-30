@@ -20,7 +20,7 @@ export function AIOverlay() {
   const { isOpen, openAI, closeAI, sendMessage } = useAI();
 
   // Hide AI overlay on certain pages
-  if (pathname?.startsWith("/order-flow") || pathname?.endsWith("/alerts")) return null;
+  if (pathname?.startsWith("/order-flow") || pathname?.endsWith("/alerts") || pathname === "/search") return null;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [containerW, setContainerW] = useState(390);

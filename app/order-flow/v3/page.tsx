@@ -265,7 +265,8 @@ export default function OrderFlowV3() {
   }, [livePrice]);
 
   const parsedAmount = parseFloat(amount) || 0;
-  const insufficientFunds = (parsedAmount + fee) > available;
+  const dollarAmount = amountMode === "dollars" ? parsedAmount : parsedAmount * livePrice;
+  const insufficientFunds = (dollarAmount + fee) > available;
   const hasAdvancedSettings = stopLoss;
 
   const getFieldValue = (id: FieldId) => {
@@ -415,15 +416,24 @@ export default function OrderFlowV3() {
               </span>
               <ChevronsUpDown size={14} strokeWidth={1.8} className="text-muted-foreground/50" />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); setActiveField("amount"); }} className="flex items-baseline justify-end active:opacity-70">
-              {amountMode === "dollars" && (
-                <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+            <div className="flex flex-col items-end">
+              <button onClick={(e) => { e.stopPropagation(); setActiveField("amount"); }} className="flex items-baseline justify-end active:opacity-70">
+                {amountMode === "dollars" && (
+                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                )}
+                <span className={cn("font-mono text-[20px] font-semibold tabular-nums", activeField === "amount" ? "text-foreground" : "text-foreground")}>
+                  {amount || "0"}
+                </span>
+                {activeField === "amount" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
+              </button>
+              {parseFloat(amount) > 0 && (
+                <span className="text-[13px] font-mono tabular-nums text-muted-foreground/50 mt-0.5">
+                  {amountMode === "dollars"
+                    ? `Est. ${(parseFloat(amount) / livePrice).toFixed(4)} shares`
+                    : `Est. $${(parseFloat(amount) * livePrice).toFixed(2)}`}
+                </span>
               )}
-              <span className={cn("font-mono text-[20px] font-semibold tabular-nums", activeField === "amount" ? "text-foreground" : "text-foreground")}>
-                {amount || "0"}
-              </span>
-              {activeField === "amount" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
-            </button>
+            </div>
           </div>
 
           {/* Order Type */}
@@ -507,43 +517,27 @@ export default function OrderFlowV3() {
         </Card>
 
         {/* Advanced */}
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-center">
           {showAdvanced && hasAdvancedSettings ? (
-            <>
+            <button
+              onClick={() => {
+                setStopLoss(false);
+                setSlTriggerPrice("409.50");
+                setSlTriggerPercent("1.50");
+                setSlTriggerMode("price");
+                setShowAdvanced(false);
+              }}
+              className="flex items-center justify-center gap-1.5 active:opacity-70 transition-opacity"
+            >
               <span className="text-[14px] font-medium text-muted-foreground">Advanced</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setStopLoss(false);
-                    setSlTriggerPrice("409.50");
-                    setSlTriggerPercent("1.50");
-                    setSlTriggerMode("price");
-                    setShowAdvanced(false);
-                  }}
-                  className="text-[14px] font-medium text-muted-foreground active:opacity-70 transition-opacity"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={() => {
-                    setStopLoss(false);
-                    setSlTriggerPrice("409.50");
-                    setSlTriggerPercent("1.50");
-                    setSlTriggerMode("price");
-                    setShowAdvanced(false);
-                  }}
-                  className="p-1 active:opacity-70 transition-opacity"
-                >
-                  <div className="rotate-180">
-                    <ChevronDown size={18} strokeWidth={2} className="text-muted-foreground" />
-                  </div>
-                </button>
+              <div className="rotate-180">
+                <ChevronDown size={18} strokeWidth={2} className="text-muted-foreground" />
               </div>
-            </>
+            </button>
           ) : (
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center justify-between w-full active:opacity-70 transition-opacity"
+              className="flex items-center justify-center gap-1.5 w-full active:opacity-70 transition-opacity"
             >
               <span className="text-[14px] font-medium text-muted-foreground">Advanced</span>
               <motion.div
@@ -641,7 +635,7 @@ export default function OrderFlowV3() {
       <div className="flex flex-col mt-auto z-10 bg-background">
         {/* Insufficient funds warning */}
         <AnimatePresence>
-          {insufficientFunds && parsedAmount > 0 && (
+          {insufficientFunds && dollarAmount > 0 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -652,7 +646,7 @@ export default function OrderFlowV3() {
               <div className="px-5 py-2.5 bg-loss/10 border-b border-loss/20 flex items-center gap-2">
                 <Info size={15} strokeWidth={2} className="text-loss shrink-0" />
                 <span className="text-[13px] text-loss">
-                  Insufficient buying power. You need <span className="font-mono font-semibold">{((parsedAmount + fee) - available).toFixed(2)}</span> more.
+                  Insufficient buying power. You need <span className="font-mono font-semibold">{((dollarAmount + fee) - available).toFixed(2)}</span> more.
                 </span>
               </div>
             </motion.div>
@@ -668,7 +662,7 @@ export default function OrderFlowV3() {
             >
               Amount{" "}
               <span className="font-mono font-semibold text-foreground">
-                {parsedAmount.toFixed(0)}
+                {dollarAmount.toFixed(2)}
               </span>
               <span className="text-muted-foreground/50 underline underline-offset-2 decoration-dashed"> + {fee.toFixed(2)} Charges</span>
             </button>
@@ -678,7 +672,7 @@ export default function OrderFlowV3() {
             >
               <span className="text-[14px] text-muted-foreground">
                 Avail.{" "}
-                <span className={cn("font-mono font-semibold underline underline-offset-2 decoration-dashed", insufficientFunds && parsedAmount > 0 ? "text-loss" : "text-foreground")}>
+                <span className={cn("font-mono font-semibold underline underline-offset-2 decoration-dashed", insufficientFunds && dollarAmount > 0 ? "text-loss" : "text-foreground")}>
                   {available.toFixed(2)}
                 </span>
               </span>
@@ -686,7 +680,7 @@ export default function OrderFlowV3() {
             </button>
           </div>
 
-          {insufficientFunds && parsedAmount > 0 ? (
+          {insufficientFunds && dollarAmount > 0 ? (
             <button
               onClick={() => setFooterSheet("buying-power")}
               className="w-full h-[58px] rounded-full bg-foreground text-background text-[16px] font-semibold active:opacity-90 transition-opacity"
@@ -781,7 +775,7 @@ export default function OrderFlowV3() {
               <div className="space-y-3 mb-5">
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Required Amount</span>
-                  <span className="text-[14px] font-mono font-semibold text-foreground">{(parsedAmount + fee).toFixed(2)}</span>
+                  <span className="text-[14px] font-mono font-semibold text-foreground">{(dollarAmount + fee).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Available Balance</span>
@@ -792,8 +786,8 @@ export default function OrderFlowV3() {
 
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Remaining After Trade</span>
-                  <span className={cn("text-[14px] font-mono font-semibold", (available - parsedAmount - fee) >= 0 ? "text-gain" : "text-loss")}>
-                    {(available - parsedAmount - fee).toFixed(2)}
+                  <span className={cn("text-[14px] font-mono font-semibold", (available - dollarAmount - fee) >= 0 ? "text-gain" : "text-loss")}>
+                    {(available - dollarAmount - fee).toFixed(2)}
                   </span>
                 </div>
               </div>

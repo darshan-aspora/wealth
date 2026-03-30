@@ -3,7 +3,6 @@ import { Roboto_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
 import { AIProvider } from "@/contexts/ai-context";
-import { AIOverlay } from "@/components/ai-overlay";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +41,6 @@ export default function RootLayout({
           <TickerVisibilityProvider>
             <AIProvider>
               {children}
-              <AIOverlay />
             </AIProvider>
           </TickerVisibilityProvider>
         </ThemeProvider>

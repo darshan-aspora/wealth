@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const tabs = ["Pages", "Components"] as const;
+const tabs = ["Pages", "Components", "Archive"] as const;
 type Tab = (typeof tabs)[number];
 
 const pages = [
@@ -29,16 +29,25 @@ const pages = [
     status: "v1",
   },
   {
-    title: "Home v2",
-    description: "Redesigned home screen",
-    href: "/home-v2",
-    status: "v2",
+    title: "Home v3",
+    description: "Home screen iteration",
+    href: "/home-v3",
+    status: "wip",
   },
   {
     title: "Order Flow",
     description: "Stock order placement — buy/sell with swipe",
     href: "/order-flow",
     status: "3 versions",
+  },
+];
+
+const archive = [
+  {
+    title: "Home v2",
+    description: "Redesigned home screen",
+    href: "/home-v2",
+    status: "v2",
   },
 ];
 
@@ -66,6 +75,7 @@ const components = [
 const items: Record<Tab, typeof pages> = {
   Pages: pages,
   Components: components,
+  Archive: archive,
 };
 
 function DirectoryCard({
