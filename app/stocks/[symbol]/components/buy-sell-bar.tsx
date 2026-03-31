@@ -23,12 +23,12 @@ export function BuySellBar({ symbol, onBuy, onSell }: BuySellBarProps) {
             <p className="truncate text-[14px] text-muted-foreground">
               <span className="font-medium text-foreground">{position.shares} shares</span>
               {" · "}
-              <span className="font-mono tabular-nums">${formatPrice(position.marketValue)}</span>
+              <span className="tabular-nums">${formatPrice(position.marketValue)}</span>
             </p>
           ) : (
             <p className="text-[14px] text-muted-foreground">
               Buying Power:{" "}
-              <span className="font-mono tabular-nums text-foreground">
+              <span className="tabular-nums text-foreground">
                 ${buyingPower.toLocaleString("en-US", { minimumFractionDigits: 0 })}
               </span>
             </p>

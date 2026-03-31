@@ -38,7 +38,7 @@ export function StockHero({ ticker }: StockHeroProps) {
             {ticker.name}
           </h1>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="font-mono text-[14px] text-muted-foreground">
+            <span className="text-[14px] text-muted-foreground">
               {ticker.symbol}
             </span>
             {ticker.exchange && (
@@ -56,12 +56,12 @@ export function StockHero({ ticker }: StockHeroProps) {
       {/* Price */}
       <div className="mb-2">
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[36px] font-bold tabular-nums leading-none text-foreground">
+          <span className="text-[36px] font-bold tabular-nums leading-none text-foreground">
             ${formatPrice(ticker.price)}
           </span>
           <span
             className={cn(
-              "font-mono text-[17px] font-semibold tabular-nums",
+              "text-[17px] font-semibold tabular-nums",
               gain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
             )}
           >

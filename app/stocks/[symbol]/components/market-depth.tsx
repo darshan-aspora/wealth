@@ -30,7 +30,7 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
             <div key={i} className="flex items-center gap-2">
               {/* Bid bar (right-aligned) */}
               <div className="flex flex-1 items-center justify-end">
-                <span className="mr-2 font-mono text-[12px] tabular-nums text-muted-foreground">
+                <span className="mr-2 text-[12px] tabular-nums text-muted-foreground">
                   {bid.size.toLocaleString()}
                 </span>
                 <div
@@ -41,12 +41,12 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
 
               {/* Price column */}
               <div className="w-[52px] text-center">
-                <span className="font-mono text-[12px] tabular-nums text-muted-foreground">
+                <span className="text-[12px] tabular-nums text-muted-foreground">
                   {bid.price.toFixed(2)}
                 </span>
               </div>
               <div className="w-[52px] text-center">
-                <span className="font-mono text-[12px] tabular-nums text-muted-foreground">
+                <span className="text-[12px] tabular-nums text-muted-foreground">
                   {ask.price.toFixed(2)}
                 </span>
               </div>
@@ -57,7 +57,7 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
                   className="h-5 rounded-r-sm bg-[hsl(var(--loss))]/20"
                   style={{ width: `${askWidth}%` }}
                 />
-                <span className="ml-2 font-mono text-[12px] tabular-nums text-muted-foreground">
+                <span className="ml-2 text-[12px] tabular-nums text-muted-foreground">
                   {ask.size.toLocaleString()}
                 </span>
               </div>
@@ -76,13 +76,13 @@ export function MarketDepth({ symbol, currentPrice }: MarketDepthProps) {
       <div className="mt-4 rounded-xl border border-border/40 bg-card p-3">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[14px] text-muted-foreground">Bid / Ask</span>
-          <span className="font-mono text-[14px] tabular-nums text-foreground">
+          <span className="text-[14px] tabular-nums text-foreground">
             ${depth.bids[0].price.toFixed(2)} / ${depth.asks[0].price.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[14px] text-muted-foreground">Spread</span>
-          <span className="font-mono text-[14px] tabular-nums text-foreground">
+          <span className="text-[14px] tabular-nums text-foreground">
             ${depth.spread.toFixed(2)} ({depth.spreadPercent}%)
           </span>
         </div>

@@ -199,7 +199,7 @@ function RevenueBarChart({
                 }}
               />
             </div>
-            <span className="w-[60px] shrink-0 text-right font-mono text-[15px] font-medium tabular-nums text-foreground">
+            <span className="w-[60px] shrink-0 text-right text-[15px] font-medium tabular-nums text-foreground">
               {val}{unit}
             </span>
           </div>
@@ -274,7 +274,7 @@ function SegmentBreakdown({
               style={{ backgroundColor: seg.color }}
             />
             <span className="flex-1 text-[15px] text-foreground">{seg.label}</span>
-            <span className="font-mono text-[15px] font-medium tabular-nums text-muted-foreground">
+            <span className="text-[15px] font-medium tabular-nums text-muted-foreground">
               {seg.percent}%
             </span>
           </div>
@@ -333,12 +333,12 @@ function ProfitMetricRow({
     <div className="flex items-center justify-between py-3 border-b border-border/40 last:border-b-0">
       <span className="text-[15px] text-muted-foreground">{label}</span>
       <div className="flex items-center gap-3">
-        <span className="font-mono text-[15px] font-medium tabular-nums text-foreground">
+        <span className="text-[15px] font-medium tabular-nums text-foreground">
           {value}
         </span>
         <span
           className={cn(
-            "font-mono text-[14px] tabular-nums",
+            "text-[14px] tabular-nums",
             isPositive ? "text-gain" : "text-loss",
           )}
         >

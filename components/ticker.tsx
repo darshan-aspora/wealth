@@ -1,25 +1,19 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, Reorder, useDragControls } from "framer-motion";
 import {
   TrendingUp,
   TrendingDown,
   Settings2,
   Check,
   Search,
-  EyeOff,
-  Save,
+  ChevronDown,
+  X,
+  GripVertical,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useTickerVisibility } from "@/components/ticker-visibility";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -67,6 +61,11 @@ export const ALL_TICKERS: TickerItem[] = [
   { symbol: "NFLX", name: "Netflix Inc.", price: 928.84, change: 12.67, changePercent: 1.38, category: "watchlist", type: "Equity", logo: "N", logoColor: "bg-red-700", exchange: "NASDAQ", volume: 5_600_000, marketCap: 401_000_000_000 },
   { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", type: "Equity", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ", volume: 44_200_000, marketCap: 192_000_000_000 },
   { symbol: "INTC", name: "Intel Corp.", price: 22.14, change: -0.68, changePercent: -2.98, category: "watchlist", type: "Equity", logo: "IN", logoColor: "bg-sky-800", exchange: "NASDAQ", volume: 38_900_000, marketCap: 95_000_000_000 },
+  { symbol: "RIVN", name: "Rivian Automotive", price: 14.82, change: 0.54, changePercent: 3.78, category: "watchlist", type: "Equity", logo: "RV", logoColor: "bg-muted", exchange: "NASDAQ", volume: 28_400_000, marketCap: 15_200_000_000 },
+  { symbol: "LCID", name: "Lucid Group Inc.", price: 2.84, change: -0.12, changePercent: -4.05, category: "watchlist", type: "Equity", logo: "LC", logoColor: "bg-muted", exchange: "NASDAQ", volume: 22_100_000, marketCap: 6_500_000_000 },
+  { symbol: "NIO", name: "NIO Inc.", price: 5.62, change: 0.28, changePercent: 5.24, category: "watchlist", type: "Equity", logo: "NI", logoColor: "bg-muted", exchange: "NYSE", volume: 35_800_000, marketCap: 11_200_000_000 },
+  { symbol: "LI", name: "Li Auto Inc.", price: 28.45, change: 1.12, changePercent: 4.10, category: "watchlist", type: "Equity", logo: "LI", logoColor: "bg-muted", exchange: "NASDAQ", volume: 12_600_000, marketCap: 30_800_000_000 },
+  { symbol: "XPEV", name: "XPeng Inc.", price: 18.34, change: -0.67, changePercent: -3.52, category: "watchlist", type: "Equity", logo: "XP", logoColor: "bg-muted", exchange: "NYSE", volume: 9_400_000, marketCap: 17_500_000_000 },
 
   // ETFs (5)
   { symbol: "SPY", name: "SPDR S&P 500 ETF", price: 601.42, change: 2.48, changePercent: 0.41, category: "watchlist", type: "ETF", logo: "SP", logoColor: "bg-amber-700", exchange: "NYSE Arca", volume: 85_000_000, marketCap: 560_000_000_000 },
@@ -77,12 +76,10 @@ export const ALL_TICKERS: TickerItem[] = [
 ];
 
 const DEFAULT_SELECTED = [
-  "SPX", "NDX", "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA",
+  "SPX", "NDX", "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
 ];
 
-const MAX_TICKERS = 10;
-const EDIT_TABS = ["Indices", "Watchlist", "Equities", "ETFs", "Options"] as const;
-type EditTab = (typeof EDIT_TABS)[number];
+const MAX_TICKERS = 8;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -108,26 +105,23 @@ export const isGain = (t: TickerItem) => t.change >= 0;
 
 export function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
   const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
-  const text = size === "sm" ? "text-[11px]" : "text-[12px]";
 
   return (
     <div
       className={cn(
         dim,
-        "shrink-0 rounded-full flex items-center justify-center",
-        ticker.logoColor
+        "shrink-0 rounded-full bg-muted"
       )}
-    >
-      <span className={cn(text, "font-bold text-white leading-none")}>
-        {ticker.logo}
-      </span>
-    </div>
+    />
   );
 }
 
-// ─── Edit Sheet (inline, self-triggering) ────────────────────────────────────
+// ─── Edit Ticker (full-page overlay) ────────────────────────────────────────
 
-function getTabItems(tab: EditTab, localSelected: string[], query: string): TickerItem[] {
+type SearchTab = "All" | "Indices" | "Stocks" | "ETFs" | "Watchlist";
+const SEARCH_TABS: SearchTab[] = ["All", "Indices", "Stocks", "ETFs", "Watchlist"];
+
+function getSearchItems(tab: SearchTab, localSelected: string[], query: string): TickerItem[] {
   const q = query.toLowerCase().trim();
   let items: TickerItem[];
 
@@ -135,20 +129,17 @@ function getTabItems(tab: EditTab, localSelected: string[], query: string): Tick
     case "Indices":
       items = ALL_TICKERS.filter((t) => t.type === "Index");
       break;
-    case "Watchlist":
-      items = ALL_TICKERS.filter((t) => localSelected.includes(t.symbol));
-      break;
-    case "Equities":
+    case "Stocks":
       items = ALL_TICKERS.filter((t) => t.type === "Equity");
       break;
     case "ETFs":
       items = ALL_TICKERS.filter((t) => t.type === "ETF");
       break;
-    case "Options":
-      items = ALL_TICKERS.filter((t) => t.type === "Option");
+    case "Watchlist":
+      items = ALL_TICKERS.filter((t) => localSelected.includes(t.symbol));
       break;
     default:
-      items = [];
+      items = ALL_TICKERS;
   }
 
   if (q) {
@@ -162,6 +153,82 @@ function getTabItems(tab: EditTab, localSelected: string[], query: string): Tick
   return items;
 }
 
+function TickerRow({ ticker, checked, disabled, onToggle }: {
+  ticker: TickerItem;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      disabled={disabled}
+      className={cn(
+        "flex w-full items-center gap-3 px-5 py-3 transition-colors text-left",
+        disabled && !checked && "opacity-40 cursor-not-allowed"
+      )}
+    >
+      <TickerLogo ticker={ticker} />
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] font-medium text-foreground leading-tight truncate">
+          {ticker.name}
+        </p>
+        <p className="text-[13px] text-muted-foreground/50 leading-tight truncate mt-0.5">
+          {ticker.symbol}
+        </p>
+      </div>
+      <div
+        className={cn(
+          "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 transition-all",
+          checked
+            ? "border-foreground bg-foreground"
+            : "border-muted-foreground/25 bg-transparent"
+        )}
+      >
+        {checked && (
+          <Check size={12} className="text-background" strokeWidth={3.5} />
+        )}
+      </div>
+    </button>
+  );
+}
+
+function DraggableTickerRow({
+  symbol,
+  ticker,
+  onRemove,
+}: {
+  symbol: string;
+  ticker: TickerItem;
+  onRemove: () => void;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={symbol}
+      dragListener={false}
+      dragControls={dragControls}
+      className="flex items-center gap-3 bg-background px-5 py-3"
+    >
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="flex h-8 w-8 cursor-grab items-center justify-center touch-none text-muted-foreground/30 active:cursor-grabbing"
+      >
+        <GripVertical size={18} strokeWidth={1.5} />
+      </div>
+      <TickerLogo ticker={ticker} />
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] font-medium text-foreground leading-tight truncate">{ticker.name}</p>
+        <p className="text-[13px] text-muted-foreground/50 leading-tight truncate mt-0.5">{ticker.symbol}</p>
+      </div>
+      <button onClick={onRemove} className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/40 active:text-foreground active:bg-muted/50 transition-colors">
+        <X size={16} strokeWidth={2} />
+      </button>
+    </Reorder.Item>
+  );
+}
+
 export function EditSheet({
   selected,
   onSave,
@@ -173,17 +240,16 @@ export function EditSheet({
 }) {
   const [local, setLocal] = useState<string[]>(selected);
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<EditTab>("Indices");
-  const { hideTicker } = useTickerVisibility();
+  const [activeTab, setActiveTab] = useState<SearchTab>("All");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleOpen = (isOpen: boolean) => {
-    if (isOpen) {
-      setLocal(selected);
-      setQuery("");
-      setActiveTab("Indices");
-    }
-    setOpen(isOpen);
+  const handleOpen = () => {
+    setLocal(selected);
+    setSearching(false);
+    setQuery("");
+    setOpen(true);
   };
 
   const atLimit = local.length >= MAX_TICKERS;
@@ -196,226 +262,185 @@ export function EditSheet({
     });
   };
 
-  const selectAllForTab = () => {
-    const tabItems = getTabItems(activeTab, local, "");
-    setLocal((prev) => {
-      const remaining = MAX_TICKERS - prev.length;
-      const toAdd = tabItems
-        .map((t) => t.symbol)
-        .filter((s) => !prev.includes(s))
-        .slice(0, remaining);
-      return [...prev, ...toAdd];
-    });
-  };
-
-  const deselectAllForTab = () => {
-    const tabItems = getTabItems(activeTab, local, "");
-    const syms = new Set(tabItems.map((t) => t.symbol));
-    setLocal((prev) => prev.filter((s) => !syms.has(s)));
-  };
-
   const save = () => {
     onSave(local);
     setOpen(false);
   };
 
-  const items = useMemo(
-    () => getTabItems(activeTab, local, query),
+  const startSearch = () => {
+    setSearching(true);
+    setQuery("");
+    setActiveTab("All");
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const cancelSearch = () => {
+    setSearching(false);
+    setQuery("");
+  };
+
+  const selectedTickers = useMemo(
+    () => ALL_TICKERS.filter((t) => local.includes(t.symbol)),
+    [local]
+  );
+
+  const searchItems = useMemo(
+    () => getSearchItems(activeTab, local, query),
     [activeTab, local, query]
   );
 
-  const tabAllSelected = useMemo(() => {
-    if (activeTab === "Watchlist") return false;
-    const tabItems = getTabItems(activeTab, local, "");
-    return tabItems.length > 0 && tabItems.every((t) => local.includes(t.symbol));
-  }, [activeTab, local]);
+  if (!open) {
+    return <div onClick={handleOpen}>{trigger}</div>;
+  }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpen}>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent
-        side="bottom"
-        className="mx-auto max-w-[430px] rounded-t-2xl border-border/60 bg-background px-0 pb-8"
-      >
-        <SheetHeader className="flex-row items-center justify-between px-5 pb-0 border-0">
-          <SheetTitle className="text-[18px] font-semibold">
-            Edit Ticker
-          </SheetTitle>
-          {local.length > 0 && (
-            <button
-              onClick={() => setLocal([])}
-              className="text-[14px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
-            >
-              Unselect all
-            </button>
-          )}
-        </SheetHeader>
+    <div className="fixed inset-0 z-[60] mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+        <button
+          onClick={() => setOpen(false)}
+          className="text-[15px] font-medium text-muted-foreground"
+        >
+          Cancel
+        </button>
+        <h2 className="text-[17px] font-semibold text-foreground">Edit Ticker</h2>
+        <button
+          onClick={startSearch}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground active:bg-muted/50 transition-colors"
+        >
+          <Plus size={20} strokeWidth={2} />
+        </button>
+      </div>
 
-        {/* Search */}
-        <div className="px-5 pt-3 pb-2">
-          <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-secondary/40 px-3 py-2.5 transition-colors focus-within:border-muted-foreground/40 focus-within:bg-secondary/60">
-            <Search
-              size={17}
-              className="shrink-0 text-muted-foreground/60"
-            />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search stocks, ETFs..."
-              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 pb-2">
-          {EDIT_TABS.map((tab) => {
-            const isActive = tab === activeTab;
-            return (
+      {/* Search overlay */}
+      {searching && (
+        <div className="absolute inset-0 z-30 flex flex-col">
+          {/* Dark backdrop */}
+          <div className="absolute inset-0 bg-black/50" onClick={cancelSearch} />
+
+          {/* Search panel — positioned to align search bar with dummy button */}
+          <div className="relative flex flex-col max-h-[70vh] rounded-2xl bg-background shadow-xl overflow-hidden" style={{ marginTop: 20, marginLeft: 20, marginRight: 20 }}>
+            {/* Search input — same px-5 and inner px-4 py-2.5 as dummy */}
+            <div className="flex items-center gap-2 px-5 pt-3 pb-2 shrink-0">
+              <div className="flex-1 flex items-center rounded-full bg-muted/50 px-4 py-2.5">
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search stocks, indices, ETFs..."
+                  className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground/40"
+                />
+                {query && (
+                  <button
+                    onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+                    className="ml-2 text-muted-foreground/40"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                )}
+              </div>
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "relative shrink-0 rounded-full px-3.5 py-2 text-[14px] font-medium transition-colors",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground/70"
-                )}
+                onClick={cancelSearch}
+                className="shrink-0 text-[14px] font-medium text-muted-foreground active:text-foreground"
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="edit-sheet-tab"
-                    className="absolute inset-0 rounded-full bg-muted/70"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <span className="relative z-10">{tab}</span>
+                Cancel
               </button>
-            );
-          })}
-        </div>
-
-        <div className="h-px bg-border/60 relative z-10" />
-
-        {/* Tab header — select/deselect all for non-Watchlist tabs */}
-        {activeTab !== "Watchlist" && items.length > 0 && !query && (
-          <div className="flex items-center justify-between px-5 pt-2.5 pb-1">
-            <span className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {activeTab}
-            </span>
-            <button
-              onClick={() => (tabAllSelected ? deselectAllForTab() : selectAllForTab())}
-              className="text-[13px] font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
-            >
-              {tabAllSelected ? "Deselect all" : "Select all"}
-            </button>
-          </div>
-        )}
-
-        <div className="max-h-[45vh] overflow-y-auto no-scrollbar px-5">
-          {items.length === 0 && (
-            <div className="py-8 text-center">
-              <p className="text-[15px] text-muted-foreground">
-                {query
-                  ? <>No results for &ldquo;{query}&rdquo;</>
-                  : activeTab === "Watchlist"
-                    ? "No tickers selected yet"
-                    : activeTab === "Options"
-                      ? "Coming soon"
-                      : "No items"}
-              </p>
             </div>
-          )}
 
-          <div className="space-y-0.5">
-            {items.map((ticker) => {
-              const checked = local.includes(ticker.symbol);
-              const disabled = !checked && atLimit;
-              return (
-                <button
-                  key={ticker.symbol}
-                  onClick={() => toggle(ticker.symbol)}
-                  disabled={disabled}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors text-left",
-                    checked
-                      ? "bg-secondary/50"
-                      : disabled
-                        ? "opacity-40 cursor-not-allowed"
-                        : "hover:bg-secondary/25"
-                  )}
-                >
-                  {/* Checkbox */}
-                  <div
+            {/* Tabs */}
+            <div className="no-scrollbar flex gap-1 overflow-x-auto px-4 pb-2 shrink-0">
+              {SEARCH_TABS.map((tab) => {
+                const isActive = tab === activeTab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
                     className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 transition-all",
-                      checked
-                        ? "border-foreground bg-foreground"
-                        : "border-muted-foreground/25 bg-transparent"
+                      "relative shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
+                      isActive ? "text-foreground" : "text-muted-foreground"
                     )}
                   >
-                    {checked && (
-                      <Check size={12} className="text-background" strokeWidth={3.5} />
+                    {isActive && (
+                      <motion.div
+                        layoutId="edit-search-tab"
+                        className="absolute inset-0 rounded-full bg-muted/70"
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      />
                     )}
-                  </div>
+                    <span className="relative z-10">{tab}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-                  {/* Logo */}
-                  <TickerLogo ticker={ticker} />
+            <div className="h-px bg-border/30 shrink-0" />
 
-                  {/* Name + Symbol:Exchange */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-medium text-foreground leading-tight truncate">
-                      {ticker.name}
-                    </p>
-                    <p className="text-[13px] text-muted-foreground leading-tight truncate mt-0.5">
-                      {ticker.symbol}
-                      {ticker.exchange && (
-                        <span className="text-muted-foreground/40"> : {ticker.exchange}</span>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Price + Change */}
-                  <div className="shrink-0 text-right">
-                    <p className="text-[15px] font-semibold text-foreground tabular-nums leading-tight">
-                      {formatPrice(ticker.price)}
-                    </p>
-                    <p
-                      className={cn(
-                        "text-[13px] font-medium tabular-nums leading-tight mt-0.5",
-                        isGain(ticker) ? "text-gain" : "text-loss"
-                      )}
-                    >
-                      {formatPercent(ticker.changePercent)}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+            {/* Results */}
+            <div className="no-scrollbar overflow-y-auto">
+              {searchItems.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <p className="text-[14px] text-muted-foreground/40">
+                    {query ? `No results for "${query}"` : "No items"}
+                  </p>
+                </div>
+              ) : (
+                searchItems.slice(0, 8).map((ticker) => {
+                  const checked = local.includes(ticker.symbol);
+                  return (
+                    <TickerRow
+                      key={ticker.symbol}
+                      ticker={ticker}
+                      checked={checked}
+                      disabled={!checked && atLimit}
+                      onToggle={() => toggle(ticker.symbol)}
+                    />
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="flex gap-3 px-5 pt-4">
-          <button
-            onClick={() => {
-              hideTicker();
-              setOpen(false);
-            }}
-            className="shrink-0 flex items-center gap-2 rounded-xl px-5 py-3.5 text-[15px] font-semibold text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground active:scale-[0.98]"
-          >
-            <EyeOff size={16} />
-            Hide
-          </button>
-          <button
-            onClick={save}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-foreground py-3.5 text-[16px] font-semibold text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
-          >
-            <Save size={16} />
-            Save {local.length} of {MAX_TICKERS}
-          </button>
-        </div>
-      </SheetContent>
-    </Sheet>
+      <div className="h-px bg-border/40 shrink-0" />
+
+      {/* Selected tickers — draggable */}
+      <div className="flex-1 no-scrollbar overflow-y-auto">
+        {selectedTickers.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-[15px] text-muted-foreground/40">No tickers selected</p>
+          </div>
+        ) : (
+          <>
+            <Reorder.Group axis="y" values={local} onReorder={setLocal}>
+              {local.map((symbol) => {
+                const ticker = selectedTickers.find((t) => t.symbol === symbol);
+                if (!ticker) return null;
+                return (
+                  <DraggableTickerRow
+                    key={symbol}
+                    symbol={symbol}
+                    ticker={ticker}
+                    onRemove={() => toggle(symbol)}
+                  />
+                );
+              })}
+            </Reorder.Group>
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-border/40 shrink-0">
+        <button
+          onClick={save}
+          className="w-full flex items-center justify-center rounded-xl bg-foreground py-3 text-[15px] font-semibold text-background transition-opacity active:opacity-80"
+        >
+          Save
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -589,10 +614,99 @@ export function TickerMarqueeAuto() {
 // ─── VARIATION 1b: Draggable Tape (ACTIVE) ──────────────────────────────────
 // User drags left/right. Background matches current theme (white/black).
 
+// ── Ticker Expand Sheet (top sheet with full list) ────────────────────────────
+
+function TickerExpandSheet({
+  tickers,
+  selected,
+  onSave,
+  open,
+  onClose,
+}: {
+  tickers: TickerItem[];
+  selected: string[];
+  onSave: (next: string[]) => void;
+  open: boolean;
+  onClose: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 mx-auto max-w-[430px]">
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Content — auto height */}
+      <motion.div
+        initial={{ y: "-100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "-100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="relative flex flex-col rounded-b-2xl bg-background shadow-xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted/50"
+          >
+            <X size={20} strokeWidth={2} />
+          </button>
+          <h2 className="text-[17px] font-semibold text-foreground">My Ticker</h2>
+          <EditSheet
+            selected={selected}
+            onSave={onSave}
+            trigger={
+              <button className="text-[14px] font-medium text-muted-foreground active:text-foreground transition-colors">
+                Customise
+              </button>
+            }
+          />
+        </div>
+
+        <div className="h-px bg-border/40 shrink-0" />
+
+        {/* Ticker list */}
+        <div>
+          {tickers.map((t) => {
+            const gain = isGain(t);
+            return (
+              <div key={t.symbol} className="flex items-center gap-3 px-5 py-3.5">
+                <TickerLogo ticker={t} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-foreground leading-tight truncate">{t.name}</p>
+                  <p className="text-[13px] text-muted-foreground/50 leading-tight mt-0.5">{t.symbol}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[15px] font-semibold tabular-nums text-foreground leading-tight">
+                    {formatPrice(t.price)}
+                  </p>
+                  <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                    <span className={cn("text-[13px] tabular-nums font-medium", gain ? "text-gain" : "text-loss")}>
+                      {formatChange(t.change)}
+                    </span>
+                    <span className={cn("text-[13px] tabular-nums font-medium", gain ? "text-gain" : "text-loss")}>
+                      ({formatPercent(t.changePercent)})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bottom padding + rounded corner */}
+        <div className="h-3 shrink-0" />
+      </motion.div>
+    </div>
+  );
+}
+
 export function TickerMarquee() {
   const { tickerVisible } = useTickerVisibility();
   const { selected, setSelected, tickers } = useTickerState();
   const liveTickers = useLiveTickers(tickers);
+  const [expanded, setExpanded] = useState(false);
 
   if (!tickerVisible) return null;
 
@@ -617,41 +731,51 @@ export function TickerMarquee() {
   }
 
   return (
-    <div className="border-b border-border/40">
-      <div className="overflow-x-auto no-scrollbar">
-        <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-1 pb-4 font-mono">
-          {liveTickers.map((t) => (
-            <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
-              <span className="font-semibold text-foreground">{t.symbol}</span>
-              {" "}
-              <span className="tabular-nums font-medium text-muted-foreground">
-                {formatPrice(t.price)}
-              </span>
-              {" "}
-              <span
-                className={cn(
-                  "tabular-nums font-semibold",
-                  isGain(t) ? "text-gain" : "text-loss"
-                )}
-              >
-                {formatPercent(t.changePercent)}
-              </span>
-            </span>
-          ))}
+    <>
+      <div className="border-b border-border/40">
+        <div className="flex items-center">
+          <div className="overflow-x-auto no-scrollbar flex-1">
+            <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-1 pb-4">
+              {liveTickers.map((t) => (
+                <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
+                  <span className="font-semibold text-foreground">{t.symbol}</span>
+                  {" "}
+                  <span className="tabular-nums font-medium text-muted-foreground">
+                    {formatPrice(t.price)}
+                  </span>
+                  {" "}
+                  <span
+                    className={cn(
+                      "tabular-nums font-semibold",
+                      isGain(t) ? "text-gain" : "text-loss"
+                    )}
+                  >
+                    {formatPercent(t.changePercent)}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
 
-          {/* Edit button — at end of scroll */}
-          <EditSheet
-            selected={selected}
-            onSave={setSelected}
-            trigger={
-              <button className="shrink-0 text-muted-foreground transition-colors hover:text-foreground">
-                <Settings2 size={16} strokeWidth={1.8} />
-              </button>
-            }
-          />
+          {/* Expand button */}
+          <button
+            onClick={() => setExpanded(true)}
+            className="shrink-0 pr-4 pl-2 pb-3 pt-1 text-muted-foreground/40 active:text-muted-foreground transition-colors"
+          >
+            <ChevronDown size={16} strokeWidth={2} />
+          </button>
         </div>
       </div>
-    </div>
+
+      {/* Expand sheet */}
+      <TickerExpandSheet
+        tickers={liveTickers}
+        selected={selected}
+        onSave={setSelected}
+        open={expanded}
+        onClose={() => setExpanded(false)}
+      />
+    </>
   );
 }
 

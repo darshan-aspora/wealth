@@ -121,7 +121,7 @@ export function EarningsCalendar() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[13px] font-semibold tabular-nums text-foreground">
+                <div className="text-[13px] font-semibold tabular-nums text-foreground">
                   {c.epsEstimate}
                 </div>
                 <div className="text-[10px] font-medium text-muted-foreground">

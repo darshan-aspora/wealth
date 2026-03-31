@@ -65,7 +65,7 @@ export function Technicals({ symbol }: TechnicalsProps) {
           <div className="rounded-xl border border-[hsl(var(--gain))]/20 bg-[hsl(var(--gain))]/[0.03] p-3">
             <p className="mb-1 text-[12px] uppercase tracking-wider text-muted-foreground">Support</p>
             {data.keyLevels.support.map((level) => (
-              <p key={level} className="font-mono text-[15px] font-medium tabular-nums text-[hsl(var(--gain))]">
+              <p key={level} className="text-[15px] font-medium tabular-nums text-[hsl(var(--gain))]">
                 ${formatPrice(level)}
               </p>
             ))}
@@ -73,7 +73,7 @@ export function Technicals({ symbol }: TechnicalsProps) {
           <div className="rounded-xl border border-[hsl(var(--loss))]/20 bg-[hsl(var(--loss))]/[0.03] p-3">
             <p className="mb-1 text-[12px] uppercase tracking-wider text-muted-foreground">Resistance</p>
             {data.keyLevels.resistance.map((level) => (
-              <p key={level} className="font-mono text-[15px] font-medium tabular-nums text-[hsl(var(--loss))]">
+              <p key={level} className="text-[15px] font-medium tabular-nums text-[hsl(var(--loss))]">
                 ${formatPrice(level)}
               </p>
             ))}

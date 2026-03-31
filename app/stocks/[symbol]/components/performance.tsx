@@ -56,7 +56,7 @@ export function Performance({ symbol }: PerformanceProps) {
               <div key={r.period} className="flex flex-1 flex-col items-center gap-1">
                 <span
                   className={cn(
-                    "font-mono text-[13px] font-medium tabular-nums",
+                    "text-[13px] font-medium tabular-nums",
                     positive ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
                   )}
                 >
@@ -124,10 +124,10 @@ function RangeSlider({
         />
       </div>
       <div className="flex justify-between">
-        <span className="font-mono text-[13px] tabular-nums text-muted-foreground">
+        <span className="text-[13px] tabular-nums text-muted-foreground">
           {formatPrice(low)}
         </span>
-        <span className="font-mono text-[13px] tabular-nums text-muted-foreground">
+        <span className="text-[13px] tabular-nums text-muted-foreground">
           {formatPrice(high)}
         </span>
       </div>

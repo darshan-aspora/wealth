@@ -63,12 +63,12 @@ export function StockHeader({
         <span className="text-[15px] font-semibold text-foreground">
           {ticker.symbol}
         </span>
-        <span className="font-mono text-[15px] font-semibold tabular-nums text-foreground">
+        <span className="text-[15px] font-semibold tabular-nums text-foreground">
           ${formatPrice(ticker.price)}
         </span>
         <span
           className={cn(
-            "font-mono text-[13px] font-medium tabular-nums",
+            "text-[13px] font-medium tabular-nums",
             gain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
           )}
         >

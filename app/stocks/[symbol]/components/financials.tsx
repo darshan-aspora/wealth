@@ -132,7 +132,7 @@ function BarSection({
                   transition={{ type: "spring", stiffness: 300, damping: 25, delay: i * 0.08 }}
                 />
               </div>
-              <span className="w-[56px] shrink-0 text-right font-mono text-[14px] font-medium tabular-nums text-foreground">
+              <span className="w-[56px] shrink-0 text-right text-[14px] font-medium tabular-nums text-foreground">
                 ${val}{unit}
               </span>
             </div>

@@ -53,13 +53,13 @@ export function Ownership({ symbol }: OwnershipProps) {
               <div key={holder.name} className="flex items-center justify-between">
                 <span className="text-[15px] text-foreground">{holder.name}</span>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[14px] tabular-nums text-foreground">
+                  <span className="text-[14px] tabular-nums text-foreground">
                     {holder.percent}%
                   </span>
                   {!flat && (
                     <span
                       className={cn(
-                        "flex items-center gap-0.5 font-mono text-[13px] tabular-nums",
+                        "flex items-center gap-0.5 text-[13px] tabular-nums",
                         positive ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
                       )}
                     >

@@ -78,7 +78,7 @@ const vixColumns: TableColumn<VixRow>[] = [
     key: "last",
     label: "Level",
     align: "right",
-    render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last.toFixed(2)}</span>,
+    render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last.toFixed(2)}</span>,
   },
   {
     key: "sentiment",

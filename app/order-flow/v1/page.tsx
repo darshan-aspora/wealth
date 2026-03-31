@@ -144,7 +144,7 @@ export default function OrderFlowV1() {
             <span className="text-[17px] font-semibold text-foreground leading-tight">
               {stock.name}
             </span>
-            <span className="text-[14px] font-mono text-muted-foreground leading-tight">
+            <span className="text-[14px] text-muted-foreground leading-tight">
               {stock.price.toFixed(2)}{" "}
               <span className="text-gain">+{stock.changePercent.toFixed(2)}%</span>
             </span>
@@ -212,14 +212,14 @@ export default function OrderFlowV1() {
             </button>
             <div className="flex items-baseline justify-end">
               {amountMode === "dollars" && (
-                <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
               )}
               <input
                 type="text"
                 inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                className="bg-transparent font-mono text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
+                className="bg-transparent text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
                 style={{ width: `${Math.max(amount.length, 1)}ch` }}
               />
             </div>
@@ -242,13 +242,13 @@ export default function OrderFlowV1() {
               <div className="flex items-center justify-between">
                 <span className="text-[15px] text-muted-foreground">Limit Price</span>
                 <div className="flex items-baseline justify-end">
-                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                  <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={limitPrice}
                     onChange={(e) => setLimitPrice(e.target.value.replace(/[^0-9.]/g, ""))}
-                    className="bg-transparent font-mono text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
+                    className="bg-transparent text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
                     style={{ width: `${Math.max(limitPrice.length, 1)}ch` }}
                   />
                 </div>
@@ -259,13 +259,13 @@ export default function OrderFlowV1() {
               <div className="flex items-center justify-between">
                 <span className="text-[15px] text-muted-foreground">Trigger Price</span>
                 <div className="flex items-baseline justify-end">
-                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                  <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={triggerPrice}
                     onChange={(e) => setTriggerPrice(e.target.value.replace(/[^0-9.]/g, ""))}
-                    className="bg-transparent font-mono text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
+                    className="bg-transparent text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
                     style={{ width: `${Math.max(triggerPrice.length, 1)}ch` }}
                   />
                 </div>
@@ -285,13 +285,13 @@ export default function OrderFlowV1() {
                   <span className="text-[15px] text-muted-foreground">At Market</span>
                 ) : (
                   <div className="flex items-baseline justify-end">
-                    <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                    <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={gtcLimitPrice}
                       onChange={(e) => setGtcLimitPrice(e.target.value.replace(/[^0-9.]/g, ""))}
-                      className="bg-transparent font-mono text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
+                      className="bg-transparent text-[20px] font-semibold text-foreground tabular-nums outline-none text-right"
                       style={{ width: `${Math.max(gtcLimitPrice.length, 1)}ch` }}
                     />
                   </div>
@@ -353,7 +353,7 @@ export default function OrderFlowV1() {
           <div className="flex items-center justify-between mb-3">
             <span className="text-[14px] text-muted-foreground">
               Amount{" "}
-              <span className="font-mono font-semibold text-foreground">
+              <span className="font-semibold text-foreground">
                 {parsedAmount.toFixed(0)}
               </span>
               <span className="text-muted-foreground/50"> + {fee.toFixed(2)}</span>
@@ -361,7 +361,7 @@ export default function OrderFlowV1() {
             <div className="flex items-center gap-1.5">
               <span className="text-[14px] text-muted-foreground">
                 Avail.{" "}
-                <span className="font-mono font-semibold text-foreground">
+                <span className="font-semibold text-foreground">
                   {available.toFixed(2)}
                 </span>
               </span>

@@ -134,7 +134,7 @@ function CaseCard({
         </span>
       </div>
       {target !== undefined && (
-        <p className={cn("mb-1.5 font-mono text-[18px] font-bold tabular-nums", config.priceColor)}>
+        <p className={cn("mb-1.5 text-[18px] font-bold tabular-nums", config.priceColor)}>
           ${target}
         </p>
       )}

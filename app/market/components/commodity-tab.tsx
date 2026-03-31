@@ -80,7 +80,7 @@ const commodityColumns: TableColumn<CommodityRow>[] = [
     key: "last",
     label: "Last Price",
     align: "right",
-    render: (r) => <span className="font-mono tabular-nums text-foreground">{r.last}</span>,
+    render: (r) => <span className="tabular-nums text-foreground">{r.last}</span>,
   },
   {
     key: "change",
@@ -99,7 +99,7 @@ const commodityColumns: TableColumn<CommodityRow>[] = [
     label: "Day Range",
     align: "right",
     render: (r) => (
-      <span className="text-[12px] text-muted-foreground font-mono tabular-nums">{r.dayRange}</span>
+      <span className="text-[12px] text-muted-foreground tabular-nums">{r.dayRange}</span>
     ),
   },
 ];

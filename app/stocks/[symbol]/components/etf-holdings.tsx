@@ -34,7 +34,7 @@ export function ETFHoldings({ symbol }: ETFHoldingsProps) {
               <p className="text-[13px] text-muted-foreground">{etf.name}</p>
             </div>
             <div className="text-right">
-              <p className="font-mono text-[15px] font-medium tabular-nums text-foreground">
+              <p className="text-[15px] font-medium tabular-nums text-foreground">
                 {etf.weight}%
               </p>
               <p className="text-[12px] text-muted-foreground">weight</p>

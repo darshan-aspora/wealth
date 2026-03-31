@@ -7,7 +7,7 @@ import { UK_TOP_INDICES, type PerformanceRow } from "../data";
 
 const indexColumns: TableColumn<PerformanceRow>[] = [
   { key: "name", label: "Name", align: "left", frozen: true, width: 200, render: (r) => <span className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</span> },
-  { key: "last", label: "Level", align: "right", render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> },
+  { key: "last", label: "Level", align: "right", render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> },
   { key: "today", label: "Today", align: "right", render: (r) => <PctCell value={r.today} /> },
   { key: "5d", label: "5 Days", align: "right", render: (r) => <PctCell value={r.fiveDays} /> },
   { key: "1m", label: "1 Month", align: "right", render: (r) => <PctCell value={r.oneMonth} /> },

@@ -209,12 +209,12 @@ export default function SetAlertPage() {
             <span className="text-[13px] text-muted-foreground font-medium">{symbol}</span>
           </div>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="font-mono text-[17px] font-bold tabular-nums text-foreground">
+            <span className="text-[17px] font-bold tabular-nums text-foreground">
               {formatPrice(ticker.price)}
             </span>
             <span
               className={cn(
-                "font-mono text-[13px] font-medium tabular-nums",
+                "text-[13px] font-medium tabular-nums",
                 gain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]"
               )}
             >
@@ -260,7 +260,7 @@ export default function SetAlertPage() {
                     variant="outline"
                     onClick={() => togglePercentAlert(v)}
                     className={cn(
-                      "flex-1 justify-center rounded-full px-1.5 py-2 cursor-pointer text-[12px] font-semibold font-mono tabular-nums transition-all border",
+                      "flex-1 justify-center rounded-full px-1.5 py-2 cursor-pointer text-[12px] font-semibold tabular-nums transition-all border",
                       isActive
                         ? activeStyles
                         : "bg-muted/30 text-foreground/60 border-transparent"
@@ -288,7 +288,7 @@ export default function SetAlertPage() {
           <CardHeader className="p-4 flex-row items-center justify-between space-y-0">
             <CardTitle className="text-[17px]">Active Alerts</CardTitle>
             {alerts.length > 0 && (
-              <Badge variant="outline" className="rounded-full text-[13px] font-mono tabular-nums px-2.5">
+              <Badge variant="outline" className="rounded-full text-[13px] tabular-nums px-2.5">
                 {alerts.length}
               </Badge>
             )}
@@ -358,7 +358,7 @@ export default function SetAlertPage() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={formatPrice(ticker.price)}
               autoFocus
-              className="h-auto border-0 bg-transparent text-center font-mono text-[40px] font-bold tabular-nums text-foreground shadow-none ring-0 focus-visible:ring-0 placeholder:text-muted-foreground/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="h-auto border-0 bg-transparent text-center text-[40px] font-bold tabular-nums text-foreground shadow-none ring-0 focus-visible:ring-0 placeholder:text-muted-foreground/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <Separator className="w-48 my-2 bg-border/50" />
             <p className="text-center text-[13px] text-muted-foreground/40">

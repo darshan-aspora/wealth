@@ -63,7 +63,7 @@ const forexColumns: TableColumn<ForexRow>[] = [
   },
   {
     key: "last", label: "Last Price", align: "right",
-    render: (r) => <span className="font-mono tabular-nums font-semibold text-foreground">{r.last}</span>,
+    render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last}</span>,
   },
   {
     key: "change", label: "Change", align: "right",
@@ -75,11 +75,11 @@ const forexColumns: TableColumn<ForexRow>[] = [
   },
   {
     key: "dayRange", label: "Day Range", align: "right",
-    render: (r) => <span className="text-[12px] font-mono tabular-nums text-muted-foreground">{r.dayRange}</span>,
+    render: (r) => <span className="text-[12px] tabular-nums text-muted-foreground">{r.dayRange}</span>,
   },
   {
     key: "spread", label: "Spread", align: "right",
-    render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.spread}</span>,
+    render: (r) => <span className="tabular-nums text-muted-foreground">{r.spread}</span>,
   },
 ];
 

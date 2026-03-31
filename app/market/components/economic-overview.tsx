@@ -40,13 +40,13 @@ export function EconomicOverview({ data }: EconomicOverviewProps) {
                 <td className="sticky left-0 z-[2] bg-card shadow-[2px_0_8px_rgba(0,0,0,0.12)] whitespace-nowrap px-3 text-[14px] font-semibold text-foreground" style={{ minWidth: 150 }}>
                   {item.label}
                 </td>
-                <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] font-semibold tabular-nums text-foreground">
+                <td className="whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums text-foreground">
                   {item.value}
                 </td>
                 <td className="whitespace-nowrap px-3 text-right">
                   <span
                     className={cn(
-                      "font-mono text-[13px] font-medium tabular-nums",
+                      "text-[13px] font-medium tabular-nums",
                       item.badge.direction === "up" && "text-gain",
                       item.badge.direction === "down" && "text-loss",
                       item.badge.direction === "neutral" && "text-muted-foreground"
@@ -55,7 +55,7 @@ export function EconomicOverview({ data }: EconomicOverviewProps) {
                     {item.badge.text}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                <td className="whitespace-nowrap px-3 text-right text-[13px] tabular-nums text-muted-foreground">
                   {item.previous}
                 </td>
                 <td className="whitespace-nowrap px-3 text-right text-[13px] text-muted-foreground">

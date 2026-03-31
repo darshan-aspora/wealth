@@ -37,12 +37,12 @@ export function SimilarStocks({ symbol }: SimilarStocksProps) {
             >
               <TickerLogo ticker={t} size="sm" />
               <span className="text-[14px] font-semibold text-foreground">{t.symbol}</span>
-              <span className="font-mono text-[14px] tabular-nums text-foreground">
+              <span className="text-[14px] tabular-nums text-foreground">
                 ${formatPrice(t.price)}
               </span>
               <span
                 className={cn(
-                  "font-mono text-[13px] tabular-nums",
+                  "text-[13px] tabular-nums",
                   gain ? "text-[hsl(var(--gain))]" : "text-[hsl(var(--loss))]",
                 )}
               >

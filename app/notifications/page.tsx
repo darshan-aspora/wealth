@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Settings,
   Bell,
   TrendingUp,
-  AlertTriangle,
-  Target,
-  Zap,
+  ShieldAlert,
+  Crosshair,
+  BarChart3,
+  CircleCheck,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
@@ -19,7 +20,7 @@ import { Button } from "@/components/ui/button";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type NotifIcon = "movers" | "price" | "stoploss" | "target" | "earnings";
+type NotifIcon = "movers" | "price" | "stoploss" | "target" | "earnings" | "order";
 
 interface StockBullet {
   symbol: string;
@@ -80,6 +81,13 @@ const NOTIFICATIONS: Notification[] = [
   },
   {
     id: "n4",
+    icon: "order",
+    title: "Buy order executed — AAPL x 10 at 227.63",
+    time: "1h",
+    read: true,
+  },
+  {
+    id: "n4b",
     icon: "target",
     title: "MSFT reached target at 430.00",
     time: "2h",
@@ -105,34 +113,29 @@ const NOTIFICATIONS: Notification[] = [
 /*  Icon helper                                                        */
 /* ------------------------------------------------------------------ */
 
-function NotifIconEl({ type, read }: { type: NotifIcon; read: boolean }) {
-  const base = cn(
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-    read ? "bg-muted/30" : "bg-foreground/[0.07]"
-  );
-  const iconClass = read ? "text-muted-foreground/40" : "text-foreground/50";
-  const size = 17;
-  const sw = 1.8;
+const NOTIF_ICONS: Record<NotifIcon, LucideIcon> = {
+  movers: TrendingUp,
+  price: Bell,
+  stoploss: ShieldAlert,
+  target: Crosshair,
+  earnings: BarChart3,
+  order: CircleCheck,
+};
 
-  switch (type) {
-    case "movers":
-      return <div className={base}><TrendingUp size={size} strokeWidth={sw} className={iconClass} /></div>;
-    case "price":
-      return <div className={base}><Bell size={size} strokeWidth={sw} className={iconClass} /></div>;
-    case "stoploss":
-      return <div className={base}><AlertTriangle size={size} strokeWidth={sw} className={iconClass} /></div>;
-    case "target":
-      return <div className={base}><Target size={size} strokeWidth={sw} className={iconClass} /></div>;
-    case "earnings":
-      return <div className={base}><Zap size={size} strokeWidth={sw} className={iconClass} /></div>;
-  }
+function NotifIconEl({ type }: { type: NotifIcon }) {
+  const Icon = NOTIF_ICONS[type];
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/60">
+      <Icon size={18} strokeWidth={1.6} className="text-muted-foreground" />
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
 /*  Stock badge (borrowed from watchlist AI summary)                    */
 /* ------------------------------------------------------------------ */
 
-function StockBulletRow({ bullet, read }: { bullet: StockBullet; read: boolean }) {
+function StockBulletRow({ bullet }: { bullet: StockBullet }) {
   const router = useRouter();
   const gain = bullet.change !== undefined ? bullet.change >= 0 : null;
 
@@ -144,10 +147,7 @@ function StockBulletRow({ bullet, read }: { bullet: StockBullet; read: boolean }
       }}
       className="flex items-center gap-2 cursor-pointer active:opacity-70"
     >
-      <span className={cn(
-        "text-[14px] font-medium",
-        read ? "text-foreground/50" : "text-foreground/70"
-      )}>
+      <span className="text-[14px] font-medium text-foreground/70">
         {bullet.name}
       </span>
 
@@ -183,38 +183,29 @@ function NotificationRow({ notif, index }: { notif: Notification; index: number 
         const symbol = notif.bullets?.[0]?.symbol;
         if (symbol) router.push(`/stocks/${symbol}`);
       }}
-      className={cn(
-        "flex gap-3 px-5 py-5 cursor-pointer active:bg-muted/20 transition-colors",
-        !notif.read && "bg-foreground/[0.02]"
-      )}
+      className="flex gap-3 px-5 py-5 cursor-pointer active:bg-muted/20 transition-colors"
     >
       {/* Icon — vertically centered with first line of title */}
       <div className="flex h-[22px] items-center pt-px">
-        <NotifIconEl type={notif.icon} read={notif.read} />
+        <NotifIconEl type={notif.icon} />
       </div>
 
       <div className="min-w-0 flex-1">
         {/* Title row */}
         <div className="flex items-center gap-2">
-          <p className={cn(
-            "flex-1 text-[15px] leading-[22px]",
-            !notif.read ? "font-semibold text-foreground" : "font-medium text-foreground/55"
-          )}>
+          <p className="flex-1 text-[15px] leading-[22px] font-medium text-foreground">
             {notif.title}
           </p>
           <span className="shrink-0 text-[12px] text-muted-foreground/35 tabular-nums">
             {notif.time}
           </span>
-          {!notif.read && (
-            <div className="h-2 w-2 shrink-0 rounded-full bg-foreground/50" />
-          )}
         </div>
 
         {/* Stock bullet rows */}
         {notif.bullets && notif.bullets.length > 0 && (
           <div className="mt-2 flex flex-col gap-1.5">
             {notif.bullets.map((b) => (
-              <StockBulletRow key={b.symbol} bullet={b} read={notif.read} />
+              <StockBulletRow key={b.symbol} bullet={b} />
             ))}
           </div>
         )}
@@ -230,7 +221,6 @@ function NotificationRow({ notif, index }: { notif: Notification; index: number 
 export default function NotificationsPage() {
   const router = useRouter();
 
-  const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
   const todayNotifs = NOTIFICATIONS.filter((n) => n.time !== "Yesterday");
   const yesterdayNotifs = NOTIFICATIONS.filter((n) => n.time === "Yesterday");
 
@@ -249,15 +239,8 @@ export default function NotificationsPage() {
           <ArrowLeft size={22} strokeWidth={2} />
         </Button>
         <div className="flex-1">
-          <h1 className="text-[20px] font-bold text-foreground">Notifications</h1>
+          <h1 className="text-[19px] font-semibold text-foreground">Notifications</h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-full text-muted-foreground"
-        >
-          <Settings size={19} strokeWidth={1.8} />
-        </Button>
       </header>
 
       {/* Content */}

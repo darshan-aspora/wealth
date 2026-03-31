@@ -117,7 +117,7 @@ function DarkTicker({ selected, onSave }: { selected: string[]; onSave: (next: s
   return (
     <div className="relative flex items-center">
       <div className="flex-1 overflow-x-auto no-scrollbar">
-        <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-4 pb-3 font-mono">
+        <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-4 pb-3">
           {liveTickers.map((t) => {
             const gain = isGain(t);
             return (

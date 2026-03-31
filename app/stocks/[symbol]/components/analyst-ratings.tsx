@@ -97,7 +97,7 @@ export function AnalystRatings({ symbol }: AnalystRatingsProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-[14px] font-medium tabular-nums text-foreground">
+                  <p className="text-[14px] font-medium tabular-nums text-foreground">
                     ${call.target}
                   </p>
                   <p className="text-[12px] text-muted-foreground">{call.date}</p>
@@ -141,11 +141,11 @@ function PriceTargetSlider({
         />
       </div>
       <div className="flex justify-between">
-        <span className="font-mono text-[13px] tabular-nums text-muted-foreground">${low}</span>
-        <span className="font-mono text-[13px] font-medium tabular-nums text-blue-500">
+        <span className="text-[13px] tabular-nums text-muted-foreground">${low}</span>
+        <span className="text-[13px] font-medium tabular-nums text-blue-500">
           avg ${avg}
         </span>
-        <span className="font-mono text-[13px] tabular-nums text-muted-foreground">${high}</span>
+        <span className="text-[13px] tabular-nums text-muted-foreground">${high}</span>
       </div>
     </div>
   );

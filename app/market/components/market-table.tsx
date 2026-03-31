@@ -64,7 +64,7 @@ export function MarketTable<T>({ columns, data, onRowClick }: MarketTableProps<T
                       col.frozen
                         ? "sticky left-0 z-[2] bg-card shadow-[2px_0_8px_rgba(0,0,0,0.12)]"
                         : "",
-                      col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right font-mono tabular-nums"
+                      col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right tabular-nums"
                     )}
                     style={{
                       ...(col.minWidth ? { minWidth: col.minWidth } : {}),
@@ -86,7 +86,7 @@ export function MarketTable<T>({ columns, data, onRowClick }: MarketTableProps<T
 // Helper: render a percentage cell with gain/loss color
 export function PctCell({ value }: { value: number }) {
   return (
-    <span className={cn("font-mono tabular-nums", value >= 0 ? "text-gain" : "text-loss")}>
+    <span className={cn("tabular-nums", value >= 0 ? "text-gain" : "text-loss")}>
       {value >= 0 ? "+" : ""}
       {value.toFixed(2)}%
     </span>
@@ -96,7 +96,7 @@ export function PctCell({ value }: { value: number }) {
 // Helper: render a range cell (text fallback)
 export function RangeCell({ low, high }: { low: number; high: number }) {
   return (
-    <span className="text-[12px] text-muted-foreground font-mono tabular-nums">
+    <span className="text-[12px] text-muted-foreground tabular-nums">
       {low.toLocaleString()} <span className="text-muted-foreground/40">—</span> {high.toLocaleString()}
     </span>
   );
@@ -109,7 +109,7 @@ export function RangeBar({ low, high, current }: { low: number; high: number; cu
 
   return (
     <div className="flex items-baseline gap-1.5 w-full min-w-[140px]">
-      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none font-mono">
+      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
       </span>
       <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
@@ -118,7 +118,7 @@ export function RangeBar({ low, high, current }: { low: number; high: number; cu
           style={{ left: `${pct}%`, width: 2, bottom: 0 }}
         />
       </div>
-      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none font-mono">
+      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {high.toLocaleString(undefined, { maximumFractionDigits: 0 })}
       </span>
     </div>
@@ -128,7 +128,7 @@ export function RangeBar({ low, high, current }: { low: number; high: number; cu
 // Helper: render a change cell with color
 export function ChangeCell({ value, isUp }: { value: string; isUp: boolean }) {
   return (
-    <span className={cn("font-mono tabular-nums", isUp ? "text-gain" : "text-loss")}>
+    <span className={cn("tabular-nums", isUp ? "text-gain" : "text-loss")}>
       {value}
     </span>
   );

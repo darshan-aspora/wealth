@@ -44,18 +44,9 @@ interface WatchlistData {
 }
 
 /* Themed watchlist stock data */
-const AI_INFRA_STOCKS: TickerItem[] = [
-  { symbol: "NVDA", name: "NVIDIA Corp.", price: 131.88, change: -3.21, changePercent: -2.38, category: "watchlist", type: "Equity", logo: "NV", logoColor: "bg-neutral-600", exchange: "NASDAQ", volume: 68_500_000, marketCap: 3_240_000_000_000 },
-  { symbol: "AMD", name: "AMD Inc.", price: 118.92, change: -2.45, changePercent: -2.02, category: "watchlist", type: "Equity", logo: "AM", logoColor: "bg-neutral-700", exchange: "NASDAQ", volume: 44_200_000, marketCap: 192_000_000_000 },
-  { symbol: "AVGO", name: "Broadcom Inc.", price: 186.54, change: -1.73, changePercent: -0.92, category: "watchlist", type: "Equity", logo: "AV", logoColor: "bg-red-800", exchange: "NASDAQ", volume: 12_400_000, marketCap: 870_000_000_000 },
-  { symbol: "TSM", name: "Taiwan Semiconductor", price: 178.35, change: 4.12, changePercent: 2.36, category: "watchlist", type: "Equity", logo: "TS", logoColor: "bg-blue-700", exchange: "NYSE", volume: 18_200_000, marketCap: 925_000_000_000 },
-  { symbol: "ARM", name: "Arm Holdings", price: 164.22, change: 6.88, changePercent: 4.37, category: "watchlist", type: "Equity", logo: "AR", logoColor: "bg-cyan-700", exchange: "NASDAQ", volume: 14_800_000, marketCap: 172_000_000_000 },
-  { symbol: "SMCI", name: "Super Micro Computer", price: 38.45, change: -1.92, changePercent: -4.76, category: "watchlist", type: "Equity", logo: "SM", logoColor: "bg-orange-700", exchange: "NASDAQ", volume: 32_100_000, marketCap: 22_500_000_000 },
-  { symbol: "MRVL", name: "Marvell Technology", price: 88.14, change: 2.67, changePercent: 3.12, category: "watchlist", type: "Equity", logo: "MV", logoColor: "bg-rose-700", exchange: "NASDAQ", volume: 9_400_000, marketCap: 76_200_000_000 },
-  { symbol: "ANET", name: "Arista Networks", price: 342.56, change: 8.44, changePercent: 2.52, category: "watchlist", type: "Equity", logo: "AN", logoColor: "bg-indigo-700", exchange: "NYSE", volume: 4_600_000, marketCap: 108_000_000_000 },
-];
-
 const MAG7_SYMBOLS = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA"];
+const AI_SYMBOLS = ["NVDA", "AMD", "AVGO", "MSFT", "GOOGL", "META"];
+const EV_SYMBOLS = ["TSLA", "RIVN", "LCID", "NIO", "LI", "XPEV"];
 
 const INITIAL_WATCHLISTS: WatchlistData[] = [
   {
@@ -65,8 +56,13 @@ const INITIAL_WATCHLISTS: WatchlistData[] = [
   },
   {
     id: "wl-2",
-    label: "AI Infrastructure",
-    stocks: AI_INFRA_STOCKS,
+    label: "AI",
+    stocks: ALL_TICKERS.filter((t) => AI_SYMBOLS.includes(t.symbol)),
+  },
+  {
+    id: "wl-3",
+    label: "EV",
+    stocks: ALL_TICKERS.filter((t) => EV_SYMBOLS.includes(t.symbol)),
   },
 ];
 
@@ -181,34 +177,31 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
     return (
       <button
         onClick={handleGenerate}
-        className="mx-4 mt-2 mb-2 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-5 py-4 text-left transition-all active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-2 py-8 active:opacity-70"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60">
-          <Sparkles size={20} className="text-muted-foreground" />
-        </div>
-        <div className="flex-1">
-          <p className="text-[15px] font-semibold text-foreground">AI Summary</p>
-          <p className="text-[13px] text-muted-foreground/70">Get insights for this watchlist</p>
-        </div>
-        <ChevronRight size={18} className="text-muted-foreground/40" />
+        <Sparkles size={14} className="text-muted-foreground/30" />
+        <span className="text-[13px] font-medium text-muted-foreground/40">Tap for AI summary</span>
       </button>
     );
   }
 
   return (
-    <div className="mx-4 mt-2 mb-2 rounded-2xl border border-border/50 bg-muted/20 px-5 py-4">
+    <div className="px-5 pt-4 pb-2">
       {/* Header */}
-      <div className="mb-3 flex items-center gap-2">
-        <Sparkles size={16} className="text-muted-foreground" />
-        <span className="text-[14px] font-semibold text-foreground/80">AI Summary</span>
+      <div className="mb-2 flex items-center gap-2">
+        <Sparkles size={14} className="text-muted-foreground/50" />
+        <span className="text-[13px] font-medium text-muted-foreground/50">AI Summary</span>
         {phase === "analyzing" && (
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="ml-auto"
           >
-            <RefreshCw size={14} className="text-muted-foreground/50" />
+            <RefreshCw size={14} className="text-muted-foreground/30" />
           </motion.div>
+        )}
+        {phase === "complete" && (
+          <span className="ml-auto text-[11px] text-muted-foreground/30">Updated now</span>
         )}
       </div>
 
@@ -271,32 +264,6 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
         </motion.div>
       )}
 
-      {/* Sources footer — shown after typing completes */}
-      {phase === "complete" && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-4 flex items-center gap-2 border-t border-border/30 pt-3"
-        >
-          {/* Source logos */}
-          <div className="flex -space-x-1.5">
-            {AI_SOURCES.map((src) => (
-              <div key={src.name} className={cn("h-5 w-5 rounded-full border-2 border-muted/20", src.color)} />
-            ))}
-          </div>
-          {/* Source name pills */}
-          <div className="flex flex-1 gap-1.5 overflow-x-auto no-scrollbar">
-            {AI_SOURCES.map((src) => (
-              <span key={src.name} className="shrink-0 rounded-md bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                {src.name}
-              </span>
-            ))}
-          </div>
-          {/* Timestamp */}
-          <span className="shrink-0 text-[11px] text-muted-foreground/50">Updated now</span>
-        </motion.div>
-      )}
 
       {/* Reanalyze */}
       {phase === "complete" && (
@@ -649,14 +616,6 @@ function WatchlistTabContent({
         onTapStock={(symbol) => router.push(`/stocks/${symbol}`)}
       />
 
-      {/* Add button */}
-      <button
-        onClick={() => router.push("/search")}
-        className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3 text-[15px] font-medium text-muted-foreground transition-colors active:bg-muted/40"
-      >
-        <Plus size={16} />
-        Add to {watchlist.label}
-      </button>
     </div>
   );
 }
@@ -797,7 +756,9 @@ function CustomizeTab({
 /*  Main Page                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function WatchlistPage() {
+// ── Shared watchlist content (no shell) ──────────────────────────────
+export function WatchlistContent() {
+  const router = useRouter();
   const [watchlists, setWatchlists] = useState<WatchlistData[]>(INITIAL_WATCHLISTS);
   const [activeTabId, setActiveTabId] = useState("wl-1");
   const tabs = useMemo(() => {
@@ -862,15 +823,11 @@ export default function WatchlistPage() {
 
 
   return (
-    <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
-      <StatusBar />
-      <Header />
-      <TickerMarquee />
-
+    <>
       {/* Tab Bar */}
-      <div className="relative border-b border-border/40">
-        <div className="no-scrollbar flex overflow-x-auto pl-1 pr-4 gap-0.5">
-          {tabs.map((tab) => (
+      <div className="relative flex items-center border-b border-border/40">
+        <div className="no-scrollbar flex-1 flex overflow-x-auto pl-1 gap-0.5">
+          {tabs.filter((t) => t.id !== "settings").map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTabId(tab.id)}
@@ -882,15 +839,10 @@ export default function WatchlistPage() {
               )}
             >
               <span className="flex items-center gap-1.5">
-                {tab.id === "settings" ? (
-                  <SlidersHorizontal size={16} strokeWidth={1.8} />
-                ) : null}
                 {tab.label}
-                {tab.id !== "settings" && (
-                  <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-muted px-1 text-[11px] font-semibold tabular-nums leading-none text-muted-foreground">
-                    {watchlists.find((w) => w.id === tab.id)?.stocks.length ?? 0}
-                  </span>
-                )}
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-muted px-1 text-[11px] font-semibold tabular-nums leading-none text-muted-foreground">
+                  {watchlists.find((w) => w.id === tab.id)?.stocks.length ?? 0}
+                </span>
               </span>
               {activeTabId === tab.id && (
                 <motion.div
@@ -901,38 +853,71 @@ export default function WatchlistPage() {
               )}
             </button>
           ))}
+          <button
+            onClick={handleAddWatchlist}
+            className="shrink-0 px-2 py-2.5 text-muted-foreground/40 active:text-muted-foreground transition-colors"
+          >
+            <Plus size={18} strokeWidth={2} />
+          </button>
         </div>
-
+        <button
+          onClick={() => setActiveTabId("settings")}
+          className={cn(
+            "shrink-0 px-4 py-2.5 transition-colors",
+            activeTabId === "settings" ? "text-foreground" : "text-muted-foreground/50"
+          )}
+        >
+          <SlidersHorizontal size={18} strokeWidth={1.8} />
+        </button>
       </div>
 
       {/* Tab Content */}
-      <main className="no-scrollbar flex-1 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTabId}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
-          >
-            {activeTabId === "settings" ? (
-              <CustomizeTab
-                watchlists={watchlists}
-                onRename={handleRenameWatchlist}
-                onDelete={handleDeleteWatchlist}
-                onAdd={handleAddWatchlist}
-                onReorder={handleReorderWatchlist}
-              />
-            ) : activeWatchlist ? (
-              <WatchlistTabContent
-                watchlist={activeWatchlist}
-                onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
-              />
-            ) : null}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTabId}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+        >
+          {activeTabId === "settings" ? (
+            <CustomizeTab
+              watchlists={watchlists}
+              onRename={handleRenameWatchlist}
+              onDelete={handleDeleteWatchlist}
+              onAdd={handleAddWatchlist}
+              onReorder={handleReorderWatchlist}
+            />
+          ) : activeWatchlist ? (
+            <WatchlistTabContent
+              watchlist={activeWatchlist}
+              onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
+            />
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
 
+    </>
+  );
+}
+
+// ── Page (with shell) ────────────────────────────────────────────────
+export default function WatchlistPage() {
+  return (
+    <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
+      <StatusBar />
+      <Header />
+      <TickerMarquee />
+      <main className="no-scrollbar flex-1 overflow-y-auto">
+        <WatchlistContent />
+      </main>
+      {/* Floating add button */}
+      <button
+        onClick={() => window.location.href = "/search"}
+        className="absolute bottom-20 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition-transform active:scale-90"
+      >
+        <Plus size={22} strokeWidth={2} />
+      </button>
       <BottomNavV2 />
       <HomeIndicator />
     </div>

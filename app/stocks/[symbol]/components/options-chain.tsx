@@ -122,7 +122,7 @@ export function OptionsChain({ symbol, currentPrice }: OptionsChainProps) {
                   isNearPrice && "rounded-md bg-foreground/10 py-0.5",
                 )}>
                   <span className={cn(
-                    "font-mono text-[13px] font-semibold tabular-nums",
+                    "text-[13px] font-semibold tabular-nums",
                     isNearPrice ? "text-foreground" : "text-muted-foreground",
                   )}>
                     {row.strike}
@@ -147,7 +147,7 @@ export function OptionsChain({ symbol, currentPrice }: OptionsChainProps) {
 
         {/* Current price indicator */}
         <div className="px-5 py-2 text-center">
-          <span className="rounded-full bg-foreground/10 px-3 py-1 font-mono text-[13px] font-medium tabular-nums text-foreground">
+          <span className="rounded-full bg-foreground/10 px-3 py-1 text-[13px] font-medium tabular-nums text-foreground">
             Current: ${currentPrice.toFixed(2)}
           </span>
         </div>
@@ -183,7 +183,7 @@ function Cell({
     <div className={cn(width, align === "right" ? "text-right" : "text-left")}>
       <span
         className={cn(
-          "font-mono text-[12px] tabular-nums",
+          "text-[12px] tabular-nums",
           color === "gain" && "text-[hsl(var(--gain))]",
           color === "loss" && "text-[hsl(var(--loss))]",
           muted && "text-muted-foreground/60",

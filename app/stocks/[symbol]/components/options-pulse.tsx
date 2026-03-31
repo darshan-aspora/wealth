@@ -64,10 +64,10 @@ export function OptionsPulse({ symbol }: OptionsPulseProps) {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-mono text-[14px] font-medium tabular-nums text-foreground">
+                <p className="text-[14px] font-medium tabular-nums text-foreground">
                   ${contract.lastPrice.toFixed(2)}
                 </p>
-                <p className="font-mono text-[12px] tabular-nums text-muted-foreground">
+                <p className="text-[12px] tabular-nums text-muted-foreground">
                   Vol {(contract.volume / 1000).toFixed(1)}K
                 </p>
               </div>
@@ -83,7 +83,7 @@ function MetricBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/40 bg-card p-3 text-center">
       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 font-mono text-[18px] font-bold tabular-nums text-foreground">{value}</p>
+      <p className="mt-1 text-[18px] font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }

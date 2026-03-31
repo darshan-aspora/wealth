@@ -74,7 +74,7 @@ const divEtfColumns: TableColumn<DividendETF>[] = [
   },
   {
     key: "yield", label: "Yield", align: "right",
-    render: (r) => <span className="font-mono text-[13px] font-bold tabular-nums text-gain">{r.yield.toFixed(2)}%</span>,
+    render: (r) => <span className="text-[13px] font-bold tabular-nums text-gain">{r.yield.toFixed(2)}%</span>,
   },
   {
     key: "pct", label: "% Chg", align: "right",
@@ -82,11 +82,11 @@ const divEtfColumns: TableColumn<DividendETF>[] = [
   },
   {
     key: "exp", label: "Exp. Ratio", align: "right",
-    render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.expenseRatio}</span>,
+    render: (r) => <span className="tabular-nums text-muted-foreground">{r.expenseRatio}</span>,
   },
   {
     key: "aum", label: "AUM", align: "right",
-    render: (r) => <span className="font-mono tabular-nums text-muted-foreground">{r.aum}</span>,
+    render: (r) => <span className="tabular-nums text-muted-foreground">{r.aum}</span>,
   },
   {
     key: "ytd", label: "YTD", align: "right",

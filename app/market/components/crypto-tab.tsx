@@ -79,7 +79,7 @@ const cryptoColumns: TableColumn<CryptoRow>[] = [
     label: "Price",
     align: "right",
     render: (r) => (
-      <span className="font-mono tabular-nums text-foreground">{r.price}</span>
+      <span className="tabular-nums text-foreground">{r.price}</span>
     ),
   },
   {
@@ -99,7 +99,7 @@ const cryptoColumns: TableColumn<CryptoRow>[] = [
     label: "Mkt Cap",
     align: "right",
     render: (r) => (
-      <span className="font-mono tabular-nums text-muted-foreground">{r.marketCap}</span>
+      <span className="tabular-nums text-muted-foreground">{r.marketCap}</span>
     ),
   },
   {
@@ -107,7 +107,7 @@ const cryptoColumns: TableColumn<CryptoRow>[] = [
     label: "Vol (24h)",
     align: "right",
     render: (r) => (
-      <span className="font-mono tabular-nums text-muted-foreground">{r.volume}</span>
+      <span className="tabular-nums text-muted-foreground">{r.volume}</span>
     ),
   },
 ];
@@ -203,12 +203,12 @@ export function CryptoTab() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-mono text-[14px] font-semibold tabular-nums text-foreground">
+                <p className="text-[14px] font-semibold tabular-nums text-foreground">
                   {coin.price}
                 </p>
                 <p
                   className={cn(
-                    "font-mono text-[13px] font-medium tabular-nums",
+                    "text-[13px] font-medium tabular-nums",
                     coin.isUp ? "text-gain" : "text-loss"
                   )}
                 >

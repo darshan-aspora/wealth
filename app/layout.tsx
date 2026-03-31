@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto_Mono, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
 import { AIProvider } from "@/contexts/ai-context";
@@ -8,11 +8,6 @@ import { cn } from "@/lib/utils";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "US Equity",
@@ -35,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("light", "font-sans", inter.variable)} suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${robotoMono.variable} font-sans antialiased`}
+        className={`${inter.variable} font-sans antialiased`}
       >
         <ThemeProvider>
           <TickerVisibilityProvider>

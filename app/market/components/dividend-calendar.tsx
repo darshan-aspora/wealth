@@ -175,10 +175,10 @@ export function DividendCalendar() {
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end gap-2">
-                  <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground">
+                  <span className="text-[13px] font-semibold tabular-nums text-foreground">
                     {e.dividendAmount.toFixed(3)}
                   </span>
-                  <span className="font-mono text-[13px] font-semibold tabular-nums text-gain">
+                  <span className="text-[13px] font-semibold tabular-nums text-gain">
                     {e.yield.toFixed(2)}%
                   </span>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { useRotatingSuffix } from "@/components/header";
@@ -37,6 +37,8 @@ type SearchItem = {
   trackingError?: string;
   exitLoad?: string;
   aum?: string;
+  // Chain entry (synthetic)
+  isChain?: boolean;
   // Option-specific
   iv?: number;
   volume?: string;
@@ -170,6 +172,43 @@ function filterResults(query: string, tab: string): SearchItem[] {
     );
   }
 
+  // Inject option chain entries when showing options or "All"
+  if (!typeFilter || typeFilter === "Option") {
+    const optionResults = results.filter((r) => r.type === "Option");
+    const chainSymbols = new Set<string>();
+    optionResults.forEach((r) => {
+      const base = r.symbol.split(" ")[0];
+      chainSymbols.add(base);
+    });
+    const chainEntries: SearchItem[] = [];
+    chainSymbols.forEach((sym) => {
+      const stock = mockData.find((d) => d.type === "Stock" && d.symbol === sym);
+      const name = stock?.name ?? sym;
+      chainEntries.push({
+        symbol: `${sym}-CHAIN`,
+        name: `${name} Option Chain`,
+        type: "Option",
+        price: stock?.price ?? 0,
+        change: stock?.change ?? 0,
+        changePct: stock?.changePct ?? 0,
+        isChain: true,
+        keywords: [sym.toLowerCase()],
+      });
+    });
+    // Insert chain entries before their individual options
+    const nonOptions = results.filter((r) => r.type !== "Option");
+    const finalOptions: SearchItem[] = [];
+    chainSymbols.forEach((sym) => {
+      const chain = chainEntries.find((c) => c.symbol === `${sym}-CHAIN`);
+      if (chain) finalOptions.push(chain);
+      finalOptions.push(...optionResults.filter((r) => r.symbol.startsWith(sym + " ")));
+    });
+    // Add remaining options not matching any chain
+    const handled = new Set(finalOptions.map((r) => r.symbol));
+    optionResults.filter((r) => !handled.has(r.symbol)).forEach((r) => finalOptions.push(r));
+    results = [...nonOptions, ...finalOptions];
+  }
+
   return results;
 }
 
@@ -239,6 +278,7 @@ function SearchHeader({
       </Button>
 
       <div className="relative mx-1 flex h-12 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-muted/50 px-4">
+        <Search size={20} strokeWidth={1.8} className="mr-2.5 shrink-0 text-muted-foreground/35" />
         <div className="relative h-full flex-1">
           {!query && <SearchPagePlaceholder />}
           <input
@@ -312,6 +352,7 @@ function SearchTabs({
 
 // ─── Stats helper ────────────────────────────────────────────────────
 function getStats(item: SearchItem): { label: string; value: string }[] {
+  if (item.isChain) return [];
   const s: { label: string; value: string }[] = [];
   if (item.type === "Stock") {
     if (item.capSize) s.push({ label: "", value: item.capSize });
@@ -322,15 +363,14 @@ function getStats(item: SearchItem): { label: string; value: string }[] {
     if (item.return1Y != null) s.push({ label: "1Y", value: `${item.return1Y > 0 ? "+" : ""}${item.return1Y}%` });
     if (item.return3Y != null) s.push({ label: "3Y", value: `${item.return3Y > 0 ? "+" : ""}${item.return3Y}%` });
   } else if (item.type === "ETF") {
-    if (item.expenseRatio) s.push({ label: "ER", value: item.expenseRatio });
-    if (item.trackingError) s.push({ label: "TE", value: item.trackingError });
     if (item.aum) s.push({ label: "AUM", value: item.aum });
+    if (item.expenseRatio) s.push({ label: "Exp. Ratio", value: item.expenseRatio });
   } else if (item.type === "Option") {
     if (item.iv != null) s.push({ label: "IV", value: `${item.iv}%` });
-    if (item.delta != null) s.push({ label: "Delta", value: `${item.delta > 0 ? "+" : ""}${item.delta}` });
-    if (item.theta != null) s.push({ label: "Theta", value: String(item.theta) });
     if (item.volume) s.push({ label: "Vol", value: item.volume });
     if (item.openInterest) s.push({ label: "OI", value: item.openInterest });
+    if (item.delta != null) s.push({ label: "Delta", value: `${item.delta > 0 ? "+" : ""}${item.delta}` });
+    if (item.theta != null) s.push({ label: "Theta", value: String(item.theta) });
   } else if (item.type === "Forex") {
     if (item.bid != null) s.push({ label: "Bid", value: String(item.bid) });
     if (item.ask != null) s.push({ label: "Ask", value: String(item.ask) });
@@ -340,13 +380,20 @@ function getStats(item: SearchItem): { label: string; value: string }[] {
 }
 
 // ─── Shared sub-components ───────────────────────────────────────────
-function LogoCircle({ symbol }: { symbol: string }) {
+function itemSubtext(item: SearchItem): string {
+  if (item.isChain) return "Option Chain";
+  switch (item.type) {
+    case "Stock": return `Stock · ${item.symbol}`;
+    case "ETF": return `ETF · ${item.symbol}`;
+    case "Option": return "Option";
+    case "Index": return `Index · ${item.symbol}`;
+    case "Forex": return `Forex · ${item.symbol}`;
+  }
+}
+
+function LogoCircle() {
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted/70">
-      <span className="text-[15px] font-semibold text-foreground/80">
-        {symbol.slice(0, 2)}
-      </span>
-    </div>
+    <div className="h-10 w-10 shrink-0 rounded-full bg-muted" />
   );
 }
 
@@ -413,16 +460,21 @@ function ResultRow({
 }) {
   return (
     <div className="flex items-center gap-3 px-5 py-3.5">
-      <LogoCircle symbol={item.symbol} />
+      <LogoCircle />
       <div className="min-w-0 flex-1">
         <p className="truncate text-left text-[16px] font-medium text-foreground leading-tight">{item.name}</p>
-        <p className="text-left text-[14px] text-muted-foreground leading-tight mt-0.5">
-          {item.symbol}
-          {item.exchange && <span className="text-muted-foreground/40"> : {item.exchange}</span>}
+        <p className="text-left text-[13px] text-muted-foreground/50 leading-tight mt-0.5">
+          {itemSubtext(item)}
         </p>
       </div>
-      <PriceBlock item={item} />
-      {!hideBookmark && <BookmarkBtn symbol={item.symbol} isWatchlisted={isWatchlisted} onToggle={onToggleWatchlist} />}
+      {item.isChain ? (
+        <ChevronRight size={18} className="text-muted-foreground/40" />
+      ) : (
+        <>
+          <PriceBlock item={item} />
+          {!hideBookmark && <BookmarkBtn symbol={item.symbol} isWatchlisted={isWatchlisted} onToggle={onToggleWatchlist} />}
+        </>
+      )}
     </div>
   );
 }
@@ -441,19 +493,24 @@ function DetailResultRow({
   return (
     <div className="px-5 py-3.5">
       <div className="flex items-center gap-3">
-        <LogoCircle symbol={item.symbol} />
+        <LogoCircle />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[16px] font-medium text-foreground leading-tight">{item.name}</p>
-          <p className="text-[14px] text-muted-foreground leading-tight mt-0.5">
-            {item.symbol}
-            {item.exchange && <span className="text-muted-foreground/40"> : {item.exchange}</span>}
+          <p className="text-[13px] text-muted-foreground leading-tight mt-0.5">
+            {itemSubtext(item)}
           </p>
         </div>
-        <PriceBlock item={item} />
-        <BookmarkBtn symbol={item.symbol} isWatchlisted={isWatchlisted} onToggle={onToggleWatchlist} />
+        {item.isChain ? (
+          <ChevronRight size={18} className="text-muted-foreground/40" />
+        ) : (
+          <>
+            <PriceBlock item={item} />
+            <BookmarkBtn symbol={item.symbol} isWatchlisted={isWatchlisted} onToggle={onToggleWatchlist} />
+          </>
+        )}
       </div>
       {stats.length > 0 && (
-        <div className="mt-2 ml-[60px] flex flex-wrap gap-1.5">
+        <div className="mt-2 ml-[52px] flex flex-wrap gap-1.5">
           {stats.map((s) => (
             <span
               key={s.label + s.value}

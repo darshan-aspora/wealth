@@ -135,7 +135,7 @@ function MarketDepthPanel() {
       </div>
       <Separator className="mb-1" />
       {depthData.map((row, i) => (
-        <div key={i} className="flex items-center justify-between py-2 text-[14px] font-mono tabular-nums">
+        <div key={i} className="flex items-center justify-between py-2 text-[14px] tabular-nums">
           <span className="w-1/4 text-left text-foreground">{row.bidQty}</span>
           <span className="w-1/4 text-right text-foreground">{row.bid.toFixed(2)}</span>
           <span className="w-1/4 text-left pl-4 text-foreground">{row.offer.toFixed(2)}</span>
@@ -323,7 +323,7 @@ export default function OrderFlowV3() {
             <span className="text-[17px] font-semibold text-foreground leading-tight">
               {stock.name}
             </span>
-            <span className="text-[14px] font-mono text-muted-foreground leading-tight">
+            <span className="text-[14px] text-muted-foreground leading-tight">
               {livePrice.toFixed(2)}{" "}
               <span className={liveChange >= 0 ? "text-gain" : "text-loss"}>
                 {liveChange >= 0 ? "+" : ""}{liveChange.toFixed(2)}%
@@ -419,15 +419,15 @@ export default function OrderFlowV3() {
             <div className="flex flex-col items-end">
               <button onClick={(e) => { e.stopPropagation(); setActiveField("amount"); }} className="flex items-baseline justify-end active:opacity-70">
                 {amountMode === "dollars" && (
-                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                  <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
                 )}
-                <span className={cn("font-mono text-[20px] font-semibold tabular-nums", activeField === "amount" ? "text-foreground" : "text-foreground")}>
+                <span className={cn("text-[20px] font-semibold tabular-nums", activeField === "amount" ? "text-foreground" : "text-foreground")}>
                   {amount || "0"}
                 </span>
                 {activeField === "amount" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
               </button>
               {parseFloat(amount) > 0 && (
-                <span className="text-[13px] font-mono tabular-nums text-muted-foreground/50 mt-0.5">
+                <span className="text-[13px] tabular-nums text-muted-foreground/50 mt-0.5">
                   {amountMode === "dollars"
                     ? `Est. ${(parseFloat(amount) / livePrice).toFixed(4)} shares`
                     : `Est. $${(parseFloat(amount) * livePrice).toFixed(2)}`}
@@ -458,8 +458,8 @@ export default function OrderFlowV3() {
               <div className="flex items-center justify-between">
                 <span className="text-[15px] text-muted-foreground">Limit Price</span>
                 <button onClick={(e) => { e.stopPropagation(); setActiveField("limitPrice"); }} className="flex items-baseline justify-end active:opacity-70">
-                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
-                  <span className="font-mono text-[20px] font-semibold text-foreground tabular-nums">
+                  <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
+                  <span className="text-[20px] font-semibold text-foreground tabular-nums">
                     {limitPrice || "0"}
                   </span>
                   {activeField === "limitPrice" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
@@ -471,8 +471,8 @@ export default function OrderFlowV3() {
               <div className="flex items-center justify-between">
                 <span className="text-[15px] text-muted-foreground">Trigger Price</span>
                 <button onClick={(e) => { e.stopPropagation(); setActiveField("triggerPrice"); }} className="flex items-baseline justify-end active:opacity-70">
-                  <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
-                  <span className="font-mono text-[20px] font-semibold text-foreground tabular-nums">
+                  <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
+                  <span className="text-[20px] font-semibold text-foreground tabular-nums">
                     {triggerPrice || "0"}
                   </span>
                   {activeField === "triggerPrice" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
@@ -493,8 +493,8 @@ export default function OrderFlowV3() {
                   <span className="text-[15px] text-muted-foreground">At Market</span>
                 ) : (
                   <button onClick={(e) => { e.stopPropagation(); setActiveField("gtcLimitPrice"); }} className="flex items-baseline justify-end active:opacity-70">
-                    <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
-                    <span className="font-mono text-[20px] font-semibold text-foreground tabular-nums">
+                    <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
+                    <span className="text-[20px] font-semibold text-foreground tabular-nums">
                       {gtcLimitPrice || "0"}
                     </span>
                     {activeField === "gtcLimitPrice" && <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />}
@@ -603,19 +603,19 @@ export default function OrderFlowV3() {
                             className="flex items-baseline active:opacity-70"
                           >
                             {slTriggerMode === "price" && (
-                              <span className="text-[18px] font-mono text-muted-foreground/50 mr-1">$</span>
+                              <span className="text-[18px] text-muted-foreground/50 mr-1">$</span>
                             )}
-                            <span className="font-mono text-[20px] font-semibold text-foreground tabular-nums">
+                            <span className="text-[20px] font-semibold text-foreground tabular-nums">
                               {(slTriggerMode === "price" ? slTriggerPrice : slTriggerPercent) || "0"}
                             </span>
                             {(activeField === "slTriggerPrice" || activeField === "slTriggerPercent") && (
                               <span className="w-[2px] h-[22px] bg-foreground ml-0.5 animate-pulse" />
                             )}
                             {slTriggerMode === "percent" && (
-                              <span className="text-[18px] font-mono text-muted-foreground/50 ml-1">%</span>
+                              <span className="text-[18px] text-muted-foreground/50 ml-1">%</span>
                             )}
                           </button>
-                          <span className="text-[13px] font-mono text-muted-foreground/50 mt-0.5">
+                          <span className="text-[13px] text-muted-foreground/50 mt-0.5">
                             {slTriggerMode === "price"
                               ? `${(((stock.price - (parseFloat(slTriggerPrice) || 0)) / stock.price) * 100).toFixed(2)}%`
                               : `$${(stock.price * (1 - (parseFloat(slTriggerPercent) || 0) / 100)).toFixed(2)}`
@@ -646,7 +646,7 @@ export default function OrderFlowV3() {
               <div className="px-5 py-2.5 bg-loss/10 border-b border-loss/20 flex items-center gap-2">
                 <Info size={15} strokeWidth={2} className="text-loss shrink-0" />
                 <span className="text-[13px] text-loss">
-                  Insufficient buying power. You need <span className="font-mono font-semibold">{((dollarAmount + fee) - available).toFixed(2)}</span> more.
+                  Insufficient buying power. You need <span className="font-semibold">{((dollarAmount + fee) - available).toFixed(2)}</span> more.
                 </span>
               </div>
             </motion.div>
@@ -661,7 +661,7 @@ export default function OrderFlowV3() {
               className="text-[14px] text-muted-foreground active:opacity-70 transition-opacity"
             >
               Amount{" "}
-              <span className="font-mono font-semibold text-foreground">
+              <span className="font-semibold text-foreground">
                 {dollarAmount.toFixed(2)}
               </span>
               <span className="text-muted-foreground/50 underline underline-offset-2 decoration-dashed"> + {fee.toFixed(2)} Charges</span>
@@ -672,7 +672,7 @@ export default function OrderFlowV3() {
             >
               <span className="text-[14px] text-muted-foreground">
                 Avail.{" "}
-                <span className={cn("font-mono font-semibold underline underline-offset-2 decoration-dashed", insufficientFunds && dollarAmount > 0 ? "text-loss" : "text-foreground")}>
+                <span className={cn("font-semibold underline underline-offset-2 decoration-dashed", insufficientFunds && dollarAmount > 0 ? "text-loss" : "text-foreground")}>
                   {available.toFixed(2)}
                 </span>
               </span>
@@ -747,10 +747,10 @@ export default function OrderFlowV3() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/50">Regulatory Fees</span>
               <p className="text-[12px] text-muted-foreground/40 mb-2">(Govt. & Exchange fees)</p>
               <div className="space-y-2.5 mb-4">
-                <div className="flex justify-between"><span className="text-[14px] text-foreground">SEC Fee</span><span className="text-[14px] font-mono text-foreground">0.01</span></div>
-                <div className="flex justify-between"><span className="text-[14px] text-foreground">FINRA TAF</span><span className="text-[14px] font-mono text-foreground">0.01</span></div>
-                <div className="flex justify-between"><span className="text-[14px] text-foreground">Exchange Fee</span><span className="text-[14px] font-mono text-foreground">0.00</span></div>
-                <div className="flex justify-between"><span className="text-[14px] text-foreground">Withholding Tax</span><span className="text-[14px] font-mono text-foreground">0.00</span></div>
+                <div className="flex justify-between"><span className="text-[14px] text-foreground">SEC Fee</span><span className="text-[14px] text-foreground">0.01</span></div>
+                <div className="flex justify-between"><span className="text-[14px] text-foreground">FINRA TAF</span><span className="text-[14px] text-foreground">0.01</span></div>
+                <div className="flex justify-between"><span className="text-[14px] text-foreground">Exchange Fee</span><span className="text-[14px] text-foreground">0.00</span></div>
+                <div className="flex justify-between"><span className="text-[14px] text-foreground">Withholding Tax</span><span className="text-[14px] text-foreground">0.00</span></div>
               </div>
 
               <Separator className="mb-4" />
@@ -758,14 +758,14 @@ export default function OrderFlowV3() {
               {/* Broker */}
               <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/50 mb-2 block">Aspora Charges</span>
               <div className="space-y-2.5 mb-4">
-                <div className="flex justify-between"><span className="text-[14px] text-foreground">Brokerage</span><span className="text-[14px] font-mono text-foreground">0.00</span></div>
+                <div className="flex justify-between"><span className="text-[14px] text-foreground">Brokerage</span><span className="text-[14px] text-foreground">0.00</span></div>
               </div>
 
               <Separator className="mb-4" />
 
               <div className="flex justify-between">
                 <span className="text-[15px] font-semibold text-foreground">Total Charges</span>
-                <span className="text-[15px] font-mono font-semibold text-foreground">{fee.toFixed(2)}</span>
+                <span className="text-[15px] font-semibold text-foreground">{fee.toFixed(2)}</span>
               </div>
             </div>
           )}
@@ -775,18 +775,18 @@ export default function OrderFlowV3() {
               <div className="space-y-3 mb-5">
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Required Amount</span>
-                  <span className="text-[14px] font-mono font-semibold text-foreground">{(dollarAmount + fee).toFixed(2)}</span>
+                  <span className="text-[14px] font-semibold text-foreground">{(dollarAmount + fee).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Available Balance</span>
-                  <span className="text-[14px] font-mono font-semibold text-foreground">{available.toFixed(2)}</span>
+                  <span className="text-[14px] font-semibold text-foreground">{available.toFixed(2)}</span>
                 </div>
 
                 <Separator />
 
                 <div className="flex justify-between">
                   <span className="text-[14px] text-muted-foreground">Remaining After Trade</span>
-                  <span className={cn("text-[14px] font-mono font-semibold", (available - dollarAmount - fee) >= 0 ? "text-gain" : "text-loss")}>
+                  <span className={cn("text-[14px] font-semibold", (available - dollarAmount - fee) >= 0 ? "text-gain" : "text-loss")}>
                     {(available - dollarAmount - fee).toFixed(2)}
                   </span>
                 </div>
