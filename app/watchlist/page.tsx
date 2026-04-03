@@ -127,7 +127,8 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
 
     segs.push({ type: "text", content: "Overall, rotation within the group suggests mixed conviction; keep an eye on Treasury yields which may impact growth multiples this week." });
     return segs;
-  }, [watchlist.stocks, topGainer, topLoser, secondMover]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topGainer, topLoser, secondMover]);
 
   /* Total character length for typing effect — stock badges count as their label length */
   const segmentLengths = useMemo(() => segments.map((s) => s.type === "text" ? s.content.length : s.name.length), [segments]);
@@ -749,7 +750,7 @@ function CustomizeTab({
 /* ------------------------------------------------------------------ */
 
 // ── Shared watchlist content (no shell) ──────────────────────────────
-export function WatchlistContent() {
+function WatchlistContent() {
   const [watchlists, setWatchlists] = useState<WatchlistData[]>(INITIAL_WATCHLISTS);
   const [activeTabId, setActiveTabId] = useState("wl-1");
   const tabs = useMemo(() => {

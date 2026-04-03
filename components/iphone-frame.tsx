@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 

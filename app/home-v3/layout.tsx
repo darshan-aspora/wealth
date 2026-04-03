@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useRef, useCallback, useState, createContext, useContext } from "react";
+import { useRef, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,9 +14,7 @@ import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { TickerMarquee } from "@/components/ticker";
 import { SearchPlaceholder } from "@/components/header";
 
-// ── Scroll context so child pages can react to header state ──────────
-const HeaderHiddenContext = createContext(false);
-export function useHeaderHidden() { return useContext(HeaderHiddenContext); }
+import { HeaderHiddenContext } from "./header-context";
 
 // ── Bottom Nav (route links) ──────────────────────────────────────────
 

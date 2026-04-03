@@ -235,10 +235,8 @@ export function PortfolioSummary() {
                 {/* Hero numbers — crosshair-reactive */}
                 {(() => {
                   const latest = WEALTH_GROWTH_DATA[WEALTH_GROWTH_DATA.length - 1];
-                  const first = WEALTH_GROWTH_DATA[0];
                   const displayVal = crosshairData?.value ?? latest.value;
                   const displayInv = crosshairData?.invested ?? latest.invested;
-                  const displayDate = crosshairData?.date ?? "Today";
 
                   // Total gain from invested
                   const totalGain = displayVal - displayInv;
