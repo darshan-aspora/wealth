@@ -11,6 +11,15 @@ type Tab = (typeof tabs)[number];
 
 const pages = [
   {
+    title: "Home v3",
+    description: "Home screen iteration",
+    href: "/home-v3",
+    status: "wip",
+  },
+];
+
+const archive = [
+  {
     title: "Home",
     description: "Watchlist, header, and bottom navigation",
     href: "/home",
@@ -29,20 +38,11 @@ const pages = [
     status: "v1",
   },
   {
-    title: "Home v3",
-    description: "Home screen iteration",
-    href: "/home-v3",
-    status: "wip",
-  },
-  {
     title: "Order Flow",
     description: "Stock order placement — buy/sell with swipe",
     href: "/order-flow",
     status: "3 versions",
   },
-];
-
-const archive = [
   {
     title: "Home v2",
     description: "Redesigned home screen",
