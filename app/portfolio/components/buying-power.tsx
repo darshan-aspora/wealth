@@ -94,7 +94,7 @@ export function BuyingPower() {
 
   return (
     <>
-      <div className="rounded-xl border border-border/50 overflow-hidden">
+      <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
         {/* Top row — Buying Power + amount + chevron */}
         <button className="w-full flex items-center justify-between px-4 py-4 active:bg-muted/30 transition-colors">
           <div className="text-left">

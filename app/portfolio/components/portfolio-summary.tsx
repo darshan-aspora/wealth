@@ -19,8 +19,16 @@ import { PORTFOLIO_SUMMARY, PERIOD_RETURNS, WEALTH_GROWTH_DATA } from "./portfol
 /*  Chart period tabs                                                  */
 /* ------------------------------------------------------------------ */
 
-const CHART_PERIODS = ["6M", "1Y", "3Y", "5Y", "Max"] as const;
+const CHART_PERIODS = ["1M", "3M", "6M", "1Y", "All"] as const;
 type ChartPeriod = (typeof CHART_PERIODS)[number];
+
+function daysForPeriod(period: ChartPeriod): number {
+  if (period === "1M") return 22;
+  if (period === "3M") return 66;
+  if (period === "6M") return 132;
+  if (period === "1Y") return 252;
+  return Infinity; // All
+}
 
 /* ------------------------------------------------------------------ */
 /*  Wealth Growth Chart                                                */
@@ -44,6 +52,17 @@ function WealthGrowthChart({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const count = daysForPeriod(period);
+    const chartData = WEALTH_GROWTH_DATA.slice(-Math.min(count, WEALTH_GROWTH_DATA.length));
+
+    // Determine if portfolio is up or down over selected period
+    const firstVal = chartData[0]?.value ?? 0;
+    const lastVal = chartData[chartData.length - 1]?.value ?? 0;
+    const isGain = lastVal >= firstVal;
+    const lineColor = isGain ? "#22c55e" : "#ef4444";
+    const areaTop = isGain ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)";
+    const areaBottom = isGain ? "rgba(34,197,94,0.01)" : "rgba(239,68,68,0.01)";
+
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
       height: 220,
@@ -64,13 +83,6 @@ function WealthGrowthChart({
         borderVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
-        tickMarkFormatter: (time: string) => {
-          const d = new Date(time);
-          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          if (period === "6M") return months[d.getMonth()];
-          if (period === "1Y") return months[d.getMonth()];
-          return `${months[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
-        },
       },
       handleScroll: { mouseWheel: false, pressedMouseMove: true },
       handleScale: false,
@@ -80,52 +92,48 @@ function WealthGrowthChart({
       },
     });
 
+    // Invested line — stepped (lineType 0 = simple for step effect with duplicate points)
     const investedSeries = chart.addSeries(LineSeries, {
-      color: "rgba(150,150,150,0.35)",
+      color: "rgba(150,150,150,0.4)",
       lineWidth: 1,
-      lineType: 2,
+      lineStyle: 2, // dashed
       crosshairMarkerVisible: false,
       lastValueVisible: false,
       priceLineVisible: false,
     });
 
     const valueSeries = chart.addSeries(AreaSeries, {
-      lineColor: "#22c55e",
-      topColor: "rgba(34,197,94,0.18)",
-      bottomColor: "rgba(34,197,94,0.01)",
+      lineColor,
+      topColor: areaTop,
+      bottomColor: areaBottom,
       lineWidth: 2,
-      lineType: 2,
       crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 5,
-      crosshairMarkerBackgroundColor: "#22c55e",
-      crosshairMarkerBorderColor: "#fff",
-      crosshairMarkerBorderWidth: 2,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBackgroundColor: lineColor,
+      crosshairMarkerBorderColor: lineColor,
+      crosshairMarkerBorderWidth: 1,
       lastValueVisible: false,
       priceLineVisible: false,
     });
 
-    const sliceCount =
-      period === "6M" ? 6 :
-      period === "1Y" ? 12 :
-      WEALTH_GROWTH_DATA.length;
-
-    const slicedData = WEALTH_GROWTH_DATA.slice(-Math.min(sliceCount, WEALTH_GROWTH_DATA.length));
-
-    const chartData = slicedData.map((d, i) => {
-      const startIdx = WEALTH_GROWTH_DATA.length - slicedData.length;
-      const absIdx = startIdx + i;
-      const year = 2025 + Math.floor(absIdx / 12);
-      const month = (absIdx % 12) + 1;
-      return {
-        time: `${year}-${String(month).padStart(2, "0")}-15` as string,
-        value: d.value,
-        invested: d.invested,
-        label: d.date,
-      };
-    });
-
     valueSeries.setData(chartData.map((d) => ({ time: d.time, value: d.value })));
-    investedSeries.setData(chartData.map((d) => ({ time: d.time, value: d.invested })));
+
+    // Build stepped invested data: hold value until it changes
+    const investedSteps: { time: string; value: number }[] = [];
+    for (let i = 0; i < chartData.length; i++) {
+      const curr = chartData[i];
+      const prev = i > 0 ? chartData[i - 1] : null;
+      if (prev && curr.invested !== prev.invested) {
+        // Add a point at previous value just before the step
+        investedSteps.push({ time: curr.time, value: prev.invested });
+      }
+      investedSteps.push({ time: curr.time, value: curr.invested });
+    }
+    // Deduplicate same-time entries, keep last
+    const deduped = new Map<string, number>();
+    for (const s of investedSteps) deduped.set(s.time, s.value);
+    investedSeries.setData(chartData.map((d) => ({ time: d.time, value: deduped.get(d.time) ?? d.invested })));
+
     chart.timeScale().fitContent();
 
     chart.subscribeCrosshairMove((param) => {
@@ -137,11 +145,10 @@ function WealthGrowthChart({
       const vData = param.seriesData.get(valueSeries) as { value?: number } | undefined;
       const iData = param.seriesData.get(investedSeries) as { value?: number } | undefined;
       if (vData?.value != null) {
-        const idx = chartData.findIndex((d) => d.time === param.time);
         onCrosshairMove({
           value: vData.value,
           invested: iData?.value ?? 0,
-          date: idx >= 0 ? chartData[idx].label : "",
+          date: param.time as string,
         });
       }
     });
@@ -221,33 +228,65 @@ export function PortfolioSummary() {
                 </button>
               </SheetTrigger>
               <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-5 pb-8">
-                <SheetHeader className="pb-2">
+                <SheetHeader className="pb-1">
                   <SheetTitle className="text-[17px] font-semibold text-foreground">Wealth Growth</SheetTitle>
                 </SheetHeader>
 
-                {/* Info row — shows crosshair data or latest values */}
+                {/* Hero numbers — crosshair-reactive */}
                 {(() => {
                   const latest = WEALTH_GROWTH_DATA[WEALTH_GROWTH_DATA.length - 1];
+                  const first = WEALTH_GROWTH_DATA[0];
                   const displayVal = crosshairData?.value ?? latest.value;
                   const displayInv = crosshairData?.invested ?? latest.invested;
-                  const displayDate = crosshairData?.date ?? latest.date;
-                  const pctChange = ((displayVal - displayInv) / displayInv * 100).toFixed(1);
-                  const isGain = displayVal >= displayInv;
+                  const displayDate = crosshairData?.date ?? "Today";
+
+                  // Total gain from invested
+                  const totalGain = displayVal - displayInv;
+                  const totalGainPct = displayInv > 0 ? (totalGain / displayInv) * 100 : 0;
+                  const isTotalGain = totalGain >= 0;
+
+                  // XIRR (use stored value)
+                  const xirrVal = PORTFOLIO_SUMMARY.xirr;
+
+                  // Format date for display
+                  const dateLabel = crosshairData
+                    ? (() => {
+                        const d = new Date(crosshairData.date);
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+                      })()
+                    : "Today";
+
                   return (
-                    <div className="h-[52px] mb-1">
+                    <div className="mb-2">
+                      {/* Current value + date */}
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[24px] font-bold tracking-tight text-foreground">
-                          {displayVal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        <span className="text-[28px] font-bold tracking-tight text-foreground">
+                          {displayVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                        <span className="text-[13px] text-muted-foreground">{displayDate}</span>
+                        <span className="text-[13px] text-muted-foreground">{dateLabel}</span>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-[13px] text-muted-foreground">
-                          Invested: <span className="text-foreground">{displayInv.toLocaleString("en-US")}</span>
-                        </span>
-                        <span className={cn("text-[13px] font-medium", isGain ? "text-gain" : "text-loss")}>
-                          {isGain ? "+" : ""}{pctChange}%
-                        </span>
+
+                      {/* Metrics row */}
+                      <div className="mt-2 grid grid-cols-2 gap-3">
+                        {/* Total gain */}
+                        <div>
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Total Gain</p>
+                          <span className={cn("text-[14px] font-semibold", isTotalGain ? "text-gain" : "text-loss")}>
+                            {isTotalGain ? "+" : ""}{totalGain.toFixed(0)} ({isTotalGain ? "+" : ""}{totalGainPct.toFixed(1)}%)
+                          </span>
+                        </div>
+                        {/* Annualized return */}
+                        <div>
+                          <p className="text-[11px] text-muted-foreground mb-0.5">XIRR</p>
+                          {crosshairData ? (
+                            <span className="text-[14px] font-semibold text-muted-foreground">—</span>
+                          ) : (
+                            <span className={cn("text-[14px] font-semibold", xirrVal >= 0 ? "text-gain" : "text-loss")}>
+                              {xirrVal >= 0 ? "+" : ""}{xirrVal}%
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -255,33 +294,33 @@ export function PortfolioSummary() {
 
                 <WealthGrowthChart onCrosshairMove={handleCrosshairMove} period={chartPeriod} />
 
-                {/* Period selector */}
-                <div className="mt-3 flex items-center justify-center gap-1">
-                  {CHART_PERIODS.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setChartPeriod(p)}
-                      className={cn(
-                        "rounded-md px-2.5 py-1 text-[13px] font-medium transition-colors",
-                        chartPeriod === p
-                          ? "bg-foreground/10 text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Legend */}
-                <div className="mt-3 flex items-center justify-center gap-4 text-[12px] text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-[2px] w-3 rounded-full bg-[#22c55e]" />
-                    <span>Portfolio</span>
+                {/* Period selector + legend row */}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    {CHART_PERIODS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setChartPeriod(p)}
+                        className={cn(
+                          "rounded-md px-2.5 py-1 text-[13px] font-medium transition-colors",
+                          chartPeriod === p
+                            ? "bg-foreground/10 text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-[2px] w-3 rounded-full bg-muted-foreground/40" />
-                    <span>Invested</span>
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <div className="h-[2px] w-2.5 rounded-full bg-gain" />
+                      <span>Value</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-[2px] w-2.5 rounded-full bg-muted-foreground/40" style={{ borderTop: "1px dashed" }} />
+                      <span>Invested</span>
+                    </div>
                   </div>
                 </div>
               </SheetContent>

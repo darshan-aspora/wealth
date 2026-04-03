@@ -14,7 +14,7 @@ export function StatusBar() {
       onClick={toggleTheme}
       className={cn(
         "cursor-pointer select-none active:opacity-70 transition-all duration-200",
-        isDark ? "bg-[#0f0f11]" : "bg-background"
+        "bg-background"
       )}
     >
       <img

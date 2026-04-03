@@ -15,26 +15,94 @@ export const PORTFOLIO_SUMMARY = {
   buyingPower: 12_485.50,
 };
 
-// ── Wealth Growth Chart Data ──
+// ── Wealth Growth Chart Data (daily) ──
+// Generated with realistic daily volatility. Invested line steps up on SIP dates (1st of month).
 
-// Each month: invested = cumulative amount put in, value = portfolio market value
-export const WEALTH_GROWTH_DATA = [
-  { date: "Jan '25", invested: 30_000, value: 30_200 },
-  { date: "Feb '25", invested: 31_000, value: 31_620 },
-  { date: "Mar '25", invested: 32_000, value: 33_100 },
-  { date: "Apr '25", invested: 33_000, value: 33_400 },
-  { date: "May '25", invested: 34_000, value: 35_200 },
-  { date: "Jun '25", invested: 35_000, value: 37_050 },
-  { date: "Jul '25", invested: 36_000, value: 37_900 },
-  { date: "Aug '25", invested: 37_500, value: 38_200 },
-  { date: "Sep '25", invested: 39_000, value: 40_500 },
-  { date: "Oct '25", invested: 40_500, value: 42_100 },
-  { date: "Nov '25", invested: 42_000, value: 43_800 },
-  { date: "Dec '25", invested: 43_500, value: 45_400 },
-  { date: "Jan '26", invested: 44_500, value: 46_200 },
-  { date: "Feb '26", invested: 45_200, value: 47_500 },
-  { date: "Mar '26", invested: 45_780, value: 48_625 },
-];
+export interface WealthDataPoint {
+  /** YYYY-MM-DD */
+  time: string;
+  /** Cumulative amount deposited */
+  invested: number;
+  /** Portfolio market value */
+  value: number;
+}
+
+function generateDailyWealthData(): WealthDataPoint[] {
+  const points: WealthDataPoint[] = [];
+
+  // Initial lump sum on Jan 2, 2025
+  const startDate = new Date(2025, 0, 2);
+  const endDate = new Date(2026, 2, 31); // Mar 31, 2026
+
+  let invested = 30_000; // initial lump sum
+  let value = 30_000;
+  const monthlySip = 1_200; // SIP on 1st of each month starting Feb 2025
+  let sipStarted = false;
+
+  const d = new Date(startDate);
+  let dayIndex = 0;
+
+  while (d <= endDate) {
+    const dow = d.getDay();
+    // Skip weekends
+    if (dow !== 0 && dow !== 6) {
+      const month = d.getMonth();
+      const date = d.getDate();
+
+      // SIP on the 1st trading day of each month (or first weekday after 1st)
+      if (date <= 3 && !sipStarted && d > startDate) {
+        invested += monthlySip;
+        value += monthlySip; // new money added at market value
+        sipStarted = true;
+      }
+
+      // Daily market movement: slight upward bias with realistic volatility
+      // Use seeded pseudo-random based on day index for consistency
+      const seed = Math.sin(dayIndex * 127.1 + month * 311.7) * 43758.5453;
+      const rand = seed - Math.floor(seed); // 0–1
+      const dailyReturn = (rand - 0.47) * 0.015; // slight positive bias, ~1.5% max daily swing
+      value = value * (1 + dailyReturn);
+
+      // Occasional larger moves
+      const seed2 = Math.sin(dayIndex * 53.7 + 7.3) * 10000;
+      const rand2 = seed2 - Math.floor(seed2);
+      if (rand2 > 0.93) {
+        // ~7% of days have a bigger move
+        const bigMove = (rand - 0.45) * 0.025;
+        value = value * (1 + bigMove);
+      }
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      points.push({
+        time: `${yyyy}-${mm}-${dd}`,
+        invested: Math.round(invested * 100) / 100,
+        value: Math.round(value * 100) / 100,
+      });
+
+      dayIndex++;
+    }
+
+    // Reset SIP flag at end of month
+    if (d.getDate() >= 4) sipStarted = false;
+
+    d.setDate(d.getDate() + 1);
+  }
+
+  // Normalize final value to match PORTFOLIO_SUMMARY.currentValue
+  const lastPoint = points[points.length - 1];
+  const scale = 48_625.80 / lastPoint.value;
+  const investedScale = 45_780.50 / lastPoint.invested;
+  for (const p of points) {
+    p.value = Math.round(p.value * scale * 100) / 100;
+    p.invested = Math.round(p.invested * investedScale * 100) / 100;
+  }
+
+  return points;
+}
+
+export const WEALTH_GROWTH_DATA: WealthDataPoint[] = generateDailyWealthData();
 
 export const PERIOD_RETURNS = [
   { period: "1 Week", shortPeriod: "1W", value: 0.42 },
