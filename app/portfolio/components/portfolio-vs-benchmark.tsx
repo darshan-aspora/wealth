@@ -1,137 +1,103 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Target } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { BENCHMARK_DATA, type BenchmarkMetric } from "./portfolio-mock-data";
+import { ChevronDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { PORTFOLIO_SUMMARY } from "./portfolio-mock-data";
 
-function MetricRow({ metric }: { metric: BenchmarkMetric }) {
-  const portfolioBetter =
-    metric.label === "Max Drawdown" || metric.label === "Volatility"
-      ? metric.portfolio <= metric.benchmark
-      : metric.portfolio >= metric.benchmark;
+/* ------------------------------------------------------------------ */
+/*  Benchmark data                                                     */
+/* ------------------------------------------------------------------ */
 
-  const delta = metric.portfolio - metric.benchmark;
-  const showDelta = metric.label !== "Alpha";
+const BENCHMARKS = [
+  { name: "S&P 500", ticker: "SPX", xirr: 14.8 },
+  { name: "Dow Jones", ticker: "DJI", xirr: 12.1 },
+  { name: "NASDAQ", ticker: "IXIC", xirr: 17.6 },
+] as const;
 
-  // Bar widths — scale both relative to the larger value
-  const maxVal = Math.max(
-    Math.abs(metric.portfolio),
-    Math.abs(metric.benchmark)
-  );
-  const portfolioWidth =
-    maxVal > 0 ? (Math.abs(metric.portfolio) / maxVal) * 100 : 0;
-  const benchmarkWidth =
-    maxVal > 0 ? (Math.abs(metric.benchmark) / maxVal) * 100 : 0;
-
-  return (
-    <div className="py-3">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[13px] text-muted-foreground">{metric.label}</p>
-        {showDelta && delta !== 0 && (
-          <Badge
-            variant="secondary"
-            className={cn(
-              "text-[12px] tabular-nums border-transparent",
-              portfolioBetter
-                ? "bg-gain/12 text-gain"
-                : "bg-loss/12 text-loss"
-            )}
-          >
-            {delta >= 0 ? "+" : ""}
-            {delta.toFixed(2)}
-            {metric.unit}
-          </Badge>
-        )}
-      </div>
-
-      {/* Dual bars */}
-      <div className="space-y-1.5">
-        {/* Portfolio bar */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground/60 w-[28px] shrink-0">
-            You
-          </span>
-          <div className="flex-1 h-2 rounded-full bg-muted/30 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-500"
-              style={{ width: `${portfolioWidth}%` }}
-            />
-          </div>
-          <span className="text-[13px] font-semibold tabular-nums text-foreground w-[52px] text-right">
-            {metric.portfolio}
-            {metric.unit}
-          </span>
-        </div>
-
-        {/* Benchmark bar */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground/60 w-[28px] shrink-0">
-            S&P
-          </span>
-          <div className="flex-1 h-2 rounded-full bg-muted/30 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-muted-foreground/40"
-              style={{ width: `${benchmarkWidth}%` }}
-            />
-          </div>
-          <span className="text-[13px] font-medium tabular-nums text-muted-foreground w-[52px] text-right">
-            {metric.benchmark === 0
-              ? "—"
-              : `${metric.benchmark}${metric.unit}`}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+/* ------------------------------------------------------------------ */
+/*  Widget                                                             */
+/* ------------------------------------------------------------------ */
 
 export function PortfolioVsBenchmark() {
-  const { benchmarkName, period, metrics } = BENCHMARK_DATA;
+  const [benchmarkIdx, setBenchmarkIdx] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const returnMetric = metrics.find((m) => m.label === "Return");
-  const beating = returnMetric
-    ? returnMetric.portfolio >= returnMetric.benchmark
-    : true;
+  const benchmark = BENCHMARKS[benchmarkIdx];
+  const portfolioXirr = PORTFOLIO_SUMMARY.xirr;
+  const diff = portfolioXirr - benchmark.xirr;
+  const beating = diff >= 0;
 
   return (
-    <Card className="border-border/50 shadow-none">
-      <CardHeader className="p-5 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target size={18} className="text-foreground" />
-            <CardTitle className="text-[15px]">vs {benchmarkName}</CardTitle>
+    <Card className="border-border/50 shadow-none overflow-hidden">
+      <CardContent className="p-5">
+        {/* Two columns — Portfolio vs Benchmark */}
+        <div className="flex gap-3">
+          {/* Portfolio */}
+          <div className="flex-1">
+            <p className="text-[12px] text-muted-foreground mb-1">Your Portfolio</p>
+            <p className="text-[13px] text-muted-foreground/70 mb-2">Est. XIRR</p>
+            <p className={cn(
+              "text-[22px] font-bold tabular-nums leading-none",
+              portfolioXirr >= 0 ? "text-gain" : "text-loss"
+            )}>
+              {portfolioXirr >= 0 ? "+" : ""}{portfolioXirr}%
+            </p>
           </div>
-          <Badge variant="secondary" className="text-[12px]">
-            {period}
-          </Badge>
+
+          {/* Divider */}
+          <div className="w-px bg-border/30 self-stretch" />
+
+          {/* Benchmark */}
+          <div className="flex-1">
+            {/* Benchmark selector */}
+            <div className="relative mb-1">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-1 active:opacity-70 transition-opacity"
+              >
+                <p className="text-[12px] text-muted-foreground">{benchmark.name}</p>
+                <ChevronDown size={12} strokeWidth={2} className={cn(
+                  "text-muted-foreground transition-transform",
+                  dropdownOpen && "rotate-180"
+                )} />
+              </button>
+
+              {/* Dropdown */}
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 z-10 min-w-[140px] rounded-lg border border-border/60 bg-card shadow-lg py-1">
+                  {BENCHMARKS.map((b, i) => (
+                    <button
+                      key={b.ticker}
+                      onClick={() => { setBenchmarkIdx(i); setDropdownOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-[13px] transition-colors",
+                        i === benchmarkIdx
+                          ? "text-foreground font-medium bg-muted/50"
+                          : "text-muted-foreground hover:bg-muted/30"
+                      )}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-[13px] text-muted-foreground/70 mb-2">Est. XIRR</p>
+            <p className="text-[26px] font-bold tabular-nums leading-none text-muted-foreground">
+              {benchmark.xirr >= 0 ? "+" : ""}{benchmark.xirr}%
+            </p>
+          </div>
         </div>
-        {/* Headline verdict */}
-        <p
-          className={cn(
-            "text-[13px] font-medium",
-            beating ? "text-gain" : "text-loss"
-          )}
-        >
+
+        {/* Insight — full width */}
+        <p className="text-[13px] font-medium mt-4 text-muted-foreground">
           {beating
-            ? `Beating the market by +${((returnMetric?.portfolio ?? 0) - (returnMetric?.benchmark ?? 0)).toFixed(1)}%`
-            : `Trailing the market by ${((returnMetric?.benchmark ?? 0) - (returnMetric?.portfolio ?? 0)).toFixed(1)}%`}
+            ? `Your portfolio has outperformed ${benchmark.name} by +${diff.toFixed(1)}%`
+            : `Your portfolio is trailing ${benchmark.name} by ${Math.abs(diff).toFixed(1)}%`
+          }
         </p>
-      </CardHeader>
-      <CardContent className="px-5 pb-5 pt-0">
-        {metrics.map((metric, i) => (
-          <div key={metric.label}>
-            {i > 0 && <Separator className="bg-border/30" />}
-            <MetricRow metric={metric} />
-          </div>
-        ))}
       </CardContent>
     </Card>
   );

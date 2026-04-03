@@ -104,14 +104,7 @@ export function EarningsCalendar() {
               key={c.symbol}
               className="flex items-center border-b border-border/20 px-5 py-3 last:border-b-0"
             >
-              <div
-                className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-bold text-white",
-                  c.logoColor
-                )}
-              >
-                {c.symbol.slice(0, 2)}
-              </div>
+              <div className="h-9 w-9 shrink-0 rounded-[10px] bg-muted" />
               <div className="ml-3 flex-1">
                 <div className="text-[14px] font-semibold text-foreground">
                   {c.name}

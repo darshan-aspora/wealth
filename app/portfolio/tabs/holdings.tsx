@@ -42,7 +42,7 @@ const holdingsData: Holding[] = [
 
 const categories: Category[] = ["All", "Stocks", "ETFs", "Options"];
 const sortOptions: { key: SortKey; label: string }[] = [
-  { key: "xirr", label: "XIRR" },
+  { key: "xirr", label: "Est. XIRR" },
   { key: "current", label: "Current Value" },
   { key: "invested", label: "Invested Amount" },
   { key: "dayChange", label: "1D Change %" },
@@ -100,7 +100,7 @@ export function HoldingsTab() {
         <div className="mt-1.5 flex items-center gap-4 text-[12px] text-muted-foreground">
           <span>Invested <span className="font-medium tabular-nums text-foreground/80">{totalInvested.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
           <span>·</span>
-          <span>XIRR <span className={cn("font-medium tabular-nums", totalXirr >= 0 ? "text-gain" : "text-loss")}>{totalXirr >= 0 ? "+" : ""}{totalXirr}%</span></span>
+          <span>Est. XIRR <span className={cn("font-medium tabular-nums", totalXirr >= 0 ? "text-gain" : "text-loss")}>{totalXirr >= 0 ? "+" : ""}{totalXirr}%</span></span>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ export function HoldingsTab() {
                     <>
                       <span>·</span>
                       <span className={cn(h.xirr >= 0 ? "text-gain/70" : "text-loss/70")}>
-                        XIRR {h.xirr > 0 ? "+" : ""}{h.xirr}%
+                        Est. XIRR {h.xirr > 0 ? "+" : ""}{h.xirr}%
                       </span>
                     </>
                   )}

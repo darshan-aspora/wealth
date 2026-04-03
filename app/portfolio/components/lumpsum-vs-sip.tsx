@@ -47,7 +47,7 @@ function StyleCard({
             </p>
           </div>
           <div>
-            <p className="text-[12px] text-muted-foreground">XIRR</p>
+            <p className="text-[12px] text-muted-foreground">Est. XIRR</p>
             <p
               className={cn(
                 "text-[15px] font-semibold tabular-nums",

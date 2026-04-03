@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A mobile trading app prototype for US Equity, ETF, and Options trading. Priority is visual polish and interaction fidelity — no backend, no real data. Inspired by Robinhood simplicity + Groww/Zerodha info density. Brand name: **Aspora Wealth**.
+A mobile trading app prototype for US Equity, ETF, and Options trading — brand name **Aspora Wealth**. Priority is visual polish and interaction fidelity — no backend, no real data. Inspired by Robinhood simplicity + Groww/Zerodha info density.
 
 ## Commands
 
@@ -13,6 +13,7 @@ A mobile trading app prototype for US Equity, ETF, and Options trading. Priority
 - `npm run dev:clean` — nuke `.next` cache and restart dev
 - `npm run build` — production build
 - `npm run lint` — ESLint
+- `npx shadcn@latest add <component>` — add new shadcn/ui components (new-york style, neutral base)
 
 No test framework is configured.
 
@@ -23,11 +24,12 @@ No test framework is configured.
 - **TradingView Lightweight Charts** (`lightweight-charts`) — all charting with mock/static data
 - **Framer Motion** — transitions, micro-interactions, gestures
 - **Lucide React** — icons
-- Fonts: Inter (sans via `--font-sans`) + Roboto Mono (mono via `--font-mono`), loaded via `next/font/google` in `app/layout.tsx`
+- Fonts: Inter (sans via `--font-sans`) loaded via `next/font/google` in `app/layout.tsx`. `font-mono` uses system monospace (no custom mono font loaded).
 - Path alias: `@/*` maps to project root (e.g., `@/components/ui/button`)
 
 ## Architecture
 
+- **All pages are `"use client"`** — every page uses interactivity (Framer Motion, context, state). New pages must include the `"use client"` directive.
 - **Mobile-first layout**: every page wraps content in `max-w-[430px] mx-auto` container
 - **Root layout** (`app/layout.tsx`) wraps the app in `ThemeProvider` → `TickerVisibilityProvider` → `AIProvider`, with a global `AIOverlay`
   - `ThemeProvider` (`components/theme-provider.tsx`): custom class-based dark/light toggle via React context, NOT next-themes
@@ -42,9 +44,9 @@ No test framework is configured.
 - **Webpack cache disabled** in dev (`next.config.mjs`) to avoid Next.js 14.2.x stale cache bugs
 - **`lib/` directory**: `utils.ts` (cn helper), `ai-responses.ts` and `ai-suggestions.ts` (mock AI data)
 
-## Page Routes
+## Page Structure
 
-17 pages exist under `app/`: `/` (directory), `/home`, `/home-v2`, `/search`, `/explore`, `/explore-headers`, `/explore-tickers`, `/explore-bottom-nav`, `/market`, `/watchlist`, `/portfolio`, `/orders`, `/stocks`, `/notifications`, `/profile`, `/learn`, `/community`, `/advisory`. Each is a self-contained page with colocated components where needed (e.g., `app/market/components/`, `app/portfolio/tabs/` and `app/portfolio/components/`).
+Each page under `app/` is self-contained with colocated components (e.g., `app/market/components/`, `app/portfolio/tabs/`). Run `ls app/` to see all routes. Some pages have variant explorations in subdirectories (e.g., `app/explore/versions/`). The root page (`app/page.tsx`) is a directory/index of all screens.
 
 ## Design Rules
 
@@ -52,7 +54,10 @@ No test framework is configured.
 - **Large font sizes** — minimum: body/tab labels `text-[15px]`, headings `text-[17px]+`, placeholders `text-[14px]`. When in doubt, go bigger.
 - **Use `font-mono`** for prices, numbers, and financial data for tabular alignment
 - Bold aesthetic, avoid generic/safe design. Dark mode trading app context.
-- Reference `SKILL.md` for detailed frontend design guidance and `design_principles.md` for design philosophy (lead with insight not data, warm personality, simple surface with serious depth).
+- Lead with insight, not raw data — tell the user *why* they should care about a number (see `design_principles.md`)
+- Warm, slightly cheeky brand voice — smart friend who knows money, not a Bloomberg terminal
+- Simple on the surface, serious underneath — show essentials first, depth one level deeper
+- Reference `SKILL.md` for detailed frontend design guidance and `design_principles.md` for full design philosophy
 
 ## Workflow
 

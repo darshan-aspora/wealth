@@ -212,17 +212,6 @@ function filterResults(query: string, tab: string): SearchItem[] {
   return results;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-function typeLabel(type: SearchItem["type"]) {
-  switch (type) {
-    case "Stock": return "STOCK";
-    case "Index": return "INDEX";
-    case "ETF": return "ETF";
-    case "Option": return "OPT";
-    case "Forex": return "FX";
-  }
-}
-
 // ─── Rotating placeholder — matches home header structure exactly ─────
 function SearchPagePlaceholder() {
   const suffix = useRotatingSuffix();
@@ -426,14 +415,6 @@ function BookmarkBtn({
   );
 }
 
-function TypeBadge({ type }: { type: SearchItem["type"] }) {
-  return (
-    <span className="shrink-0 rounded bg-muted/70 px-2 py-1 text-[12px] font-medium leading-none text-muted-foreground">
-      {typeLabel(type)}
-    </span>
-  );
-}
-
 function PriceBlock({ item }: { item: SearchItem }) {
   const changeColor = item.change >= 0 ? "text-emerald-500" : "text-red-500";
   return (
@@ -526,7 +507,7 @@ function DetailResultRow({
 }
 
 // ─── Empty state: Recent + Popular widgets ──────────────────────────
-function SearchEmptyState() {
+function SearchEmptyState({ watchlist, onToggleWatchlist }: { watchlist: Set<string>; onToggleWatchlist: (symbol: string) => void }) {
   return (
     <div className="space-y-5 pt-3 pb-8">
       {/* Recent searches */}
@@ -542,9 +523,8 @@ function SearchEmptyState() {
             <ResultRow
               key={item.symbol}
               item={item}
-              isWatchlisted={false}
-              onToggleWatchlist={() => {}}
-              hideBookmark
+              isWatchlisted={watchlist.has(item.symbol)}
+              onToggleWatchlist={onToggleWatchlist}
             />
           ))}
         </div>
@@ -563,9 +543,8 @@ function SearchEmptyState() {
             <ResultRow
               key={item.symbol}
               item={item}
-              isWatchlisted={false}
-              onToggleWatchlist={() => {}}
-              hideBookmark
+              isWatchlisted={watchlist.has(item.symbol)}
+              onToggleWatchlist={onToggleWatchlist}
             />
           ))}
         </div>
@@ -660,7 +639,7 @@ export default function SearchPage() {
         onTouchEnd={onTouchEnd}
       >
         {!query.trim() ? (
-          <SearchEmptyState />
+          <SearchEmptyState watchlist={watchlist} onToggleWatchlist={toggleWatchlist} />
         ) : results.length > 0 ? (
           <motion.div
             key={activeTab}

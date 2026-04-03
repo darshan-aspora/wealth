@@ -7,7 +7,7 @@ import {
   Home,
   BarChart3,
   Briefcase,
-  Sparkles,
+  FlaskConical,
   Rocket,
   Compass,
   ClipboardList,
@@ -38,7 +38,7 @@ const v1Tabs = [
   { label: "Home", icon: Home, id: "home" },
   { label: "Market", icon: BarChart3, id: "market" },
   { label: "Portfolio", icon: Briefcase, id: "portfolio" },
-  { label: "Advisory", icon: Sparkles, id: "advisory" },
+  { label: "Advisory", icon: FlaskConical, id: "advisory" },
   { label: "Autopilot", icon: Rocket, id: "autopilot" },
 ];
 

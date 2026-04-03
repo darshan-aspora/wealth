@@ -7,11 +7,10 @@ import { cn } from "@/lib/utils";
 import { MarketTable, PctCell, RangeBar, AlertButton, type TableColumn } from "./market-table";
 import { SectionHeader } from "./section-header";
 import { EconomicOverview } from "./economic-overview";
-import { NewsAccordion } from "./news-accordion";
 import {
   US_IDX_POPULAR, US_IDX_STRATEGY,
   US_IDX_THEMATIC, US_IDX_VOL_SENTIMENT, US_IDX_FIXED_INCOME,
-  US_SECTORS, US_SECTORS_ALT, US_ECONOMIC, US_NEWS,
+  US_SECTORS, US_SECTORS_ALT, US_ECONOMIC,
   type PerformanceRow,
 } from "../data";
 
@@ -149,18 +148,6 @@ export function USMarketsTab() {
           View More
           <ChevronRight size={14} />
         </button>
-      </div>
-
-      <div className="h-6" />
-
-      {/* Market Summary */}
-      <div className="px-5">
-        <NewsAccordion
-          title="Market Summary"
-          subtitle="AI-curated headlines with expandable summaries"
-          items={US_NEWS}
-          sourceCount={47}
-        />
       </div>
 
     </div>

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PNL_CALENDAR, PNL_MONTHLY_GOAL, type DayPnL } from "./portfolio-mock-data";
+import { PNL_CALENDAR, type DayPnL } from "./portfolio-mock-data";
 
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI"];
 const MONTH_NAMES_FULL = [
@@ -22,8 +22,6 @@ const MONTH_NAMES_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
-
-const TODAY = 24; // March 24, 2026
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -38,7 +36,7 @@ function PnlValue({ value, className }: { value: number; className?: string }) {
   return (
     <span
       className={cn(
-        "font-bold tabular-nums",
+        "font-bold",
         value >= 0 ? "text-gain" : "text-loss",
         className
       )}
@@ -48,45 +46,37 @@ function PnlValue({ value, className }: { value: number; className?: string }) {
   );
 }
 
+/** Neutral background with subtle opacity based on magnitude */
+function pnlBgClass(pnl: number): string {
+  if (pnl >= 0) return "bg-foreground/[0.04]";
+  return "bg-foreground/[0.04]";
+}
+
 /* ------------------------------------------------------------------ */
-/*  Summary cards                                                      */
+/*  P&L Stats row (P&L, Total Trades, Win Rate)                        */
 /* ------------------------------------------------------------------ */
 
-function SummaryCards({ totalPnL, goal }: { totalPnL: number; goal: number }) {
-  const goalProgress = Math.min((Math.abs(totalPnL) / goal) * 100, 100);
+function PnlStats({ days }: { days: DayPnL[] }) {
+  const trading = days.filter((d) => d.isTrading);
+  const totalPnl = trading.reduce((s, d) => s + d.pnl, 0);
+  const totalTrades = trading.reduce((s, d) => s + d.trades, 0);
+  const greenDays = trading.filter((d) => d.pnl >= 0).length;
+  const winRate = trading.length > 0 ? Math.round((greenDays / trading.length) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <Card className="shadow-none bg-card border-border/30">
-        <CardContent className="p-3.5">
-          <p className="text-[12px] text-muted-foreground mb-1">Total P&L</p>
-          <PnlValue value={totalPnL} className="text-[22px] leading-tight" />
-        </CardContent>
-      </Card>
-      <Card className="shadow-none bg-card border-border/30">
-        <CardContent className="p-3.5">
-          <p className="text-[12px] text-muted-foreground mb-1">Monthly goal</p>
-          <div className="h-2 rounded-full bg-muted/40 overflow-hidden mb-1.5 mt-2">
-            <div
-              className="h-full rounded-full bg-gain transition-all"
-              style={{ width: `${goalProgress}%` }}
-            />
-          </div>
-          <div className="flex justify-between">
-            <span
-              className={cn(
-                "text-[12px] font-medium tabular-nums",
-                totalPnL >= 0 ? "text-gain" : "text-loss"
-              )}
-            >
-              {Math.abs(Math.round(totalPnL)).toLocaleString("en-US")}
-            </span>
-            <span className="text-[12px] text-muted-foreground tabular-nums">
-              {goal.toLocaleString("en-US")}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-3 gap-3">
+      <div>
+        <p className="text-[12px] text-muted-foreground mb-0.5">P&L</p>
+        <PnlValue value={totalPnl} className="text-[18px] leading-tight" />
+      </div>
+      <div>
+        <p className="text-[12px] text-muted-foreground mb-0.5">Trades</p>
+        <span className="text-[18px] font-bold text-foreground">{totalTrades}</span>
+      </div>
+      <div>
+        <p className="text-[12px] text-muted-foreground mb-0.5">Win Rate</p>
+        <span className="text-[18px] font-bold text-foreground">{winRate}%</span>
+      </div>
     </div>
   );
 }
@@ -95,36 +85,16 @@ function SummaryCards({ totalPnL, goal }: { totalPnL: number; goal: number }) {
 /*  Day cell                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Map P&L value to a pastel background color with intensity based on magnitude.
- *  Small gains/losses → very light pastel, large → deeper pastel.
- *  Green spectrum: hsl(145, 40-60%, 85-35%)
- *  Red spectrum:   hsl(0, 40-60%, 85-35%)
- */
-function pnlBgStyle(pnl: number): React.CSSProperties {
-  const abs = Math.abs(pnl);
-  // Clamp intensity: 0 at 0, 1 at ~300+
-  const t = Math.min(abs / 300, 1);
-  const hue = pnl >= 0 ? 145 : 0;
-  // Saturation: 30% (faint) → 55% (rich pastel)
-  const sat = 30 + t * 25;
-  // Lightness: 88% (very light) → 28% (deep pastel)
-  const light = 88 - t * 60;
-  // Opacity ramp so small values are subtle
-  const alpha = 0.35 + t * 0.65;
-  return { backgroundColor: `hsla(${hue}, ${sat}%, ${light}%, ${alpha})` };
-}
-
 function DayCell({ day, isToday }: { day: DayPnL; isToday: boolean }) {
   return (
     <div
       className={cn(
         "rounded-lg p-1.5 flex flex-col items-center justify-center min-h-[68px]",
-        !day.isTrading && "bg-muted/20",
+        day.isTrading ? pnlBgClass(day.pnl) : "bg-muted/10",
         isToday && "ring-1.5 ring-foreground/50"
       )}
-      style={day.isTrading ? pnlBgStyle(day.pnl) : undefined}
     >
-      <span className="text-[14px] font-semibold text-foreground/80 tabular-nums mb-0.5">
+      <span className="text-[14px] font-semibold text-foreground/80 mb-0.5">
         {day.date}
       </span>
 
@@ -143,37 +113,79 @@ function DayCell({ day, isToday }: { day: DayPnL; isToday: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Navigation header (reusable)                                       */
+/* ------------------------------------------------------------------ */
+
+function NavHeader({
+  label,
+  onPrev,
+  onNext,
+  canPrev,
+  canNext,
+}: {
+  label: string;
+  onPrev: () => void;
+  onNext: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onPrev}
+        disabled={!canPrev}
+        className="h-8 w-8"
+      >
+        <ChevronLeft size={18} />
+      </Button>
+      <span className="text-[15px] font-semibold text-foreground">{label}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onNext}
+        disabled={!canNext}
+        className="h-8 w-8"
+      >
+        <ChevronRight size={18} />
+      </Button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Month grid view                                                    */
 /* ------------------------------------------------------------------ */
 
 function MonthGrid({
   monthKey,
+  year,
   monthIndex,
   isCurrentMonth,
 }: {
   monthKey: string;
+  year: number;
   monthIndex: number;
   isCurrentMonth: boolean;
 }) {
   const monthData = PNL_CALENDAR[monthKey];
   if (!monthData) return null;
 
-  // Build 5-column grid cells (Mon-Fri only)
   const gridCells: (DayPnL | null)[] = [];
-
-  // firstWeekday: 0=Mon..4=Fri, 5=Sat, 6=Sun
-  // If the 1st falls on a weekend, 0 leading blanks (first Mon is day 2 or 3)
   const leadingBlanks = monthData.firstWeekday >= 5 ? 0 : monthData.firstWeekday;
   for (let i = 0; i < leadingBlanks; i++) gridCells.push(null);
 
   for (const day of monthData.days) {
-    const dow = new Date(2026, monthIndex, day.date).getDay();
+    const dow = new Date(year, monthIndex, day.date).getDay();
     if (dow >= 1 && dow <= 5) gridCells.push(day);
   }
 
+  const today = new Date();
+  const todayDate = isCurrentMonth ? today.getDate() : -1;
+
   return (
     <>
-      {/* Weekday headers */}
       <div className="grid grid-cols-5 gap-1.5 mb-1">
         {WEEKDAYS.map((d) => (
           <div
@@ -185,14 +197,10 @@ function MonthGrid({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-5 gap-1.5">
         {gridCells.map((cell, i) => {
-          if (!cell) {
-            return <div key={`blank-${i}`} className="min-h-[68px]" />;
-          }
-          const isToday = isCurrentMonth && cell.date === TODAY;
-          return <DayCell key={cell.date} day={cell} isToday={isToday} />;
+          if (!cell) return <div key={`blank-${i}`} className="min-h-[68px]" />;
+          return <DayCell key={cell.date} day={cell} isToday={cell.date === todayDate} />;
         })}
       </div>
     </>
@@ -200,28 +208,77 @@ function MonthGrid({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Week view                                                          */
+/*  Week view (with navigation)                                        */
 /* ------------------------------------------------------------------ */
 
+function getMonday(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return date;
+}
+
+function formatShortDate(d: Date): string {
+  return `${MONTH_NAMES_SHORT[d.getMonth()]} ${d.getDate()}`;
+}
+
 function WeekView() {
-  // Show current week (Mar 23-27, 2026 = Mon-Fri around today Mar 24)
-  const monthData = PNL_CALENDAR["2026-03"];
-  if (!monthData) return null;
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  // Current week: Mon Mar 23 to Fri Mar 27
-  const weekDays = monthData.days.filter((d) => {
-    const dow = new Date(2026, 2, d.date).getDay();
-    return d.date >= 23 && d.date <= 27 && dow >= 1 && dow <= 5;
-  });
+  const currentMonday = useMemo(() => {
+    const mon = getMonday(new Date());
+    mon.setDate(mon.getDate() + weekOffset * 7);
+    return mon;
+  }, [weekOffset]);
 
-  const weekTotal = weekDays.reduce((s, d) => s + d.pnl, 0);
+  const friday = useMemo(() => {
+    const f = new Date(currentMonday);
+    f.setDate(f.getDate() + 4);
+    return f;
+  }, [currentMonday]);
+
+  const weekLabel = `${formatShortDate(currentMonday)} – ${formatShortDate(friday)}`;
+
+  // Get the days for this week
+  const weekDays = useMemo(() => {
+    const days: DayPnL[] = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(currentMonday);
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const monthData = PNL_CALENDAR[key];
+      if (monthData) {
+        const dayData = monthData.days.find((dd) => dd.date === d.getDate());
+        if (dayData) {
+          days.push(dayData);
+          continue;
+        }
+      }
+      days.push({ date: d.getDate(), pnl: 0, trades: 0, isTrading: false });
+    }
+    return days;
+  }, [currentMonday]);
+
+  const todayDate = new Date().getDate();
+  const isCurrentWeek = weekOffset === 0;
+
+  // Limit how far back (oldest data is Jan 2024)
+  const earliestMonday = getMonday(new Date(2024, 0, 1));
+  const canPrev = currentMonday > earliestMonday;
+  const canNext = weekOffset < 0;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-[14px] text-muted-foreground">Mar 23 – Mar 27</p>
-        <PnlValue value={weekTotal} className="text-[16px]" />
-      </div>
+      <NavHeader
+        label={weekLabel}
+        onPrev={() => setWeekOffset((p) => p - 1)}
+        onNext={() => setWeekOffset((p) => p + 1)}
+        canPrev={canPrev}
+        canNext={canNext}
+      />
+
+      <PnlStats days={weekDays} />
 
       <div className="grid grid-cols-5 gap-1.5 mb-1">
         {WEEKDAYS.map((d) => (
@@ -235,8 +292,8 @@ function WeekView() {
       </div>
 
       <div className="grid grid-cols-5 gap-1.5">
-        {weekDays.map((day) => (
-          <DayCell key={day.date} day={day} isToday={day.date === TODAY} />
+        {weekDays.map((day, i) => (
+          <DayCell key={i} day={day} isToday={isCurrentWeek && day.date === todayDate} />
         ))}
       </div>
     </div>
@@ -244,59 +301,73 @@ function WeekView() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Year view                                                          */
+/*  Year view (with navigation)                                        */
 /* ------------------------------------------------------------------ */
 
 function YearView() {
-  // Show monthly P&L summaries for available months + mock rest of year
-  const monthlyData = [
-    { month: 0, pnl: 1842, trades: 34 },
-    { month: 1, pnl: -620, trades: 28 },
-    { month: 2, pnl: 0, trades: 0 }, // will be computed from actual data
-    { month: 3, pnl: 0, trades: 0 },
-    { month: 4, pnl: 0, trades: 0 },
-    { month: 5, pnl: 0, trades: 0 },
-    { month: 6, pnl: 0, trades: 0 },
-    { month: 7, pnl: 0, trades: 0 },
-    { month: 8, pnl: 0, trades: 0 },
-    { month: 9, pnl: 0, trades: 0 },
-    { month: 10, pnl: 0, trades: 0 },
-    { month: 11, pnl: 0, trades: 0 },
-  ];
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
 
-  // Compute actual months from data
-  for (const [key, data] of Object.entries(PNL_CALENDAR)) {
-    const [, monthStr] = key.split("-");
-    const mi = parseInt(monthStr, 10) - 1;
-    const trading = data.days.filter((d) => d.isTrading);
-    monthlyData[mi] = {
-      month: mi,
-      pnl: trading.reduce((s, d) => s + d.pnl, 0),
-      trades: trading.reduce((s, d) => s + d.trades, 0),
-    };
-  }
+  const isCurrentYear = year === currentYear;
+  const currentMonth = isCurrentYear ? new Date().getMonth() : 11;
 
-  const ytd = monthlyData.reduce((s, m) => s + m.pnl, 0);
+  const monthlyData = useMemo(() => {
+    const data = [];
+    const monthCount = isCurrentYear ? currentMonth + 1 : 12;
+    for (let m = 0; m < monthCount; m++) {
+      const key = `${year}-${String(m + 1).padStart(2, "0")}`;
+      const monthData = PNL_CALENDAR[key];
+      if (monthData) {
+        const trading = monthData.days.filter((d) => d.isTrading);
+        data.push({
+          month: m,
+          pnl: trading.reduce((s, d) => s + d.pnl, 0),
+          trades: trading.reduce((s, d) => s + d.trades, 0),
+        });
+      } else {
+        data.push({ month: m, pnl: 0, trades: 0 });
+      }
+    }
+    return data;
+  }, [year, isCurrentYear, currentMonth]);
+
+  // Collect all days for PnlStats
+  const yearDays = useMemo(() => {
+    const days: DayPnL[] = [];
+    const monthCount = isCurrentYear ? currentMonth + 1 : 12;
+    for (let m = 0; m < monthCount; m++) {
+      const key = `${year}-${String(m + 1).padStart(2, "0")}`;
+      const monthData = PNL_CALENDAR[key];
+      if (monthData) days.push(...monthData.days);
+    }
+    return days;
+  }, [year, isCurrentYear, currentMonth]);
+
+  const canPrev = year > 2024;
+  const canNext = year < currentYear;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-[14px] text-muted-foreground">2026 YTD</p>
-        <PnlValue value={ytd} className="text-[16px]" />
-      </div>
+      <NavHeader
+        label={isCurrentYear ? `${year} YTD` : `${year}`}
+        onPrev={() => setYear((y) => y - 1)}
+        onNext={() => setYear((y) => y + 1)}
+        canPrev={canPrev}
+        canNext={canNext}
+      />
+
+      <PnlStats days={yearDays} />
 
       <div className="grid grid-cols-3 gap-2">
         {monthlyData.map((m) => {
           const hasData = m.trades > 0;
-
           return (
             <div
               key={m.month}
               className={cn(
                 "rounded-lg p-3 flex flex-col items-center justify-center min-h-[72px]",
-                !hasData && "bg-muted/10"
+                hasData ? "bg-foreground/[0.04]" : "bg-muted/10"
               )}
-              style={hasData ? pnlBgStyle(m.pnl / 5) : undefined}
             >
               <span className="text-[13px] font-semibold text-foreground/80 mb-0.5">
                 {MONTH_NAMES_SHORT[m.month]}
@@ -324,7 +395,6 @@ function YearView() {
 /* ------------------------------------------------------------------ */
 
 function AllTimeView() {
-  // Aggregate all available data
   let totalPnl = 0;
   let totalTrades = 0;
   let greenDays = 0;
@@ -370,7 +440,7 @@ function AllTimeView() {
             {s.isPnl ? (
               <PnlValue value={s.value} className="text-[17px]" />
             ) : (
-              <span className="text-[17px] font-bold tabular-nums text-foreground">
+              <span className="text-[17px] font-bold text-foreground">
                 {Math.round(s.value).toLocaleString("en-US")}
                 {s.suffix || ""}
               </span>
@@ -389,18 +459,28 @@ function AllTimeView() {
 export function PnlCalendar() {
   const [monthOffset, setMonthOffset] = useState(0);
 
-  const monthKey = monthOffset === 0 ? "2026-03" : "2026-02";
-  const monthData = PNL_CALENDAR[monthKey];
-  const monthIndex = monthOffset === 0 ? 2 : 1;
+  // monthOffset: 0 = current month (Mar 2026), -1 = Feb 2026, etc.
+  const targetDate = useMemo(() => {
+    const d = new Date(2026, 2, 1); // March 2026
+    d.setMonth(d.getMonth() + monthOffset);
+    return d;
+  }, [monthOffset]);
 
-  const monthLabel = `${MONTH_NAMES_FULL[monthIndex]} 2026`;
+  const year = targetDate.getFullYear();
+  const monthIndex = targetDate.getMonth();
+  const monthKey = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+  const monthLabel = `${MONTH_NAMES_FULL[monthIndex]} ${year}`;
 
-  const totalPnL = useMemo(() => {
-    if (!monthData) return 0;
-    return monthData.days
-      .filter((d) => d.isTrading)
-      .reduce((sum, d) => sum + d.pnl, 0);
-  }, [monthData]);
+  const isCurrentMonth = monthOffset === 0;
+
+  const monthDays = useMemo(() => {
+    const monthData = PNL_CALENDAR[monthKey];
+    return monthData?.days ?? [];
+  }, [monthKey]);
+
+  // Can go back to Jan 2024, can't go forward past current month
+  const canPrev = !(year === 2024 && monthIndex === 0);
+  const canNext = monthOffset < 0;
 
   return (
     <Card className="border-border/50 shadow-none">
@@ -422,41 +502,26 @@ export function PnlCalendar() {
 
           {/* ── Week ── */}
           <TabsContent value="week" className="space-y-4 mt-0">
-            <SummaryCards totalPnL={totalPnL} goal={PNL_MONTHLY_GOAL} />
             <WeekView />
           </TabsContent>
 
           {/* ── Month ── */}
           <TabsContent value="month" className="space-y-4 mt-0">
-            {/* Month navigation */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setMonthOffset((p) => Math.max(p - 1, -1))}
-                disabled={monthOffset <= -1}
-              >
-                <ChevronLeft size={18} />
-              </Button>
-              <span className="text-[16px] font-semibold text-foreground">
-                {monthLabel}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setMonthOffset((p) => Math.min(p + 1, 0))}
-                disabled={monthOffset >= 0}
-              >
-                <ChevronRight size={18} />
-              </Button>
-            </div>
+            <NavHeader
+              label={monthLabel}
+              onPrev={() => setMonthOffset((p) => p - 1)}
+              onNext={() => setMonthOffset((p) => p + 1)}
+              canPrev={canPrev}
+              canNext={canNext}
+            />
 
-            <SummaryCards totalPnL={totalPnL} goal={PNL_MONTHLY_GOAL} />
+            <PnlStats days={monthDays} />
 
             <MonthGrid
               monthKey={monthKey}
+              year={year}
               monthIndex={monthIndex}
-              isCurrentMonth={monthOffset === 0}
+              isCurrentMonth={isCurrentMonth}
             />
           </TabsContent>
 

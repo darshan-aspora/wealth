@@ -42,7 +42,7 @@ function SwipeCTA({ onComplete, side }: { onComplete: () => void; side: OrderSid
   const textOpacity = useTransform(dragX, [0, maxDrag * 0.35], [1, 0]);
 
   const handleDragEnd = useCallback(
-    (_: any, info: { offset: { x: number } }) => {
+    (_: unknown, info: { offset: { x: number } }) => {
       if (info.offset.x > maxDrag * 0.6) {
         animate(dragX, maxDrag, { type: "spring", stiffness: 400, damping: 30 });
         setCompleted(true);
@@ -112,7 +112,7 @@ export default function OrderFlowV2() {
   const [triggerPrice, setTriggerPrice] = useState("411.30");
   const [stopLoss, setStopLoss] = useState(false);
   const [trailingStopLoss, setTrailingStopLoss] = useState(false);
-  const [swiped, setSwiped] = useState(false);
+  const [, setSwiped] = useState(false);
   const [amountMode, setAmountMode] = useState<"dollars" | "shares">("dollars");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [gtcPriceMode, setGtcPriceMode] = useState<"market" | "limit">("market");

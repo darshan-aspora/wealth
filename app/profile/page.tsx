@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-import { cn } from "@/lib/utils";
 
 // ── Menu section helper ───────────────────────────────────────────────
 

@@ -7,7 +7,6 @@ import {
   TrendingDown,
   Settings2,
   Check,
-  Search,
   ChevronDown,
   X,
   GripVertical,
@@ -103,7 +102,7 @@ export const isGain = (t: TickerItem) => t.change >= 0;
 
 // ─── Logo Avatar ─────────────────────────────────────────────────────────────
 
-export function TickerLogo({ ticker, size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
+export function TickerLogo({ size = "md" }: { ticker: TickerItem; size?: "sm" | "md" }) {
   const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
 
   return (
@@ -321,7 +320,14 @@ export function EditSheet({
 
           {/* Search panel — positioned to align search bar with dummy button */}
           <div className="relative flex flex-col max-h-[70vh] rounded-2xl bg-background shadow-xl overflow-hidden" style={{ marginTop: 20, marginLeft: 20, marginRight: 20 }}>
-            {/* Search input — same px-5 and inner px-4 py-2.5 as dummy */}
+            {/* Limit message */}
+            {atLimit && (
+              <div className="px-5 pt-3 pb-0 shrink-0">
+                <p className="text-[13px] text-muted-foreground/50">{local.length} of {MAX_TICKERS} selected</p>
+              </div>
+            )}
+
+            {/* Search input */}
             <div className="flex items-center gap-2 px-5 pt-3 pb-2 shrink-0">
               <div className="flex-1 flex items-center rounded-full bg-muted/50 px-4 py-2.5">
                 <input
@@ -348,57 +354,82 @@ export function EditSheet({
               </button>
             </div>
 
-            {/* Tabs */}
-            <div className="no-scrollbar flex gap-1 overflow-x-auto px-4 pb-2 shrink-0">
-              {SEARCH_TABS.map((tab) => {
-                const isActive = tab === activeTab;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      "relative shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
-                      isActive ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="edit-search-tab"
-                        className="absolute inset-0 rounded-full bg-muted/70"
-                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                    <span className="relative z-10">{tab}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="h-px bg-border/30 shrink-0" />
-
-            {/* Results */}
-            <div className="no-scrollbar overflow-y-auto">
-              {searchItems.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <p className="text-[14px] text-muted-foreground/40">
-                    {query ? `No results for "${query}"` : "No items"}
-                  </p>
+            {query ? (
+              <>
+                {/* Tabs — only when searching */}
+                <div className="no-scrollbar flex gap-1 overflow-x-auto px-4 pb-2 shrink-0">
+                  {SEARCH_TABS.map((tab) => {
+                    const isActive = tab === activeTab;
+                    return (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={cn(
+                          "relative shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
+                          isActive ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="edit-search-tab"
+                            className="absolute inset-0 rounded-full bg-muted/70"
+                            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                          />
+                        )}
+                        <span className="relative z-10">{tab}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                searchItems.slice(0, 8).map((ticker) => {
-                  const checked = local.includes(ticker.symbol);
-                  return (
-                    <TickerRow
-                      key={ticker.symbol}
-                      ticker={ticker}
-                      checked={checked}
-                      disabled={!checked && atLimit}
-                      onToggle={() => toggle(ticker.symbol)}
-                    />
-                  );
-                })
-              )}
-            </div>
+
+                <div className="h-px bg-border/30 shrink-0" />
+
+                {/* Search results */}
+                <div className="no-scrollbar overflow-y-auto">
+                  {searchItems.length === 0 ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-[14px] text-muted-foreground/40">
+                        No results for &ldquo;{query}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    searchItems.slice(0, 8).map((ticker) => {
+                      const checked = local.includes(ticker.symbol);
+                      return (
+                        <TickerRow
+                          key={ticker.symbol}
+                          ticker={ticker}
+                          checked={checked}
+                          disabled={!checked && atLimit}
+                          onToggle={() => toggle(ticker.symbol)}
+                        />
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Empty state — Popular Indices */}
+                <div className="px-5 pt-3 pb-1 shrink-0">
+                  <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/40">Popular Indices</span>
+                </div>
+                <div className="no-scrollbar overflow-y-auto">
+                  {ALL_TICKERS.filter((t) => t.type === "Index").map((ticker) => {
+                    const checked = local.includes(ticker.symbol);
+                    return (
+                      <TickerRow
+                        key={ticker.symbol}
+                        ticker={ticker}
+                        checked={checked}
+                        disabled={!checked && atLimit}
+                        onToggle={() => toggle(ticker.symbol)}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

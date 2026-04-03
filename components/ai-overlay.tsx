@@ -19,9 +19,10 @@ export function AIOverlay() {
   const pathname = usePathname();
   const { isOpen, openAI, closeAI, sendMessage } = useAI();
 
-  // Hide AI overlay on certain pages
-  if (pathname?.startsWith("/order-flow") || pathname?.endsWith("/alerts") || pathname === "/search") return null;
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Hide AI overlay on certain pages
+  const hidden = pathname?.startsWith("/order-flow") || pathname?.endsWith("/alerts") || pathname === "/search" || pathname === "/home-v2";
 
   const [containerW, setContainerW] = useState(390);
   const [containerH, setContainerH] = useState(800);
@@ -152,7 +153,7 @@ export function AIOverlay() {
     snapToEdge(cx + FAB_SIZE / 2, cy);
   };
 
-  if (pathname === "/home-v2") return null;
+  if (hidden) return null;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex justify-center">

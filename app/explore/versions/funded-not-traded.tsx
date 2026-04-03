@@ -20,11 +20,12 @@ import {
   Gem,
   Rocket,
   Maximize2,
-  Wrench,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { StoriesViewer, type Story } from "@/components/stories-viewer";
 // pills used instead of shadcn Tabs
 
 /* ------------------------------------------------------------------ */
@@ -647,28 +648,40 @@ function TopMoversWidget() {
 /*  Smart Collections — data                                           */
 /* ------------------------------------------------------------------ */
 
-type RiskCategory = "conservative" | "moderate" | "aggressive" | "thematic";
-
-const riskStyle: Record<RiskCategory, { label: string; color: string }> = {
-  conservative: { label: "Conservative", color: "text-blue-500" },
-  moderate: { label: "Moderate", color: "text-amber-500" },
-  aggressive: { label: "Aggressive", color: "text-red-500" },
-  thematic: { label: "Thematic", color: "text-violet-500" },
-};
-
 interface Collection {
   name: string;
   description: string;
-  icon: LucideIcon;
-  cagr5y: number;
-  maxDrawdown: number;
-  risk: RiskCategory;
+  return1y: number;
+  return3y: number;
+  return5y: number;
+  stocks: number;
+  logos: string[];  // bg colors for logo circles
+  minAmount: number;
+  customisable?: boolean;
 }
 
 const smartCollections: Collection[] = [
-  { name: "AI & Robotics", description: "Top AI, automation & chip companies driving the next wave", icon: Brain, cagr5y: 38.4, maxDrawdown: -34.2, risk: "aggressive" },
-  { name: "FAANG+", description: "Big tech & digital platforms with proven cash flows", icon: Layers, cagr5y: 19.6, maxDrawdown: -18.5, risk: "moderate" },
-  { name: "Clean Energy & EV", description: "Solar, wind & EV ecosystem shaping the future", icon: Zap, cagr5y: 24.1, maxDrawdown: -41.8, risk: "aggressive" },
+  {
+    name: "Tech Giants",
+    description: "High-growth silicon leaders dominating the global digital infrastructure and AI sector.",
+    return1y: 4.2, return3y: 18.7, return5y: 32.4,
+    stocks: 15, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 1234, customisable: true,
+  },
+  {
+    name: "AI & Robotics",
+    description: "Top AI, automation & chip companies driving the next wave of computing.",
+    return1y: 12.8, return3y: 42.1, return5y: 68.3,
+    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 500,
+  },
+  {
+    name: "Clean Energy",
+    description: "Solar, wind & EV ecosystem shaping the future of sustainable infrastructure.",
+    return1y: -2.4, return3y: 8.9, return5y: 24.1,
+    stocks: 12, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 750, customisable: true,
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -676,37 +689,54 @@ const smartCollections: Collection[] = [
 /* ------------------------------------------------------------------ */
 
 function CollectionCard({ c }: { c: Collection }) {
-  const risk = riskStyle[c.risk];
+  const moreCount = c.stocks - c.logos.length;
 
   return (
-    <button className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors active:scale-[0.98]">
-      {/* Row 1: icon + title + 5Y CAGR */}
-      <div className="flex items-center gap-3 mb-2.5">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-muted">
-          <c.icon size={22} strokeWidth={1.7} className="text-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-bold leading-tight">{c.name}</p>
-          <p className="text-[13px] text-muted-foreground leading-snug mt-0.5">{c.description}</p>
-        </div>
+    <button className="w-full rounded-2xl border border-border/60 bg-card p-5 text-left transition-colors active:scale-[0.98]">
+      {/* Title + badge */}
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="text-[17px] font-bold text-foreground leading-tight">{c.name}</h3>
+        {c.customisable && (
+          <span className="shrink-0 ml-3 rounded-full border border-border/60 px-3 py-1 text-[12px] font-medium text-muted-foreground">
+            Customisable
+          </span>
+        )}
       </div>
 
-      {/* Row 2: stats grid */}
-      <div className="border-t border-border/40 pt-3 grid grid-cols-3 gap-2">
-        {/* 5Y CAGR */}
-        <div>
-          <p className="text-[11px] text-muted-foreground mb-0.5">5Y CAGR</p>
-          <p className="text-[15px] font-bold tabular-nums text-emerald-500">+{c.cagr5y}%</p>
+      {/* Description */}
+      <p className="text-[14px] text-muted-foreground leading-relaxed mb-4">{c.description}</p>
+
+      {/* Returns */}
+      <div className="border-t border-border/40 pt-3 grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: "1Y", value: c.return1y },
+          { label: "3Y", value: c.return3y },
+          { label: "5Y", value: c.return5y },
+        ].map((r) => (
+          <div key={r.label}>
+            <p className="text-[12px] text-muted-foreground/50 mb-0.5">{r.label}</p>
+            <p className={cn("text-[17px] font-bold tabular-nums", r.value >= 0 ? "text-gain" : "text-loss")}>
+              {r.value >= 0 ? "+" : ""}{r.value}%
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Logos + Min amount */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex -space-x-2">
+            {c.logos.map((bg, i) => (
+              <div key={i} className={cn("h-8 w-8 rounded-full border-2 border-card", bg)} />
+            ))}
+          </div>
+          {moreCount > 0 && (
+            <span className="text-[13px] text-muted-foreground">+{moreCount} more</span>
+          )}
         </div>
-        {/* Max Drawdown */}
-        <div>
-          <p className="text-[11px] text-muted-foreground mb-0.5">Max DD</p>
-          <p className="text-[15px] font-bold tabular-nums text-red-500">{c.maxDrawdown}%</p>
-        </div>
-        {/* Category */}
         <div className="text-right">
-          <p className="text-[11px] text-muted-foreground mb-0.5">Category</p>
-          <p className={cn("text-[13px] font-semibold", risk.color)}>{risk.label}</p>
+          <p className="text-[11px] text-muted-foreground/50 uppercase tracking-wide">Min Amount</p>
+          <p className="text-[15px] font-bold tabular-nums text-foreground">{c.minAmount.toLocaleString()}</p>
         </div>
       </div>
     </button>
@@ -740,18 +770,6 @@ function RecurringBasketsWidget() {
           <CollectionCard key={c.name} c={c} />
         ))}
       </div>
-
-      {/* Build your own */}
-      <button className="mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card/50 p-4 text-left transition-colors active:scale-[0.98]">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-muted">
-          <Wrench size={20} strokeWidth={1.7} className="text-muted-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold">Build Your Own Collection</p>
-          <p className="text-[13px] text-muted-foreground">Pick your stocks, set weights, auto-invest on your terms</p>
-        </div>
-        <ChevronRight size={18} className="text-muted-foreground flex-shrink-0" />
-      </button>
 
       {/* View more */}
       <button className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-border/60 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
@@ -903,123 +921,104 @@ function AnalystRatingsWidget() {
             className="flex"
           >
             {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Stock
-              </div>
+            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
+              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
               {stocks.map((stock) => (
-                <div
-                  key={stock.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-5"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => toggleBookmark(stock.symbol)}
-                      className="flex-shrink-0 transition-transform active:scale-90"
-                    >
-                      <Bookmark
-                        size={16}
-                        strokeWidth={1.8}
-                        className={cn(
-                          "transition-colors",
-                          bookmarks.has(stock.symbol)
-                            ? "fill-foreground text-foreground"
-                            : "text-muted-foreground/60"
-                        )}
-                      />
-                    </button>
-                    <div
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground"
-                    >
-                      {stock.symbol.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
-                        {stock.name}
-                      </p>
-                      <p className="text-[12px] leading-tight text-muted-foreground">
-                        {stock.symbol}
-                      </p>
-                    </div>
-                  </div>
+                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
+                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
+                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
                 </div>
               ))}
             </div>
 
             {/* ---- Scrollable right columns ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 560 }}>
+              <table style={{ minWidth: 620 }}>
                 <thead>
-                  <tr className="h-[37px]">
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <tr className="h-[40px]">
+                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Upside
                     </th>
-                    <th className="min-w-[120px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[120px] px-3 text-center text-[14px] font-medium text-muted-foreground">
                       Consensus
                     </th>
-                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Price
                     </th>
-                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Target
                     </th>
-                    <th className="min-w-[68px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[68px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Avg Vol
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Mkt Cap
                     </th>
-                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[64px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Sector
                     </th>
+                    <th className="min-w-[48px] px-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {stocks.map((stock) => (
                     <tr
                       key={stock.symbol}
-                      className="h-[56px] border-t border-border/20"
+                      className="h-[64px] border-t border-border/10"
                     >
-                      {/* Upside % */}
                       <td
                         className={cn(
-                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
-                          stock.upside >= 0 ? "text-emerald-500" : "text-red-500"
+                          "whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold",
+                          stock.upside >= 0 ? "text-gain" : "text-loss"
                         )}
                       >
                         {stock.upside >= 0 ? "+" : ""}{stock.upside.toFixed(1)}%
                       </td>
 
-                      {/* Consensus Bar */}
                       <td className="px-3">
                         <div className="flex justify-center">
                           <ConsensusBadge buy={stock.buy} hold={stock.hold} sell={stock.sell} />
                         </div>
                       </td>
 
-                      {/* Price */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
                         {stock.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
 
-                      {/* Target Price */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                         {stock.targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
 
-                      {/* Avg Volume */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                         {stock.avgVolume}
                       </td>
 
-                      {/* Market Cap */}
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
                         {stock.marketCap}
                       </td>
 
-                      {/* Sector */}
-                      <td className="whitespace-nowrap px-3 text-right text-[13px] text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right text-[14px] text-muted-foreground">
                         {stock.sector}
+                      </td>
+
+                      <td className="px-3">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => toggleBookmark(stock.symbol)}
+                            className="flex-shrink-0 transition-transform active:scale-90"
+                          >
+                            <Bookmark
+                              size={16}
+                              strokeWidth={1.8}
+                              className={cn(
+                                "transition-colors",
+                                bookmarks.has(stock.symbol)
+                                  ? "fill-foreground text-foreground"
+                                  : "text-muted-foreground/60"
+                              )}
+                            />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1162,82 +1161,52 @@ function DividendStocksWidget() {
             className="flex"
           >
             {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Stock
-              </div>
+            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
+              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
               {stocks.map((stock) => (
-                <div
-                  key={stock.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-5"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => toggleBookmark(stock.symbol)}
-                      className="flex-shrink-0 transition-transform active:scale-90"
-                    >
-                      <Bookmark
-                        size={16}
-                        strokeWidth={1.8}
-                        className={cn(
-                          "transition-colors",
-                          bookmarks.has(stock.symbol)
-                            ? "fill-foreground text-foreground"
-                            : "text-muted-foreground/60"
-                        )}
-                      />
-                    </button>
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
-                      {stock.symbol.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
-                        {stock.name}
-                      </p>
-                      <p className="text-[12px] leading-tight text-muted-foreground">
-                        {stock.symbol}
-                      </p>
-                    </div>
-                  </div>
+                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
+                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
+                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
                 </div>
               ))}
             </div>
 
             {/* ---- Scrollable right columns ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 520 }}>
+              <table style={{ minWidth: 580 }}>
                 <thead>
-                  <tr className="h-[37px]">
-                    <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <tr className="h-[40px]">
+                    <th className="min-w-[64px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Yield
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Div/Yr
                     </th>
-                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Payout
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       5Y CAGR
                     </th>
-                    <th className="min-w-[56px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[56px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Streak
                     </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
                       Ex-Date
                     </th>
+                    <th className="min-w-[48px] px-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {stocks.map((stock) => (
                     <tr
                       key={stock.symbol}
-                      className="h-[56px] border-t border-border/20"
+                      className="h-[64px] border-t border-border/10"
                     >
-                      <td className="whitespace-nowrap px-3 text-right text-[13px] font-bold tabular-nums text-gain">
+                      <td className="whitespace-nowrap px-3 text-right text-[14px] font-bold tabular-nums text-gain">
                         {stock.yield.toFixed(2)}%
                       </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[13px] tabular-nums text-foreground">
+                      <td className="whitespace-nowrap px-3 text-right text-[14px] tabular-nums text-foreground">
                         {stock.annualDiv.toFixed(2)}
                       </td>
                       <td className="whitespace-nowrap px-3 text-right">
@@ -1245,17 +1214,36 @@ function DividendStocksWidget() {
                       </td>
                       <td
                         className={cn(
-                          "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
-                          stock.growth5Y >= 0 ? "text-emerald-500" : "text-red-500"
+                          "whitespace-nowrap px-3 text-right text-[14px] font-semibold tabular-nums",
+                          stock.growth5Y >= 0 ? "text-gain" : "text-loss"
                         )}
                       >
                         {stock.growth5Y >= 0 ? "+" : ""}{stock.growth5Y.toFixed(1)}%
                       </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums text-foreground">
+                      <td className="whitespace-nowrap px-3 text-right text-[14px] font-semibold tabular-nums text-foreground">
                         {stock.streak}yr
                       </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[13px] text-muted-foreground">
+                      <td className="whitespace-nowrap px-3 text-right text-[14px] text-muted-foreground">
                         {stock.nextExDate}
+                      </td>
+                      <td className="px-3">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => toggleBookmark(stock.symbol)}
+                            className="flex-shrink-0 transition-transform active:scale-90"
+                          >
+                            <Bookmark
+                              size={16}
+                              strokeWidth={1.8}
+                              className={cn(
+                                "transition-colors",
+                                bookmarks.has(stock.symbol)
+                                  ? "fill-foreground text-foreground"
+                                  : "text-muted-foreground/60"
+                              )}
+                            />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1276,122 +1264,321 @@ function DividendStocksWidget() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Level Up Widget                                                    */
+/*  Level Up Widget — Tabbed Bite-Sized Stories                        */
 /* ------------------------------------------------------------------ */
 
-const levelUpStages = [
-  {
-    title: "The Confident Investor",
-    body: "Read earnings reports. Understand P/E ratios. Spot sector rotation.",
-    videos: [
-      { title: "How to read earnings", duration: "5 min" },
-      { title: "P/E ratios explained", duration: "4 min" },
-      { title: "Sector rotation strategies", duration: "5 min" },
-    ],
-  },
-  {
-    title: "The Strategic Investor",
-    body: "Read charts. Spot patterns. Make your first swing trade.",
-    videos: [
-      { title: "Reading a stock chart", duration: "5 min" },
-      { title: "Support & resistance", duration: "4 min" },
-      { title: "Volume: the hidden signal", duration: "3 min" },
-    ],
-  },
-  {
-    title: "The Options Explorer",
-    body: "Calls, puts, covered calls. Trade options with confidence.",
-    videos: [
-      { title: "Options 101: Calls", duration: "3 min" },
-      { title: "Options 102: Puts", duration: "4 min" },
-      { title: "Covered calls for income", duration: "5 min" },
-    ],
-  },
-  {
-    title: "Power Mode",
-    body: "Algo strategies. Advanced orders. Extended-hours trading.",
-    videos: [
-      { title: "How algo trading works", duration: "4 min" },
-      { title: "Bracket & OCO orders", duration: "5 min" },
-      { title: "From investor to trader", duration: "6 min" },
-    ],
-  },
+type StockLevelUpTab = "strategies" | "insights";
+
+interface LevelUpCard {
+  id: string;
+  title: string;
+  hook: string;
+  gradient: string;
+  story: Story;
+}
+
+const stockLevelUpTabs: { id: StockLevelUpTab; label: string }[] = [
+  { id: "strategies", label: "Strategies" },
+  { id: "insights", label: "Insights" },
 ];
 
+const stockLevelUpData: Record<StockLevelUpTab, LevelUpCard[]> = {
+  strategies: [
+    {
+      id: "pe-trick", title: "What P/E Actually Tells You",
+      hook: "It\u2019s not just \u201ccheap vs expensive.\u201d One number, decoded.",
+      gradient: "from-zinc-600 to-zinc-900",
+      story: { id: "s-pe", title: "P/E Decoded", subtitle: "Strategy", icon: <TrendingUp size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">P/E <span className="text-zinc-300">decoded.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <p className="text-[48px] font-bold text-white/80">25x</p>
+            <p className="text-[16px] leading-relaxed text-white/50">A P/E of 25 means you pay 25 for every 1 of earnings. But high P/E isn&apos;t always bad \u2014 it can mean the market expects growth. Low P/E isn&apos;t always good \u2014 it can mean the market expects decline.</p>
+            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
+              <p className="text-[15px] font-semibold text-white">The one-liner</p>
+              <p className="text-[13px] text-white/40">Compare P/E to the sector average, not the market. A tech stock at 30x and a bank at 30x are very different stories.</p>
+            </div>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "earnings-check", title: "The 10-Second Earnings Check",
+      hook: "Revenue, EPS, guidance. Three numbers. That\u2019s it.",
+      gradient: "from-neutral-600 to-neutral-900",
+      story: { id: "s-earnings", title: "Earnings in 10s", subtitle: "Strategy", icon: <BarChart3 size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">3 numbers. <span className="text-neutral-300">10 seconds.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="w-full space-y-2.5">
+              {[
+                { num: "1", label: "Revenue", desc: "Did the company sell more than expected? Top-line growth = demand." },
+                { num: "2", label: "EPS", desc: "Earnings per share \u2014 beat or miss? This moves the stock after hours." },
+                { num: "3", label: "Guidance", desc: "What management expects next quarter. This matters more than the beat." },
+              ].map((item) => (
+                <div key={item.num} className="flex items-start gap-3 rounded-2xl bg-white/8 px-4 py-3 text-left">
+                  <span className="text-[20px] font-bold text-white/60">{item.num}</span>
+                  <div><p className="text-[15px] font-semibold text-white">{item.label}</p><p className="text-[13px] text-white/40">{item.desc}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "dca-power", title: "DCA: The Lazy Genius Move",
+      hook: "Same amount, same day, every month. Why it beats timing.",
+      gradient: "from-stone-600 to-stone-900",
+      story: { id: "s-dca", title: "DCA Power", subtitle: "Strategy", icon: <Target size={18} />, gradient: "from-stone-800 to-stone-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">The lazy <span className="text-stone-300">genius</span> move.</div>
+            <div className="h-px w-12 bg-white/15" />
+            <p className="text-[16px] leading-relaxed text-white/50">Dollar-cost averaging means investing a fixed amount at regular intervals. You buy more shares when prices are low, fewer when they\u2019re high.</p>
+            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
+              <p className="text-[15px] font-semibold text-white">The math</p>
+              <p className="text-[13px] text-white/40">500/month into the S&P 500 since 2014 \u2192 you\u2019d have invested 60,000 and it would be worth ~112,000. No timing required.</p>
+            </div>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "sell-winner", title: "When to Sell a Winner",
+      hook: "The hardest decision in investing. Here\u2019s a framework.",
+      gradient: "from-gray-600 to-gray-900",
+      story: { id: "s-sell", title: "Selling Winners", subtitle: "Strategy", icon: <Zap size={18} />, gradient: "from-gray-800 to-gray-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">When to <span className="text-gray-300">let go.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="w-full space-y-2.5">
+              {[
+                { label: "The thesis broke", desc: "You bought for a reason. If that reason no longer holds, sell." },
+                { label: "It\u2019s now 40%+ of your portfolio", desc: "Concentration risk. Take some off the table." },
+                { label: "You need the money", desc: "Investing has a purpose. If the purpose arrived, it\u2019s not \u201cselling early.\u201d" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                  <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                  <p className="text-[13px] text-white/40">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "covered-call", title: "Covered Calls in 30 Seconds",
+      hook: "Own the stock. Sell the upside. Collect the premium.",
+      gradient: "from-zinc-500 to-zinc-900",
+      story: { id: "s-cc", title: "Covered Calls", subtitle: "Strategy", icon: <Gem size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Income from <span className="text-zinc-300">stocks you own.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="w-full space-y-2.5">
+              {[
+                { num: "1", desc: "You own 100 shares of AAPL at 185" },
+                { num: "2", desc: "You sell a call at 195 strike, expiring in 30 days" },
+                { num: "3", desc: "You collect ~3.50 per share = 350 premium, instantly" },
+              ].map((item) => (
+                <div key={item.num} className="flex items-start gap-3 rounded-2xl bg-white/8 px-4 py-3 text-left">
+                  <span className="text-[20px] font-bold text-white/60">{item.num}</span>
+                  <p className="text-[14px] text-white/50">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[14px] text-white/30">If AAPL stays below 195, you keep the shares + the premium. If it goes above, you sell at 195 + keep the premium. Win-win.</p>
+          </div>
+        ),
+      },
+    },
+  ],
+  insights: [
+    {
+      id: "time-vs-timing", title: "Why Time Beats Timing",
+      hook: "Miss the 10 best days in 20 years and your returns get cut in half.",
+      gradient: "from-neutral-500 to-neutral-900",
+      story: { id: "i-time", title: "Time > Timing", subtitle: "Insight", icon: <TrendingUp size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Time <span className="text-neutral-300">always</span> wins.</div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="flex gap-6">
+              <div><p className="text-[28px] font-bold text-white/80">9.8%</p><p className="text-[12px] text-white/40">Stayed invested</p></div>
+              <div><p className="text-[28px] font-bold text-white/40">5.6%</p><p className="text-[12px] text-white/40">Missed 10 best days</p></div>
+            </div>
+            <p className="text-[16px] leading-relaxed text-white/50">S&P 500 over 20 years. The 10 best days often come right after the worst. If you panicked and sold, you missed the recovery. Staying invested is the strategy.</p>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "compounding", title: "The Power of Compounding",
+      hook: "1,000 growing at 10% becomes 17,449 in 30 years. No extra effort.",
+      gradient: "from-stone-500 to-stone-900",
+      story: { id: "i-compound", title: "Compounding", subtitle: "Insight", icon: <Rocket size={18} />, gradient: "from-stone-800 to-stone-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">The 8th <span className="text-stone-300">wonder.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="flex gap-4">
+              <div><p className="text-[24px] font-bold text-white/80">1,000</p><p className="text-[12px] text-white/40">Year 0</p></div>
+              <div><p className="text-[24px] font-bold text-white/80">6,727</p><p className="text-[12px] text-white/40">Year 20</p></div>
+              <div><p className="text-[24px] font-bold text-white/80">17,449</p><p className="text-[12px] text-white/40">Year 30</p></div>
+            </div>
+            <p className="text-[16px] leading-relaxed text-white/50">That last 10 years added more than the first 20. Compounding is exponential \u2014 the longer you stay, the harder your money works.</p>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "good-news-drop", title: "Why Stocks Drop on Good News",
+      hook: "\u201cBeat earnings by 20%\u201d \u2014 stock drops 8%. Here\u2019s why.",
+      gradient: "from-gray-500 to-gray-900",
+      story: { id: "i-drop", title: "Good News, Bad Price", subtitle: "Insight", icon: <BarChart3 size={18} />, gradient: "from-gray-800 to-gray-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Buy the <span className="text-gray-300">rumor.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <p className="text-[16px] leading-relaxed text-white/50">Markets are forward-looking. By the time earnings drop, the stock already moved on expectations. A \u201cbeat\u201d that was already priced in is actually a non-event.</p>
+            <div className="w-full space-y-2.5">
+              {[
+                { label: "Priced in", desc: "Stock ran up 15% into earnings. The beat was expected." },
+                { label: "Sell the news", desc: "Traders who bought the rumor take profits on the event." },
+                { label: "Guidance matters more", desc: "The beat was great. But management lowered next quarter." },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                  <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                  <p className="text-[13px] text-white/40">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "loss-aversion", title: "Why Losses Hurt 2x More",
+      hook: "Losing 100 feels worse than gaining 100 feels good. Your brain is wired this way.",
+      gradient: "from-zinc-500 to-zinc-900",
+      story: { id: "i-loss", title: "Loss Aversion", subtitle: "Insight", icon: <Brain size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Your brain <span className="text-zinc-300">lies.</span></div>
+            <div className="h-px w-12 bg-white/15" />
+            <div className="flex gap-6">
+              <div><p className="text-[28px] font-bold text-white/80">+100</p><p className="text-[12px] text-white/40">Feels good</p></div>
+              <div><p className="text-[28px] font-bold text-white/80">-100</p><p className="text-[12px] text-white/40">Feels 2x worse</p></div>
+            </div>
+            <p className="text-[16px] leading-relaxed text-white/50">This is loss aversion. It makes you hold losers too long (hoping to break even) and sell winners too early (locking in the good feeling). Knowing this is half the battle.</p>
+          </div>
+        ),
+      },
+    },
+    {
+      id: "diversification-myth", title: "Diversification \u2260 Owning 50 Stocks",
+      hook: "You can hold 50 tech stocks and still be wildly concentrated.",
+      gradient: "from-neutral-600 to-neutral-900",
+      story: { id: "i-div", title: "Real Diversification", subtitle: "Insight", icon: <Layers size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
+        renderContent: () => (
+          <div className="flex flex-col items-center gap-8 px-2 text-center">
+            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">50 stocks. <span className="text-neutral-300">Zero</span> diversification.</div>
+            <div className="h-px w-12 bg-white/15" />
+            <p className="text-[16px] leading-relaxed text-white/50">Diversification isn&apos;t about counting holdings. It&apos;s about owning things that don&apos;t move together. 50 tech stocks all drop when rates rise.</p>
+            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
+              <p className="text-[15px] font-semibold text-white">Real diversification</p>
+              <p className="text-[13px] text-white/40">Different sectors, different geographies, different asset classes (stocks, bonds, commodities). When one zigs, the other zags.</p>
+            </div>
+          </div>
+        ),
+      },
+    },
+  ],
+};
+
+function LevelUpCarousel({ cards }: { cards: LevelUpCard[] }) {
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
+
+  return (
+    <>
+      <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
+        <div className="flex gap-3" style={{ width: "max-content" }}>
+          {cards.map((card, i) => (
+            <button
+              key={card.id}
+              onClick={() => { setStoryIndex(i); setStoryOpen(true); }}
+              className="relative flex w-[200px] flex-shrink-0 flex-col justify-between overflow-hidden rounded-2xl text-left transition-transform active:scale-[0.97]"
+              style={{ height: 240 }}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient}`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="relative z-10 p-3.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <Play size={16} fill="white" className="text-white ml-0.5" />
+                </div>
+              </div>
+              <div className="relative z-10 p-3.5">
+                <p className="text-[17px] font-bold leading-tight text-white mb-1.5">{card.title}</p>
+                <p className="text-[12px] leading-snug text-white/50 line-clamp-2">{card.hook}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <StoriesViewer
+        isOpen={storyOpen}
+        onClose={() => setStoryOpen(false)}
+        initialIndex={storyIndex}
+      />
+    </>
+  );
+}
+
 function LevelUpWidget() {
-  const [expanded, setExpanded] = useState(0);
+  const [activeTab, setActiveTab] = useState<StockLevelUpTab>("strategies");
 
   return (
     <div>
-      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
+      <h2 className="mb-2.5 text-[18px] font-bold tracking-tight">
         Level Up
       </h2>
-      <p className="mb-3 text-[14px] text-muted-foreground">
-        Every great trader started as a curious investor. Here&apos;s the path.
-      </p>
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        {levelUpStages.map((stage, i) => {
-          const isOpen = expanded === i;
-          return (
-            <div
-              key={stage.title}
-              className={cn(i > 0 && "border-t border-border/40")}
-            >
-              <button
-                onClick={() => setExpanded(isOpen ? -1 : i)}
-                className="flex w-full items-center gap-3 p-3.5 text-left"
-              >
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-[13px] font-bold text-foreground">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-semibold text-foreground">{stage.title}</p>
-                  {!isOpen && (
-                    <p className="text-[12px] text-muted-foreground truncate">{stage.body}</p>
-                  )}
-                </div>
-                <ChevronRight
-                  size={16}
-                  className={cn(
-                    "flex-shrink-0 text-muted-foreground transition-transform duration-200",
-                    isOpen && "rotate-90"
-                  )}
-                />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-3.5 pb-3.5 pt-0">
-                      <p className="text-[13px] text-muted-foreground mb-3">{stage.body}</p>
-                      <div className="space-y-2">
-                        {stage.videos.map((v) => (
-                          <div key={v.title} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-0.5">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </div>
-                            <p className="text-[13px] font-medium text-foreground flex-1">{v.title}</p>
-                            <span className="text-[12px] text-muted-foreground">{v.duration}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        {stockLevelUpTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+              activeTab === tab.id
+                ? "bg-foreground text-background"
+                : "border border-border/60 text-muted-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <LevelUpCarousel cards={stockLevelUpData[activeTab]} />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -1909,11 +2096,11 @@ export function ExploreFundedNotTraded() {
       <PromoBanner />
       <TopMoversWidget />
       <HeatmapWidget />
+      <LevelUpWidget />
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />
       <DividendStocksWidget />
       <ScreenerWidget />
-      <LevelUpWidget />
       <EarningsCalendar />
       <DividendCalendar />
     </div>

@@ -7,7 +7,6 @@ import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   Sparkles,
   RefreshCw,
-  ChevronRight,
   AlarmClock,
   Trash2,
   Plus,
@@ -51,7 +50,7 @@ const EV_SYMBOLS = ["TSLA", "RIVN", "LCID", "NIO", "LI", "XPEV"];
 const INITIAL_WATCHLISTS: WatchlistData[] = [
   {
     id: "wl-1",
-    label: "Watchlist",
+    label: "My Watchlist",
     stocks: ALL_TICKERS.filter((t) => MAG7_SYMBOLS.includes(t.symbol)),
   },
   {
@@ -78,14 +77,7 @@ type SummarySegment =
   | { type: "stock"; symbol: string; name: string; changePercent: number };
 
 /* Mock news sources */
-const AI_SOURCES = [
-  { name: "bloomberg", color: "bg-purple-600" },
-  { name: "reuters", color: "bg-orange-500" },
-  { name: "seekingalpha", color: "bg-green-600" },
-  { name: "barrons", color: "bg-blue-500" },
-];
-
-function StockBadge({ symbol, name, changePercent, onTap }: { symbol: string; name: string; changePercent: number; onTap: () => void }) {
+function StockBadge({ name, changePercent, onTap }: { symbol: string; name: string; changePercent: number; onTap: () => void }) {
   const gain = changePercent >= 0;
   return (
     <span className="inline whitespace-nowrap">
@@ -758,7 +750,6 @@ function CustomizeTab({
 
 // ── Shared watchlist content (no shell) ──────────────────────────────
 export function WatchlistContent() {
-  const router = useRouter();
   const [watchlists, setWatchlists] = useState<WatchlistData[]>(INITIAL_WATCHLISTS);
   const [activeTabId, setActiveTabId] = useState("wl-1");
   const tabs = useMemo(() => {

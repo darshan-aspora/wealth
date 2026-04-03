@@ -10,7 +10,7 @@ import {
 import Image from "next/image";
 import {
   X, Bell, Search, ChevronDown, SlidersHorizontal,
-  Compass, BarChart3, PieChart, Sparkles, Zap,
+  Compass, BarChart3, PieChart, Zap,
   Rocket, Users, FlaskConical, MessageCircle, Gift,
   Settings, Settings2,
 } from "lucide-react";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { HomeIndicator } from "@/components/iphone-frame";
 import { ALL_TICKERS, formatPrice, isGain, EditSheet, type TickerItem } from "@/components/ticker";
 import { SearchPlaceholder } from "@/components/header";
-import { StoriesViewer, stories } from "@/components/stories-viewer";
+import { StoriesViewer } from "@/components/stories-viewer";
 import { ExploreFundedNotTraded } from "@/app/explore/versions/funded-not-traded";
 import { ETFFundedNotTraded } from "@/app/explore/versions/etf-funded-not-traded";
 import { USMarketsTab } from "@/app/market/components/us-markets-tab";
@@ -37,7 +37,7 @@ import { SettingsTab } from "@/app/market/components/settings-tab";
 const DEFAULT_SYMBOLS = ["SPX", "NDX", "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA"];
 
 const spotlightCards = [
-  { id: "baskets", title: "Advisory Baskets", subtitle: "Curated by experts", icon: Sparkles },
+  { id: "baskets", title: "Advisory Baskets", subtitle: "Curated by experts", icon: FlaskConical },
   { id: "research", title: "Research Group", subtitle: "Join the conversation", icon: Users },
   { id: "options-launch", title: "Options Trading", subtitle: "Now live", icon: Rocket },
   { id: "community", title: "Community", subtitle: "Share your ideas", icon: MessageCircle },
@@ -159,7 +159,7 @@ const homeV2Tabs: { id: BottomTab; label: string; icon: typeof Compass }[] = [
   { id: "explore", label: "Explore", icon: Compass },
   { id: "market", label: "Market", icon: BarChart3 },
   { id: "portfolio", label: "Portfolio", icon: PieChart },
-  { id: "advisory", label: "Advisory", icon: Sparkles },
+  { id: "advisory", label: "Advisory", icon: FlaskConical },
   { id: "levelup", label: "Level Up", icon: Zap },
 ];
 

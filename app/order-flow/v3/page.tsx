@@ -24,12 +24,6 @@ const categories: { key: OrderCategory; label: string }[] = [
   { key: "cover", label: "Cover" },
 ];
 
-const orderTypes: { key: OrderType; label: string }[] = [
-  { key: "market", label: "Market" },
-  { key: "limit", label: "Limit" },
-  { key: "gtc", label: "GTC" },
-];
-
 const stock = { name: "Tesla Inc", symbol: "TSLA", price: 411.82, changePercent: 0.03 };
 const available = 500.0;
 const fee = 1.0;
@@ -49,10 +43,10 @@ function SwipeCTA({ onComplete, side }: { onComplete: () => void; side: OrderSid
   }, []);
 
   const textOpacity = useTransform(dragX, [0, maxDrag * 0.35], [1, 0]);
-  const bgWidth = useTransform(dragX, [0, maxDrag], ["58px", `${trackWidth}px`]);
+  useTransform(dragX, [0, maxDrag], ["58px", `${trackWidth}px`]);
 
   const handleDragEnd = useCallback(
-    (_: any, info: { offset: { x: number } }) => {
+    (_: unknown, info: { offset: { x: number } }) => {
       if (info.offset.x > maxDrag * 0.6) {
         animate(dragX, maxDrag, { type: "spring", stiffness: 400, damping: 30 });
         setCompleted(true);
@@ -231,7 +225,7 @@ export default function OrderFlowV3() {
   const [slTriggerMode, setSlTriggerMode] = useState<"price" | "percent">("price");
   const [slTriggerPrice, setSlTriggerPrice] = useState("409.50");
   const [slTriggerPercent, setSlTriggerPercent] = useState("1.50");
-  const [swiped, setSwiped] = useState(false);
+  const [, setSwiped] = useState(false);
   const [amountMode, setAmountMode] = useState<"dollars" | "shares">("dollars");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [gtcPriceMode, setGtcPriceMode] = useState<"market" | "limit">("market");

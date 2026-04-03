@@ -1,80 +1,356 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ArrowUpRight, LineChart, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { PORTFOLIO_SUMMARY, PERIOD_RETURNS } from "./portfolio-mock-data";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { createChart, ColorType, AreaSeries, LineSeries } from "lightweight-charts";
+import { PORTFOLIO_SUMMARY, PERIOD_RETURNS, WEALTH_GROWTH_DATA } from "./portfolio-mock-data";
+
+/* ------------------------------------------------------------------ */
+/*  Chart period tabs                                                  */
+/* ------------------------------------------------------------------ */
+
+const CHART_PERIODS = ["6M", "1Y", "3Y", "5Y", "Max"] as const;
+type ChartPeriod = (typeof CHART_PERIODS)[number];
+
+/* ------------------------------------------------------------------ */
+/*  Wealth Growth Chart                                                */
+/* ------------------------------------------------------------------ */
+
+interface CrosshairData {
+  value: number;
+  invested: number;
+  date: string;
+}
+
+function WealthGrowthChart({
+  onCrosshairMove,
+  period,
+}: {
+  onCrosshairMove?: (data: CrosshairData | null) => void;
+  period: ChartPeriod;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const chart = createChart(containerRef.current, {
+      width: containerRef.current.clientWidth,
+      height: 220,
+      layout: {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: "rgba(150,150,150,0.9)",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontSize: 11,
+        attributionLogo: false,
+      },
+      grid: {
+        vertLines: { visible: false },
+        horzLines: { visible: false },
+      },
+      rightPriceScale: { visible: false },
+      timeScale: {
+        visible: true,
+        borderVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        tickMarkFormatter: (time: string) => {
+          const d = new Date(time);
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          if (period === "6M") return months[d.getMonth()];
+          if (period === "1Y") return months[d.getMonth()];
+          return `${months[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
+        },
+      },
+      handleScroll: { mouseWheel: false, pressedMouseMove: true },
+      handleScale: false,
+      crosshair: {
+        vertLine: { color: "rgba(150,150,150,0.3)", width: 1, style: 2, labelVisible: false },
+        horzLine: { visible: false, labelVisible: false },
+      },
+    });
+
+    const investedSeries = chart.addSeries(LineSeries, {
+      color: "rgba(150,150,150,0.35)",
+      lineWidth: 1,
+      lineType: 2,
+      crosshairMarkerVisible: false,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+
+    const valueSeries = chart.addSeries(AreaSeries, {
+      lineColor: "#22c55e",
+      topColor: "rgba(34,197,94,0.18)",
+      bottomColor: "rgba(34,197,94,0.01)",
+      lineWidth: 2,
+      lineType: 2,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 5,
+      crosshairMarkerBackgroundColor: "#22c55e",
+      crosshairMarkerBorderColor: "#fff",
+      crosshairMarkerBorderWidth: 2,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+
+    const sliceCount =
+      period === "6M" ? 6 :
+      period === "1Y" ? 12 :
+      WEALTH_GROWTH_DATA.length;
+
+    const slicedData = WEALTH_GROWTH_DATA.slice(-Math.min(sliceCount, WEALTH_GROWTH_DATA.length));
+
+    const chartData = slicedData.map((d, i) => {
+      const startIdx = WEALTH_GROWTH_DATA.length - slicedData.length;
+      const absIdx = startIdx + i;
+      const year = 2025 + Math.floor(absIdx / 12);
+      const month = (absIdx % 12) + 1;
+      return {
+        time: `${year}-${String(month).padStart(2, "0")}-15` as string,
+        value: d.value,
+        invested: d.invested,
+        label: d.date,
+      };
+    });
+
+    valueSeries.setData(chartData.map((d) => ({ time: d.time, value: d.value })));
+    investedSeries.setData(chartData.map((d) => ({ time: d.time, value: d.invested })));
+    chart.timeScale().fitContent();
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!onCrosshairMove) return;
+      if (!param.time || !param.seriesData.size) {
+        onCrosshairMove(null);
+        return;
+      }
+      const vData = param.seriesData.get(valueSeries) as { value?: number } | undefined;
+      const iData = param.seriesData.get(investedSeries) as { value?: number } | undefined;
+      if (vData?.value != null) {
+        const idx = chartData.findIndex((d) => d.time === param.time);
+        onCrosshairMove({
+          value: vData.value,
+          invested: iData?.value ?? 0,
+          date: idx >= 0 ? chartData[idx].label : "",
+        });
+      }
+    });
+
+    const handleResize = () => {
+      if (containerRef.current) {
+        chart.applyOptions({ width: containerRef.current.clientWidth });
+      }
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.remove();
+    };
+  }, [onCrosshairMove, period]);
+
+  return <div ref={containerRef} className="w-full" />;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+const MASK = "••••";
+const f = (n: number, d = 2) => n.toLocaleString("en-US", { minimumFractionDigits: d });
+const fs = (n: number, d = 2) => `${n > 0 ? "+" : ""}${f(n, d)}`;
+
+/* ------------------------------------------------------------------ */
+/*  Portfolio Summary Card                                             */
+/* ------------------------------------------------------------------ */
 
 export function PortfolioSummary() {
-  const { currentValue, investedAmount, dayChange, dayChangePct, xirr } =
-    PORTFOLIO_SUMMARY;
+  const {
+    currentValue,
+    investedAmount,
+    dayChange,
+    dayChangePct,
+    unrealizedPnl,
+    unrealizedPnlPct,
+    xirr,
+  } = PORTFOLIO_SUMMARY;
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("1Y");
+  const [crosshairData, setCrosshairData] = useState<CrosshairData | null>(null);
+
+
+  const handleCrosshairMove = useCallback((data: CrosshairData | null) => {
+    setCrosshairData(data);
+  }, []);
+
+  const val = (n: number, d = 2) => (hidden ? MASK : f(n, d));
 
   return (
-    <Card className="border-border/50 shadow-none">
-      <CardContent className="p-5">
-        <p className="text-[13px] text-muted-foreground">Current Value</p>
-        <p className="mt-0.5 text-[32px] font-bold tabular-nums tracking-tight text-foreground leading-tight">
-          {currentValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-        </p>
+    <Card className="border-border/50 shadow-none overflow-hidden">
+      <CardContent className="p-6">
+        {/* Top row — icons only, no "Portfolio" label */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[13px] text-muted-foreground">Current Value</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHidden(!hidden)}
+              className="rounded-lg p-2 transition-colors hover:bg-muted/60 active:bg-muted"
+            >
+              {hidden ? (
+                <EyeOff size={20} className="text-muted-foreground" />
+              ) : (
+                <Eye size={20} className="text-muted-foreground" />
+              )}
+            </button>
+            <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (!open) setCrosshairData(null); }}>
+              <SheetTrigger asChild>
+                <button className="rounded-lg p-2 transition-colors hover:bg-muted/60 active:bg-muted">
+                  <LineChart size={20} className="text-muted-foreground" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-5 pb-8">
+                <SheetHeader className="pb-2">
+                  <SheetTitle className="text-[17px] font-semibold text-foreground">Wealth Growth</SheetTitle>
+                </SheetHeader>
 
-        {/* Day change */}
-        <div className="mt-2.5 flex items-center gap-3">
-          <Badge
-            variant="secondary"
-            className="bg-gain/12 text-gain border-transparent gap-1 px-2 py-1"
-          >
-            <ArrowUpRight size={14} />
-            <span className="text-[14px] font-semibold tabular-nums">
-              {dayChange.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[13px] font-medium tabular-nums">
-              ({dayChangePct > 0 ? "+" : ""}
-              {dayChangePct}%)
-            </span>
-          </Badge>
-          <span className="text-[13px] text-muted-foreground">Today</span>
+                {/* Info row — shows crosshair data or latest values */}
+                {(() => {
+                  const latest = WEALTH_GROWTH_DATA[WEALTH_GROWTH_DATA.length - 1];
+                  const displayVal = crosshairData?.value ?? latest.value;
+                  const displayInv = crosshairData?.invested ?? latest.invested;
+                  const displayDate = crosshairData?.date ?? latest.date;
+                  const pctChange = ((displayVal - displayInv) / displayInv * 100).toFixed(1);
+                  const isGain = displayVal >= displayInv;
+                  return (
+                    <div className="h-[52px] mb-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[24px] font-bold tracking-tight text-foreground">
+                          {displayVal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[13px] text-muted-foreground">{displayDate}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="text-[13px] text-muted-foreground">
+                          Invested: <span className="text-foreground">{displayInv.toLocaleString("en-US")}</span>
+                        </span>
+                        <span className={cn("text-[13px] font-medium", isGain ? "text-gain" : "text-loss")}>
+                          {isGain ? "+" : ""}{pctChange}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <WealthGrowthChart onCrosshairMove={handleCrosshairMove} period={chartPeriod} />
+
+                {/* Period selector */}
+                <div className="mt-3 flex items-center justify-center gap-1">
+                  {CHART_PERIODS.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setChartPeriod(p)}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-[13px] font-medium transition-colors",
+                        chartPeriod === p
+                          ? "bg-foreground/10 text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Legend */}
+                <div className="mt-3 flex items-center justify-center gap-4 text-[12px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-[2px] w-3 rounded-full bg-[#22c55e]" />
+                    <span>Portfolio</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-[2px] w-3 rounded-full bg-muted-foreground/40" />
+                    <span>Invested</span>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
-        {/* Invested + XIRR row */}
-        <div className="mt-4 flex gap-6">
-          <div>
-            <p className="text-[12px] text-muted-foreground">Invested</p>
-            <p className="text-[16px] font-semibold tabular-nums text-foreground">
-              {investedAmount.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-              })}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12px] text-muted-foreground">XIRR</p>
-            <p className="text-[16px] font-semibold tabular-nums text-gain">
-              {xirr}%
-            </p>
+        {/* Big value — centered */}
+        <div className="text-center py-5">
+          <p className="text-[38px] font-bold tracking-tight text-foreground leading-none">
+            {val(currentValue)}
+          </p>
+          <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-gain/10 px-3 py-1">
+            <ArrowUpRight size={14} className="text-gain" />
+            {!hidden && (
+              <span className="text-[14px] font-semibold text-gain">{f(dayChange)}</span>
+            )}
+            <span className="text-[13px] font-medium text-gain/80">
+              {hidden ? `${dayChangePct > 0 ? "+" : ""}${dayChangePct}%` : `(${dayChangePct > 0 ? "+" : ""}${dayChangePct}%)`}
+            </span>
+            <span className="text-[12px] text-gain/50 ml-0.5">today</span>
           </div>
         </div>
 
-        {/* Period returns */}
-        <Separator className="mt-4 mb-4 bg-border/30" />
+        <Separator className="bg-border/30" />
+
+        {/* Metrics — stacked rows */}
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-muted-foreground">Invested</span>
+            <span className="text-[16px] font-semibold text-foreground">{val(investedAmount)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-muted-foreground">Unrealized P&L</span>
+            {hidden ? (
+              <span className="text-[16px] font-semibold text-gain">+{unrealizedPnlPct}%</span>
+            ) : (
+              <div className="text-right">
+                <span className="text-[16px] font-semibold text-gain">{fs(unrealizedPnl)}</span>
+                <span className="text-[13px] text-gain/70 ml-1.5">+{unrealizedPnlPct}%</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-muted-foreground">Est. XIRR</span>
+            <span className="text-[16px] font-semibold text-gain">{xirr}%</span>
+          </div>
+        </div>
+
+        <Separator className="mt-4 mb-3 bg-border/30" />
+
+        {/* Returns — 4 columns, label on top, percentage below */}
+        <p className="text-[12px] font-medium text-muted-foreground mb-2.5">Returns</p>
         <div className="grid grid-cols-4 gap-2">
           {PERIOD_RETURNS.map((r) => (
-            <div key={r.period} className="text-center">
-              <p className="text-[12px] text-muted-foreground mb-1">
-                {r.period}
-              </p>
+            <div key={r.period}>
+              <p className="text-[13px] text-muted-foreground">{r.period}</p>
               <p
                 className={cn(
-                  "text-[15px] font-semibold tabular-nums",
+                  "text-[15px] font-semibold mt-0.5",
                   r.value >= 0 ? "text-gain" : "text-loss"
                 )}
               >
-                {r.value >= 0 ? "+" : ""}
-                {r.value}%
+                {r.value >= 0 ? "+" : ""}{r.value}%
               </p>
             </div>
           ))}
         </div>
+
       </CardContent>
     </Card>
   );

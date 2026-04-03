@@ -24,8 +24,8 @@ export default function HomeV3Market() {
 
   return (
     <>
-      {/* Tabs */}
-      <div className="border-b border-border/40 bg-background">
+      {/* Tabs — sticky on scroll */}
+      <div className="sticky top-0 z-20 border-b border-border/40 bg-background">
         <div className="no-scrollbar overflow-x-auto">
           <div className="flex gap-0.5 px-5">
             {MARKET_TABS.map((tab, i) => (

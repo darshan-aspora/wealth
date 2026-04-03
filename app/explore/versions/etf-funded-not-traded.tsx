@@ -19,10 +19,12 @@ import {
   DollarSign,
   Scale,
   Maximize2,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { StoriesViewer, type Story } from "@/components/stories-viewer";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -292,7 +294,7 @@ function TopMoversWidget() {
             className="flex border-t border-border/40"
           >
             {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[170px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
+            <div className="z-10 w-[196px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
               <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                 ETF
               </div>
@@ -301,17 +303,10 @@ function TopMoversWidget() {
                   key={etf.symbol}
                   className="flex h-[56px] items-center border-t border-border/20 px-5"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground"
-                    >
-                      {etf.symbol.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="max-w-[100px] text-[13px] font-semibold leading-[1.25] line-clamp-2">
-                        {etf.name}
-                      </p>
-                    </div>
+                  <div className="min-w-0">
+                    <p className="max-w-[160px] text-[13px] font-semibold leading-[1.25] line-clamp-2">
+                      {etf.name}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -685,11 +680,8 @@ function FrozenETFColumn({
                 )}
               />
             </button>
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
-              {etf.symbol.slice(0, 2)}
-            </div>
             <div className="min-w-0">
-              <p className="max-w-[85px] truncate text-[14px] font-semibold leading-tight">
+              <p className="max-w-[115px] truncate text-[14px] font-semibold leading-tight">
                 {etf.name}
               </p>
               <p className="text-[12px] leading-tight text-muted-foreground">
@@ -707,6 +699,7 @@ function FrozenETFColumn({
 /*  Risk-Adjusted Performance Widget (Morningstar)                     */
 /* ------------------------------------------------------------------ */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function RiskAdjustedWidget() {
   const [filter, setFilter] = useState<MorningstarFilter>("5star");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -843,6 +836,7 @@ function RiskAdjustedWidget() {
 /*  Forward-Looking Analysis Widget (CFRA)                             */
 /* ------------------------------------------------------------------ */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ForwardLookingWidget() {
   const [filter, setFilter] = useState<CFRAFilter>("overweight");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -1092,10 +1086,28 @@ function DividendETFsWidget() {
             transition={{ duration: 0.15 }}
             className="flex"
           >
-            <FrozenETFColumn etfs={etfs} bookmarks={bookmarks} toggleBookmark={toggleBookmark} />
+            {/* ---- Frozen left column ---- */}
+            <div className="z-10 w-[196px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
+              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                ETF
+              </div>
+              {etfs.map((etf) => (
+                <div
+                  key={etf.symbol}
+                  className="flex h-[56px] items-center border-t border-border/20 px-5"
+                >
+                  <div className="min-w-0">
+                    <p className="max-w-[160px] text-[13px] font-semibold leading-[1.25] line-clamp-2">
+                      {etf.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
+            {/* ---- Scrollable right columns ---- */}
             <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 520 }}>
+              <table style={{ minWidth: 570 }}>
                 <thead>
                   <tr className="h-[37px]">
                     <th className="min-w-[64px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -1119,6 +1131,7 @@ function DividendETFsWidget() {
                     <th className="min-w-[100px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Top Holdings
                     </th>
+                    <th className="min-w-[48px] px-3" />
                   </tr>
                 </thead>
                 <tbody>
@@ -1129,7 +1142,7 @@ function DividendETFsWidget() {
                       </td>
                       <td className={cn(
                         "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
-                        etf.changePct >= 0 ? "text-emerald-500" : "text-red-500"
+                        etf.changePct >= 0 ? "text-gain" : "text-loss"
                       )}>
                         {etf.changePct >= 0 ? "+" : ""}{etf.changePct.toFixed(2)}%
                       </td>
@@ -1141,7 +1154,7 @@ function DividendETFsWidget() {
                       </td>
                       <td className={cn(
                         "whitespace-nowrap px-3 text-right text-[13px] font-semibold tabular-nums",
-                        etf.ytd >= 0 ? "text-emerald-500" : "text-red-500"
+                        etf.ytd >= 0 ? "text-gain" : "text-loss"
                       )}>
                         {etf.ytd >= 0 ? "+" : ""}{etf.ytd.toFixed(2)}%
                       </td>
@@ -1150,6 +1163,25 @@ function DividendETFsWidget() {
                       </td>
                       <td className="whitespace-nowrap px-3 text-right text-[12px] text-muted-foreground">
                         {etf.topHoldings}
+                      </td>
+                      <td className="px-3">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => toggleBookmark(etf.symbol)}
+                            className="flex-shrink-0 transition-transform active:scale-90"
+                          >
+                            <Bookmark
+                              size={16}
+                              strokeWidth={1.8}
+                              className={cn(
+                                "transition-colors",
+                                bookmarks.has(etf.symbol)
+                                  ? "fill-foreground text-foreground"
+                                  : "text-muted-foreground/60"
+                              )}
+                            />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1248,50 +1280,131 @@ function ScreenerWidget() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Level Up Widget (ETF-specific education)                           */
+/*  Level Up Widget — Carousel Cards + Stories (ETF)                   */
 /* ------------------------------------------------------------------ */
 
-const levelUpStages = [
+const etfLevelUpCards: { id: string; title: string; subtitle: string; hook: string; gradient: string; duration: string; story: Story }[] = [
   {
-    title: "ETF Fundamentals",
-    body: "Understand what ETFs are, how they track indices, and why expense ratios matter.",
-    videos: [
-      { title: "ETFs vs Mutual Funds vs Stocks", duration: "4 min" },
-      { title: "How index tracking works", duration: "5 min" },
-      { title: "Expense ratios explained", duration: "3 min" },
-    ],
+    id: "fundamentals", title: "ETF Fundamentals", subtitle: "Getting Started",
+    hook: "What ETFs are, how they track indices, and why expense ratios matter more than you think.",
+    gradient: "from-zinc-600 to-zinc-900", duration: "4 min",
+    story: {
+      id: "etf-fundamentals", title: "ETF Fundamentals", subtitle: "Getting started",
+      icon: <Layers size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
+      renderContent: () => (
+        <div className="flex flex-col items-center gap-8 px-2 text-center">
+          <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+            ETF <span className="text-zinc-300">101.</span>
+          </div>
+          <div className="h-px w-12 bg-white/15" />
+          <div className="w-full space-y-2.5">
+            {[
+              { label: "ETFs vs Mutual Funds vs Stocks", desc: "One trades like a stock, holds like a fund. The best of both worlds." },
+              { label: "How index tracking works", desc: "Replication, sampling, and why tracking error matters" },
+              { label: "Expense ratios explained", desc: "0.03% vs 0.75% — small numbers, massive impact over decades" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                <p className="text-[13px] text-white/40">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
   },
   {
-    title: "Building Your Portfolio",
-    body: "Learn asset allocation, core-satellite strategy, and when to rebalance.",
-    videos: [
-      { title: "Core-satellite portfolio strategy", duration: "5 min" },
-      { title: "Asset allocation by age", duration: "4 min" },
-      { title: "When & how to rebalance", duration: "4 min" },
-    ],
+    id: "portfolio", title: "Building Your Portfolio", subtitle: "Asset Allocation",
+    hook: "Core-satellite strategy, asset allocation by age, and when to rebalance.",
+    gradient: "from-neutral-600 to-neutral-900", duration: "5 min",
+    story: {
+      id: "etf-portfolio", title: "Building Your Portfolio", subtitle: "Asset allocation",
+      icon: <Coins size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
+      renderContent: () => (
+        <div className="flex flex-col items-center gap-8 px-2 text-center">
+          <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+            Build the <span className="text-neutral-300">core.</span>
+          </div>
+          <div className="h-px w-12 bg-white/15" />
+          <div className="w-full space-y-2.5">
+            {[
+              { label: "Core-satellite strategy", desc: "80% broad market core + 20% tactical satellites" },
+              { label: "Asset allocation by age", desc: "The rule of thumb, when to break it, and why it works" },
+              { label: "When & how to rebalance", desc: "Drift happens. Rebalancing keeps your risk in check." },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                <p className="text-[13px] text-white/40">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
   },
   {
-    title: "Advanced ETF Strategies",
-    body: "Sector rotation, leveraged ETFs, and using ETFs for options strategies.",
-    videos: [
-      { title: "Sector rotation with ETFs", duration: "5 min" },
-      { title: "Leveraged & inverse ETFs", duration: "4 min" },
-      { title: "Options on ETFs (basics)", duration: "5 min" },
-    ],
+    id: "advanced", title: "Advanced ETF Strategies", subtitle: "Pro Moves",
+    hook: "Sector rotation, leveraged ETFs, and using ETFs for options strategies.",
+    gradient: "from-stone-600 to-stone-900", duration: "5 min",
+    story: {
+      id: "etf-advanced", title: "Advanced Strategies", subtitle: "Pro moves",
+      icon: <Rocket size={18} />, gradient: "from-stone-800 to-stone-950", timestamp: "",
+      renderContent: () => (
+        <div className="flex flex-col items-center gap-8 px-2 text-center">
+          <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+            Go <span className="text-stone-300">deeper.</span>
+          </div>
+          <div className="h-px w-12 bg-white/15" />
+          <div className="w-full space-y-2.5">
+            {[
+              { label: "Sector rotation with ETFs", desc: "Ride the economic cycle — tech in growth, utilities in recession" },
+              { label: "Leveraged & inverse ETFs", desc: "2x, 3x, and inverse — powerful tools with sharp edges" },
+              { label: "Options on ETFs", desc: "Covered calls on SPY, protective puts on QQQ — the basics" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                <p className="text-[13px] text-white/40">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
   },
   {
-    title: "Tax-Smart Investing",
-    body: "Tax-loss harvesting, wash sale rules, and the ETF tax advantage.",
-    videos: [
-      { title: "The ETF tax advantage", duration: "4 min" },
-      { title: "Tax-loss harvesting with ETFs", duration: "5 min" },
-      { title: "Avoiding wash sale traps", duration: "3 min" },
-    ],
+    id: "tax", title: "Tax-Smart Investing", subtitle: "Keep More",
+    hook: "Tax-loss harvesting, wash sale rules, and why ETFs are the most tax-efficient wrapper.",
+    gradient: "from-gray-600 to-gray-900", duration: "4 min",
+    story: {
+      id: "etf-tax", title: "Tax-Smart Investing", subtitle: "Keep more",
+      icon: <DollarSign size={18} />, gradient: "from-gray-800 to-gray-950", timestamp: "",
+      renderContent: () => (
+        <div className="flex flex-col items-center gap-8 px-2 text-center">
+          <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">
+            Keep <span className="text-gray-300">more.</span>
+          </div>
+          <div className="h-px w-12 bg-white/15" />
+          <div className="w-full space-y-2.5">
+            {[
+              { label: "The ETF tax advantage", desc: "In-kind redemptions mean fewer taxable events than mutual funds" },
+              { label: "Tax-loss harvesting with ETFs", desc: "Sell the loser, buy a similar ETF, keep the exposure, book the loss" },
+              { label: "Avoiding wash sale traps", desc: "30-day rule, substantially identical securities, and how to stay clean" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
+                <p className="text-[15px] font-semibold text-white">{item.label}</p>
+                <p className="text-[13px] text-white/40">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
   },
 ];
 
 function LevelUpWidget() {
-  const [expanded, setExpanded] = useState(0);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
 
   return (
     <div>
@@ -1299,71 +1412,41 @@ function LevelUpWidget() {
         Level Up
       </h2>
       <p className="mb-3 text-[14px] text-muted-foreground">
-        Master ETF investing from beginner to advanced. Here&apos;s the path.
+        Master ETF investing from beginner to advanced
       </p>
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        {levelUpStages.map((stage, i) => {
-          const isOpen = expanded === i;
-          return (
-            <div
-              key={stage.title}
-              className={cn(i > 0 && "border-t border-border/40")}
+      <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
+        <div className="flex gap-3" style={{ width: "max-content" }}>
+          {etfLevelUpCards.map((card, i) => (
+            <button
+              key={card.id}
+              onClick={() => { setStoryIndex(i); setStoryOpen(true); }}
+              className="relative flex w-[200px] flex-shrink-0 flex-col justify-between overflow-hidden rounded-2xl text-left transition-transform active:scale-[0.97]"
+              style={{ height: 260 }}
             >
-              <button
-                onClick={() => setExpanded(isOpen ? -1 : i)}
-                className="flex w-full items-center gap-3 p-3.5 text-left"
-              >
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-[13px] font-bold text-foreground">
-                  {i + 1}
+              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient}`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="relative z-10 p-3.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <Play size={16} fill="white" className="text-white ml-0.5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-semibold text-foreground">{stage.title}</p>
-                  {!isOpen && (
-                    <p className="text-[12px] text-muted-foreground truncate">{stage.body}</p>
-                  )}
-                </div>
-                <ChevronRight
-                  size={16}
-                  className={cn(
-                    "flex-shrink-0 text-muted-foreground transition-transform duration-200",
-                    isOpen && "rotate-90"
-                  )}
-                />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-3.5 pb-3.5 pt-0">
-                      <p className="text-[13px] text-muted-foreground mb-3">{stage.body}</p>
-                      <div className="space-y-2">
-                        {stage.videos.map((v) => (
-                          <div key={v.title} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-0.5">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </div>
-                            <p className="text-[13px] font-medium text-foreground flex-1">{v.title}</p>
-                            <span className="text-[12px] text-muted-foreground">{v.duration}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+              </div>
+              <div className="relative z-10 p-3.5">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-1.5">{card.subtitle}</p>
+                <p className="text-[17px] font-bold leading-tight text-white mb-1.5">{card.title}</p>
+                <p className="text-[12px] leading-snug text-white/50 line-clamp-2">{card.hook}</p>
+                <p className="mt-2 text-[11px] font-medium text-white/30">{card.duration} read</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
+
+      <StoriesViewer
+        isOpen={storyOpen}
+        onClose={() => setStoryOpen(false)}
+        initialIndex={storyIndex}
+      />
     </div>
   );
 }
@@ -1741,12 +1824,10 @@ export function ETFFundedNotTraded() {
       <PromoBanner />
       <TopMoversWidget />
       <HeatmapWidget />
+      <LevelUpWidget />
       <TrendingCategoriesWidget />
-      <RiskAdjustedWidget />
-      <ForwardLookingWidget />
       <DividendETFsWidget />
       <ScreenerWidget />
-      <LevelUpWidget />
     </div>
   );
 }

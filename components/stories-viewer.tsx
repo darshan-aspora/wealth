@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { X, Sparkles, Users, Rocket, MessageCircle, FlaskConical, Gift, ChevronUp, ChevronDown, Send, ExternalLink } from "lucide-react";
+import { X, Sparkles, Users, Rocket, MessageCircle, FlaskConical, Gift, ChevronUp, ChevronDown, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -159,20 +159,6 @@ function FeedbackInput({
   );
 }
 
-function ViewAllButton({ onNavigate }: { onNavigate: () => void }) {
-  return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onNavigate();
-      }}
-      className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-[14px] font-semibold text-white/80 transition-colors active:bg-white/15"
-    >
-      <ExternalLink size={14} strokeWidth={2} />
-      View full details
-    </button>
-  );
-}
 
 // ─── Story data ──────────────────────────────────────────────────────
 

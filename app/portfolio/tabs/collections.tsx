@@ -55,7 +55,7 @@ export function CollectionsTab() {
             <div className="flex-1 min-w-0">
               <p className="text-[15px] font-semibold text-foreground">{c.name}</p>
               <p className="text-[12px] text-muted-foreground/60">
-                {c.count} stocks · XIRR <span className={cn(c.xirr >= 0 ? "text-gain/70" : "text-loss/70")}>{c.xirr > 0 ? "+" : ""}{c.xirr}%</span>
+                {c.count} stocks · Est. XIRR <span className={cn(c.xirr >= 0 ? "text-gain/70" : "text-loss/70")}>{c.xirr > 0 ? "+" : ""}{c.xirr}%</span>
               </p>
             </div>
             <div className="text-right shrink-0">
