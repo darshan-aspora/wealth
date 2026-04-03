@@ -6,10 +6,12 @@ import {
   ArrowLeft, ChevronRight, Wallet, UserCircle, Headphones,
   FileText, Gift, Landmark, GraduationCap, MessageSquare,
   ArrowLeftRight, BellRing, Twitter, Instagram, Youtube,
+  Sun, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { useTheme } from "@/components/theme-provider";
 
 // ── Menu section helper ───────────────────────────────────────────────
 
@@ -49,6 +51,7 @@ function MenuItem({
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
@@ -122,7 +125,13 @@ export default function ProfilePage() {
           <MenuSection>
             <MenuItem icon={Gift} label="Refer & Invite" />
             <MenuItem icon={GraduationCap} label="Level Up" />
-            <MenuItem icon={MessageSquare} label="Give Us Feedback" last />
+            <MenuItem icon={MessageSquare} label="Give Us Feedback" />
+            <MenuItem
+              icon={theme === "dark" ? Sun : Moon}
+              label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              right={<span />}
+              onClick={toggleTheme}
+            />
           </MenuSection>
         </div>
 
