@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { WatchlistContent } from "@/components/watchlist-content";
+import { WatchlistContent } from "@/app/watchlist/watchlist-full";
 
 export default function HomeV3Watchlist() {
   const router = useRouter();
