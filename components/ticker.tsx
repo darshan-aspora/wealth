@@ -483,6 +483,17 @@ function useTickerState() {
   return { selected, setSelected, tickers };
 }
 
+// ─── Market status (mock — cycles every 20s for demo) ────────────────────────
+
+type MarketStatus = "open" | "after-hours" | "closed";
+const MARKET_STATES: MarketStatus[] = ["open", "after-hours", "closed"];
+
+const STATUS_LABEL: Record<MarketStatus, { text: string; color: string } | null> = {
+  open: null,
+  "after-hours": { text: "After Hours", color: "text-amber-500" },
+  closed: { text: "Closed", color: "text-loss" },
+};
+
 // ─── Live price fluctuation hook ──────────────────────────────────────────────
 // Simulates tiny random price ticks every 1.5–3s for a "live" feel.
 
@@ -738,6 +749,9 @@ export function TickerMarquee() {
   const { selected, setSelected, tickers } = useTickerState();
   const liveTickers = useLiveTickers(tickers);
   const [expanded, setExpanded] = useState(false);
+  const [statusIdx, setStatusIdx] = useState(0);
+  const marketStatus = MARKET_STATES[statusIdx];
+  const statusLabel = STATUS_LABEL[marketStatus];
 
   if (!tickerVisible) return null;
 
@@ -765,8 +779,23 @@ export function TickerMarquee() {
     <>
       <div className="border-b border-border/40">
         <div className="flex items-center">
-          <div className="overflow-x-auto no-scrollbar flex-1">
-            <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-1 pb-4">
+          {/* Status label — sticky left */}
+          {statusLabel && (
+            <div className="shrink-0 pl-5 flex items-baseline pt-1 pb-4">
+              <span className={cn("text-[14px] font-semibold leading-none", statusLabel.color)}>
+                {statusLabel.text}
+              </span>
+            </div>
+          )}
+
+          <div
+            className="overflow-x-auto no-scrollbar flex-1"
+            onClick={() => setStatusIdx((i) => (i + 1) % MARKET_STATES.length)}
+          >
+            <div className={cn(
+              "flex items-baseline gap-5 whitespace-nowrap pr-5 pt-1 pb-4",
+              statusLabel ? "pl-4" : "pl-5"
+            )}>
               {liveTickers.map((t) => (
                 <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
                   <span className="font-semibold text-foreground">{t.symbol}</span>

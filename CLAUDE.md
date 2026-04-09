@@ -11,8 +11,9 @@ A mobile trading app prototype for US Equity, ETF, and Options trading — brand
 - `npm run dev` — start dev server (Turbopack)
 - `npm run dev:webpack` — start dev server (webpack, slower)
 - `npm run dev:clean` — nuke `.next` cache and restart dev
-- `npm run build` — production build
+- `npm run build` — production build (**do NOT run while dev server is active** — it will crash the Turbopack process)
 - `npm run lint` — ESLint
+- `npx tsc --noEmit` — type-check without emitting (safe to run alongside dev server)
 - `npx shadcn@latest add <component>` — add new shadcn/ui components (new-york style, neutral base)
 
 No test framework is configured.
@@ -24,7 +25,7 @@ No test framework is configured.
 - **TradingView Lightweight Charts** (`lightweight-charts`) — all charting with mock/static data
 - **Framer Motion** — transitions, micro-interactions, gestures
 - **Lucide React** — icons
-- Fonts: Inter (sans via `--font-sans`) loaded via `next/font/google` in `app/layout.tsx`. `font-mono` uses system monospace (no custom mono font loaded).
+- Fonts: Inter (sans via `--font-sans`) loaded via `next/font/google` in `app/layout.tsx`. **Inter is the only font** — do not use `font-mono` anywhere (see Design Rules).
 - Path alias: `@/*` maps to project root (e.g., `@/components/ui/button`)
 
 ## Architecture
@@ -52,7 +53,7 @@ Each page under `app/` is self-contained with colocated components (e.g., `app/m
 
 - **No `$` signs** before prices anywhere — display raw numbers (e.g., `892.4` not `$892.4`)
 - **Large font sizes** — minimum: body/tab labels `text-[15px]`, headings `text-[17px]+`, placeholders `text-[14px]`. When in doubt, go bigger.
-- **Use `font-mono`** for prices, numbers, and financial data for tabular alignment
+- **No `font-mono`** — use Inter (default sans) for everything including prices, numbers, and financial data. Use `tabular-nums` font-feature for alignment if needed, but never switch to a monospace font family.
 - Bold aesthetic, avoid generic/safe design. Dark mode trading app context.
 - Lead with insight, not raw data — tell the user *why* they should care about a number (see `design_principles.md`)
 - Warm, slightly cheeky brand voice — smart friend who knows money, not a Bloomberg terminal

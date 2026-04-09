@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, Search, SlidersHorizontal, Settings2, Grid2x2, LayoutDashboard, Grip, X, Bell } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Search, Grip, X, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Shared: animated search keywords ────────────────────────────────
@@ -42,104 +42,7 @@ function RotatingText({ prefix = "Search " }: { prefix?: string }) {
   );
 }
 
-// ─── Variation 1: Clean pill ─────────────────────────────────────────
-// Rounded-full pill search bar — iOS-inspired, soft and approachable
-function HeaderV1() {
-  return (
-    <header className="flex items-center gap-2.5 px-5 py-3">
-      <button className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <ChevronLeft size={24} strokeWidth={2} />
-      </button>
-
-      <div className="relative flex h-12 flex-1 items-center rounded-full bg-muted/50 px-5">
-        <Search size={18} className="shrink-0 text-muted-foreground/60" />
-        <div className="ml-2 text-[16px] text-muted-foreground/60">
-          <RotatingText />
-        </div>
-      </div>
-
-      <button className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-        <SlidersHorizontal size={20} strokeWidth={1.8} />
-      </button>
-    </header>
-  );
-}
-
-// ─── Variation 2: Underline minimal ──────────────────────────────────
-// No background on search — just a bottom border, editorial/magazine feel
-function HeaderV2() {
-  return (
-    <header className="flex items-center gap-3 px-5 py-3">
-      <button className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
-        <ArrowLeft size={22} strokeWidth={1.8} />
-      </button>
-
-      <div className="relative flex h-12 flex-1 items-center border-b border-border/80 px-0.5">
-        <Search size={17} className="shrink-0 text-muted-foreground/50" />
-        <div className="ml-2.5 text-[16px] font-light tracking-wide text-muted-foreground/50">
-          <RotatingText />
-        </div>
-      </div>
-
-      <button className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground">
-        <Grid2x2 size={20} strokeWidth={1.6} />
-      </button>
-    </header>
-  );
-}
-
-// ─── Variation 3: Glassmorphic ───────────────────────────────────────
-// Frosted glass search bar with border glow — dark, premium feel
-function HeaderV3() {
-  return (
-    <header className="flex items-center gap-2.5 px-5 py-3">
-      <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-        <ChevronLeft size={22} strokeWidth={2} />
-      </button>
-
-      <div className="relative flex h-12 flex-1 items-center rounded-xl border border-border/40 bg-card/40 px-3.5 backdrop-blur-sm">
-        <Search size={18} className="shrink-0 text-muted-foreground/50" />
-        <div className="ml-2 text-[16px] text-muted-foreground/50">
-          <RotatingText />
-        </div>
-        {/* Subtle top-edge highlight */}
-        <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-      </div>
-
-      <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/40 bg-card/60 text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-        <Settings2 size={20} strokeWidth={1.6} />
-      </button>
-    </header>
-  );
-}
-
-// ─── Variation 4: Wide search, compact actions ───────────────────────
-// Search takes full width, action buttons are tight and small — Zerodha-density
-function HeaderV4() {
-  return (
-    <header className="px-5 py-3">
-      <div className="flex items-center gap-2">
-        <button className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground active:bg-muted/30">
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
-
-        <div className="relative flex h-11 flex-1 items-center rounded-lg bg-muted/40 px-3">
-          <Search size={16} className="shrink-0 text-muted-foreground/50" />
-          <div className="ml-2 text-[15px] text-muted-foreground/50">
-            <RotatingText />
-          </div>
-        </div>
-
-        <button className="flex h-10 items-center gap-1 rounded-md border border-border/50 bg-card/50 px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
-          <LayoutDashboard size={15} strokeWidth={1.6} />
-          <span>Edit</span>
-        </button>
-      </div>
-    </header>
-  );
-}
-
-// ─── Variation 5: Bold display ───────────────────────────────────────
+// ─── Variation 1: Bold display ───────────────────────────────────────
 // Large search presence, icon-heavy, confident trading-app energy
 function HeaderV5() {
   return (
@@ -162,44 +65,181 @@ function HeaderV5() {
   );
 }
 
-// ─── Variation 6: Search + Bell + Profile ───────────────────────────
-// Current production header — X back, pill search, bell with badge, profile avatar
-function HeaderV6() {
+// ─── Shared: v3-style header bar ────────────────────────────────────
+function V3Header() {
   return (
-    <header className="flex items-center gap-3 px-5 py-3">
-      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+    <header className="flex items-center gap-1.5 pl-3 pr-3 py-3">
+      <button className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50">
         <X size={20} strokeWidth={2} />
       </button>
-
-      <div className="relative flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-5">
-        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground/60">
+      <div className="relative mx-1 flex h-12 min-w-0 flex-1 items-center rounded-full bg-muted/50 px-4">
+        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground">
           <RotatingText />
         </div>
       </div>
-
-      <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50">
         <Bell size={20} strokeWidth={1.8} />
-        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-background">
-          3
-        </span>
       </button>
-
-      <button className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full transition-opacity hover:opacity-90 active:opacity-80">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/profile.png" alt="Profile" className="h-full w-full object-cover" />
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95 transition-transform ml-1">
+        <div className="h-8 w-8 overflow-hidden rounded-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/profile_dp.png" alt="Profile" className="h-full w-full object-cover" />
+        </div>
       </button>
     </header>
   );
 }
 
+// ─── Market status subtexts ─────────────────────────────────────────
+const MARKET_SUBTEXTS = [
+  { text: "Market Open", color: "text-gain", closed: false },
+  { text: "Market closing in 15:00", color: "text-amber-500", closed: false },
+  { text: "After Hours", color: "text-amber-500", closed: false },
+  { text: "After hours closing in 15:00", color: "text-amber-500", closed: false },
+  { text: "Market Closed", color: "text-loss", closed: true },
+  { text: "Market opening in 15:00", color: "text-muted-foreground/50", closed: true },
+];
+
+// ─── V2 Header: Title + status + icons ──────────────────────────────
+function V2Header({ onStatusChange }: { onStatusChange?: (closed: boolean) => void }) {
+  const [statusIdx, setStatusIdx] = useState(0);
+  const status = MARKET_SUBTEXTS[statusIdx];
+
+  const cycle = () => {
+    const next = (statusIdx + 1) % MARKET_SUBTEXTS.length;
+    setStatusIdx(next);
+    onStatusChange?.(MARKET_SUBTEXTS[next].closed);
+  };
+
+  return (
+    <header className="flex items-center gap-2 pl-3 pr-3 py-3">
+      <button className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50">
+        <X size={20} strokeWidth={2} />
+      </button>
+
+      <div className="flex-1 min-w-0 ml-0.5">
+        <p className="text-[17px] font-bold text-foreground leading-none">US Stocks</p>
+        <button onClick={cycle} className="mt-0.5 active:opacity-70">
+          <span className={`text-[12px] font-medium leading-none ${status.color}`}>
+            {status.text}
+          </span>
+        </button>
+      </div>
+
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50">
+        <Search size={20} strokeWidth={1.8} />
+      </button>
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50">
+        <Bell size={20} strokeWidth={1.8} />
+      </button>
+      <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95 transition-transform">
+        <div className="h-8 w-8 overflow-hidden rounded-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/profile_dp.png" alt="Profile" className="h-full w-full object-cover" />
+        </div>
+      </button>
+    </header>
+  );
+}
+
+// ─── Variation 2: Header + Ticker Tape ──────────────────────────────
+
+const DEMO_TICKERS = [
+  { symbol: "SPX", price: "5,999", change: "+0.4%" , gain: true },
+  { symbol: "NDX", price: "21,256", change: "-0.4%", gain: false },
+  { symbol: "AAPL", price: "229", change: "+1.4%", gain: true },
+  { symbol: "MSFT", price: "432", change: "-0.7%", gain: false },
+  { symbol: "GOOGL", price: "179", change: "+0.8%", gain: true },
+  { symbol: "NVDA", price: "132", change: "-2.4%", gain: false },
+];
+
+function TickerTapeV1() {
+  const [closed, setClosed] = useState(false);
+
+  return (
+    <div>
+      <V2Header onStatusChange={setClosed} />
+      <div className={`border-b border-border/40 transition-opacity duration-300 ${closed ? "opacity-30" : ""}`}>
+        <div className="flex items-center">
+        <div className="overflow-x-auto no-scrollbar flex-1">
+          <div className="flex items-baseline gap-5 whitespace-nowrap px-5 pt-1 pb-3">
+            {DEMO_TICKERS.map((t) => (
+              <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
+                <span className={`font-semibold ${closed ? "text-muted-foreground" : "text-foreground"}`}>{t.symbol}</span>
+                {" "}
+                <span className="tabular-nums font-medium text-muted-foreground">{t.price}</span>
+                {" "}
+                <span className={`tabular-nums font-semibold ${closed ? "text-muted-foreground" : t.gain ? "text-gain" : "text-loss"}`}>
+                  {t.change}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="shrink-0 pr-4 pl-2 pb-2 pt-1 text-muted-foreground/40">
+          <ChevronLeft size={16} strokeWidth={2} className="-rotate-90" />
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Variation 8: Header + Ticker Tape (with market status) ─────────
+// Same as V7 but with sticky market status label on left. Click to cycle.
+
+function TickerTapeV2() {
+  const [idx, setIdx] = useState(0);
+  const states = ["open", "after-hours", "closed"] as const;
+  const status = states[idx];
+  const label = status === "open" ? null
+    : status === "after-hours" ? { text: "After Hours", color: "text-amber-500" }
+    : { text: "Closed", color: "text-loss" };
+
+  return (
+    <div>
+      <V3Header />
+      <div className="border-b border-border/40">
+        <div className="flex items-center">
+          {label && (
+          <div className="shrink-0 pl-5 flex items-baseline pt-1 pb-3">
+            <span className={`text-[14px] font-semibold leading-none ${label.color}`}>
+              {label.text}
+            </span>
+          </div>
+        )}
+        <div
+          className="overflow-x-auto no-scrollbar flex-1"
+          onClick={() => setIdx((i) => (i + 1) % states.length)}
+        >
+          <div className={`flex items-baseline gap-5 whitespace-nowrap pr-5 pt-1 pb-3 ${label ? "pl-4" : "pl-5"}`}>
+            {DEMO_TICKERS.map((t) => (
+              <span key={t.symbol} className="shrink-0 text-[14px] leading-none">
+                <span className="font-semibold text-foreground">{t.symbol}</span>
+                {" "}
+                <span className="tabular-nums font-medium text-muted-foreground">{t.price}</span>
+                {" "}
+                <span className={`tabular-nums font-semibold ${t.gain ? "text-gain" : "text-loss"}`}>
+                  {t.change}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="shrink-0 pr-4 pl-2 pb-2 pt-1 text-muted-foreground/40">
+          <ChevronLeft size={16} strokeWidth={2} className="-rotate-90" />
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ────────────────────────────────────────────────────────────
 const variations = [
-  { id: 1, label: "Clean Pill", sublabel: "Rounded, iOS-inspired", component: HeaderV1 },
-  { id: 2, label: "Underline Minimal", sublabel: "Editorial, bottom-border only", component: HeaderV2 },
-  { id: 3, label: "Glassmorphic", sublabel: "Frosted glass, bordered", component: HeaderV3 },
-  { id: 4, label: "Compact Dense", sublabel: "Tight, Zerodha-style density", component: HeaderV4 },
-  { id: 5, label: "Bold Display", sublabel: "Large, confident, ring-accented", component: HeaderV5 },
-  { id: 6, label: "Search + Bell + Profile", sublabel: "X back, pill, bell badge, avatar", component: HeaderV6 },
+  { id: 1, label: "Bold Display", sublabel: "Large, confident, ring-accented", component: HeaderV5, fullWidth: false },
+  { id: 2, label: "Header + Ticker Tape", sublabel: "Scrollable prices, expand chevron", component: TickerTapeV1, fullWidth: true },
+  { id: 3, label: "Header + Ticker + Status", sublabel: "Market open / after-hours / closed", component: TickerTapeV2, fullWidth: true },
 ];
 
 export default function ExploreHeaders() {
@@ -218,7 +258,7 @@ export default function ExploreHeaders() {
             Header Design
           </h1>
           <p className="text-[14px] text-muted-foreground">
-            6 variations — search, nav, customise
+            3 variations — header, ticker tape
           </p>
         </div>
       </div>
@@ -226,7 +266,7 @@ export default function ExploreHeaders() {
       <div className="mx-5 h-px bg-border/60" />
 
       {/* Variations */}
-      <div className="flex-1 space-y-5 px-5 pt-5 pb-10">
+      <div className="flex-1 space-y-10 pt-5 pb-10">
         {variations.map((v, i) => (
           <motion.div
             key={v.id}
@@ -235,8 +275,8 @@ export default function ExploreHeaders() {
             transition={{ duration: 0.35, delay: 0.1 + i * 0.07 }}
           >
             {/* Label */}
-            <div className="mb-2 flex items-baseline gap-2">
-              <span className="text-[13px] tabular-nums font-semibold text-muted-foreground/50 tabular-nums">
+            <div className="mb-2 flex items-baseline gap-2 px-5">
+              <span className="text-[13px] tabular-nums font-semibold text-muted-foreground/50">
                 {String(v.id).padStart(2, "0")}
               </span>
               <span className="text-[15px] font-semibold text-foreground/80">
@@ -248,9 +288,15 @@ export default function ExploreHeaders() {
             </div>
 
             {/* Header preview */}
-            <div className="overflow-hidden rounded-xl border border-border/50 bg-card/40">
-              <v.component />
-            </div>
+            {v.fullWidth ? (
+              <div className="border-y border-border/50">
+                <v.component />
+              </div>
+            ) : (
+              <div className="mx-5 overflow-hidden rounded-xl border border-border/50 bg-card/40">
+                <v.component />
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
