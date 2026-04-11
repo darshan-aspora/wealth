@@ -490,7 +490,7 @@ const MARKET_STATES: MarketStatus[] = ["open", "after-hours", "closed"];
 
 const STATUS_LABEL: Record<MarketStatus, { text: string; color: string } | null> = {
   open: null,
-  "after-hours": { text: "After Hours", color: "text-amber-500" },
+  "after-hours": { text: "After Hours", color: "text-muted-foreground" },
   closed: { text: "Closed", color: "text-loss" },
 };
 
@@ -781,7 +781,7 @@ export function TickerMarquee() {
         <div className="flex items-center">
           {/* Status label — sticky left */}
           {statusLabel && (
-            <div className="shrink-0 pl-5 flex items-baseline pt-1 pb-4">
+            <div className="shrink-0 pl-5 pr-4 flex items-baseline pt-1 pb-4">
               <span className={cn("text-[14px] font-semibold leading-none", statusLabel.color)}>
                 {statusLabel.text}
               </span>
@@ -794,7 +794,7 @@ export function TickerMarquee() {
           >
             <div className={cn(
               "flex items-baseline gap-5 whitespace-nowrap pr-5 pt-1 pb-4",
-              statusLabel ? "pl-4" : "pl-5"
+              statusLabel ? "pl-0" : "pl-5"
             )}>
               {liveTickers.map((t) => (
                 <span key={t.symbol} className="shrink-0 text-[14px] leading-none">

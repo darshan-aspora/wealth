@@ -32,16 +32,17 @@ No test framework is configured.
 
 - **All pages are `"use client"`** — every page uses interactivity (Framer Motion, context, state). New pages must include the `"use client"` directive.
 - **Mobile-first layout**: every page wraps content in `max-w-[430px] mx-auto` container
-- **Root layout** (`app/layout.tsx`) wraps the app in `ThemeProvider` → `TickerVisibilityProvider` → `AIProvider`, with a global `AIOverlay`
+- **Root layout** (`app/layout.tsx`) wraps the app in `ThemeProvider` → `TickerVisibilityProvider` → `AIProvider`
   - `ThemeProvider` (`components/theme-provider.tsx`): custom class-based dark/light toggle via React context, NOT next-themes
   - `TickerVisibilityProvider` (`components/ticker-visibility.tsx`): controls global ticker tape visibility (show/hide from any page)
   - `AIProvider` (`contexts/ai-context.tsx`): manages AI chat overlay state, conversations, and mock streaming responses
-  - `AIOverlay` (`components/ai-overlay.tsx`): global AI chat interface, always mounted at root level
-- **AI subsystem**: `components/ai/` contains the overlay's internal components (header, body, input bar, message bubbles, welcome screen, buddy, history panel). Mock data lives in `lib/ai-responses.ts` and `lib/ai-suggestions.ts`.
+- **AI subsystem**: `components/ai-overlay.tsx` is the chat overlay component (not currently mounted — import and add to layout if needed). `components/ai/` contains the overlay's internal components (header, body, input bar, message bubbles, welcome screen, buddy, history panel). Mock data lives in `lib/ai-responses.ts` and `lib/ai-suggestions.ts`.
 - **Theme toggle**: tapping the iPhone `StatusBar` component toggles dark/light mode — this must be present on every page using the status bar
 - **Directory page** (`app/page.tsx`): index of all screens/components with tabbed navigation
 - **Shared components** in `components/`: `bottom-nav.tsx`, `header.tsx`, `mobile-shell.tsx`, `ticker.tsx`, `stories-viewer.tsx`, `iphone-frame.tsx` (StatusBar + HomeIndicator), and context providers (`watchlist-context.tsx`, `ticker-visibility.tsx`)
 - **Custom semantic colors** in Tailwind: `gain`/`loss` for green/red (use `text-gain`, `text-loss`, `bg-gain`, `bg-loss`), plus standard shadcn HSL variables (`background`, `foreground`, `card`, `muted`, etc.) defined in `app/globals.css`
+- **Custom Tailwind animations** defined in `tailwind.config.ts`: `animate-slide-up-in`, `animate-marquee`, `animate-marquee-fast` — use these for sheet entrances and ticker tapes
+- **Dark mode** via `class` strategy in Tailwind (`darkMode: ["class"]`), toggled by adding/removing `.dark` on `<html>`
 - **Webpack cache disabled** in dev (`next.config.mjs`) to avoid Next.js 14.2.x stale cache bugs
 - **`lib/` directory**: `utils.ts` (cn helper), `ai-responses.ts` and `ai-suggestions.ts` (mock AI data)
 

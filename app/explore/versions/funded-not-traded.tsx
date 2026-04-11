@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { EarningsCalendar } from "@/app/market/components/earnings-calendar";
 import { DividendCalendar } from "@/app/market/components/dividend-calendar";
 import { useTheme } from "@/components/theme-provider";
 import {
+  Bell,
   Bookmark,
   Brain,
+  Check,
+  X,
   Zap,
   Coins,
   Layers,
@@ -24,6 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoriesViewer, type Story } from "@/components/stories-viewer";
 // pills used instead of shadcn Tabs
@@ -64,12 +68,16 @@ function hashStr(s: string) {
 function makeSparkline(symbol: string, isGainer: boolean): number[] {
   const seed = hashStr(symbol);
   const pts: number[] = [];
-  let v = 50;
-  // 52 points ≈ weekly over 1 year
+  // vary starting point & volatility per symbol
+  const startV = 30 + (seed % 40); // 30–70
+  const vol = 3 + (seed % 7);      // 3–9
+  const drift = isGainer ? 0.08 + (seed % 5) * 0.04 : -(0.08 + (seed % 5) * 0.04);
+  let v = startV;
   for (let i = 0; i < 52; i++) {
-    const r = (Math.sin(seed + i * 127) + 1) / 2;
-    v += (r - 0.5 + (isGainer ? 0.12 : -0.12)) * 4;
-    v = Math.max(8, Math.min(92, v));
+    const r1 = (Math.sin(seed + i * 127) + 1) / 2;
+    const r2 = (Math.cos(seed * 3 + i * 53) + 1) / 2;
+    v += ((r1 + r2) / 2 - 0.5 + drift) * vol;
+    v = Math.max(5, Math.min(95, v));
     pts.push(v);
   }
   return pts;
@@ -84,15 +92,24 @@ function Sparkline({
   color,
   w = 52,
   h = 22,
+  autoColor = false,
 }: {
   points: number[];
-  color: string;
+  color?: string;
   w?: number;
   h?: number;
+  autoColor?: boolean;
 }) {
   const min = Math.min(...points);
   const max = Math.max(...points);
   const range = max - min || 1;
+
+  const startVal = points[0];
+  const endVal = points[points.length - 1];
+  const isUp = endVal >= startVal;
+  const lineColor = autoColor ? (isUp ? "#10b981" : "#ef4444") : (color ?? "#6366f1");
+
+  const baselineY = h - ((startVal - min) / range) * (h - 2) - 1;
 
   const d = points
     .map((p, i) => {
@@ -104,10 +121,17 @@ function Sparkline({
 
   return (
     <svg width={w} height={h} className="overflow-visible">
+      <line
+        x1={0} y1={baselineY} x2={w} y2={baselineY}
+        stroke="currentColor"
+        className="text-muted-foreground/20"
+        strokeWidth={1}
+        strokeDasharray="2 2"
+      />
       <path
         d={d}
         fill="none"
-        stroke={color}
+        stroke={lineColor}
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -342,7 +366,7 @@ const moverTabs: { id: MoverType; label: string }[] = [
 /*  Top Movers Widget                                                  */
 /* ------------------------------------------------------------------ */
 
-function TopMoversWidget() {
+function TopMoversWidget({ cardless = false }: { cardless?: boolean } = {}) {
   const [moverType, setMoverType] = useState<MoverType>("gainers");
   const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -373,8 +397,12 @@ function TopMoversWidget() {
     setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
 
   const thCls = "px-3 text-[14px] font-medium text-muted-foreground";
-  // 2 visible cols: (viewport − padding − border − frozenCol − watchCol) / 2
-  const colW = "w-[calc((min(430px,100vw)-40px-196px-48px)/2)]";
+  // cardless: col1(frozen) + col2(88px) + col3(88px) = viewport − 40px padding
+  // card: 2 visible data cols with original sizing
+  const DATA_COL = 88;
+  const colW = cardless
+    ? "w-[88px] min-w-[88px] max-w-[88px]"
+    : "w-[calc((min(430px,100vw)-40px-196px-48px)/2)]";
 
   return (
     <div>
@@ -423,7 +451,7 @@ function TopMoversWidget() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden pt-3">
+      <div className={cardless ? "pt-1" : "rounded-2xl border border-border/60 bg-card overflow-hidden pt-3"}>
         <AnimatePresence mode="wait">
           <motion.div
             key={`${moverType}-${capSize}`}
@@ -431,22 +459,29 @@ function TopMoversWidget() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex"
           >
+            <div
+              className={cardless ? "" : "flex"}
+              style={cardless ? { display: "grid", gridTemplateColumns: `1fr ${DATA_COL * 2}px` } : undefined}
+            >
             {/* ---- Frozen left column: name only ---- */}
-            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
-              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
+            <div
+              className={cn("z-10 border-r border-border/20", !cardless && "w-[196px] flex-shrink-0", cardless ? "bg-background" : "bg-card")}
+            >
+              <div className={cn("flex h-[40px] items-center text-[14px] font-medium text-muted-foreground", cardless ? "pl-1" : "pl-5")}>Stock</div>
               {stocks.map((stock) => (
-                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
+                <div key={stock.symbol} className={cn("flex h-[64px] items-center gap-2.5 pr-3", cardless ? "pl-1" : "pl-5")}>
                   <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
                   <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
                 </div>
               ))}
             </div>
 
-            {/* ---- Scrollable right columns (first 2 visible by default) ---- */}
-            <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table className="w-full" style={{ minWidth: isGainersLosers ? 780 : 560 }}>
+            {/* ---- Scrollable right columns ---- */}
+            <div
+              className={cn("overflow-x-auto no-scrollbar", !cardless && "flex-1")}
+            >
+              <table style={{ minWidth: isGainersLosers ? 780 : 560 }}>
                 <thead>
                   <tr className="h-[40px]">
 
@@ -632,6 +667,7 @@ function TopMoversWidget() {
                 </tbody>
               </table>
             </div>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -641,6 +677,199 @@ function TopMoversWidget() {
         <ChevronRight size={16} />
       </button>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Top Movers — Cardless (sticky col, single scroll container)        */
+/* ------------------------------------------------------------------ */
+
+function TopMoversCardless() {
+  const [moverType, setMoverType] = useState<MoverType>("gainers");
+  const [capSize, setCapSize] = useState<CapSize>("mega");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const stocks = data[moverType][capSize];
+  const isGainer = moverType === "gainers";
+
+  const sparklines = useMemo(
+    () =>
+      stocks.reduce<Record<string, number[]>>((acc, s) => {
+        acc[s.symbol] = makeSparkline(s.symbol, isGainer);
+        return acc;
+      }, {}),
+    [stocks, isGainer]
+  );
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => {
+      const n = new Set(p);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
+      return n;
+    });
+
+  const cycleCapSize = () =>
+    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
+
+  const tabDescriptions: Record<MoverType, { title: string; body: React.ReactNode }> = {
+    gainers: {
+      title: "Green doesn't always mean go",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spot real momentum</p><p className="text-[14px] text-muted-foreground mt-0.5">Scroll right to check if revenue and profit growth back the move</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Find breakouts with conviction</p><p className="text-[14px] text-muted-foreground mt-0.5">Strong analyst consensus + rising price = something worth watching</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spikes on no news</p><p className="text-[14px] text-muted-foreground mt-0.5">If there's no catalyst, the move probably won't last</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High PE, negative profit growth</p><p className="text-[14px] text-muted-foreground mt-0.5">The hype may not hold. Check the numbers before chasing</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    losers: {
+      title: "One bad day isn't the full story",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Find overreactions</p><p className="text-[14px] text-muted-foreground mt-0.5">Quality stocks get punished short-term all the time. Look for intact fundamentals</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spot dips worth buying</p><p className="text-[14px] text-muted-foreground mt-0.5">If revenue growth is strong and analysts still say buy, the dip may be your entry</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Declining fundamentals</p><p className="text-[14px] text-muted-foreground mt-0.5">Falling revenue + falling profit = not a dip, it's a slide</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sell ratings + 52W lows</p><p className="text-[14px] text-muted-foreground mt-0.5">When analysts agree it's going lower, the market might be right</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "most-active": {
+      title: "Volume is the market whispering",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Catch early signals</p><p className="text-[14px] text-muted-foreground mt-0.5">Earnings, sector shifts, or breaking news. Volume shows up before headlines do</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Read market attention</p><p className="text-[14px] text-muted-foreground mt-0.5">See what the broader market is focused on right now, not last week</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Volume with flat price</p><p className="text-[14px] text-muted-foreground mt-0.5">Lots of trades but no movement? Could be big players quietly exiting</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Meme-driven spikes</p><p className="text-[14px] text-muted-foreground mt-0.5">Fun to watch, risky to chase. These rarely hold</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "near-52w-high": {
+      title: "Peaking, or just getting started?",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Confirm real strength</p><p className="text-[14px] text-muted-foreground mt-0.5">Rising price + growing revenue + buy ratings = genuine breakout</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Check the 1Y range</p><p className="text-[14px] text-muted-foreground mt-0.5">A stock near its high with a wide range has more story to tell</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sky-high PE, slowing growth</p><p className="text-[14px] text-muted-foreground mt-0.5">When the music stops, expensive stocks fall hardest</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">50%+ run with no earnings</p><p className="text-[14px] text-muted-foreground mt-0.5">Momentum alone doesn't pay dividends. Make sure there's substance</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "near-52w-low": {
+      title: "Hidden gem or falling knife?",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Hunt for undervalued stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">If revenue growth is intact and analysts say buy, the price may not reflect reality yet</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Find contrarian plays</p><p className="text-[14px] text-muted-foreground mt-0.5">The best entries often feel uncomfortable. That's why most people miss them</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth across the board</p><p className="text-[14px] text-muted-foreground mt-0.5">Cheap for a reason. If revenue and profits are both shrinking, stay cautious</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">All sell ratings, no coverage</p><p className="text-[14px] text-muted-foreground mt-0.5">When even analysts won't touch it, there's usually a good reason</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+  };
+
+  // Mock consensus data for mega cap stocks (keyed by symbol)
+  const megaConsensus: Record<string, { buy: number; hold: number; sell: number }> = {
+    NVDA: { buy: 38, hold: 5, sell: 1 },
+    META: { buy: 42, hold: 4, sell: 2 },
+    AMZN: { buy: 45, hold: 3, sell: 0 },
+    MSFT: { buy: 40, hold: 6, sell: 1 },
+    AAPL: { buy: 28, hold: 12, sell: 4 },
+    TSLA: { buy: 12, hold: 14, sell: 18 },
+    GOOGL: { buy: 36, hold: 8, sell: 2 },
+    "BRK.B": { buy: 8, hold: 18, sell: 2 },
+    JPM: { buy: 18, hold: 10, sell: 1 },
+    V: { buy: 32, hold: 6, sell: 0 },
+  };
+
+  const showConsensus = capSize === "mega";
+
+  const columns = [
+    { header: "Stock", align: "left" as const },
+    { header: "Price", align: "right" as const },
+    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const },
+    { header: "1Y", align: "center" as const, minWidth: 64 },
+    ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
+    { header: "PE", align: "right" as const, minWidth: 48 },
+    { header: "M.Cap", align: "right" as const, minWidth: 68 },
+    { header: "Rev Gr.", align: "right" as const, minWidth: 74 },
+    { header: "Profit Gr.", align: "right" as const, minWidth: 80 },
+    { header: "1Y Range", align: "center" as const, minWidth: 136 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = stocks.map((stock) => {
+    const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    return [
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 truncate text-[14px] font-semibold leading-tight text-foreground">{stock.name}</p>
+      </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
+      <div key="spark" className="flex justify-center"><Sparkline points={sparklines[stock.symbol]} autoColor /></div>,
+      ...(showConsensus ? [
+        <div key="consensus" className="flex justify-center">
+          <ConsensusBadge {...(megaConsensus[stock.symbol] ?? { buy: 10, hold: 10, sell: 5 })} />
+        </div>,
+      ] : []),
+      <span key="pe" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.pe != null ? Math.round(stock.pe) : "—"}</span>,
+      <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap.replace("$", "")}</span>,
+      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%</span>,
+      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%</span>,
+      <RangeBar key="range" low={stock.low52w} high={stock.high52w} current={stock.price} />,
+      <div key="watch" className="flex justify-center">
+        <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
+          <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
+        </button>
+      </div>,
+    ];
+  });
+
+  return (
+    <ScrollableTableWidget
+      title="What's Moving"
+      flipper={{
+        label: capLabels[capSize],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleCapSize,
+      }}
+      tabs={moverTabs}
+      activeTab={moverType}
+      onTabChange={(id) => setMoverType(id as MoverType)}
+      tabDescription={tabDescriptions[moverType]}
+      pillLayoutId="mover-tab-pill"
+      columns={columns}
+      rows={rows}
+      animationKey={`${moverType}-${capSize}`}
+      footer={{ label: "See All 76 Movers" }}
+    />
   );
 }
 
@@ -2094,7 +2323,7 @@ export function ExploreFundedNotTraded() {
   return (
     <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
-      <TopMoversWidget />
+      <TopMoversCardless />
       <HeatmapWidget />
       <LevelUpWidget />
       <RecurringBasketsWidget />

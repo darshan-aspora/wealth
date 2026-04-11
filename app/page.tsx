@@ -70,6 +70,12 @@ const components = [
     href: "/explore-bottom-nav",
     status: "2 variations",
   },
+  {
+    title: "Scrollable Table Widget",
+    description: "Frozen first col, scrollable data, pills, flipper",
+    href: "/explore-scrollable-table",
+    status: "component",
+  },
 ];
 
 const items: Record<Tab, typeof pages> = {

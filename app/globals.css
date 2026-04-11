@@ -7,6 +7,10 @@
   100% { transform: translateX(100%); }
 }
 
+/* Font toggle: switch --font-sans based on class on <html> */
+html.font-haffer { --font-sans: var(--font-haffer); letter-spacing: 0.02em; }
+html.font-inter  { --font-sans: var(--font-inter); letter-spacing: normal; }
+
 @layer base {
   :root {
     --background: 0 0% 100%;
