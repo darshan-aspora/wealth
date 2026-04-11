@@ -77,6 +77,18 @@ const components = [
     status: "10 variations",
   },
   {
+    title: "Trust & Co-Creation",
+    description: "Trust, support, and co-creation sections",
+    href: "/explore-trust",
+    status: "2 approaches",
+  },
+  {
+    title: "Collection Cards",
+    description: "Vertical, horizontal, list, grid, filled",
+    href: "/explore-collection-cards",
+    status: "7 variations",
+  },
+  {
     title: "Scrollable Table Widget",
     description: "Frozen first col, scrollable data, pills, flipper",
     href: "/explore-scrollable-table",

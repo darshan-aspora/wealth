@@ -114,21 +114,6 @@ function ExploreContent() {
         </div>
       )}
 
-      {/* From the Team */}
-      <div className="px-8 py-10 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/30 mb-5">From the Team</p>
-        <p className="text-[17px] font-light leading-[1.7] text-foreground/80">
-          Built around how you invest. Tell us how to make it better.
-        </p>
-        <div className="flex flex-col items-center gap-2.5 mt-7">
-          <button className="w-full max-w-[240px] rounded-full bg-foreground py-2.5 text-[13px] font-medium text-background transition-colors active:opacity-80">
-            Share Feedback
-          </button>
-          <button className="w-full max-w-[240px] rounded-full border border-border/50 py-2.5 text-[13px] font-medium text-foreground transition-colors active:bg-muted/50">
-            Participate in User Research
-          </button>
-        </div>
-      </div>
 
       {/* Version Picker */}
       <Sheet open={showVersionPicker} onOpenChange={setShowVersionPicker}>

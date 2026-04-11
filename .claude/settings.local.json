@@ -36,7 +36,8 @@
       "Bash(cp /tmp/claude-config-new.json ~/.claude.json)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''mcpServers'''',{}\\).get\\(''''figma-developer'''',{}\\), indent=2\\)\\)\")",
       "mcp__figma-console__figma_get_status",
-      "mcp__figma-console__figma_capture_screenshot"
+      "mcp__figma-console__figma_capture_screenshot",
+      "Bash(python3 -c ':*)"
     ],
     "additionalDirectories": [
       "/Users/apple/Dev/02-US-Equity/app/baskets"

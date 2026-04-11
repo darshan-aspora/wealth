@@ -1,40 +1,28 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
-import { EarningsCalendar } from "@/app/market/components/earnings-calendar";
-import { DividendCalendar } from "@/app/market/components/dividend-calendar";
+import { useState, useMemo } from "react";
 import { useTheme } from "@/components/theme-provider";
 import {
-  Bell,
   Bookmark,
   Brain,
   Check,
   X,
-  Zap,
-  Coins,
-  Layers,
-  TrendingUp,
   ArrowUpDown,
   ChevronRight,
-  Target,
-  Plus,
   ArrowDown,
   BarChart3,
-  Gem,
-  Rocket,
   Maximize2,
-  Play,
-  ListFilter,
   GitCompareArrows,
   GraduationCap,
   Newspaper,
+  CalendarDays,
+  CalendarCheck,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
+import { WidgetHeader } from "@/components/widget-header";
 import { motion, AnimatePresence } from "framer-motion";
-import { StoriesViewer, type Story } from "@/components/stories-viewer";
-// pills used instead of shadcn Tabs
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -170,24 +158,6 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Rating Badge                                                       */
-/* ------------------------------------------------------------------ */
-
-function RatingBadge({ rating }: { rating: "Buy" | "Sell" | "Hold" }) {
-  return (
-    <span
-      className={cn(
-        "inline-block rounded-full px-2.5 py-0.5 text-[14px] font-semibold whitespace-nowrap",
-        rating === "Buy" && "bg-emerald-500/15 text-emerald-500",
-        rating === "Sell" && "bg-red-500/15 text-red-500",
-        rating === "Hold" && "bg-muted text-muted-foreground"
-      )}
-    >
-      {rating}
-    </span>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                          */
@@ -366,323 +336,6 @@ const moverTabs: { id: MoverType; label: string }[] = [
   { id: "near-52w-low", label: "Near 52W Low" },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Top Movers Widget                                                  */
-/* ------------------------------------------------------------------ */
-
-function TopMoversWidget({ cardless = false }: { cardless?: boolean } = {}) {
-  const [moverType, setMoverType] = useState<MoverType>("gainers");
-  const [capSize, setCapSize] = useState<CapSize>("mega");
-  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
-
-  const stocks = data[moverType][capSize];
-  const isGainersLosers = moverType === "gainers" || moverType === "losers";
-  const isGainer = moverType === "gainers";
-  const sparkColor = moverType === "gainers" ? "#10b981" : moverType === "losers" ? "#ef4444" : "#6366f1";
-  const showRating = isGainersLosers && (capSize === "mega" || capSize === "large");
-
-  const sparklines = useMemo(
-    () =>
-      stocks.reduce<Record<string, number[]>>((acc, s) => {
-        acc[s.symbol] = makeSparkline(s.symbol, isGainer);
-        return acc;
-      }, {}),
-    [stocks, isGainer]
-  );
-
-  const toggleBookmark = (sym: string) =>
-    setBookmarks((p) => {
-      const n = new Set(p);
-      if (n.has(sym)) n.delete(sym); else n.add(sym);
-      return n;
-    });
-
-  const cycleCapSize = () =>
-    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
-
-  const thCls = "px-3 text-[14px] font-medium text-muted-foreground";
-  // cardless: col1(frozen) + col2(88px) + col3(88px) = viewport − 40px padding
-  // card: 2 visible data cols with original sizing
-  const DATA_COL = 88;
-  const colW = cardless
-    ? "w-[88px] min-w-[88px] max-w-[88px]"
-    : "w-[calc((min(430px,100vw)-40px-196px-48px)/2)]";
-
-  return (
-    <div>
-      {/* Title row: title + cap-size flipper inline */}
-      <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="text-[18px] font-bold tracking-tight">
-          What&apos;s Moving
-        </h2>
-        <button
-          onClick={cycleCapSize}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={capSize}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.15 }}
-              className="block"
-            >
-              {capLabels[capSize]}
-            </motion.span>
-          </AnimatePresence>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* Mover-type tabs — scrollable pills */}
-      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 px-5 py-0.5">
-          {moverTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setMoverType(tab.id)}
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-                moverType === tab.id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className={cardless ? "pt-1" : "rounded-2xl border border-border/60 bg-card overflow-hidden pt-3"}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${moverType}-${capSize}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <div
-              className={cardless ? "" : "flex"}
-              style={cardless ? { display: "grid", gridTemplateColumns: `1fr ${DATA_COL * 2}px` } : undefined}
-            >
-            {/* ---- Frozen left column: name only ---- */}
-            <div
-              className={cn("z-10 border-r border-border/20", !cardless && "w-[196px] flex-shrink-0", cardless ? "bg-background" : "bg-card")}
-            >
-              <div className={cn("flex h-[40px] items-center text-[14px] font-medium text-muted-foreground", cardless ? "pl-1" : "pl-5")}>Stock</div>
-              {stocks.map((stock) => (
-                <div key={stock.symbol} className={cn("flex h-[64px] items-center gap-2.5 pr-3", cardless ? "pl-1" : "pl-5")}>
-                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
-                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* ---- Scrollable right columns ---- */}
-            <div
-              className={cn("overflow-x-auto no-scrollbar", !cardless && "flex-1")}
-            >
-              <table style={{ minWidth: isGainersLosers ? 780 : 560 }}>
-                <thead>
-                  <tr className="h-[40px]">
-
-                    {isGainersLosers && (<>
-                      <th className={cn(thCls, colW, "text-right")}>Price</th>
-                      <th className={cn(thCls, colW, "text-right")}>
-                        <span className="inline-flex items-center justify-end gap-1">
-                          <ArrowDown size={10} className="text-foreground" />Chg%
-                        </span>
-                      </th>
-                      <th className={cn(thCls, "min-w-[64px] text-center")}>1Y</th>
-                      <th className={cn(thCls, "min-w-[48px] text-right")}>PE</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
-                      <th className={cn(thCls, "min-w-[74px] text-right")}>Rev Gr.</th>
-                      <th className={cn(thCls, "min-w-[80px] text-right")}>Profit Gr.</th>
-                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
-                      {showRating && <th className={cn(thCls, "min-w-[60px] text-center")}>Rating</th>}
-                    </>)}
-
-                    {moverType === "most-active" && (<>
-                      <th className={cn(thCls, colW, "text-right")}>Volume</th>
-                      <th className={cn(thCls, colW, "text-right")}>Price</th>
-                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
-                      <th className={cn(thCls, "min-w-[64px] text-center")}>1Y</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
-                      <th className={cn(thCls, "min-w-[48px] text-right")}>PE</th>
-                    </>)}
-
-                    {moverType === "near-52w-high" && (<>
-                      <th className={cn(thCls, colW, "text-right")}>From High</th>
-                      <th className={cn(thCls, colW, "text-right")}>Price</th>
-                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
-                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
-                    </>)}
-
-                    {moverType === "near-52w-low" && (<>
-                      <th className={cn(thCls, colW, "text-right")}>From Low</th>
-                      <th className={cn(thCls, colW, "text-right")}>Price</th>
-                      <th className={cn(thCls, "min-w-[72px] text-right")}>Chg%</th>
-                      <th className={cn(thCls, "min-w-[136px] text-center")}>1Y Range</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>Volume</th>
-                      <th className={cn(thCls, "min-w-[68px] text-right")}>M.Cap</th>
-                    </>)}
-
-                    {/* Watchlist — always rightmost */}
-                    <th className={cn(thCls, "w-[48px] min-w-[48px] text-center")}>Watchlist</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stocks.map((stock) => {
-                    const fromHigh = (stock.high52w - stock.price) / stock.high52w * 100;
-                    const fromLow = (stock.price - stock.low52w) / stock.low52w * 100;
-                    const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
-                    return (
-                      <tr key={stock.symbol} className="h-[64px]">
-
-                        {isGainersLosers && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
-                            {stock.price.toFixed(1)}
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
-                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
-                          </td>
-                          <td className="px-3">
-                            <div className="flex justify-center">
-                              <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.pe != null ? Math.round(stock.pe) : "—"}
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.marketCap.replace("$", "")}
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
-                            {stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>
-                            {stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%
-                          </td>
-                          <td className="min-w-[136px] px-3">
-                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
-                          </td>
-                          {showRating && (
-                            <td className="px-3">
-                              <div className="flex justify-center">
-                                <RatingBadge rating={stock.rating} />
-                              </div>
-                            </td>
-                          )}
-                        </>)}
-
-                        {moverType === "most-active" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-foreground">
-                            {stock.volume}
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
-                            {stock.price.toFixed(1)}
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
-                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
-                          </td>
-                          <td className="px-3">
-                            <div className="flex justify-center">
-                              <Sparkline points={sparklines[stock.symbol]} color={sparkColor} />
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.marketCap.replace("$", "")}
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.pe != null ? Math.round(stock.pe) : "—"}
-                          </td>
-                        </>)}
-
-                        {moverType === "near-52w-high" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-amber-500">
-                            -{fromHigh.toFixed(1)}%
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
-                            {stock.price.toFixed(1)}
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
-                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
-                          </td>
-                          <td className="min-w-[136px] px-3">
-                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.volume}
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.marketCap.replace("$", "")}
-                          </td>
-                        </>)}
-
-                        {moverType === "near-52w-low" && (<>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold text-sky-500">
-                            +{fromLow.toFixed(1)}%
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
-                            {stock.price.toFixed(1)}
-                          </td>
-                          <td className={cn("whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold", chgColor)}>
-                            {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
-                          </td>
-                          <td className="min-w-[136px] px-3">
-                            <RangeBar low={stock.low52w} high={stock.high52w} current={stock.price} />
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.volume}
-                          </td>
-                          <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                            {stock.marketCap.replace("$", "")}
-                          </td>
-                        </>)}
-
-                        {/* Watchlist — always rightmost */}
-                        <td className="w-[48px] px-3">
-                          <div className="flex justify-center">
-                            <button
-                              onClick={() => toggleBookmark(stock.symbol)}
-                              className="transition-transform active:scale-90"
-                            >
-                              <Bookmark
-                                size={20}
-                                strokeWidth={1.8}
-                                className={cn(
-                                  "transition-colors",
-                                  bookmarks.has(stock.symbol)
-                                    ? "fill-foreground text-foreground"
-                                    : "text-muted-foreground/50"
-                                )}
-                              />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <button className="mt-3 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-        See All 76 Movers
-        <ChevronRight size={16} />
-      </button>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Top Movers — Cardless (sticky col, single scroll container)        */
@@ -717,7 +370,7 @@ function TopMoversCardless() {
 
   const tabDescriptions: Record<MoverType, { title: string; body: React.ReactNode }> = {
     gainers: {
-      title: "Green doesn't always mean go",
+      title: "Green doesn&apos;t always mean go",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -726,14 +379,14 @@ function TopMoversCardless() {
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spikes on no news</p><p className="text-[14px] text-muted-foreground mt-0.5">If there's no catalyst, the move probably won't last</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spikes on no news</p><p className="text-[14px] text-muted-foreground mt-0.5">If there&apos;s no catalyst, the move probably won&apos;t last</p></div></div>
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High PE, negative profit growth</p><p className="text-[14px] text-muted-foreground mt-0.5">The hype may not hold. Check the numbers before chasing</p></div></div>
           </div>
         </div>
       ),
     },
     losers: {
-      title: "One bad day isn't the full story",
+      title: "One bad day isn&apos;t the full story",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -742,8 +395,8 @@ function TopMoversCardless() {
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Declining fundamentals</p><p className="text-[14px] text-muted-foreground mt-0.5">Falling revenue + falling profit = not a dip, it's a slide</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sell ratings + 52W lows</p><p className="text-[14px] text-muted-foreground mt-0.5">When analysts agree it's going lower, the market might be right</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Declining fundamentals</p><p className="text-[14px] text-muted-foreground mt-0.5">Falling revenue + falling profit = not a dip, it&apos;s a slide</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sell ratings + 52W lows</p><p className="text-[14px] text-muted-foreground mt-0.5">When analysts agree it&apos;s going lower, the market might be right</p></div></div>
           </div>
         </div>
       ),
@@ -775,7 +428,7 @@ function TopMoversCardless() {
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sky-high PE, slowing growth</p><p className="text-[14px] text-muted-foreground mt-0.5">When the music stops, expensive stocks fall hardest</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">50%+ run with no earnings</p><p className="text-[14px] text-muted-foreground mt-0.5">Momentum alone doesn't pay dividends. Make sure there's substance</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">50%+ run with no earnings</p><p className="text-[14px] text-muted-foreground mt-0.5">Momentum alone doesn&apos;t pay dividends. Make sure there&apos;s substance</p></div></div>
           </div>
         </div>
       ),
@@ -786,12 +439,12 @@ function TopMoversCardless() {
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
             <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Hunt for undervalued stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">If revenue growth is intact and analysts say buy, the price may not reflect reality yet</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Find contrarian plays</p><p className="text-[14px] text-muted-foreground mt-0.5">The best entries often feel uncomfortable. That's why most people miss them</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Find contrarian plays</p><p className="text-[14px] text-muted-foreground mt-0.5">The best entries often feel uncomfortable. That&apos;s why most people miss them</p></div></div>
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth across the board</p><p className="text-[14px] text-muted-foreground mt-0.5">Cheap for a reason. If revenue and profits are both shrinking, stay cautious</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">All sell ratings, no coverage</p><p className="text-[14px] text-muted-foreground mt-0.5">When even analysts won't touch it, there's usually a good reason</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">All sell ratings, no coverage</p><p className="text-[14px] text-muted-foreground mt-0.5">When even analysts won&apos;t touch it, there&apos;s usually a good reason</p></div></div>
           </div>
         </div>
       ),
@@ -888,9 +541,11 @@ interface Collection {
   return3y: number;
   return5y: number;
   stocks: number;
-  logos: string[];  // bg colors for logo circles
+  logos: string[];
   minAmount: number;
   customisable?: boolean;
+  weighting: "Equal" | "Market Cap" | "Custom";
+  type: "Stocks" | "ETFs" | "Mixed";
 }
 
 const smartCollections: Collection[] = [
@@ -899,21 +554,70 @@ const smartCollections: Collection[] = [
     description: "High-growth silicon leaders dominating the global digital infrastructure and AI sector.",
     return1y: 4.2, return3y: 18.7, return5y: 32.4,
     stocks: 15, logos: ["bg-muted", "bg-muted", "bg-muted"],
-    minAmount: 1234, customisable: true,
+    minAmount: 1234, customisable: true, weighting: "Market Cap", type: "Stocks",
   },
   {
     name: "AI & Robotics",
     description: "Top AI, automation & chip companies driving the next wave of computing.",
     return1y: 12.8, return3y: 42.1, return5y: 68.3,
     stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
-    minAmount: 500,
+    minAmount: 500, weighting: "Equal", type: "Stocks",
   },
   {
     name: "Clean Energy",
     description: "Solar, wind & EV ecosystem shaping the future of sustainable infrastructure.",
     return1y: -2.4, return3y: 8.9, return5y: 24.1,
     stocks: 12, logos: ["bg-muted", "bg-muted", "bg-muted"],
-    minAmount: 750, customisable: true,
+    minAmount: 750, customisable: true, weighting: "Equal", type: "Stocks",
+  },
+  {
+    name: "Global ETF Pack",
+    description: "Broad exposure across US, Europe, and emerging markets through top ETFs.",
+    return1y: 8.1, return3y: 12.4, return5y: 22.8,
+    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 250, weighting: "Custom", type: "ETFs",
+  },
+  {
+    name: "ETF Starter Kit",
+    description: "The 5 ETFs every new investor should know. Simple, diversified, low cost.",
+    return1y: 9.4, return3y: 14.2, return5y: 19.6,
+    stocks: 5, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 100, weighting: "Equal", type: "ETFs",
+  },
+  {
+    name: "Nano Cap Winners",
+    description: "Small companies with outsized returns. High risk, high reward micro-cap picks.",
+    return1y: 34.2, return3y: 52.8, return5y: 78.1,
+    stocks: 12, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 200, weighting: "Equal", type: "Stocks",
+  },
+  {
+    name: "Dividend Machines",
+    description: "Stocks that pay you to hold them. 25+ years of consecutive dividend increases.",
+    return1y: 6.8, return3y: 10.2, return5y: 14.5,
+    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 500, customisable: true, weighting: "Market Cap", type: "Stocks",
+  },
+  {
+    name: "Healthcare Innovation",
+    description: "Biotech, medtech and digital health companies reshaping how we treat disease.",
+    return1y: 3.2, return3y: 15.8, return5y: 28.4,
+    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 600, weighting: "Equal", type: "Stocks",
+  },
+  {
+    name: "Cybersecurity",
+    description: "The companies protecting the digital world. Every breach makes this sector more essential.",
+    return1y: 11.4, return3y: 28.6, return5y: 45.2,
+    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 400, weighting: "Custom", type: "Stocks",
+  },
+  {
+    name: "FAANG+",
+    description: "The original tech titans plus the next generation. The stocks that move the market.",
+    return1y: 5.8, return3y: 20.4, return5y: 35.6,
+    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 800, customisable: true, weighting: "Market Cap", type: "Stocks",
   },
 ];
 
@@ -922,94 +626,239 @@ const smartCollections: Collection[] = [
 /* ------------------------------------------------------------------ */
 
 function CollectionCard({ c }: { c: Collection }) {
-  const moreCount = c.stocks - c.logos.length;
-
   return (
-    <button className="w-full rounded-2xl border border-border/60 bg-card p-5 text-left transition-colors active:scale-[0.98]">
-      {/* Title + badge */}
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="text-[17px] font-bold text-foreground leading-tight">{c.name}</h3>
-        {c.customisable && (
-          <span className="shrink-0 ml-3 rounded-full border border-border/60 px-3 py-1 text-[12px] font-medium text-muted-foreground">
-            Customisable
-          </span>
-        )}
+    <button className="w-full rounded-2xl border border-border/60 p-5 text-left active:scale-[0.98] transition-transform">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="h-10 w-10 rounded-xl bg-muted-foreground/20" />
+        <h3 className="text-[16px] font-bold text-foreground">{c.name}</h3>
       </div>
-
-      {/* Description */}
-      <p className="text-[14px] text-muted-foreground leading-relaxed mb-4">{c.description}</p>
-
-      {/* Returns */}
-      <div className="border-t border-border/40 pt-3 grid grid-cols-3 gap-2 mb-4">
-        {[
-          { label: "1Y", value: c.return1y },
-          { label: "3Y", value: c.return3y },
-          { label: "5Y", value: c.return5y },
-        ].map((r) => (
-          <div key={r.label}>
-            <p className="text-[12px] text-muted-foreground/50 mb-0.5">{r.label}</p>
-            <p className={cn("text-[17px] font-bold tabular-nums", r.value >= 0 ? "text-gain" : "text-loss")}>
-              {r.value >= 0 ? "+" : ""}{r.value}%
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Logos + Min amount */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-2">
-            {c.logos.map((bg, i) => (
-              <div key={i} className={cn("h-8 w-8 rounded-full border-2 border-card", bg)} />
-            ))}
-          </div>
-          {moreCount > 0 && (
-            <span className="text-[13px] text-muted-foreground">+{moreCount} more</span>
-          )}
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] text-muted-foreground/50 uppercase tracking-wide">Min Amount</p>
-          <p className="text-[15px] font-bold tabular-nums text-foreground">{c.minAmount.toLocaleString()}</p>
-        </div>
+      <p className="text-[14px] text-muted-foreground leading-relaxed mb-3">{c.description}</p>
+      <div className="flex flex-wrap gap-1.5">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{c.stocks} {c.type}</span>
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{c.weighting === "Equal" ? "Equi Weighted" : c.weighting === "Market Cap" ? "Market Cap Weighted" : "Custom Weights"}</span>
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground tabular-nums">Min {c.minAmount.toLocaleString()}</span>
       </div>
     </button>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Smart Collections Widget                                           */
+/*  Collections Widget                                                 */
 /* ------------------------------------------------------------------ */
 
-function RecurringBasketsWidget() {
-  return (
-    <div>
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
-            Smart Collections
-          </h2>
-          <p className="text-[14px] text-muted-foreground">
-            One tap, any amount. Start with $1 or go all in, we recommend starting small.
-          </p>
+type CollectionTab = "all" | "invested" | "saved" | "tech" | "etf" | "nano" | "income" | "esg" | "growth" | "sector";
+const collectionTabs: { id: CollectionTab; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "invested", label: "Invested" },
+  { id: "saved", label: "Saved" },
+  { id: "tech", label: "Tech & AI" },
+  { id: "etf", label: "ETFs" },
+  { id: "nano", label: "Nano Caps" },
+  { id: "income", label: "Income" },
+  { id: "esg", label: "Clean Energy" },
+  { id: "growth", label: "Growth" },
+  { id: "sector", label: "Sector Bets" },
+];
+
+const collectionsByTab: Record<CollectionTab, Collection[]> = {
+  all: smartCollections,
+  invested: smartCollections.filter((c) => c.name === "Tech Giants" || c.name === "AI & Robotics"),
+  saved: smartCollections.filter((c) => c.name === "Clean Energy" || c.name === "Dividend Machines" || c.name === "FAANG+"),
+  tech: smartCollections.filter((c) => ["Tech Giants", "AI & Robotics", "Cybersecurity", "FAANG+"].includes(c.name)),
+  etf: smartCollections.filter((c) => c.name.includes("ETF")),
+  nano: smartCollections.filter((c) => c.name === "Nano Cap Winners"),
+  income: smartCollections.filter((c) => c.name === "Dividend Machines"),
+  esg: smartCollections.filter((c) => c.name === "Clean Energy"),
+  growth: smartCollections.filter((c) => ["AI & Robotics", "Nano Cap Winners", "Cybersecurity"].includes(c.name)),
+  sector: smartCollections.filter((c) => ["Healthcare Innovation", "Cybersecurity", "Clean Energy"].includes(c.name)),
+};
+
+const collectionDescriptions: Record<CollectionTab, { title: string; body: React.ReactNode }> = {
+  invested: {
+    title: "Your active collections",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Track what you own</p><p className="text-[14px] text-muted-foreground mt-0.5">These are the collections you&apos;ve put money into. Monitor performance all in one place</p></div></div>
         </div>
-        <button className="flex-shrink-0 ml-3 flex items-center gap-1.5 rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-muted-foreground transition-colors active:scale-[0.97]">
-          <Plus size={14} />
-          Create
-        </button>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don&apos;t set and forget forever</p><p className="text-[14px] text-muted-foreground mt-0.5">Check in periodically. A collection that made sense 6 months ago might need a rethink</p></div></div>
+        </div>
       </div>
+    ),
+  },
+  saved: {
+    title: "Your bookmarked collections",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Your research shortlist</p><p className="text-[14px] text-muted-foreground mt-0.5">Collections you&apos;ve saved for later. Take your time, do the research, invest when ready</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Saving isn&apos;t investing</p><p className="text-[14px] text-muted-foreground mt-0.5">A saved collection doesn&apos;t earn you returns. When you&apos;re ready, tap invest</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  etf: {
+    title: "The easy button for diversification",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Instant global exposure</p><p className="text-[14px] text-muted-foreground mt-0.5">ETF collections bundle multiple funds covering US, Europe, and emerging markets in one tap</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Lower costs than individual stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">ETFs already have built-in diversification. A collection of ETFs takes it even further</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Overlap can sneak in</p><p className="text-[14px] text-muted-foreground mt-0.5">Two different ETFs might hold the same stocks. Check the underlying holdings to avoid doubling up</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  nano: {
+    title: "Small bets, big swings",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Outsized return potential</p><p className="text-[14px] text-muted-foreground mt-0.5">Nano and micro-cap stocks can multiply fast when they hit. The winners here can be massive</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High risk, seriously</p><p className="text-[14px] text-muted-foreground mt-0.5">These are volatile, thinly traded, and can lose 50%+ fast. Only invest money you can afford to lose entirely</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Liquidity can be a problem</p><p className="text-[14px] text-muted-foreground mt-0.5">Small stocks sometimes have wide bid-ask spreads. Getting out at the price you want isn&apos;t always possible</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  all: {
+    title: "What are Collections?",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">One tap, multiple stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">A collection is a pre-built basket of stocks. You invest once and get instant diversification across a theme</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Cheaper than buying individually</p><p className="text-[14px] text-muted-foreground mt-0.5">One order instead of 10-15 separate trades. Lower fees, less hassle, same exposure</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">This is not financial advice</p><p className="text-[14px] text-muted-foreground mt-0.5">Collections are tools, not recommendations. Past returns don&apos;t guarantee future performance</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Check what&apos;s inside before investing</p><p className="text-[14px] text-muted-foreground mt-0.5">Tap any collection to see which stocks are included, their weights, and how they&apos;ve performed</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  tech: {
+    title: "Tech is eating the world",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High growth potential</p><p className="text-[14px] text-muted-foreground mt-0.5">Tech and AI companies are driving the biggest value creation in the market right now</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spread across the stack</p><p className="text-[14px] text-muted-foreground mt-0.5">From chips to cloud to applications. Not just one company, the whole ecosystem</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Valuations can be stretched</p><p className="text-[14px] text-muted-foreground mt-0.5">Tech stocks often trade at high PE ratios. When sentiment shifts, corrections can be sharp</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Concentrated in a few names</p><p className="text-[14px] text-muted-foreground mt-0.5">The biggest tech stocks dominate these collections. If they stumble, the whole basket feels it</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  income: {
+    title: "Built for steady income",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Reliable dividend payers</p><p className="text-[14px] text-muted-foreground mt-0.5">Companies with long track records of paying and growing dividends</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Lower growth potential</p><p className="text-[14px] text-muted-foreground mt-0.5">Income stocks tend to be mature companies. The trade-off for stability is slower price appreciation</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  esg: {
+    title: "Invest in what matters",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Align your portfolio with your values</p><p className="text-[14px] text-muted-foreground mt-0.5">Clean energy, solar, wind, and EV companies shaping a sustainable future</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Policy-dependent sector</p><p className="text-[14px] text-muted-foreground mt-0.5">Clean energy stocks are sensitive to government subsidies and regulation changes</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  growth: {
+    title: "Betting on the future",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Highest upside potential</p><p className="text-[14px] text-muted-foreground mt-0.5">Companies growing revenue and earnings faster than the market. The next big winners live here</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Higher volatility</p><p className="text-[14px] text-muted-foreground mt-0.5">Growth stocks swing harder in both directions. Be ready for drawdowns along the way</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  sector: {
+    title: "Pick a lane",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Targeted sector exposure</p><p className="text-[14px] text-muted-foreground mt-0.5">Bet on a specific part of the economy. Healthcare, finance, industrials, your pick</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">No diversification across sectors</p><p className="text-[14px] text-muted-foreground mt-0.5">By design, these are concentrated. If the sector turns, everything in the basket turns with it</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+};
 
+function RecurringBasketsWidget() {
+  const [activeTab, setActiveTab] = useState<CollectionTab>("all");
+  const [expanded, setExpanded] = useState(false);
+  const collections = collectionsByTab[activeTab];
+  const visible = expanded ? collections : collections.slice(0, 3);
+  const hasMore = collections.length > 3;
+
+  return (
+    <WidgetHeader
+      title="Collections"
+      description="One tap, multiple stocks. Cheaper than buying individually, and not financial advice."
+      tabs={collectionTabs}
+      activeTab={activeTab}
+      onTabChange={(id) => { setActiveTab(id as CollectionTab); setExpanded(false); }}
+      tabDescription={collectionDescriptions[activeTab]}
+      pillLayoutId="collection-tab-pill"
+    >
       <div className="space-y-2.5">
-        {smartCollections.map((c) => (
-          <CollectionCard key={c.name} c={c} />
-        ))}
+        {visible.length > 0 ? (
+          visible.map((c) => <CollectionCard key={c.name} c={c} />)
+        ) : (
+          <div className="rounded-2xl border border-border/60 py-10 text-center">
+            <p className="text-[14px] text-muted-foreground">Coming soon</p>
+          </div>
+        )}
       </div>
 
-      {/* View more */}
-      <button className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-border/60 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-        View 12 Other Collections
-        <ChevronRight size={16} />
-      </button>
-    </div>
+      {hasMore && !expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="mt-2.5 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          View {collections.length - 3} More
+          <ChevronRight size={16} />
+        </button>
+      )}
+    </WidgetHeader>
   );
 }
 
@@ -1121,7 +970,7 @@ function AnalystRatingsWidget() {
 
   const ratingDescriptions: Record<RatingTab, { title: string; body: React.ReactNode }> = {
     "strong-buy": {
-      title: "Wall Street's top picks",
+      title: "Wall Street&apos;s top picks",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -1130,8 +979,8 @@ function AnalystRatingsWidget() {
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Analysts can be wrong together</p><p className="text-[14px] text-muted-foreground mt-0.5">Consensus doesn't mean certainty. Always check if the fundamentals support the rating</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don't ignore valuation</p><p className="text-[14px] text-muted-foreground mt-0.5">A stock can be a "strong buy" and still expensive. The target price matters more than the label</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Analysts can be wrong together</p><p className="text-[14px] text-muted-foreground mt-0.5">Consensus doesn&apos;t mean certainty. Always check if the fundamentals support the rating</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don&apos;t ignore valuation</p><p className="text-[14px] text-muted-foreground mt-0.5">A stock can be a &quot;strong buy&quot; and still expensive. The target price matters more than the label</p></div></div>
           </div>
         </div>
       ),
@@ -1153,16 +1002,16 @@ function AnalystRatingsWidget() {
       ),
     },
     hold: {
-      title: "The market's grey zone",
+      title: "The market&apos;s grey zone",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good if you already own them</p><p className="text-[14px] text-muted-foreground mt-0.5">Hold means analysts don't see a reason to sell. Steady names for stable portfolios</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good if you already own them</p><p className="text-[14px] text-muted-foreground mt-0.5">Hold means analysts don&apos;t see a reason to sell. Steady names for stable portfolios</p></div></div>
             <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Dividend candidates</p><p className="text-[14px] text-muted-foreground mt-0.5">Many hold-rated stocks are mature companies paying reliable dividends</p></div></div>
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Limited upside expected</p><p className="text-[14px] text-muted-foreground mt-0.5">The target price is usually close to current price. Don't expect big moves</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Limited upside expected</p><p className="text-[14px] text-muted-foreground mt-0.5">The target price is usually close to current price. Don&apos;t expect big moves</p></div></div>
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Hold can be a polite sell</p><p className="text-[14px] text-muted-foreground mt-0.5">Some analysts avoid sell ratings. A hold from a usually bullish analyst is a red flag</p></div></div>
           </div>
         </div>
@@ -1178,8 +1027,8 @@ function AnalystRatingsWidget() {
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Target prices are below current price</p><p className="text-[14px] text-muted-foreground mt-0.5">Analysts expect these stocks to go down. That's a strong signal to be cautious</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Catching a falling knife hurts</p><p className="text-[14px] text-muted-foreground mt-0.5">Just because a stock has dropped doesn't mean it's done dropping. Check the consensus bar</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Target prices are below current price</p><p className="text-[14px] text-muted-foreground mt-0.5">Analysts expect these stocks to go down. That&apos;s a strong signal to be cautious</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Catching a falling knife hurts</p><p className="text-[14px] text-muted-foreground mt-0.5">Just because a stock has dropped doesn&apos;t mean it&apos;s done dropping. Check the consensus bar</p></div></div>
           </div>
         </div>
       ),
@@ -1339,7 +1188,7 @@ function DividendStocksWidget() {
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Yield traps are real</p><p className="text-[14px] text-muted-foreground mt-0.5">A very high yield sometimes means the stock price has crashed. The dividend might get cut next</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth is a warning</p><p className="text-[14px] text-muted-foreground mt-0.5">If the 5Y CAGR is negative, the dividend has been shrinking. Today's yield may not last</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth is a warning</p><p className="text-[14px] text-muted-foreground mt-0.5">If the 5Y CAGR is negative, the dividend has been shrinking. Today&apos;s yield may not last</p></div></div>
           </div>
         </div>
       ),
@@ -1355,7 +1204,7 @@ function DividendStocksWidget() {
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Lower yields than high-yield stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">Aristocrats prioritize consistency over size. The yield is modest but the growth is steady</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Past streaks don't guarantee the future</p><p className="text-[14px] text-muted-foreground mt-0.5">Even aristocrats can cut. Watch the payout ratio for early warning signs</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Past streaks don&apos;t guarantee the future</p><p className="text-[14px] text-muted-foreground mt-0.5">Even aristocrats can cut. Watch the payout ratio for early warning signs</p></div></div>
           </div>
         </div>
       ),
@@ -1365,12 +1214,12 @@ function DividendStocksWidget() {
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Fastest-growing dividends</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies are raising dividends aggressively. Today's small yield could be tomorrow's large one</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low payout = room to grow</p><p className="text-[14px] text-muted-foreground mt-0.5">A low payout ratio means the company keeps most of its earnings. There's headroom to keep raising</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Fastest-growing dividends</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies are raising dividends aggressively. Today&apos;s small yield could be tomorrow&apos;s large one</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low payout = room to grow</p><p className="text-[14px] text-muted-foreground mt-0.5">A low payout ratio means the company keeps most of its earnings. There&apos;s headroom to keep raising</p></div></div>
           </div>
           <div className="border-t border-border/60" />
           <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low current income</p><p className="text-[14px] text-muted-foreground mt-0.5">If you need income now, these won't deliver much. They're a long-term play</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low current income</p><p className="text-[14px] text-muted-foreground mt-0.5">If you need income now, these won&apos;t deliver much. They&apos;re a long-term play</p></div></div>
             <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Growth can slow down</p><p className="text-[14px] text-muted-foreground mt-0.5">Double-digit CAGR is hard to sustain. Check if the business is still growing to support it</p></div></div>
           </div>
         </div>
@@ -1446,449 +1295,9 @@ function DividendStocksWidget() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Level Up Widget — Tabbed Bite-Sized Stories                        */
-/* ------------------------------------------------------------------ */
+/* Level Up Widget moved to components/level-up-widget.tsx */
 
-type StockLevelUpTab = "strategies" | "insights";
 
-interface LevelUpCard {
-  id: string;
-  title: string;
-  hook: string;
-  gradient: string;
-  story: Story;
-}
-
-const stockLevelUpTabs: { id: StockLevelUpTab; label: string }[] = [
-  { id: "strategies", label: "Strategies" },
-  { id: "insights", label: "Insights" },
-];
-
-const stockLevelUpData: Record<StockLevelUpTab, LevelUpCard[]> = {
-  strategies: [
-    {
-      id: "pe-trick", title: "What P/E Actually Tells You",
-      hook: "It\u2019s not just \u201ccheap vs expensive.\u201d One number, decoded.",
-      gradient: "from-zinc-600 to-zinc-900",
-      story: { id: "s-pe", title: "P/E Decoded", subtitle: "Strategy", icon: <TrendingUp size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">P/E <span className="text-zinc-300">decoded.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <p className="text-[48px] font-bold text-white/80">25x</p>
-            <p className="text-[16px] leading-relaxed text-white/50">A P/E of 25 means you pay 25 for every 1 of earnings. But high P/E isn&apos;t always bad \u2014 it can mean the market expects growth. Low P/E isn&apos;t always good \u2014 it can mean the market expects decline.</p>
-            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
-              <p className="text-[15px] font-semibold text-white">The one-liner</p>
-              <p className="text-[13px] text-white/40">Compare P/E to the sector average, not the market. A tech stock at 30x and a bank at 30x are very different stories.</p>
-            </div>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "earnings-check", title: "The 10-Second Earnings Check",
-      hook: "Revenue, EPS, guidance. Three numbers. That\u2019s it.",
-      gradient: "from-neutral-600 to-neutral-900",
-      story: { id: "s-earnings", title: "Earnings in 10s", subtitle: "Strategy", icon: <BarChart3 size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">3 numbers. <span className="text-neutral-300">10 seconds.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="w-full space-y-2.5">
-              {[
-                { num: "1", label: "Revenue", desc: "Did the company sell more than expected? Top-line growth = demand." },
-                { num: "2", label: "EPS", desc: "Earnings per share \u2014 beat or miss? This moves the stock after hours." },
-                { num: "3", label: "Guidance", desc: "What management expects next quarter. This matters more than the beat." },
-              ].map((item) => (
-                <div key={item.num} className="flex items-start gap-3 rounded-2xl bg-white/8 px-4 py-3 text-left">
-                  <span className="text-[20px] font-bold text-white/60">{item.num}</span>
-                  <div><p className="text-[15px] font-semibold text-white">{item.label}</p><p className="text-[13px] text-white/40">{item.desc}</p></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "dca-power", title: "DCA: The Lazy Genius Move",
-      hook: "Same amount, same day, every month. Why it beats timing.",
-      gradient: "from-stone-600 to-stone-900",
-      story: { id: "s-dca", title: "DCA Power", subtitle: "Strategy", icon: <Target size={18} />, gradient: "from-stone-800 to-stone-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">The lazy <span className="text-stone-300">genius</span> move.</div>
-            <div className="h-px w-12 bg-white/15" />
-            <p className="text-[16px] leading-relaxed text-white/50">Dollar-cost averaging means investing a fixed amount at regular intervals. You buy more shares when prices are low, fewer when they\u2019re high.</p>
-            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
-              <p className="text-[15px] font-semibold text-white">The math</p>
-              <p className="text-[13px] text-white/40">500/month into the S&P 500 since 2014 \u2192 you\u2019d have invested 60,000 and it would be worth ~112,000. No timing required.</p>
-            </div>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "sell-winner", title: "When to Sell a Winner",
-      hook: "The hardest decision in investing. Here\u2019s a framework.",
-      gradient: "from-gray-600 to-gray-900",
-      story: { id: "s-sell", title: "Selling Winners", subtitle: "Strategy", icon: <Zap size={18} />, gradient: "from-gray-800 to-gray-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">When to <span className="text-gray-300">let go.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="w-full space-y-2.5">
-              {[
-                { label: "The thesis broke", desc: "You bought for a reason. If that reason no longer holds, sell." },
-                { label: "It\u2019s now 40%+ of your portfolio", desc: "Concentration risk. Take some off the table." },
-                { label: "You need the money", desc: "Investing has a purpose. If the purpose arrived, it\u2019s not \u201cselling early.\u201d" },
-              ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
-                  <p className="text-[15px] font-semibold text-white">{item.label}</p>
-                  <p className="text-[13px] text-white/40">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "covered-call", title: "Covered Calls in 30 Seconds",
-      hook: "Own the stock. Sell the upside. Collect the premium.",
-      gradient: "from-zinc-500 to-zinc-900",
-      story: { id: "s-cc", title: "Covered Calls", subtitle: "Strategy", icon: <Gem size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Income from <span className="text-zinc-300">stocks you own.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="w-full space-y-2.5">
-              {[
-                { num: "1", desc: "You own 100 shares of AAPL at 185" },
-                { num: "2", desc: "You sell a call at 195 strike, expiring in 30 days" },
-                { num: "3", desc: "You collect ~3.50 per share = 350 premium, instantly" },
-              ].map((item) => (
-                <div key={item.num} className="flex items-start gap-3 rounded-2xl bg-white/8 px-4 py-3 text-left">
-                  <span className="text-[20px] font-bold text-white/60">{item.num}</span>
-                  <p className="text-[14px] text-white/50">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-[14px] text-white/30">If AAPL stays below 195, you keep the shares + the premium. If it goes above, you sell at 195 + keep the premium. Win-win.</p>
-          </div>
-        ),
-      },
-    },
-  ],
-  insights: [
-    {
-      id: "time-vs-timing", title: "Why Time Beats Timing",
-      hook: "Miss the 10 best days in 20 years and your returns get cut in half.",
-      gradient: "from-neutral-500 to-neutral-900",
-      story: { id: "i-time", title: "Time > Timing", subtitle: "Insight", icon: <TrendingUp size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Time <span className="text-neutral-300">always</span> wins.</div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="flex gap-6">
-              <div><p className="text-[28px] font-bold text-white/80">9.8%</p><p className="text-[12px] text-white/40">Stayed invested</p></div>
-              <div><p className="text-[28px] font-bold text-white/40">5.6%</p><p className="text-[12px] text-white/40">Missed 10 best days</p></div>
-            </div>
-            <p className="text-[16px] leading-relaxed text-white/50">S&P 500 over 20 years. The 10 best days often come right after the worst. If you panicked and sold, you missed the recovery. Staying invested is the strategy.</p>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "compounding", title: "The Power of Compounding",
-      hook: "1,000 growing at 10% becomes 17,449 in 30 years. No extra effort.",
-      gradient: "from-stone-500 to-stone-900",
-      story: { id: "i-compound", title: "Compounding", subtitle: "Insight", icon: <Rocket size={18} />, gradient: "from-stone-800 to-stone-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">The 8th <span className="text-stone-300">wonder.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="flex gap-4">
-              <div><p className="text-[24px] font-bold text-white/80">1,000</p><p className="text-[12px] text-white/40">Year 0</p></div>
-              <div><p className="text-[24px] font-bold text-white/80">6,727</p><p className="text-[12px] text-white/40">Year 20</p></div>
-              <div><p className="text-[24px] font-bold text-white/80">17,449</p><p className="text-[12px] text-white/40">Year 30</p></div>
-            </div>
-            <p className="text-[16px] leading-relaxed text-white/50">That last 10 years added more than the first 20. Compounding is exponential \u2014 the longer you stay, the harder your money works.</p>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "good-news-drop", title: "Why Stocks Drop on Good News",
-      hook: "\u201cBeat earnings by 20%\u201d \u2014 stock drops 8%. Here\u2019s why.",
-      gradient: "from-gray-500 to-gray-900",
-      story: { id: "i-drop", title: "Good News, Bad Price", subtitle: "Insight", icon: <BarChart3 size={18} />, gradient: "from-gray-800 to-gray-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Buy the <span className="text-gray-300">rumor.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <p className="text-[16px] leading-relaxed text-white/50">Markets are forward-looking. By the time earnings drop, the stock already moved on expectations. A \u201cbeat\u201d that was already priced in is actually a non-event.</p>
-            <div className="w-full space-y-2.5">
-              {[
-                { label: "Priced in", desc: "Stock ran up 15% into earnings. The beat was expected." },
-                { label: "Sell the news", desc: "Traders who bought the rumor take profits on the event." },
-                { label: "Guidance matters more", desc: "The beat was great. But management lowered next quarter." },
-              ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-white/8 px-4 py-3 text-left">
-                  <p className="text-[15px] font-semibold text-white">{item.label}</p>
-                  <p className="text-[13px] text-white/40">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "loss-aversion", title: "Why Losses Hurt 2x More",
-      hook: "Losing 100 feels worse than gaining 100 feels good. Your brain is wired this way.",
-      gradient: "from-zinc-500 to-zinc-900",
-      story: { id: "i-loss", title: "Loss Aversion", subtitle: "Insight", icon: <Brain size={18} />, gradient: "from-zinc-800 to-zinc-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">Your brain <span className="text-zinc-300">lies.</span></div>
-            <div className="h-px w-12 bg-white/15" />
-            <div className="flex gap-6">
-              <div><p className="text-[28px] font-bold text-white/80">+100</p><p className="text-[12px] text-white/40">Feels good</p></div>
-              <div><p className="text-[28px] font-bold text-white/80">-100</p><p className="text-[12px] text-white/40">Feels 2x worse</p></div>
-            </div>
-            <p className="text-[16px] leading-relaxed text-white/50">This is loss aversion. It makes you hold losers too long (hoping to break even) and sell winners too early (locking in the good feeling). Knowing this is half the battle.</p>
-          </div>
-        ),
-      },
-    },
-    {
-      id: "diversification-myth", title: "Diversification \u2260 Owning 50 Stocks",
-      hook: "You can hold 50 tech stocks and still be wildly concentrated.",
-      gradient: "from-neutral-600 to-neutral-900",
-      story: { id: "i-div", title: "Real Diversification", subtitle: "Insight", icon: <Layers size={18} />, gradient: "from-neutral-800 to-neutral-950", timestamp: "",
-        renderContent: () => (
-          <div className="flex flex-col items-center gap-8 px-2 text-center">
-            <div className="text-[36px] font-bold leading-[1.05] tracking-tight text-white">50 stocks. <span className="text-neutral-300">Zero</span> diversification.</div>
-            <div className="h-px w-12 bg-white/15" />
-            <p className="text-[16px] leading-relaxed text-white/50">Diversification isn&apos;t about counting holdings. It&apos;s about owning things that don&apos;t move together. 50 tech stocks all drop when rates rise.</p>
-            <div className="w-full rounded-2xl bg-white/8 px-4 py-3 text-left">
-              <p className="text-[15px] font-semibold text-white">Real diversification</p>
-              <p className="text-[13px] text-white/40">Different sectors, different geographies, different asset classes (stocks, bonds, commodities). When one zigs, the other zags.</p>
-            </div>
-          </div>
-        ),
-      },
-    },
-  ],
-};
-
-function LevelUpCarousel({ cards }: { cards: LevelUpCard[] }) {
-  const [storyOpen, setStoryOpen] = useState(false);
-  const [storyIndex, setStoryIndex] = useState(0);
-
-  return (
-    <>
-      <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
-        <div className="flex gap-3" style={{ width: "max-content" }}>
-          {cards.map((card, i) => (
-            <button
-              key={card.id}
-              onClick={() => { setStoryIndex(i); setStoryOpen(true); }}
-              className="relative flex w-[200px] flex-shrink-0 flex-col justify-between overflow-hidden rounded-2xl text-left transition-transform active:scale-[0.97]"
-              style={{ height: 240 }}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient}`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <div className="relative z-10 p-3.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                  <Play size={16} fill="white" className="text-white ml-0.5" />
-                </div>
-              </div>
-              <div className="relative z-10 p-3.5">
-                <p className="text-[17px] font-bold leading-tight text-white mb-1.5">{card.title}</p>
-                <p className="text-[12px] leading-snug text-white/50 line-clamp-2">{card.hook}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <StoriesViewer
-        isOpen={storyOpen}
-        onClose={() => setStoryOpen(false)}
-        initialIndex={storyIndex}
-      />
-    </>
-  );
-}
-
-function LevelUpWidget() {
-  const [activeTab, setActiveTab] = useState<StockLevelUpTab>("strategies");
-
-  return (
-    <div>
-      <h2 className="mb-2.5 text-[18px] font-bold tracking-tight">
-        Level Up
-      </h2>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4">
-        {stockLevelUpTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-              activeTab === tab.id
-                ? "bg-foreground text-background"
-                : "border border-border/60 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-        >
-          <LevelUpCarousel cards={stockLevelUpData[activeTab]} />
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Stock Screeners Widget                                             */
-/* ------------------------------------------------------------------ */
-
-type ScreenerTab = "basic" | "premium" | "saved";
-
-const screenerTabs: { id: ScreenerTab; label: string; disabled?: boolean }[] = [
-  { id: "basic", label: "Popular" },
-  { id: "premium", label: "Advanced" },
-  { id: "saved", label: "Saved", disabled: true },
-];
-
-interface Screener {
-  name: string;
-  description: string;
-  icon: LucideIcon;
-  color: string;
-  matchCount: number;
-}
-
-const basicScreeners: Screener[] = [
-  { name: "High Margin", description: "Stocks with >30% profit margins", icon: TrendingUp, color: "#10B981", matchCount: 48 },
-  { name: "Penny Stocks", description: "Under $5 with high volume", icon: Coins, color: "#F59E0B", matchCount: 124 },
-  { name: "Value with Momentum", description: "Low P/E + positive price trend", icon: Rocket, color: "#8B5CF6", matchCount: 35 },
-  { name: "Nearing Breakout", description: "Within 5% of 52-week high", icon: TrendingUp, color: "#3B82F6", matchCount: 62 },
-  { name: "Capex Expanders", description: "YoY capital spending growth >20%", icon: BarChart3, color: "#06B6D4", matchCount: 41 },
-  { name: "Dividend Aristocrats", description: "25+ years of dividend growth", icon: Gem, color: "#EC4899", matchCount: 67 },
-];
-
-const premiumScreeners: Screener[] = [
-  { name: "Insider Accumulation", description: "Heavy insider buying last 90 days", icon: Target, color: "#EF4444", matchCount: 23 },
-  { name: "Short Squeeze Setup", description: "High short interest + rising price", icon: Zap, color: "#F97316", matchCount: 18 },
-  { name: "Earnings Momentum", description: "3+ consecutive earnings beats", icon: TrendingUp, color: "#10B981", matchCount: 52 },
-  { name: "Institutional Inflow", description: "Rising fund ownership + volume", icon: BarChart3, color: "#6366F1", matchCount: 37 },
-  { name: "Cash Rich & Undervalued", description: "Cash > market cap, low EV/EBITDA", icon: Gem, color: "#14B8A6", matchCount: 14 },
-  { name: "Technical Reversal", description: "Oversold RSI + bullish divergence", icon: Rocket, color: "#8B5CF6", matchCount: 29 },
-];
-
-function ScreenerWidget() {
-  const [activeTab, setActiveTab] = useState<ScreenerTab>("basic");
-  const screeners = activeTab === "basic" ? basicScreeners : premiumScreeners;
-
-  return (
-    <div>
-      <div className="mb-3.5">
-        <h2 className="text-[18px] font-bold tracking-tight">
-          Stock Screeners
-        </h2>
-        <p className="mt-0.5 text-[14px] text-muted-foreground">
-          Find stocks that match your criteria
-        </p>
-      </div>
-
-      {/* Tabs */}
-      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 px-5 py-0.5">
-          {screenerTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => !tab.disabled && setActiveTab(tab.id)}
-              disabled={tab.disabled}
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-                tab.disabled
-                  ? "border border-border/30 text-muted-foreground/40 cursor-not-allowed"
-                  : activeTab === tab.id
-                    ? "bg-foreground text-background"
-                    : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Screener list */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="rounded-2xl border border-border/60 bg-card overflow-hidden"
-        >
-          {screeners.map((screener, i) => (
-            <button
-              key={screener.name}
-              className={cn(
-                "flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-muted/30",
-                i > 0 && "border-t border-border/30"
-              )}
-            >
-              <div
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-muted"
-              >
-                <screener.icon size={20} strokeWidth={1.7} className="text-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-semibold text-foreground">{screener.name}</p>
-                <p className="text-[12px] text-muted-foreground truncate">{screener.description}</p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-[12px] font-medium text-muted-foreground tabular-nums">
-                  {screener.matchCount} stocks
-                </span>
-                <ChevronRight size={14} className="text-muted-foreground/60" />
-              </div>
-            </button>
-          ))}
-
-          {/* Create New Screener — connected to card */}
-          <button className="flex w-full items-center justify-center gap-2 border-t border-dashed border-border/40 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-            <Plus size={16} />
-            Create New Screener
-          </button>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Market Heatmap — data                                              */
 /* ------------------------------------------------------------------ */
 
@@ -2098,63 +1507,84 @@ function heatColor(change: number, isDark: boolean): string {
 /*  Market Heatmap Widget                                              */
 /* ------------------------------------------------------------------ */
 
+const heatmapTabs: { id: HeatmapIndex; label: string }[] = [
+  { id: "sp500", label: "S&P 500" },
+  { id: "nasdaq100", label: "NASDAQ 100" },
+];
+
+const heatmapDescriptions: Record<HeatmapIndex, { title: string; body: React.ReactNode }> = {
+  sp500: {
+    title: "The 500 that move America",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">See the whole market in one glance</p><p className="text-[14px] text-muted-foreground mt-0.5">Size = weight in the index. Colour = how it&apos;s doing today. Green is up, red is down</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Spot sector trends instantly</p><p className="text-[14px] text-muted-foreground mt-0.5">Flip to Sectors view to see which parts of the economy are leading or lagging</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Big blocks aren&apos;t always best</p><p className="text-[14px] text-muted-foreground mt-0.5">Apple and Microsoft are huge here. Doesn&apos;t mean they&apos;re the best buy today</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">One day doesn&apos;t make a trend</p><p className="text-[14px] text-muted-foreground mt-0.5">A red day for tech doesn&apos;t mean sell everything. Zoom out before you act</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  nasdaq100: {
+    title: "Tech-heavy and proud of it",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">The growth engine of the market</p><p className="text-[14px] text-muted-foreground mt-0.5">NASDAQ 100 is dominated by tech and innovation. If you&apos;re bullish on growth, this is your lens</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compare with S&P 500</p><p className="text-[14px] text-muted-foreground mt-0.5">Switch between the two to see if tech is leading the market or dragging it down</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Concentrated risk</p><p className="text-[14px] text-muted-foreground mt-0.5">Top 5 stocks are over 40% of the index. When they sneeze, everything catches a cold</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Missing whole sectors</p><p className="text-[14px] text-muted-foreground mt-0.5">No financials, no energy. This is not a full picture of the economy</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+};
+
 function HeatmapWidget() {
   const [index, setIndex] = useState<HeatmapIndex>("sp500");
   const [view, setView] = useState<HeatmapView>("stocks");
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const items = view === "stocks" ? heatmapStocks[index] : heatmapSectors[index];
-  const rects = useMemo(() => treemapLayout(items), [items]);
+  const rawItems = view === "stocks" ? heatmapStocks[index] : heatmapSectors[index];
+
+  // Remove items too small to tap, then re-layout so remaining ones fill the space
+  const rects = useMemo(() => {
+    const MIN_DIM = 50;
+    let items = rawItems;
+    for (let pass = 0; pass < 3; pass++) {
+      const allRects = treemapLayout(items);
+      const tooSmall = new Set(allRects.filter((r) => Math.min(r.w, r.h) < MIN_DIM).map((r) => r.symbol));
+      if (tooSmall.size === 0) return allRects;
+      items = items.filter((i) => !tooSmall.has(i.symbol));
+    }
+    return treemapLayout(items);
+  }, [rawItems]);
 
   const cycleView = () =>
     setView((p) => heatViewOrder[(heatViewOrder.indexOf(p) + 1) % heatViewOrder.length]);
 
   return (
-    <div>
-      {/* Title row: title + view flipper */}
-      <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="text-[18px] font-bold tracking-tight">Market at a Glance</h2>
-        <button
-          onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={view}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.15 }}
-              className="block"
-            >
-              {heatViewLabels[view]}
-            </motion.span>
-          </AnimatePresence>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* Index pills */}
-      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 px-5 py-0.5">
-          {(["sp500", "nasdaq100"] as const).map((id) => (
-            <button
-              key={id}
-              onClick={() => setIndex(id)}
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-                index === id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {id === "sp500" ? "S&P 500" : "NASDAQ 100"}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <WidgetHeader
+      title="Market at a Glance"
+      flipper={{
+        label: heatViewLabels[view],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleView,
+      }}
+      tabs={heatmapTabs}
+      activeTab={index}
+      onTabChange={(id) => setIndex(id as HeatmapIndex)}
+      tabDescription={heatmapDescriptions[index]}
+      pillLayoutId="heatmap-tab-pill"
+    >
       {/* Treemap */}
       <div
         className="relative w-full overflow-hidden rounded-2xl"
@@ -2216,7 +1646,7 @@ function HeatmapWidget() {
         <Maximize2 size={15} />
         Open in Fullscreen
       </button>
-    </div>
+    </WidgetHeader>
   );
 }
 
@@ -2311,16 +1741,16 @@ const popularStocksData: Record<PopularTab, PopularStock[]> = {
 
 const popularDescriptions: Record<PopularTab, { title: string; body: React.ReactNode }> = {
   "most-invested": {
-    title: "What everyone's buying",
+    title: "What everyone&apos;s buying",
     body: (
       <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
         <div className="p-5 space-y-4">
           <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">See where the crowd is putting money</p><p className="text-[14px] text-muted-foreground mt-0.5">These are the stocks held by the most investors on Aspora. Popularity often signals trust</p></div></div>
-          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good starting point for research</p><p className="text-[14px] text-muted-foreground mt-0.5">If millions of people own it, it's probably worth understanding why</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good starting point for research</p><p className="text-[14px] text-muted-foreground mt-0.5">If millions of people own it, it&apos;s probably worth understanding why</p></div></div>
         </div>
         <div className="border-t border-border/60" />
         <div className="p-5 space-y-4">
-          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Popular doesn't mean best</p><p className="text-[14px] text-muted-foreground mt-0.5">The most-owned stocks aren't always the best performers. Do your own homework</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Popular doesn&apos;t mean best</p><p className="text-[14px] text-muted-foreground mt-0.5">The most-owned stocks aren&apos;t always the best performers. Do your own homework</p></div></div>
           <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Crowded trades can reverse fast</p><p className="text-[14px] text-muted-foreground mt-0.5">When everyone owns something, a sell-off can be sharp. Keep an eye on the fundamentals</p></div></div>
         </div>
       </div>
@@ -2336,8 +1766,8 @@ const popularDescriptions: Record<PopularTab, { title: string; body: React.React
         </div>
         <div className="border-t border-border/60" />
         <div className="p-5 space-y-4">
-          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Not a shortcut to quick gains</p><p className="text-[14px] text-muted-foreground mt-0.5">SIP is a patience game. If you're looking for short-term wins, this isn't the list</p></div></div>
-          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Review periodically</p><p className="text-[14px] text-muted-foreground mt-0.5">Set and forget doesn't mean never check. Revisit your SIPs every quarter</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Not a shortcut to quick gains</p><p className="text-[14px] text-muted-foreground mt-0.5">SIP is a patience game. If you&apos;re looking for short-term wins, this isn&apos;t the list</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Review periodically</p><p className="text-[14px] text-muted-foreground mt-0.5">Set and forget doesn&apos;t mean never check. Revisit your SIPs every quarter</p></div></div>
         </div>
       </div>
     ),
@@ -2424,10 +1854,12 @@ const quickAccessItems: { label: string; icon: LucideIcon }[] = [
   { label: "Portfolio Analysis", icon: Brain },
   { label: "Market Summary", icon: BarChart3 },
   { label: "News", icon: Newspaper },
+  { label: "Earnings Calendar", icon: CalendarDays },
+  { label: "Dividend Calendar", icon: CalendarCheck },
 ];
 
-const qaRow1 = ["My Watchlist", "Compare Stocks", "Level Up"];
-const qaRow2 = ["Portfolio Analysis", "Market Summary", "News"];
+const qaRow1 = ["My Watchlist", "Compare Stocks", "Level Up", "Earnings Calendar"];
+const qaRow2 = ["Portfolio Analysis", "Market Summary", "News", "Dividend Calendar"];
 
 function QuickAccessPill({ item }: { item: (typeof quickAccessItems)[number] }) {
   const Icon = item.icon;
@@ -2463,6 +1895,95 @@ function QuickAccessWidget() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Explore Footer — Trust, Access & Co-Creation                       */
+/* ------------------------------------------------------------------ */
+
+function ExploreFooter() {
+  return (
+    <div className="space-y-6">
+      {/* Let&apos;s Co-create, Best for You */}
+      <div>
+        <h3 className="text-[17px] font-bold text-foreground mb-3">Let&apos;s Co-create, Best for You</h3>
+        <div className="rounded-2xl border border-border/60 overflow-hidden divide-y divide-border/40">
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">Vote on Features</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">3 features are neck and neck. Your vote decides</p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          </button>
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">Share Feedback</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">What&apos;s working, what&apos;s not</p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          </button>
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">Participate in Research</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">Join sessions, review prototypes, earn badges</p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          </button>
+        </div>
+      </div>
+
+      {/* Talk to Us */}
+      <div>
+        <h3 className="text-[17px] font-bold text-foreground mb-3">Talk to Us</h3>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { line1: "Chat with", line2: "Support" },
+            { line1: "Schedule", line2: "a Call" },
+            { line1: "Write to", line2: "the CEO" },
+          ].map((item) => (
+            <button key={item.line1} className="flex flex-col items-center gap-2.5 active:opacity-70 transition-opacity">
+              <div className="h-10 w-10 rounded-full bg-muted" />
+              <p className="text-[13px] font-semibold text-foreground leading-tight text-center">{item.line1}<br />{item.line2}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Built for Trust and Reliability */}
+      <div>
+        <h3 className="text-[17px] font-bold text-foreground mb-3">Built for Trust and Reliability</h3>
+        <div className="rounded-2xl border border-border/60 overflow-hidden divide-y divide-border/40">
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">How your money is protected</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">SIPC insured, segregated accounts, Alpaca brokerage</p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          </button>
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">Transparent pricing</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">Every fee, explained. No surprises</p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
+          </button>
+          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-semibold text-foreground">System status</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">All systems operational</p>
+            </div>
+            <span className="shrink-0 h-2 w-2 rounded-full bg-gain" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ExploreFundedNotTraded() {
   return (
     <div className="space-y-8 px-5 pt-5 pb-4">
@@ -2470,14 +1991,11 @@ export function ExploreFundedNotTraded() {
       <PopularStocksWidget />
       <QuickAccessWidget />
       <TopMoversCardless />
-      <HeatmapWidget />
-      <LevelUpWidget />
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />
+      <HeatmapWidget />
       <DividendStocksWidget />
-      <ScreenerWidget />
-      <EarningsCalendar />
-      <DividendCalendar />
+      <ExploreFooter />
     </div>
   );
 }

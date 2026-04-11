@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { ArrowUpDown, ArrowDown, ArrowLeft, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
