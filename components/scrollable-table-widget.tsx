@@ -298,17 +298,19 @@ export function ScrollableTableWidget({
 
       {/* ── Info Sheet ── */}
       <Sheet open={showTabDesc} onOpenChange={setShowTabDesc}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-10 max-h-[85dvh] overflow-y-auto" hideClose>
-          <div className="pt-2">
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] flex flex-col p-0" hideClose>
+          <div className="flex-1 overflow-y-auto px-5 pt-6">
             <div className="flex flex-col items-center mb-5">
               <div className="h-[100px] w-[100px] rounded-2xl bg-muted mb-4" />
               <h3 className="text-[20px] font-bold text-foreground text-center">
                 {tabDescription?.title}
               </h3>
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               {tabDescription?.body}
             </div>
+          </div>
+          <div className="sticky bottom-0 px-5 pt-3 pb-10 bg-background border-t border-border/40">
             <button
               onClick={() => setShowTabDesc(false)}
               className="w-full rounded-full bg-foreground py-3.5 text-[15px] font-semibold text-background active:opacity-90 transition-opacity"

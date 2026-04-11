@@ -71,6 +71,12 @@ const components = [
     status: "2 variations",
   },
   {
+    title: "Quick Access",
+    description: "Shortcut grid — layout explorations",
+    href: "/explore-quick-access",
+    status: "10 variations",
+  },
+  {
     title: "Scrollable Table Widget",
     description: "Frozen first col, scrollable data, pills, flipper",
     href: "/explore-scrollable-table",

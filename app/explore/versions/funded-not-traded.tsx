@@ -24,6 +24,10 @@ import {
   Rocket,
   Maximize2,
   Play,
+  ListFilter,
+  GitCompareArrows,
+  GraduationCap,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -829,7 +833,7 @@ function TopMoversCardless() {
     return [
       <div key="name" className="flex items-center gap-2.5">
         <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
-        <p className="min-w-0 truncate text-[14px] font-semibold leading-tight text-foreground">{stock.name}</p>
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
       </div>,
       <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
       <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
@@ -1100,7 +1104,11 @@ function ConsensusBadge({ buy, hold, sell }: { buy: number; hold: number; sell: 
 
 function AnalystRatingsWidget() {
   const [ratingTab, setRatingTab] = useState<RatingTab>("strong-buy");
+  const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const cycleCapSize = () =>
+    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
 
   const stocks = ratedStocks[ratingTab];
 
@@ -1111,159 +1119,123 @@ function AnalystRatingsWidget() {
       return n;
     });
 
-  return (
-    <div>
-      <div className="mb-3.5">
-        <h2 className="text-[18px] font-bold tracking-tight">
-          Stocks by Analyst Ratings
-        </h2>
-      </div>
-
-      {/* Rating pills */}
-      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 px-5 py-0.5">
-          {ratingTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setRatingTab(tab.id)}
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-                ratingTab === tab.id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+  const ratingDescriptions: Record<RatingTab, { title: string; body: React.ReactNode }> = {
+    "strong-buy": {
+      title: "Wall Street's top picks",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Near-unanimous analyst conviction</p><p className="text-[14px] text-muted-foreground mt-0.5">Most analysts covering these stocks are saying buy. That level of agreement is rare</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compare upside to target price</p><p className="text-[14px] text-muted-foreground mt-0.5">The gap between current price and target tells you how much room analysts see</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Analysts can be wrong together</p><p className="text-[14px] text-muted-foreground mt-0.5">Consensus doesn't mean certainty. Always check if the fundamentals support the rating</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don't ignore valuation</p><p className="text-[14px] text-muted-foreground mt-0.5">A stock can be a "strong buy" and still expensive. The target price matters more than the label</p></div></div>
+          </div>
         </div>
-      </div>
+      ),
+    },
+    buy: {
+      title: "Analysts are bullish, with caveats",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Solid picks with broad support</p><p className="text-[14px] text-muted-foreground mt-0.5">These stocks have more buy ratings than hold or sell. The street likes them</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Look at the consensus bar</p><p className="text-[14px] text-muted-foreground mt-0.5">A mostly green bar means most analysts agree. A mixed bar means opinions are split</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Small upside can mean limited room</p><p className="text-[14px] text-muted-foreground mt-0.5">If the target price is close to current price, the easy gains may already be priced in</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Ratings lag behind reality</p><p className="text-[14px] text-muted-foreground mt-0.5">Analyst updates can take weeks. A lot can change between their report and today</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    hold: {
+      title: "The market's grey zone",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good if you already own them</p><p className="text-[14px] text-muted-foreground mt-0.5">Hold means analysts don't see a reason to sell. Steady names for stable portfolios</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Dividend candidates</p><p className="text-[14px] text-muted-foreground mt-0.5">Many hold-rated stocks are mature companies paying reliable dividends</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Limited upside expected</p><p className="text-[14px] text-muted-foreground mt-0.5">The target price is usually close to current price. Don't expect big moves</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Hold can be a polite sell</p><p className="text-[14px] text-muted-foreground mt-0.5">Some analysts avoid sell ratings. A hold from a usually bullish analyst is a red flag</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    sell: {
+      title: "Analysts are waving red flags",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Know what to avoid</p><p className="text-[14px] text-muted-foreground mt-0.5">Seeing sell ratings helps you steer clear. Not every cheap stock is a bargain</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Contrarian research</p><p className="text-[14px] text-muted-foreground mt-0.5">If you disagree with the consensus, this is where you start building your thesis</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Target prices are below current price</p><p className="text-[14px] text-muted-foreground mt-0.5">Analysts expect these stocks to go down. That's a strong signal to be cautious</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Catching a falling knife hurts</p><p className="text-[14px] text-muted-foreground mt-0.5">Just because a stock has dropped doesn't mean it's done dropping. Check the consensus bar</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+  };
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={ratingTab}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex"
-          >
-            {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
-              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
-              {stocks.map((stock) => (
-                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
-                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
-                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
-                </div>
-              ))}
-            </div>
+  const columns = [
+    { header: "Stock", align: "left" as const },
+    { header: "Upside", align: "right" as const },
+    { header: "Consensus", align: "center" as const, minWidth: 120 },
+    { header: "Price", align: "right" as const, minWidth: 80 },
+    { header: "Target", align: "right" as const, minWidth: 80 },
+    { header: "Avg Vol", align: "right" as const, minWidth: 68 },
+    { header: "Mkt Cap", align: "right" as const, minWidth: 72 },
+    { header: "Sector", align: "right" as const, minWidth: 64 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
 
-            {/* ---- Scrollable right columns ---- */}
-            <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 620 }}>
-                <thead>
-                  <tr className="h-[40px]">
-                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Upside
-                    </th>
-                    <th className="min-w-[120px] px-3 text-center text-[14px] font-medium text-muted-foreground">
-                      Consensus
-                    </th>
-                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Price
-                    </th>
-                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Target
-                    </th>
-                    <th className="min-w-[68px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Avg Vol
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Mkt Cap
-                    </th>
-                    <th className="min-w-[64px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Sector
-                    </th>
-                    <th className="min-w-[48px] px-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {stocks.map((stock) => (
-                    <tr
-                      key={stock.symbol}
-                      className="h-[64px] border-t border-border/10"
-                    >
-                      <td
-                        className={cn(
-                          "whitespace-nowrap px-3 text-right tabular-nums text-[14px] font-semibold",
-                          stock.upside >= 0 ? "text-gain" : "text-loss"
-                        )}
-                      >
-                        {stock.upside >= 0 ? "+" : ""}{stock.upside.toFixed(1)}%
-                      </td>
+  const rows = stocks.map((stock) => [
+    <div key="name" className="flex items-center gap-2.5">
+      <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+      <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
+    </div>,
+    <span key="upside" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", stock.upside >= 0 ? "text-gain" : "text-loss")}>{stock.upside >= 0 ? "+" : ""}{stock.upside.toFixed(1)}%</span>,
+    <div key="consensus" className="flex justify-center"><ConsensusBadge buy={stock.buy} hold={stock.hold} sell={stock.sell} /></div>,
+    <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(2)}</span>,
+    <span key="target" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.targetPrice.toFixed(2)}</span>,
+    <span key="vol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.avgVolume}</span>,
+    <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap}</span>,
+    <span key="sector" className="whitespace-nowrap text-[14px] text-muted-foreground">{stock.sector}</span>,
+    <div key="watch" className="flex justify-center">
+      <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
+        <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
+      </button>
+    </div>,
+  ]);
 
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <ConsensusBadge buy={stock.buy} hold={stock.hold} sell={stock.sell} />
-                        </div>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-foreground">
-                        {stock.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                        {stock.targetPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                        {stock.avgVolume}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[14px] text-muted-foreground">
-                        {stock.marketCap}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right text-[14px] text-muted-foreground">
-                        {stock.sector}
-                      </td>
-
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => toggleBookmark(stock.symbol)}
-                            className="flex-shrink-0 transition-transform active:scale-90"
-                          >
-                            <Bookmark
-                              size={16}
-                              strokeWidth={1.8}
-                              className={cn(
-                                "transition-colors",
-                                bookmarks.has(stock.symbol)
-                                  ? "fill-foreground text-foreground"
-                                  : "text-muted-foreground/60"
-                              )}
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* View More — connected to card */}
-        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-          View More
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    </div>
+  return (
+    <ScrollableTableWidget
+      title="Analyst Ratings"
+      flipper={{
+        label: capLabels[capSize],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleCapSize,
+      }}
+      tabs={ratingTabs}
+      activeTab={ratingTab}
+      onTabChange={(id) => setRatingTab(id as RatingTab)}
+      tabDescription={ratingDescriptions[ratingTab]}
+      pillLayoutId="rating-tab-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={620}
+      animationKey={`${ratingTab}-${capSize}`}
+      footer={{ label: "View More" }}
+    />
   );
 }
 
@@ -1340,7 +1312,11 @@ function PayoutBadge({ value }: { value: number }) {
 
 function DividendStocksWidget() {
   const [divTab, setDivTab] = useState<DividendTab>("high-yield");
+  const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const cycleCapSize = () =>
+    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
 
   const stocks = dividendStocks[divTab];
 
@@ -1351,144 +1327,121 @@ function DividendStocksWidget() {
       return n;
     });
 
-  return (
-    <div>
-      <div className="mb-3.5">
-        <h2 className="text-[18px] font-bold tracking-tight">
-          Dividend Stocks
-        </h2>
-      </div>
-
-      {/* Pill tabs */}
-      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 px-5 py-0.5">
-          {divTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setDivTab(tab.id)}
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-                divTab === tab.id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+  const divDescriptions: Record<DividendTab, { title: string; body: React.ReactNode }> = {
+    "high-yield": {
+      title: "High yield comes with strings",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Earn more income per share</p><p className="text-[14px] text-muted-foreground mt-0.5">These stocks pay some of the highest dividends in the market. Great for income-focused portfolios</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Check the payout ratio</p><p className="text-[14px] text-muted-foreground mt-0.5">Green means sustainable. Red means the company is paying out more than it can afford</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Yield traps are real</p><p className="text-[14px] text-muted-foreground mt-0.5">A very high yield sometimes means the stock price has crashed. The dividend might get cut next</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth is a warning</p><p className="text-[14px] text-muted-foreground mt-0.5">If the 5Y CAGR is negative, the dividend has been shrinking. Today's yield may not last</p></div></div>
+          </div>
         </div>
-      </div>
+      ),
+    },
+    aristocrats: {
+      title: "Decades of reliability",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">25+ years of dividend increases</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies have raised their dividend every year for decades. That takes serious discipline</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Look at the streak column</p><p className="text-[14px] text-muted-foreground mt-0.5">The longer the streak, the more committed the company is to rewarding shareholders</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Lower yields than high-yield stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">Aristocrats prioritize consistency over size. The yield is modest but the growth is steady</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Past streaks don't guarantee the future</p><p className="text-[14px] text-muted-foreground mt-0.5">Even aristocrats can cut. Watch the payout ratio for early warning signs</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    growth: {
+      title: "Small dividends, big ambition",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Fastest-growing dividends</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies are raising dividends aggressively. Today's small yield could be tomorrow's large one</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low payout = room to grow</p><p className="text-[14px] text-muted-foreground mt-0.5">A low payout ratio means the company keeps most of its earnings. There's headroom to keep raising</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low current income</p><p className="text-[14px] text-muted-foreground mt-0.5">If you need income now, these won't deliver much. They're a long-term play</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Growth can slow down</p><p className="text-[14px] text-muted-foreground mt-0.5">Double-digit CAGR is hard to sustain. Check if the business is still growing to support it</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    monthly: {
+      title: "Cash every single month",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">12 paychecks a year</p><p className="text-[14px] text-muted-foreground mt-0.5">Instead of quarterly, these stocks pay every month. Great for building a regular income stream</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compound faster</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly dividends reinvested monthly means your money compounds more frequently</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Often REITs or specialty funds</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly payers tend to be real estate or mortgage-backed. They behave differently from regular stocks</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High payout ratios are common</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly payers often distribute nearly all their income. Less buffer if earnings dip</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+  };
 
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={divTab}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex"
-          >
-            {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[196px] flex-shrink-0 border-r border-border/20 bg-card">
-              <div className="flex h-[40px] items-center pl-5 text-[14px] font-medium text-muted-foreground">Stock</div>
-              {stocks.map((stock) => (
-                <div key={stock.symbol} className="flex h-[64px] items-center gap-2.5 pl-5 pr-3">
-                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted" />
-                  <p className="min-w-0 truncate text-[14px] font-bold leading-tight text-foreground">{stock.name}</p>
-                </div>
-              ))}
-            </div>
+  const columns = [
+    { header: "Stock", align: "left" as const },
+    { header: "Yield", align: "right" as const },
+    { header: "Div/Yr", align: "right" as const },
+    { header: "Payout", align: "right" as const, minWidth: 80 },
+    { header: "5Y CAGR", align: "right" as const, minWidth: 72 },
+    { header: "Streak", align: "right" as const, minWidth: 56 },
+    { header: "Ex-Date", align: "right" as const, minWidth: 72 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
 
-            {/* ---- Scrollable right columns ---- */}
-            <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 580 }}>
-                <thead>
-                  <tr className="h-[40px]">
-                    <th className="min-w-[64px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Yield
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Div/Yr
-                    </th>
-                    <th className="min-w-[80px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Payout
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      5Y CAGR
-                    </th>
-                    <th className="min-w-[56px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Streak
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[14px] font-medium text-muted-foreground">
-                      Ex-Date
-                    </th>
-                    <th className="min-w-[48px] px-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {stocks.map((stock) => (
-                    <tr
-                      key={stock.symbol}
-                      className="h-[64px] border-t border-border/10"
-                    >
-                      <td className="whitespace-nowrap px-3 text-right text-[14px] font-bold tabular-nums text-gain">
-                        {stock.yield.toFixed(2)}%
-                      </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[14px] tabular-nums text-foreground">
-                        {stock.annualDiv.toFixed(2)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 text-right">
-                        <PayoutBadge value={stock.payoutRatio} />
-                      </td>
-                      <td
-                        className={cn(
-                          "whitespace-nowrap px-3 text-right text-[14px] font-semibold tabular-nums",
-                          stock.growth5Y >= 0 ? "text-gain" : "text-loss"
-                        )}
-                      >
-                        {stock.growth5Y >= 0 ? "+" : ""}{stock.growth5Y.toFixed(1)}%
-                      </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[14px] font-semibold tabular-nums text-foreground">
-                        {stock.streak}yr
-                      </td>
-                      <td className="whitespace-nowrap px-3 text-right text-[14px] text-muted-foreground">
-                        {stock.nextExDate}
-                      </td>
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => toggleBookmark(stock.symbol)}
-                            className="flex-shrink-0 transition-transform active:scale-90"
-                          >
-                            <Bookmark
-                              size={16}
-                              strokeWidth={1.8}
-                              className={cn(
-                                "transition-colors",
-                                bookmarks.has(stock.symbol)
-                                  ? "fill-foreground text-foreground"
-                                  : "text-muted-foreground/60"
-                              )}
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+  const rows = stocks.map((stock) => [
+    <div key="name" className="flex items-center gap-2.5">
+      <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+      <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
+    </div>,
+    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] font-bold text-gain">{stock.yield.toFixed(2)}%</span>,
+    <span key="div" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.annualDiv.toFixed(2)}</span>,
+    <PayoutBadge key="payout" value={stock.payoutRatio} />,
+    <span key="cagr" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", stock.growth5Y >= 0 ? "text-gain" : "text-loss")}>{stock.growth5Y >= 0 ? "+" : ""}{stock.growth5Y.toFixed(1)}%</span>,
+    <span key="streak" className="whitespace-nowrap tabular-nums text-[14px] font-semibold text-foreground">{stock.streak}yr</span>,
+    <span key="ex" className="whitespace-nowrap text-[14px] text-muted-foreground">{stock.nextExDate}</span>,
+    <div key="watch" className="flex justify-center">
+      <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
+        <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
+      </button>
+    </div>,
+  ]);
 
-        {/* View More */}
-        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-          View More
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    </div>
+  return (
+    <ScrollableTableWidget
+      title="Dividend Stocks"
+      flipper={{
+        label: capLabels[capSize],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleCapSize,
+      }}
+      tabs={divTabs}
+      activeTab={divTab}
+      onTabChange={(id) => setDivTab(id as DividendTab)}
+      tabDescription={divDescriptions[divTab]}
+      pillLayoutId="div-tab-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={580}
+      animationKey={`${divTab}-${capSize}`}
+      footer={{ label: "View More" }}
+    />
   );
 }
 
@@ -2319,10 +2272,203 @@ function PromoBanner() {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Popular Stocks Widget                                              */
+/* ------------------------------------------------------------------ */
+
+type PopularTab = "most-invested" | "popular-sip";
+const popularTabs: { id: PopularTab; label: string }[] = [
+  { id: "most-invested", label: "Most Invested" },
+  { id: "popular-sip", label: "Popular for SIP" },
+];
+
+interface PopularStock {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  investors: string;
+  marketCap: string;
+  pe: number | null;
+}
+
+const popularStocksData: Record<PopularTab, PopularStock[]> = {
+  "most-invested": [
+    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, investors: "4.2M", marketCap: "3.0T", pe: 31 },
+    { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, investors: "3.8M", marketCap: "568B", pe: 48 },
+    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, investors: "3.1M", marketCap: "1.9T", pe: 59 },
+    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, investors: "2.9M", marketCap: "3.2T", pe: 37 },
+    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, investors: "2.7M", marketCap: "2.2T", pe: 68 },
+  ],
+  "popular-sip": [
+    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, investors: "1.4M", marketCap: "3.0T", pe: 31 },
+    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, investors: "1.2M", marketCap: "3.2T", pe: 37 },
+    { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, investors: "920K", marketCap: "1.9T", pe: 27 },
+    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, investors: "850K", marketCap: "1.9T", pe: 59 },
+    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, investors: "780K", marketCap: "2.2T", pe: 68 },
+  ],
+};
+
+const popularDescriptions: Record<PopularTab, { title: string; body: React.ReactNode }> = {
+  "most-invested": {
+    title: "What everyone's buying",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">See where the crowd is putting money</p><p className="text-[14px] text-muted-foreground mt-0.5">These are the stocks held by the most investors on Aspora. Popularity often signals trust</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good starting point for research</p><p className="text-[14px] text-muted-foreground mt-0.5">If millions of people own it, it's probably worth understanding why</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Popular doesn't mean best</p><p className="text-[14px] text-muted-foreground mt-0.5">The most-owned stocks aren't always the best performers. Do your own homework</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Crowded trades can reverse fast</p><p className="text-[14px] text-muted-foreground mt-0.5">When everyone owns something, a sell-off can be sharp. Keep an eye on the fundamentals</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+  "popular-sip": {
+    title: "Set it and forget it",
+    body: (
+      <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Built for long-term investors</p><p className="text-[14px] text-muted-foreground mt-0.5">These are the stocks and ETFs people invest in regularly, month after month</p></div></div>
+          <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Dollar-cost averaging works best here</p><p className="text-[14px] text-muted-foreground mt-0.5">SIP smooths out volatility. These picks tend to be stable, proven names</p></div></div>
+        </div>
+        <div className="border-t border-border/60" />
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Not a shortcut to quick gains</p><p className="text-[14px] text-muted-foreground mt-0.5">SIP is a patience game. If you're looking for short-term wins, this isn't the list</p></div></div>
+          <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Review periodically</p><p className="text-[14px] text-muted-foreground mt-0.5">Set and forget doesn't mean never check. Revisit your SIPs every quarter</p></div></div>
+        </div>
+      </div>
+    ),
+  },
+};
+
+function PopularStocksWidget() {
+  const [tab, setTab] = useState<PopularTab>("most-invested");
+  const [capSize, setCapSize] = useState<CapSize>("mega");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  const cycleCapSize = () =>
+    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
+
+  const stocks = popularStocksData[tab];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => {
+      const n = new Set(p);
+      if (n.has(sym)) n.delete(sym); else n.add(sym);
+      return n;
+    });
+
+  const columns = [
+    { header: "Stock", align: "left" as const },
+    { header: "Price", align: "right" as const },
+    { header: "Chg%", align: "right" as const },
+    { header: "Investors", align: "right" as const, minWidth: 72 },
+    { header: "M.Cap", align: "right" as const, minWidth: 68 },
+    { header: "PE", align: "right" as const, minWidth: 48 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = stocks.map((stock) => {
+    const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    return [
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
+      </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
+      <span key="inv" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.investors}</span>,
+      <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap}</span>,
+      <span key="pe" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.pe != null ? Math.round(stock.pe) : "—"}</span>,
+      <div key="watch" className="flex justify-center">
+        <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
+          <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
+        </button>
+      </div>,
+    ];
+  });
+
+  return (
+    <ScrollableTableWidget
+      title="Popular Stocks"
+      flipper={{
+        label: capLabels[capSize],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleCapSize,
+      }}
+      tabs={popularTabs}
+      activeTab={tab}
+      onTabChange={(id) => setTab(id as PopularTab)}
+      tabDescription={popularDescriptions[tab]}
+      pillLayoutId="popular-tab-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={500}
+      animationKey={`${tab}-${capSize}`}
+      footer={{ label: "See All Popular Stocks" }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Quick Access Widget                                                */
+/* ------------------------------------------------------------------ */
+
+const quickAccessItems: { label: string; icon: LucideIcon }[] = [
+  { label: "My Watchlist", icon: Bookmark },
+  { label: "Compare Stocks", icon: GitCompareArrows },
+  { label: "Level Up", icon: GraduationCap },
+  { label: "Portfolio Analysis", icon: Brain },
+  { label: "Market Summary", icon: BarChart3 },
+  { label: "News", icon: Newspaper },
+];
+
+const qaRow1 = ["My Watchlist", "Compare Stocks", "Level Up"];
+const qaRow2 = ["Portfolio Analysis", "Market Summary", "News"];
+
+function QuickAccessPill({ item }: { item: (typeof quickAccessItems)[number] }) {
+  const Icon = item.icon;
+  return (
+    <button className="flex shrink-0 items-center gap-2.5 rounded-full border border-border/60 px-4 py-2.5 active:scale-[0.97] transition-transform">
+      <Icon size={18} strokeWidth={1.8} className="text-foreground" />
+      <span className="text-[14px] font-semibold text-foreground whitespace-nowrap">{item.label}</span>
+    </button>
+  );
+}
+
+function QuickAccessWidget() {
+  return (
+    <div>
+      <h2 className="text-[18px] font-bold tracking-tight mb-3.5">Quick Access</h2>
+      <div className="-mx-5 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col gap-2.5 px-5" style={{ width: "max-content" }}>
+          <div className="flex gap-2.5">
+            {qaRow1.map((label) => {
+              const item = quickAccessItems.find((i) => i.label === label)!;
+              return <QuickAccessPill key={label} item={item} />;
+            })}
+          </div>
+          <div className="flex gap-2.5">
+            {qaRow2.map((label) => {
+              const item = quickAccessItems.find((i) => i.label === label)!;
+              return <QuickAccessPill key={label} item={item} />;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ExploreFundedNotTraded() {
   return (
     <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
+      <PopularStocksWidget />
+      <QuickAccessWidget />
       <TopMoversCardless />
       <HeatmapWidget />
       <LevelUpWidget />
