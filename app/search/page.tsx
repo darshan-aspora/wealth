@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -580,6 +580,14 @@ const MOCK_WATCHLISTS = [
 ];
 
 export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageInner />
+    </Suspense>
+  );
+}
+
+function SearchPageInner() {
   const searchParams = useSearchParams();
   const fromWatchlist = searchParams.get("from") === "watchlist";
   const wlName = searchParams.get("wlName");
