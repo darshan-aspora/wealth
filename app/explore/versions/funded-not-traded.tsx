@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/components/theme-provider";
 import {
@@ -18,6 +18,9 @@ import {
   Newspaper,
   CalendarDays,
   CalendarCheck,
+  MessageCircle,
+  Phone,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -1993,103 +1996,246 @@ function QuickAccessTogglable() {
 /*  Explore Footer — Trust, Access & Co-Creation                       */
 /* ------------------------------------------------------------------ */
 
-function ExploreFooter() {
+export function ExploreFooter() {
   return (
-    <div className="space-y-6">
-      {/* Let&apos;s Co-create, Best for You */}
-      <div>
-        <h3 className="text-[17px] font-bold text-foreground mb-3">Let&apos;s Co-create, Best for You</h3>
-        <div className="rounded-2xl border border-border/60 overflow-hidden divide-y divide-border/40">
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">Vote on Features</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">3 features are neck and neck. Your vote decides</p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-          </button>
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">Share Feedback</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">What&apos;s working, what&apos;s not</p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-          </button>
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">Participate in Research</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">Join sessions, review prototypes, earn badges</p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-          </button>
-        </div>
-      </div>
+    <div className="relative -mx-5 mt-4">
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] to-transparent rounded-t-[32px]" />
 
-      {/* Talk to Us */}
-      <div>
-        <h3 className="text-[17px] font-bold text-foreground mb-3">Talk to Us</h3>
-        <div className="grid grid-cols-3 gap-4">
+      <div className="relative px-6 pt-12 pb-10">
+        {/* Hero */}
+        <h2 className="text-[28px] font-bold text-foreground leading-[1.15] tracking-tight text-center">
+          We answer to you
+        </h2>
+        <p className="text-[15px] text-muted-foreground mt-3 leading-relaxed text-center">
+          Built around how you invest.<br />Tell us how to make it better.
+        </p>
+
+        {/* Co-create actions */}
+        <div className="mt-8 space-y-3">
           {[
-            { line1: "Chat with", line2: "Support" },
-            { line1: "Schedule", line2: "a Call" },
-            { line1: "Write to", line2: "the CEO" },
+            { title: "Vote on what we build", sub: "1,247 votes this week", accent: true },
+            { title: "Share your feedback", sub: "What works, what doesn\u2019t" },
+            { title: "Join a research session", sub: "Help us understand you better" },
           ].map((item) => (
-            <button key={item.line1} className="flex flex-col items-center gap-2.5 active:opacity-70 transition-opacity">
-              <div className="h-10 w-10 rounded-full bg-muted" />
-              <p className="text-[13px] font-semibold text-foreground leading-tight text-center">{item.line1}<br />{item.line2}</p>
+            <button
+              key={item.title}
+              className="flex w-full items-center justify-between rounded-2xl bg-background border border-border/50 px-5 py-4 text-left active:scale-[0.98] transition-transform"
+            >
+              <div>
+                <p className={cn("text-[16px] font-semibold", item.accent ? "text-foreground" : "text-foreground/80")}>{item.title}</p>
+                <p className="text-[13px] text-muted-foreground mt-0.5">{item.sub}</p>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground/30" />
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Built for Trust and Reliability */}
-      <div>
-        <h3 className="text-[17px] font-bold text-foreground mb-3">Built for Trust and Reliability</h3>
-        <div className="rounded-2xl border border-border/60 overflow-hidden divide-y divide-border/40">
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">How your money is protected</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">SIPC insured, segregated accounts, Alpaca brokerage</p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-          </button>
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">Transparent pricing</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">Every fee, explained. No surprises</p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-muted-foreground/40" />
-          </button>
-          <button className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">System status</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">All systems operational</p>
-            </div>
-            <span className="shrink-0 h-2 w-2 rounded-full bg-gain" />
-          </button>
+        {/* Divider */}
+        <div className="flex items-center gap-4 my-8">
+          <div className="flex-1 h-px bg-border/40" />
+          <span className="text-[11px] font-medium text-muted-foreground/30 uppercase tracking-[0.2em]">Need a human?</span>
+          <div className="flex-1 h-px bg-border/40" />
+        </div>
+
+        {/* Contact */}
+        <div className="flex items-center justify-around">
+          {[
+            { icon: MessageCircle, label: "Chat", tat: "Instant" },
+            { icon: Phone, label: "Schedule a Call", tat: "Pick a time" },
+            { icon: Mail, label: "Write to CEO", tat: "Usually 48h" },
+          ].map((item) => (
+            <button key={item.label} className="flex flex-col items-center gap-2 active:scale-95 transition-transform flex-1">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <item.icon size={20} strokeWidth={1.8} className="text-foreground" />
+              </div>
+              <div className="text-center">
+                <p className="text-[13px] font-medium text-foreground leading-tight">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{item.tat}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Trust */}
+        <div className="mt-10 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-gain" />
+            <span className="text-[12px] text-muted-foreground/40">All systems operational</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground/40">
+            <span>SIPC insured</span>
+            <span>·</span>
+            <span>Segregated accounts</span>
+            <span>·</span>
+            <span>Alpaca Securities</span>
+            <span>·</span>
+            <span>256-bit encryption</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Onboarding Widget (V3 — The Contrast)                              */
+/* ------------------------------------------------------------------ */
+
+const KYC_STEPS = ["Email", "Phone", "Identity", "Funding", "Review"];
+const KYC_CURRENT = 2;
+
+function OnboardingWidget() {
+  const [started, setStarted] = useState(false);
+  const [cardVisible, setCardVisible] = useState(true);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setCardVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const noiseStyle = { backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E')" };
+
+  return (
+    <>
+      <div ref={cardRef}>
+        {!started ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            onClick={() => setStarted(true)}
+            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pb-6 pt-48 cursor-pointer"
+          >
+            <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
+            <div className="relative flex flex-col items-center text-center">
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+                className="text-[20px] font-bold text-background leading-[1.3] mb-1"
+              >
+                No rush. Explore all you want.
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+                className="text-[15px] text-background/50 leading-relaxed mb-6"
+              >
+                When you&apos;re ready to invest, we&apos;re here.
+              </motion.p>
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+                className="rounded-full bg-background px-6 py-3 text-[15px] font-semibold text-foreground active:opacity-90 transition-opacity"
+              >
+                Start Investing
+              </motion.button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            onClick={() => setStarted(false)}
+            className="relative overflow-hidden rounded-3xl bg-foreground p-6 cursor-pointer"
+          >
+            <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
+            <div className="relative flex flex-col items-center text-center">
+              <div className="mb-5">
+                <svg width={80} height={80} viewBox="0 0 80 80">
+                  <circle cx={40} cy={40} r={34} fill="none" stroke="hsl(var(--background) / 0.15)" strokeWidth={5} />
+                  <circle
+                    cx={40} cy={40} r={34}
+                    fill="none" stroke="hsl(var(--background))" strokeWidth={5} strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 34}
+                    strokeDashoffset={2 * Math.PI * 34 * (1 - (KYC_CURRENT + 1) / KYC_STEPS.length)}
+                    transform="rotate(-90 40 40)"
+                  />
+                      </svg>
+              </div>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+                className="text-[20px] font-bold text-background leading-tight mb-1"
+              >
+                Your account is almost ready
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+                className="text-[15px] text-background/50 leading-relaxed mb-5"
+              >
+                We saved your progress.<br />Pick up where you left off.
+              </motion.p>
+              <button className="rounded-full bg-background px-6 py-3 text-[15px] font-semibold text-foreground active:opacity-90 transition-opacity">
+                Continue Setup
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Sticky snackbar — appears when card scrolls off */}
+      <AnimatePresence>
+        {!cardVisible && started && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-[60px] left-0 right-0 z-50 mx-auto max-w-[430px]"
+          >
+            <div className="flex items-center gap-3 bg-card border-y border-border/40 px-5 py-3">
+              {/* Mini ring */}
+              <svg width={36} height={36} viewBox="0 0 36 36" className="shrink-0">
+                <circle cx={18} cy={18} r={15} fill="none" stroke="hsl(var(--border))" strokeWidth={3} />
+                <circle
+                  cx={18} cy={18} r={15}
+                  fill="none" stroke="hsl(var(--foreground))" strokeWidth={3} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 15}
+                  strokeDashoffset={2 * Math.PI * 15 * (1 - (KYC_CURRENT + 1) / KYC_STEPS.length)}
+                  transform="rotate(-90 18 18)"
+                />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-foreground">{started ? "Account setup" : "Start investing"}</p>
+                <p className="text-[13px] text-muted-foreground">{started ? "Pick up where you left off" : "No minimums, no pressure"}</p>
+              </div>
+              <button className="shrink-0 rounded-full bg-foreground px-4 py-2.5 text-[14px] font-semibold text-background active:opacity-90 transition-opacity">
+                {started ? "Continue" : "Start"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 export function ExploreFundedNotTraded() {
   return (
     <div className="space-y-8 px-5 pt-5 pb-4">
-      <PromoBanner />
+      <OnboardingWidget />
       <PopularStocksWidget />
+      <PromoBanner />
       <QuickAccessTogglable />
       <TopMoversCardless />
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />
       <HeatmapWidget />
       <DividendStocksWidget />
-      <ExploreFooter />
     </div>
   );
 }

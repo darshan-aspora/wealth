@@ -169,13 +169,28 @@ function AiSummaryCard({ watchlist }: { watchlist: WatchlistData }) {
 
   if (phase === "idle") {
     return (
-      <button
-        onClick={handleGenerate}
-        className="flex w-full items-center justify-center gap-2 py-8 active:opacity-70"
-      >
-        <Sparkles size={14} className="text-muted-foreground/30" />
-        <span className="text-[13px] font-medium text-muted-foreground/40">Tap for AI summary</span>
-      </button>
+      <div className="px-5 py-4">
+        <button
+          onClick={handleGenerate}
+          className="relative w-full overflow-hidden rounded-2xl border border-border/40 p-5 active:scale-[0.99] transition-transform"
+        >
+          {/* Breathing gradient border */}
+          <div className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none">
+            <motion.div
+              className="absolute inset-[-2px] rounded-2xl"
+              style={{
+                background: "conic-gradient(from 0deg, transparent, hsl(var(--foreground) / 0.08), transparent, hsl(var(--foreground) / 0.04), transparent)",
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            />
+          </div>
+          <div className="relative flex items-center justify-center gap-2.5">
+            <Sparkles size={16} className="text-foreground/60" />
+            <p className="text-[15px] font-semibold text-foreground">Analyze with AI</p>
+          </div>
+        </button>
+      </div>
     );
   }
 

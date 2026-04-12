@@ -13,7 +13,7 @@ import {
   type ExploreVersion,
 } from "./explore-version-context";
 import { ExploreFTUX } from "./versions/ftux";
-import { ExploreFundedNotTraded } from "./versions/funded-not-traded";
+import { ExploreFundedNotTraded, ExploreFooter } from "./versions/funded-not-traded";
 import { ETFFundedNotTraded } from "./versions/etf-funded-not-traded";
 import { AdvisoryBaskets } from "./versions/advisory-baskets";
 import { AlgoStrategies } from "./versions/algo-strategies";
@@ -177,6 +177,9 @@ function ExploreContent() {
         {activeTab === "algo" && (
           <AlgoStrategies />
         )}
+        <div className="px-5">
+          <ExploreFooter />
+        </div>
       </main>
 
       <BottomNavV2 />

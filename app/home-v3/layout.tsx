@@ -8,9 +8,10 @@ import Link from "next/link";
 import {
   X, Bell, Globe, BarChart3,
   // Bookmark, // Uncomment when restoring Watchlist tab
-  PieChart, FlaskConical, GraduationCap,
+  PieChart, FlaskConical, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { TickerMarquee } from "@/components/ticker";
 import { SearchPlaceholder } from "@/components/header";
@@ -25,7 +26,7 @@ const bottomTabs = [
   // { label: "Watchlist", icon: Bookmark, href: "/home-v3/watchlist" }, // Moved to Quick Access — uncomment to restore
   { label: "Portfolio", icon: PieChart, href: "/home-v3/portfolio" },
   { label: "Advisory", icon: FlaskConical, href: "/home-v3/advisory" },
-  { label: "Level Up", icon: GraduationCap, href: "/learn" },
+  { label: "Level Up", icon: BookOpen, href: "/learn" },
 ];
 
 function BottomNav() {
@@ -44,7 +45,7 @@ function BottomNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
+                "relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[13px] font-medium transition-colors",
                 isActive ? "text-foreground" : "text-muted-foreground"
               )}
             >
@@ -74,6 +75,7 @@ function BottomNav() {
 
 export default function HomeV3Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { toggleTheme } = useTheme();
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollTop = useRef(0);
   const scrollThreshold = 8;
@@ -95,6 +97,13 @@ export default function HomeV3Layout({ children }: { children: React.ReactNode }
     <HeaderHiddenContext.Provider value={headerHidden}>
       <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
         <StatusBar />
+
+        {/* Hidden theme toggle — floating 12px tap zone, doesn't affect layout */}
+        <div
+          className="absolute top-0 left-0 right-0 h-3 z-50"
+          onClick={toggleTheme}
+          aria-hidden
+        />
 
         {/* ── Collapsible Header + Ticker ────────────────────────────── */}
         <div

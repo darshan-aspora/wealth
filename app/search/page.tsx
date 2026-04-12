@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, X, Bookmark, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useRotatingSuffix } from "@/components/header";
 import { Button } from "@/components/ui/button";
+import { RecentWidget } from "@/app/search/components/recent-v1";
+import { PopularWidget } from "@/app/search/components/popular-v3";
+import { CollectionsWidget } from "@/app/search/components/collections-v1";
+import { OptionsUnderTenV2 } from "@/app/search/components/options-under-ten-v2";
 
 
 // ─── Mock search data ────────────────────────────────────────────────
@@ -121,27 +125,6 @@ const mockData: SearchItem[] = [
   { symbol: "USD/INR", name: "US Dollar / Indian Rupee", type: "Forex", price: 82.84, change: -0.12, changePct: -0.14, exchange: "FX", bid: 82.83, ask: 82.86, spread: "3.0 pip", session: "Mumbai", keywords: ["rupee", "india", "usdinr", "inr", "usd", "forex", "fx"] },
 ];
 
-// ─── Recently visited mock data ──────────────────────────────────────
-const recentlyVisited: SearchItem[] = [
-  mockData.find((i) => i.symbol === "NVDA")!,
-  mockData.find((i) => i.symbol === "SPX")!,
-  mockData.find((i) => i.symbol === "QQQ")!,
-  mockData.find((i) => i.symbol === "TSLA")!,
-  mockData.find((i) => i.symbol === "AAPL 250321C230")!,
-  mockData.find((i) => i.symbol === "AMZN")!,
-];
-
-// ─── Popular / trending searches ─────────────────────────────────────
-const popularSearches: SearchItem[] = [
-  mockData.find((i) => i.symbol === "AAPL")!,
-  mockData.find((i) => i.symbol === "META")!,
-  mockData.find((i) => i.symbol === "SPY")!,
-  mockData.find((i) => i.symbol === "AMD")!,
-  mockData.find((i) => i.symbol === "EUR/USD")!,
-  mockData.find((i) => i.symbol === "VIX")!,
-  mockData.find((i) => i.symbol === "ARKK")!,
-  mockData.find((i) => i.symbol === "NFLX")!,
-];
 
 // Map tab names to data types
 const tabTypeMap: Record<string, string | null> = {
@@ -507,49 +490,14 @@ function DetailResultRow({
   );
 }
 
-// ─── Empty state: Recent + Popular widgets ──────────────────────────
-function SearchEmptyState({ watchlist, onToggleWatchlist }: { watchlist: Set<string>; onToggleWatchlist: (symbol: string) => void }) {
+// ─── Empty state: Recent, Popular, Collections, Options Under 10 ───
+function SearchEmptyState() {
   return (
-    <div className="space-y-5 pt-3 pb-8">
-      {/* Recent searches */}
-      <div className="px-5">
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <Clock size={15} className="text-muted-foreground/50" />
-          <h3 className="text-[14px] font-semibold tracking-wide uppercase text-muted-foreground/60">
-            Recent
-          </h3>
-        </div>
-        <div className="rounded-2xl border border-border/50 bg-card/60 overflow-hidden divide-y divide-border/30">
-          {recentlyVisited.map((item) => (
-            <ResultRow
-              key={item.symbol}
-              item={item}
-              isWatchlisted={watchlist.has(item.symbol)}
-              onToggleWatchlist={onToggleWatchlist}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Popular searches */}
-      <div className="px-5">
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <TrendingUp size={15} className="text-muted-foreground/50" />
-          <h3 className="text-[14px] font-semibold tracking-wide uppercase text-muted-foreground/60">
-            Popular
-          </h3>
-        </div>
-        <div className="rounded-2xl border border-border/50 bg-card/60 overflow-hidden divide-y divide-border/30">
-          {popularSearches.map((item) => (
-            <ResultRow
-              key={item.symbol}
-              item={item}
-              isWatchlisted={watchlist.has(item.symbol)}
-              onToggleWatchlist={onToggleWatchlist}
-            />
-          ))}
-        </div>
-      </div>
+    <div className="space-y-10 pt-3 pb-8">
+      <RecentWidget />
+      <PopularWidget />
+      <CollectionsWidget />
+      <OptionsUnderTenV2 />
     </div>
   );
 }
@@ -680,7 +628,7 @@ function SearchPageInner() {
         onTouchEnd={onTouchEnd}
       >
         {!query.trim() ? (
-          <SearchEmptyState watchlist={watchlist} onToggleWatchlist={toggleWatchlist} />
+          <SearchEmptyState />
         ) : results.length > 0 ? (
           <motion.div
             key={activeTab}

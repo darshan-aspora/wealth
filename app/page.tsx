@@ -77,6 +77,18 @@ const components = [
     status: "10 variations",
   },
   {
+    title: "Onboarding Widget",
+    description: "Fresh user + KYC drop-off — 3 versions",
+    href: "/explore-onboarding",
+    status: "3 versions",
+  },
+  {
+    title: "Explore Footer",
+    description: "Co-create, talk, trust — 5 creative concepts",
+    href: "/explore-footer",
+    status: "5 concepts",
+  },
+  {
     title: "AI Summary",
     description: "Watchlist AI summary — layout explorations",
     href: "/explore-ai-summary",
@@ -99,6 +111,12 @@ const components = [
     description: "Frozen first col, scrollable data, pills, flipper",
     href: "/explore-scrollable-table",
     status: "component",
+  },
+  {
+    title: "Search Widgets",
+    description: "Recent, Popular, Collections, Options Under 10",
+    href: "/explore-search-widgets",
+    status: "12 variations",
   },
 ];
 

@@ -8,7 +8,7 @@ import {
   type ExploreVersion,
 } from "@/app/explore/explore-version-context";
 import { ExploreFTUX } from "@/app/explore/versions/ftux";
-import { ExploreFundedNotTraded } from "@/app/explore/versions/funded-not-traded";
+import { ExploreFundedNotTraded, ExploreFooter } from "@/app/explore/versions/funded-not-traded";
 import { ETFFundedNotTraded } from "@/app/explore/versions/etf-funded-not-traded";
 import { GlobalETFFundedNotTraded } from "@/app/explore/versions/global-etf-funded-not-traded";
 import {
@@ -114,6 +114,9 @@ function ExploreContent() {
         </div>
       )}
 
+      <div className="px-5">
+        <ExploreFooter />
+      </div>
 
       {/* Version Picker */}
       <Sheet open={showVersionPicker} onOpenChange={setShowVersionPicker}>
