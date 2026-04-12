@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoriesViewer, type Story } from "@/components/stories-viewer";
 
@@ -31,7 +32,7 @@ import { StoriesViewer, type Story } from "@/components/stories-viewer";
 /* ------------------------------------------------------------------ */
 
 type EtfCategory = "broad" | "sector" | "bond";
-type MoverType = "gainers" | "losers";
+type MoverType = "gainers" | "losers" | "most-active" | "near-52w-high" | "near-52w-low";
 
 interface ETF {
   symbol: string;
@@ -45,6 +46,9 @@ interface ETF {
   high52w: number;
   low52w: number;
   color: string;
+  return1y?: number;
+  return3y?: number;
+  return5y?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -60,14 +64,28 @@ function hashStr(s: string) {
 function makeSparkline(symbol: string, isGainer: boolean): number[] {
   const seed = hashStr(symbol);
   const pts: number[] = [];
-  let v = 50;
-  for (let i = 0; i < 24; i++) {
-    const r = (Math.sin(seed + i * 127) + 1) / 2;
-    v += (r - 0.5 + (isGainer ? 0.15 : -0.15)) * 6;
-    v = Math.max(12, Math.min(88, v));
+  const startV = 30 + (seed % 40);
+  const vol = 3 + (seed % 7);
+  const drift = isGainer ? 0.08 + (seed % 5) * 0.04 : -(0.08 + (seed % 5) * 0.04);
+  let v = startV;
+  for (let i = 0; i < 52; i++) {
+    const r1 = (Math.sin(seed + i * 127) + 1) / 2;
+    const r2 = (Math.cos(seed * 3 + i * 53) + 1) / 2;
+    v += ((r1 + r2) / 2 - 0.5 + drift) * vol;
+    v = Math.max(5, Math.min(95, v));
     pts.push(v);
   }
   return pts;
+}
+
+// Mock returns based on symbol hash
+function mockReturns(symbol: string): { r1y: number; r3y: number; r5y: number } {
+  const seed = hashStr(symbol);
+  return {
+    r1y: Math.round(((seed % 40) - 10) * 10) / 10,
+    r3y: Math.round(((seed % 30) - 5) * 10) / 10,
+    r5y: Math.round(((seed % 35) - 2) * 10) / 10,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -79,15 +97,24 @@ function Sparkline({
   color,
   w = 52,
   h = 22,
+  autoColor = false,
 }: {
   points: number[];
-  color: string;
+  color?: string;
   w?: number;
   h?: number;
+  autoColor?: boolean;
 }) {
   const min = Math.min(...points);
   const max = Math.max(...points);
   const range = max - min || 1;
+
+  const startVal = points[0];
+  const endVal = points[points.length - 1];
+  const isUp = endVal >= startVal;
+  const lineColor = autoColor ? (isUp ? "#10b981" : "#ef4444") : (color ?? "#6366f1");
+
+  const baselineY = h - ((startVal - min) / range) * (h - 2) - 1;
 
   const d = points
     .map((p, i) => {
@@ -99,10 +126,17 @@ function Sparkline({
 
   return (
     <svg width={w} height={h} className="overflow-visible">
+      <line
+        x1={0} y1={baselineY} x2={w} y2={baselineY}
+        stroke="currentColor"
+        className="text-muted-foreground/20"
+        strokeWidth={1}
+        strokeDasharray="2 2"
+      />
       <path
         d={d}
         fill="none"
-        stroke={color}
+        stroke={lineColor}
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -194,6 +228,75 @@ const data: Record<MoverType, Record<EtfCategory, ETF[]>> = {
       { symbol: "TIPS", name: "iShares TIPS Bond", price: 108.23, changePercent: -0.45, volume: "2.8M", aum: "$22B", expenseRatio: 0.19, yield: 3.65, high52w: 112.0, low52w: 102.4, color: "#333333" },
     ],
   },
+  "most-active": {
+    broad: [
+      { symbol: "SPY", name: "SPDR S&P 500", price: 478.52, changePercent: 0.82, volume: "112M", aum: "$518B", expenseRatio: 0.09, yield: 1.28, high52w: 485.0, low52w: 388.4, color: "#0033CC" },
+      { symbol: "QQQ", name: "Invesco QQQ Trust", price: 442.18, changePercent: 1.24, volume: "52M", aum: "$252B", expenseRatio: 0.20, yield: 0.52, high52w: 460.0, low52w: 352.8, color: "#00CC66" },
+      { symbol: "IWM", name: "iShares Russell 2000", price: 198.45, changePercent: -0.68, volume: "38M", aum: "$72B", expenseRatio: 0.19, yield: 1.12, high52w: 215.0, low52w: 168.2, color: "#333333" },
+      { symbol: "EEM", name: "iShares MSCI EM", price: 40.23, changePercent: -2.34, volume: "42M", aum: "$18B", expenseRatio: 0.68, yield: 2.45, high52w: 44.8, low52w: 36.2, color: "#333333" },
+      { symbol: "VOO", name: "Vanguard S&P 500", price: 438.92, changePercent: 0.78, volume: "8.4M", aum: "$892B", expenseRatio: 0.03, yield: 1.32, high52w: 445.0, low52w: 362.5, color: "#8B1A1A" },
+    ],
+    sector: [
+      { symbol: "XLF", name: "Financial Select SPDR", price: 42.18, changePercent: 1.42, volume: "48M", aum: "$42B", expenseRatio: 0.09, yield: 1.52, high52w: 44.8, low52w: 32.4, color: "#003366" },
+      { symbol: "XLE", name: "Energy Select SPDR", price: 88.45, changePercent: -1.82, volume: "22M", aum: "$38B", expenseRatio: 0.09, yield: 3.28, high52w: 98.2, low52w: 72.4, color: "#CC6600" },
+      { symbol: "XLK", name: "Technology SPDR", price: 208.34, changePercent: 1.56, volume: "12M", aum: "$62B", expenseRatio: 0.09, yield: 0.68, high52w: 218.0, low52w: 168.4, color: "#6633CC" },
+      { symbol: "XLV", name: "Health Care SPDR", price: 142.56, changePercent: 0.42, volume: "8.2M", aum: "$42B", expenseRatio: 0.09, yield: 1.42, high52w: 148.0, low52w: 122.4, color: "#009933" },
+      { symbol: "XLI", name: "Industrial SPDR", price: 118.67, changePercent: -1.28, volume: "14M", aum: "$19B", expenseRatio: 0.09, yield: 1.45, high52w: 128.0, low52w: 98.4, color: "#4169E1" },
+    ],
+    bond: [
+      { symbol: "TLT", name: "iShares 20+ Yr Trsy", price: 92.84, changePercent: 0.82, volume: "24M", aum: "$52B", expenseRatio: 0.15, yield: 4.12, high52w: 102.3, low52w: 82.4, color: "#1A5276" },
+      { symbol: "HYG", name: "iShares High Yield", price: 78.23, changePercent: 0.56, volume: "15M", aum: "$18B", expenseRatio: 0.49, yield: 5.82, high52w: 80.1, low52w: 72.4, color: "#333333" },
+      { symbol: "LQD", name: "iShares IG Corp", price: 108.67, changePercent: 0.42, volume: "12M", aum: "$35B", expenseRatio: 0.14, yield: 4.45, high52w: 114.0, low52w: 100.8, color: "#333333" },
+      { symbol: "AGG", name: "iShares Core US Agg", price: 98.12, changePercent: 0.28, volume: "6.7M", aum: "$98B", expenseRatio: 0.03, yield: 3.72, high52w: 101.5, low52w: 93.2, color: "#333333" },
+      { symbol: "BND", name: "Vanguard Total Bond", price: 72.45, changePercent: 0.34, volume: "8.2M", aum: "$108B", expenseRatio: 0.03, yield: 3.85, high52w: 75.2, low52w: 68.1, color: "#8B1A1A" },
+    ],
+  },
+  "near-52w-high": {
+    broad: [
+      { symbol: "VOO", name: "Vanguard S&P 500", price: 438.92, changePercent: 0.78, volume: "8.4M", aum: "$892B", expenseRatio: 0.03, yield: 1.32, high52w: 445.0, low52w: 362.5, color: "#8B1A1A" },
+      { symbol: "QQQ", name: "Invesco QQQ Trust", price: 442.18, changePercent: 1.24, volume: "52M", aum: "$252B", expenseRatio: 0.20, yield: 0.52, high52w: 460.0, low52w: 352.8, color: "#00CC66" },
+      { symbol: "SPY", name: "SPDR S&P 500", price: 478.52, changePercent: 0.82, volume: "112M", aum: "$518B", expenseRatio: 0.09, yield: 1.28, high52w: 485.0, low52w: 388.4, color: "#0033CC" },
+      { symbol: "VTI", name: "Vanguard Total Stock", price: 248.34, changePercent: 0.62, volume: "4.2M", aum: "$384B", expenseRatio: 0.03, yield: 1.24, high52w: 252.0, low52w: 198.4, color: "#8B1A1A" },
+      { symbol: "IVV", name: "iShares Core S&P 500", price: 480.12, changePercent: 0.84, volume: "5.8M", aum: "$478B", expenseRatio: 0.03, yield: 1.30, high52w: 486.0, low52w: 390.2, color: "#333333" },
+    ],
+    sector: [
+      { symbol: "XLK", name: "Technology SPDR", price: 208.34, changePercent: 1.56, volume: "12M", aum: "$62B", expenseRatio: 0.09, yield: 0.68, high52w: 218.0, low52w: 168.4, color: "#6633CC" },
+      { symbol: "XLF", name: "Financial Select SPDR", price: 42.18, changePercent: 1.42, volume: "48M", aum: "$42B", expenseRatio: 0.09, yield: 1.52, high52w: 44.8, low52w: 32.4, color: "#003366" },
+      { symbol: "XLI", name: "Industrial SPDR", price: 118.67, changePercent: 0.92, volume: "14M", aum: "$19B", expenseRatio: 0.09, yield: 1.45, high52w: 128.0, low52w: 98.4, color: "#4169E1" },
+      { symbol: "XLV", name: "Health Care SPDR", price: 142.56, changePercent: 0.42, volume: "8.2M", aum: "$42B", expenseRatio: 0.09, yield: 1.42, high52w: 148.0, low52w: 122.4, color: "#009933" },
+      { symbol: "XLC", name: "Comm Svcs SPDR", price: 82.34, changePercent: 0.86, volume: "6.8M", aum: "$18B", expenseRatio: 0.09, yield: 0.78, high52w: 92.1, low52w: 68.4, color: "#9400D3" },
+    ],
+    bond: [
+      { symbol: "SHY", name: "iShares 1-3 Yr Trsy", price: 81.45, changePercent: 0.12, volume: "4.2M", aum: "$28B", expenseRatio: 0.15, yield: 4.52, high52w: 82.8, low52w: 79.2, color: "#333333" },
+      { symbol: "BND", name: "Vanguard Total Bond", price: 72.45, changePercent: 0.34, volume: "8.2M", aum: "$108B", expenseRatio: 0.03, yield: 3.85, high52w: 75.2, low52w: 68.1, color: "#8B1A1A" },
+      { symbol: "AGG", name: "iShares Core US Agg", price: 98.12, changePercent: 0.28, volume: "6.7M", aum: "$98B", expenseRatio: 0.03, yield: 3.72, high52w: 101.5, low52w: 93.2, color: "#333333" },
+      { symbol: "TIPS", name: "iShares TIPS Bond", price: 108.23, changePercent: 0.18, volume: "2.8M", aum: "$22B", expenseRatio: 0.19, yield: 3.65, high52w: 112.0, low52w: 102.4, color: "#333333" },
+      { symbol: "LQD", name: "iShares IG Corp", price: 108.67, changePercent: 0.42, volume: "12M", aum: "$35B", expenseRatio: 0.14, yield: 4.45, high52w: 114.0, low52w: 100.8, color: "#333333" },
+    ],
+  },
+  "near-52w-low": {
+    broad: [
+      { symbol: "EEM", name: "iShares MSCI EM", price: 40.23, changePercent: -2.34, volume: "42M", aum: "$18B", expenseRatio: 0.68, yield: 2.45, high52w: 44.8, low52w: 36.2, color: "#333333" },
+      { symbol: "EFA", name: "iShares MSCI EAFE", price: 78.56, changePercent: -1.87, volume: "18M", aum: "$52B", expenseRatio: 0.32, yield: 2.82, high52w: 84.2, low52w: 68.5, color: "#333333" },
+      { symbol: "VWO", name: "Vanguard FTSE EM", price: 42.18, changePercent: -2.15, volume: "12M", aum: "$82B", expenseRatio: 0.08, yield: 3.12, high52w: 46.5, low52w: 37.8, color: "#8B1A1A" },
+      { symbol: "VXUS", name: "Vanguard Total Intl", price: 58.34, changePercent: -1.42, volume: "4.2M", aum: "$65B", expenseRatio: 0.07, yield: 2.95, high52w: 62.8, low52w: 52.1, color: "#8B1A1A" },
+      { symbol: "IWM", name: "iShares Russell 2000", price: 198.45, changePercent: -0.68, volume: "38M", aum: "$72B", expenseRatio: 0.19, yield: 1.12, high52w: 215.0, low52w: 168.2, color: "#333333" },
+    ],
+    sector: [
+      { symbol: "XLRE", name: "Real Estate SPDR", price: 38.72, changePercent: -3.24, volume: "8.2M", aum: "$6.8B", expenseRatio: 0.09, yield: 3.45, high52w: 44.2, low52w: 34.8, color: "#8B4513" },
+      { symbol: "XLU", name: "Utilities Select SPDR", price: 68.45, changePercent: -2.18, volume: "12M", aum: "$18B", expenseRatio: 0.09, yield: 2.92, high52w: 74.5, low52w: 58.2, color: "#008080" },
+      { symbol: "XLE", name: "Energy Select SPDR", price: 88.45, changePercent: -1.82, volume: "22M", aum: "$38B", expenseRatio: 0.09, yield: 3.28, high52w: 98.2, low52w: 72.4, color: "#CC6600" },
+      { symbol: "XLP", name: "Consumer Stpl SPDR", price: 78.23, changePercent: -1.56, volume: "9.8M", aum: "$20B", expenseRatio: 0.09, yield: 2.42, high52w: 82.4, low52w: 68.5, color: "#228B22" },
+      { symbol: "XLC", name: "Comm Svcs SPDR", price: 82.34, changePercent: -2.72, volume: "6.8M", aum: "$18B", expenseRatio: 0.09, yield: 0.78, high52w: 92.1, low52w: 68.4, color: "#9400D3" },
+    ],
+    bond: [
+      { symbol: "JNK", name: "SPDR High Yield", price: 94.56, changePercent: -0.78, volume: "8.4M", aum: "$8.2B", expenseRatio: 0.40, yield: 5.45, high52w: 98.2, low52w: 88.4, color: "#8B0000" },
+      { symbol: "EMB", name: "iShares EM Bond", price: 86.34, changePercent: -1.24, volume: "5.2M", aum: "$14B", expenseRatio: 0.39, yield: 5.12, high52w: 92.4, low52w: 78.6, color: "#333333" },
+      { symbol: "BNDX", name: "Vanguard Intl Bond", price: 48.72, changePercent: -0.62, volume: "3.8M", aum: "$48B", expenseRatio: 0.07, yield: 3.28, high52w: 51.2, low52w: 45.8, color: "#8B1A1A" },
+      { symbol: "TLT", name: "iShares 20+ Yr Trsy", price: 92.84, changePercent: -0.42, volume: "24M", aum: "$52B", expenseRatio: 0.15, yield: 4.12, high52w: 102.3, low52w: 82.4, color: "#1A5276" },
+      { symbol: "HYG", name: "iShares High Yield", price: 78.23, changePercent: -0.56, volume: "15M", aum: "$18B", expenseRatio: 0.49, yield: 5.82, high52w: 80.1, low52w: 72.4, color: "#333333" },
+    ],
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -211,6 +314,14 @@ const catLabels: Record<EtfCategory, string> = {
 /*  Top Movers Widget                                                  */
 /* ------------------------------------------------------------------ */
 
+const moverTabs = [
+  { id: "gainers" as MoverType, label: "Gainers" },
+  { id: "losers" as MoverType, label: "Losers" },
+  { id: "most-active" as MoverType, label: "Most Active" },
+  { id: "near-52w-high" as MoverType, label: "Near 52W High" },
+  { id: "near-52w-low" as MoverType, label: "Near 52W Low" },
+];
+
 function TopMoversWidget() {
   const [moverType, setMoverType] = useState<MoverType>("gainers");
   const [category, setCategory] = useState<EtfCategory>("broad");
@@ -218,7 +329,6 @@ function TopMoversWidget() {
 
   const etfs = data[moverType][category];
   const isGainer = moverType === "gainers";
-  const sparkColor = isGainer ? "#10b981" : "#ef4444";
 
   const sparklines = useMemo(
     () =>
@@ -239,203 +349,66 @@ function TopMoversWidget() {
   const cycleCategory = () =>
     setCategory((p) => catOrder[(catOrder.indexOf(p) + 1) % catOrder.length]);
 
+  const columns = [
+    { header: "ETF", align: "left" as const },
+    { header: "Price", align: "right" as const },
+    { header: "Chg%", align: "right" as const },
+    { header: "1Y", align: "center" as const, minWidth: 64 },
+    { header: "1 Year", align: "right" as const, minWidth: 58 },
+    { header: "3 Year", align: "right" as const, minWidth: 58 },
+    { header: "5 Year", align: "right" as const, minWidth: 58 },
+    { header: "AUM", align: "right" as const, minWidth: 72 },
+    { header: "Exp%", align: "right" as const, minWidth: 58 },
+    { header: "Yield", align: "right" as const, minWidth: 58 },
+    { header: "52W Range", align: "center" as const, minWidth: 110 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = etfs.map((etf) => {
+    const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    return [
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
+      </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
+      <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} autoColor /></div>,
+      ...(() => { const r = mockReturns(etf.symbol); return [
+        <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
+        <span key="r3y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r3y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r3y >= 0 ? "+" : ""}{r.r3y.toFixed(1)}%</span>,
+        <span key="r5y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r5y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r5y >= 0 ? "+" : ""}{r.r5y.toFixed(1)}%</span>,
+      ]; })(),
+      <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
+      <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
+      <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "—"}</span>,
+      <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+      <div key="watch" className="flex justify-center">
+        <button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90">
+          <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
+        </button>
+      </div>,
+    ];
+  });
+
   return (
-    <div>
-      <h2 className="mb-2 text-[18px] font-bold tracking-tight">
-        Top Movers
-      </h2>
-
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex gap-2">
-          {(["gainers", "losers"] as MoverType[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setMoverType(t)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                moverType === t
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {t === "gainers" ? "Gainers" : "Losers"}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={cycleCategory}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={category}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.15 }}
-              className="block"
-            >
-              {catLabels[category]}
-            </motion.span>
-          </AnimatePresence>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${moverType}-${category}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex border-t border-border/40"
-          >
-            {/* ---- Frozen left column ---- */}
-            <div className="z-10 w-[196px] flex-shrink-0 bg-card shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
-              <div className="flex h-[37px] items-center px-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                ETF
-              </div>
-              {etfs.map((etf) => (
-                <div
-                  key={etf.symbol}
-                  className="flex h-[56px] items-center border-t border-border/20 px-5"
-                >
-                  <div className="min-w-0">
-                    <p className="max-w-[160px] text-[13px] font-semibold leading-[1.25] line-clamp-2">
-                      {etf.name}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ---- Scrollable right columns ---- */}
-            <div className="flex-1 overflow-x-auto no-scrollbar">
-              <table style={{ minWidth: 620 }}>
-                <thead>
-                  <tr className="h-[37px]">
-                    <th className="min-w-[80px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Price
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      % Chg
-                    </th>
-                    <th className="min-w-[64px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      1D
-                    </th>
-                    <th className="min-w-[68px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Vol
-                    </th>
-                    <th className="min-w-[72px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      AUM
-                    </th>
-                    <th className="min-w-[58px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Exp %
-                    </th>
-                    <th className="min-w-[58px] px-3 text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Yield
-                    </th>
-                    <th className="min-w-[110px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      52W Range
-                    </th>
-                    <th className="min-w-[52px] px-3 text-center text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {etfs.map((etf) => (
-                    <tr
-                      key={etf.symbol}
-                      className="h-[56px] border-t border-border/20"
-                    >
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-foreground">
-                        {etf.price.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-
-                      <td
-                        className={cn(
-                          "whitespace-nowrap px-3 text-right tabular-nums text-[13px] font-semibold tabular-nums",
-                          isGainer ? "text-emerald-500" : "text-red-500"
-                        )}
-                      >
-                        {etf.changePercent >= 0 ? "+" : ""}
-                        {etf.changePercent.toFixed(2)}%
-                      </td>
-
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <Sparkline
-                            points={sparklines[etf.symbol]}
-                            color={sparkColor}
-                          />
-                        </div>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
-                        {etf.volume}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
-                        {etf.aum}
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
-                        {etf.expenseRatio.toFixed(2)}%
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 text-right tabular-nums text-[13px] tabular-nums text-muted-foreground">
-                        {etf.yield != null ? `${etf.yield.toFixed(2)}%` : "—"}
-                      </td>
-
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <Range52W
-                            low={etf.low52w}
-                            high={etf.high52w}
-                            current={etf.price}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3">
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => toggleBookmark(etf.symbol)}
-                            className="flex-shrink-0 transition-transform active:scale-90"
-                          >
-                            <Bookmark
-                              size={16}
-                              strokeWidth={1.8}
-                              className={cn(
-                                "transition-colors",
-                                bookmarks.has(etf.symbol)
-                                  ? "fill-foreground text-foreground"
-                                  : "text-muted-foreground/60"
-                              )}
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <button className="flex w-full items-center justify-center gap-1 border-t border-border/40 py-2.5 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
-          View More
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    </div>
+    <ScrollableTableWidget
+      title="Top Movers"
+      flipper={{
+        label: catLabels[category],
+        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
+        onFlip: cycleCategory,
+      }}
+      tabs={moverTabs}
+      activeTab={moverType}
+      onTabChange={(id) => setMoverType(id as MoverType)}
+      pillLayoutId="etf-mover-tab-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={620}
+      animationKey={`${moverType}-${category}`}
+      footer={{ label: "View More" }}
+    />
   );
 }
 
@@ -452,6 +425,7 @@ const trendingCategories: { name: string; icon: LucideIcon; color: string }[] = 
   { name: "Leveraged & Inverse", icon: Scale, color: "#EF4444" },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TrendingCategoriesWidget() {
   return (
     <div>
@@ -1036,6 +1010,7 @@ const divETFData: Record<DivETFTab, DivETF[]> = {
   ],
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DividendETFsWidget() {
   const [divTab, setDivTab] = useState<DivETFTab>("high-yield");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -1201,6 +1176,7 @@ function DividendETFsWidget() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ScreenerWidget() {
   const [activeTab, setActiveTab] = useState<ScreenerTab>("basic");
   const screeners = activeTab === "basic" ? basicScreeners : premiumScreeners;
@@ -1402,6 +1378,7 @@ const etfLevelUpCards: { id: string; title: string; subtitle: string; hook: stri
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function LevelUpWidget() {
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
@@ -1456,7 +1433,9 @@ function LevelUpWidget() {
 /* ------------------------------------------------------------------ */
 
 type HeatmapView = "etfs" | "categories";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const heatViewOrder: HeatmapView[] = ["etfs", "categories"];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const heatViewLabels: Record<HeatmapView, string> = { etfs: "ETFs", categories: "Categories" };
 
 type HeatmapBasis = "aum" | "volume";
@@ -1536,7 +1515,7 @@ const heatmapCategories: { symbol: string; weight: number; change: number }[] = 
 /* ------------------------------------------------------------------ */
 
 const TM_W = 400;
-const TM_H = 420;
+const TM_H = 500;
 
 interface HeatRect {
   x: number; y: number; w: number; h: number;
@@ -1649,58 +1628,28 @@ function heatColor(change: number, isDark: boolean): string {
 /* ------------------------------------------------------------------ */
 
 function HeatmapWidget() {
-  const [basis, setBasis] = useState<HeatmapBasis>("aum");
-  const [view, setView] = useState<HeatmapView>("etfs");
+  const [basis] = useState<HeatmapBasis>("aum");
+  const [view] = useState<HeatmapView>("etfs");
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const items = view === "etfs" ? heatmapETFs[basis] : heatmapCategories;
-  const rects = useMemo(() => treemapLayout(items), [items]);
+  const rawItems = view === "etfs" ? heatmapETFs[basis] : heatmapCategories;
 
-  const cycleView = () =>
-    setView((p) => heatViewOrder[(heatViewOrder.indexOf(p) + 1) % heatViewOrder.length]);
+  const rects = useMemo(() => {
+    const MIN_DIM = 40;
+    let items = rawItems;
+    for (let pass = 0; pass < 3; pass++) {
+      const allRects = treemapLayout(items);
+      const tooSmall = new Set(allRects.filter((r) => Math.min(r.w, r.h) < MIN_DIM).map((r) => r.symbol));
+      if (tooSmall.size === 0) return allRects;
+      items = items.filter((i) => !tooSmall.has(i.symbol));
+    }
+    return treemapLayout(items);
+  }, [rawItems]);
 
   return (
     <div>
-      <h2 className="mb-3.5 text-[18px] font-bold tracking-tight">ETF at a Glance</h2>
-
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex gap-2">
-          {(["aum", "volume"] as const).map((id) => (
-            <button
-              key={id}
-              onClick={() => setBasis(id)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                basis === id
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
-              )}
-            >
-              {id === "aum" ? "By AUM" : "By Volume"}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={cycleView}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground transition-all"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={view}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.15 }}
-              className="block"
-            >
-              {heatViewLabels[view]}
-            </motion.span>
-          </AnimatePresence>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </div>
+      <h2 className="mb-4 text-[18px] font-bold tracking-tight">ETF at a Glance</h2>
 
       <div
         className="relative w-full overflow-hidden rounded-2xl"
@@ -1815,19 +1764,678 @@ function PromoBanner() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Popular ETFs Widget                                                */
+/* ------------------------------------------------------------------ */
+
+interface PopularETF {
+  name: string;
+  symbol: string;
+  return3y: number;
+  aum: string;
+  expenseRatio: number;
+  trackingError: number;
+}
+
+const lumpsumETFs: PopularETF[] = [
+  { name: "Vanguard S&P 500", symbol: "VOO", return3y: 10.8, aum: "892B", expenseRatio: 0.03, trackingError: 0.01 },
+  { name: "Invesco QQQ Trust", symbol: "QQQ", return3y: 14.2, aum: "252B", expenseRatio: 0.20, trackingError: 0.04 },
+  { name: "Vanguard Total Stock", symbol: "VTI", return3y: 9.6, aum: "384B", expenseRatio: 0.03, trackingError: 0.02 },
+  { name: "iShares Core S&P 500", symbol: "IVV", return3y: 10.7, aum: "478B", expenseRatio: 0.03, trackingError: 0.01 },
+  { name: "SPDR S&P 500", symbol: "SPY", return3y: 10.6, aum: "518B", expenseRatio: 0.09, trackingError: 0.02 },
+  { name: "Vanguard Growth", symbol: "VUG", return3y: 12.8, aum: "124B", expenseRatio: 0.04, trackingError: 0.03 },
+  { name: "Schwab US Large-Cap", symbol: "SCHX", return3y: 10.4, aum: "42B", expenseRatio: 0.03, trackingError: 0.01 },
+  { name: "iShares Russell 1000", symbol: "IWB", return3y: 10.1, aum: "34B", expenseRatio: 0.15, trackingError: 0.02 },
+];
+
+const sipETFs: PopularETF[] = [
+  { name: "Vanguard Total World", symbol: "VT", return3y: 8.2, aum: "38B", expenseRatio: 0.07, trackingError: 0.03 },
+  { name: "Vanguard Dividend", symbol: "VIG", return3y: 9.4, aum: "82B", expenseRatio: 0.06, trackingError: 0.02 },
+  { name: "Schwab US Dividend", symbol: "SCHD", return3y: 8.8, aum: "56B", expenseRatio: 0.06, trackingError: 0.02 },
+  { name: "iShares Core Agg Bond", symbol: "AGG", return3y: 1.2, aum: "108B", expenseRatio: 0.03, trackingError: 0.01 },
+  { name: "Vanguard FTSE Developed", symbol: "VEA", return3y: 6.4, aum: "118B", expenseRatio: 0.05, trackingError: 0.03 },
+  { name: "iShares MSCI Emerging", symbol: "EEM", return3y: 2.8, aum: "28B", expenseRatio: 0.68, trackingError: 0.12 },
+  { name: "Vanguard Real Estate", symbol: "VNQ", return3y: 4.2, aum: "62B", expenseRatio: 0.12, trackingError: 0.04 },
+  { name: "iShares Core S&P Mid", symbol: "IJH", return3y: 7.6, aum: "78B", expenseRatio: 0.05, trackingError: 0.02 },
+];
+
+function PopularETFsWidget() {
+  const [variant, setVariant] = useState<"grid" | "scroll">("scroll");
+  const [investType, setInvestType] = useState<"lumpsum" | "sip">("lumpsum");
+
+  return (
+    <div>
+      <button onClick={() => setVariant((v) => v === "grid" ? "scroll" : "grid")}>
+        <h2 className="text-[18px] font-bold tracking-tight text-foreground">Popular ETFs</h2>
+      </button>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">Most invested ETFs by Aspora members</p>
+
+      {/* Lumpsum / SIP pills */}
+      <div className="flex gap-2 mb-4">
+        {([
+          { id: "lumpsum" as const, label: "Lumpsum" },
+          { id: "sip" as const, label: "SIP" },
+        ]).map((pill) => (
+          <button
+            key={pill.id}
+            onClick={() => setInvestType(pill.id)}
+            className={cn(
+              "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
+              investType === pill.id ? "bg-foreground text-background" : "text-muted-foreground"
+            )}
+          >
+            {pill.label}
+          </button>
+        ))}
+      </div>
+
+      {(() => {
+        const etfs = investType === "lumpsum" ? lumpsumETFs : sipETFs;
+        const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
+        const row2 = etfs.slice(Math.ceil(etfs.length / 2));
+
+        const ETFCard = ({ etf, wide }: { etf: PopularETF; wide?: boolean }) => (
+          <button className={cn("rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform", wide && "shrink-0 w-[280px]")}>
+            {wide ? (
+              <div className="flex items-start justify-between mb-3">
+                <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
+                <div className="shrink-0 text-right">
+                  <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                    {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                  </span>
+                  <p className="text-[12px] text-muted-foreground">3Y return</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-[15px] font-semibold text-foreground leading-tight mb-1">{etf.name}</p>
+                <div className="flex items-baseline gap-1.5 mb-3">
+                  <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                    {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                  </span>
+                  <span className="text-[12px] text-muted-foreground">3Y</span>
+                </div>
+              </>
+            )}
+            <div className="space-y-1 text-[12px]">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">AUM</span>
+                <span className="text-foreground font-medium">{etf.aum}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Expense Ratio</span>
+                <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tracking Error</span>
+                <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
+              </div>
+            </div>
+          </button>
+        );
+
+        return variant === "grid" ? (
+          <div className="grid grid-cols-2 gap-3">
+            {etfs.map((etf) => <ETFCard key={etf.symbol} etf={etf} />)}
+          </div>
+        ) : (
+          <div className="-mx-5 overflow-x-auto no-scrollbar">
+            <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
+              <div className="flex gap-3">
+                {row1.map((etf) => <ETFCard key={etf.symbol} etf={etf} wide />)}
+              </div>
+              <div className="flex gap-3">
+                {row2.map((etf) => <ETFCard key={etf.symbol} etf={etf} wide />)}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/*  Explore by Themes Widget                                           */
+/* ------------------------------------------------------------------ */
+
+type ThemeId = "ai" | "manufacturing" | "commodities" | "banking" | "emerging" | "healthcare" | "clean-energy";
+
+const themeTabs: { id: ThemeId; label: string }[] = [
+  { id: "ai", label: "AI & Tech" },
+  { id: "manufacturing", label: "Manufacturing" },
+  { id: "commodities", label: "Commodities" },
+  { id: "banking", label: "Banking & Finance" },
+  { id: "emerging", label: "Emerging Markets" },
+  { id: "healthcare", label: "Healthcare" },
+  { id: "clean-energy", label: "Clean Energy" },
+];
+
+const themeETFs: Record<ThemeId, PopularETF[]> = {
+  ai: [
+    { name: "Global X Robotics & AI", symbol: "BOTZ", return3y: 12.4, aum: "2.8B", expenseRatio: 0.68, trackingError: 0.15 },
+    { name: "iShares Semiconductor", symbol: "SOXX", return3y: 18.6, aum: "12B", expenseRatio: 0.35, trackingError: 0.08 },
+    { name: "ARK Autonomous Tech", symbol: "ARKQ", return3y: 8.2, aum: "1.2B", expenseRatio: 0.75, trackingError: 0.22 },
+    { name: "First Trust Cloud Comp", symbol: "SKYY", return3y: 10.8, aum: "3.4B", expenseRatio: 0.60, trackingError: 0.12 },
+  ],
+  manufacturing: [
+    { name: "iShares US Industrials", symbol: "IYJ", return3y: 9.8, aum: "1.8B", expenseRatio: 0.39, trackingError: 0.06 },
+    { name: "Industrial Select SPDR", symbol: "XLI", return3y: 10.2, aum: "19B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "Vanguard Industrials", symbol: "VIS", return3y: 9.6, aum: "5.2B", expenseRatio: 0.10, trackingError: 0.03 },
+    { name: "First Trust Indl/Prod", symbol: "FXR", return3y: 8.4, aum: "1.4B", expenseRatio: 0.61, trackingError: 0.10 },
+  ],
+  commodities: [
+    { name: "SPDR Gold Shares", symbol: "GLD", return3y: 8.2, aum: "58B", expenseRatio: 0.40, trackingError: 0.01 },
+    { name: "iShares Silver Trust", symbol: "SLV", return3y: 4.8, aum: "12B", expenseRatio: 0.50, trackingError: 0.02 },
+    { name: "Invesco DB Commodity", symbol: "DBC", return3y: 12.6, aum: "2.4B", expenseRatio: 0.85, trackingError: 0.18 },
+    { name: "United States Oil Fund", symbol: "USO", return3y: -2.4, aum: "2.8B", expenseRatio: 0.60, trackingError: 0.25 },
+  ],
+  banking: [
+    { name: "Financial Select SPDR", symbol: "XLF", return3y: 11.4, aum: "42B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "iShares US Financials", symbol: "IYF", return3y: 10.8, aum: "2.8B", expenseRatio: 0.39, trackingError: 0.05 },
+    { name: "SPDR S&P Bank", symbol: "KBE", return3y: 8.6, aum: "2.2B", expenseRatio: 0.35, trackingError: 0.08 },
+    { name: "Invesco KBW Bank", symbol: "KBWB", return3y: 9.2, aum: "1.8B", expenseRatio: 0.35, trackingError: 0.06 },
+  ],
+  emerging: [
+    { name: "Vanguard FTSE EM", symbol: "VWO", return3y: 2.8, aum: "82B", expenseRatio: 0.08, trackingError: 0.04 },
+    { name: "iShares MSCI EM", symbol: "EEM", return3y: 2.4, aum: "18B", expenseRatio: 0.68, trackingError: 0.12 },
+    { name: "iShares Core EM", symbol: "IEMG", return3y: 3.2, aum: "78B", expenseRatio: 0.09, trackingError: 0.03 },
+    { name: "Schwab EM Equity", symbol: "SCHE", return3y: 2.6, aum: "8.4B", expenseRatio: 0.11, trackingError: 0.05 },
+  ],
+  healthcare: [
+    { name: "Health Care Select SPDR", symbol: "XLV", return3y: 8.4, aum: "42B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "iShares US Healthcare", symbol: "IYH", return3y: 8.8, aum: "3.2B", expenseRatio: 0.39, trackingError: 0.05 },
+    { name: "ARK Genomic Revolution", symbol: "ARKG", return3y: -4.2, aum: "2.1B", expenseRatio: 0.75, trackingError: 0.28 },
+    { name: "iShares Biotech", symbol: "IBB", return3y: 3.6, aum: "8.4B", expenseRatio: 0.44, trackingError: 0.08 },
+  ],
+  "clean-energy": [
+    { name: "iShares Clean Energy", symbol: "ICLN", return3y: -6.8, aum: "3.2B", expenseRatio: 0.40, trackingError: 0.14 },
+    { name: "Invesco Solar", symbol: "TAN", return3y: -8.4, aum: "1.8B", expenseRatio: 0.67, trackingError: 0.22 },
+    { name: "First Trust Clean Edge", symbol: "QCLN", return3y: -4.2, aum: "1.2B", expenseRatio: 0.58, trackingError: 0.16 },
+    { name: "Global X Clean Tech", symbol: "CTEC", return3y: -5.6, aum: "0.4B", expenseRatio: 0.50, trackingError: 0.18 },
+  ],
+};
+
+function ExploreByThemesWidget() {
+  const [activeTheme, setActiveTheme] = useState<ThemeId>("ai");
+  const etfs = themeETFs[activeTheme];
+
+  return (
+    <div>
+      <h2 className="text-[18px] font-bold tracking-tight text-foreground">Explore by Themes</h2>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">Invest in trends shaping the future</p>
+
+      {/* Theme pills */}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {themeTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTheme(tab.id)}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
+                activeTheme === tab.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cards — horizontal scroll, 2 rows */}
+      <div className="-mx-5 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
+          <div className="flex gap-3">
+            {etfs.slice(0, 2).map((etf) => (
+              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-3">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
+                  <div className="shrink-0 text-right">
+                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                    </span>
+                    <p className="text-[12px] text-muted-foreground">3Y return</p>
+                  </div>
+                </div>
+                <div className="space-y-1 text-[12px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">AUM</span>
+                    <span className="text-foreground font-medium">{etf.aum}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expense Ratio</span>
+                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tracking Error</span>
+                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            {etfs.slice(2).map((etf) => (
+              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-3">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
+                  <div className="shrink-0 text-right">
+                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                    </span>
+                    <p className="text-[12px] text-muted-foreground">3Y return</p>
+                  </div>
+                </div>
+                <div className="space-y-1 text-[12px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">AUM</span>
+                    <span className="text-foreground font-medium">{etf.aum}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expense Ratio</span>
+                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tracking Error</span>
+                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Explore by Asset Class Widget                                      */
+/* ------------------------------------------------------------------ */
+
+type AssetClassId = "fixed-income" | "commodities" | "real-estate" | "currency" | "multi-asset" | "balanced";
+
+const assetClassTabs: { id: AssetClassId; label: string }[] = [
+  { id: "fixed-income", label: "Fixed Income" },
+  { id: "commodities", label: "Commodities" },
+  { id: "real-estate", label: "REITs" },
+  { id: "currency", label: "Currency" },
+  { id: "multi-asset", label: "Multi-Asset" },
+  { id: "balanced", label: "Balanced" },
+];
+
+const assetClassData: Record<AssetClassId, ETF[]> = {
+  "fixed-income": [
+    { symbol: "BND", name: "Vanguard Total Bond", price: 72.45, changePercent: 0.34, volume: "8.2M", aum: "$108B", expenseRatio: 0.03, yield: 3.85, high52w: 75.2, low52w: 68.1, color: "#8B1A1A" },
+    { symbol: "AGG", name: "iShares Core US Agg", price: 98.12, changePercent: 0.28, volume: "6.7M", aum: "$98B", expenseRatio: 0.03, yield: 3.72, high52w: 101.5, low52w: 93.2, color: "#333333" },
+    { symbol: "TLT", name: "iShares 20+ Yr Trsy", price: 92.84, changePercent: 0.82, volume: "24.5M", aum: "$52B", expenseRatio: 0.15, yield: 4.12, high52w: 102.3, low52w: 82.4, color: "#1A5276" },
+    { symbol: "LQD", name: "iShares IG Corp", price: 108.67, changePercent: 0.42, volume: "12.3M", aum: "$35B", expenseRatio: 0.14, yield: 4.45, high52w: 114.0, low52w: 100.8, color: "#333333" },
+    { symbol: "HYG", name: "iShares High Yield", price: 78.23, changePercent: 0.56, volume: "15.8M", aum: "$18B", expenseRatio: 0.49, yield: 5.82, high52w: 80.1, low52w: 72.4, color: "#333333" },
+  ],
+  commodities: [
+    { symbol: "GLD", name: "SPDR Gold Shares", price: 188.42, changePercent: 1.24, volume: "8.4M", aum: "$58B", expenseRatio: 0.40, yield: null, high52w: 195.0, low52w: 162.4, color: "#FFD700" },
+    { symbol: "SLV", name: "iShares Silver Trust", price: 22.84, changePercent: 2.18, volume: "18.2M", aum: "$12B", expenseRatio: 0.50, yield: null, high52w: 26.0, low52w: 18.4, color: "#C0C0C0" },
+    { symbol: "DBC", name: "Invesco DB Commodity", price: 24.56, changePercent: -0.82, volume: "2.4M", aum: "$2.4B", expenseRatio: 0.85, yield: null, high52w: 28.0, low52w: 20.8, color: "#8B4513" },
+    { symbol: "USO", name: "United States Oil", price: 72.34, changePercent: -1.56, volume: "4.8M", aum: "$2.8B", expenseRatio: 0.60, yield: null, high52w: 84.0, low52w: 58.4, color: "#333333" },
+    { symbol: "PDBC", name: "Invesco Optimum Yield", price: 14.28, changePercent: -0.42, volume: "3.2M", aum: "$4.8B", expenseRatio: 0.59, yield: null, high52w: 16.2, low52w: 12.4, color: "#333333" },
+  ],
+  "real-estate": [
+    { symbol: "VNQ", name: "Vanguard Real Estate", price: 82.45, changePercent: -0.68, volume: "5.8M", aum: "$62B", expenseRatio: 0.12, yield: 3.82, high52w: 92.0, low52w: 72.4, color: "#8B4513" },
+    { symbol: "IYR", name: "iShares US Real Estate", price: 88.34, changePercent: -0.42, volume: "4.2M", aum: "$4.8B", expenseRatio: 0.39, yield: 2.68, high52w: 96.0, low52w: 78.4, color: "#333333" },
+    { symbol: "XLRE", name: "Real Estate SPDR", price: 38.72, changePercent: -1.24, volume: "8.2M", aum: "$6.8B", expenseRatio: 0.09, yield: 3.45, high52w: 44.2, low52w: 34.8, color: "#333333" },
+    { symbol: "SCHH", name: "Schwab US REIT", price: 20.18, changePercent: -0.56, volume: "2.4M", aum: "$6.2B", expenseRatio: 0.07, yield: 3.12, high52w: 23.0, low52w: 18.2, color: "#333333" },
+    { symbol: "RWR", name: "SPDR DJ Wilshire REIT", price: 98.56, changePercent: -0.82, volume: "0.8M", aum: "$1.8B", expenseRatio: 0.25, yield: 3.24, high52w: 108.0, low52w: 88.4, color: "#333333" },
+  ],
+  currency: [
+    { symbol: "UUP", name: "Invesco DB US Dollar", price: 28.42, changePercent: 0.18, volume: "2.8M", aum: "$2.4B", expenseRatio: 0.75, yield: null, high52w: 30.0, low52w: 26.4, color: "#006400" },
+    { symbol: "FXE", name: "Invesco CurrencyShares Euro", price: 92.34, changePercent: -0.24, volume: "0.4M", aum: "$0.2B", expenseRatio: 0.40, yield: null, high52w: 96.0, low52w: 88.4, color: "#003399" },
+    { symbol: "FXY", name: "Invesco CurrencyShares Yen", price: 62.18, changePercent: 0.42, volume: "0.2M", aum: "$0.3B", expenseRatio: 0.40, yield: null, high52w: 68.0, low52w: 58.4, color: "#CC0000" },
+    { symbol: "FXB", name: "Invesco CurrencyShares GBP", price: 118.56, changePercent: -0.12, volume: "0.1M", aum: "$0.1B", expenseRatio: 0.40, yield: null, high52w: 124.0, low52w: 112.4, color: "#003366" },
+    { symbol: "FXA", name: "Invesco CurrencyShares AUD", price: 68.34, changePercent: -0.68, volume: "0.1M", aum: "$0.1B", expenseRatio: 0.40, yield: null, high52w: 74.0, low52w: 62.4, color: "#003366" },
+  ],
+  "multi-asset": [
+    { symbol: "AOR", name: "iShares Core Growth Alloc", price: 54.28, changePercent: 0.42, volume: "0.8M", aum: "$2.4B", expenseRatio: 0.15, yield: 2.12, high52w: 56.0, low52w: 48.4, color: "#333333" },
+    { symbol: "AOA", name: "iShares Core Aggressive", price: 62.18, changePercent: 0.68, volume: "0.4M", aum: "$1.8B", expenseRatio: 0.15, yield: 1.82, high52w: 64.0, low52w: 54.4, color: "#333333" },
+    { symbol: "AOM", name: "iShares Core Moderate", price: 42.34, changePercent: 0.24, volume: "0.3M", aum: "$1.2B", expenseRatio: 0.15, yield: 2.42, high52w: 44.0, low52w: 38.4, color: "#333333" },
+    { symbol: "AOK", name: "iShares Core Conservative", price: 36.56, changePercent: 0.12, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.15, yield: 2.82, high52w: 38.0, low52w: 34.4, color: "#333333" },
+    { symbol: "GAL", name: "SPDR SSgA Global Alloc", price: 42.18, changePercent: 0.34, volume: "0.1M", aum: "$0.4B", expenseRatio: 0.35, yield: 2.24, high52w: 44.0, low52w: 38.4, color: "#333333" },
+  ],
+  balanced: [
+    { symbol: "VBIAX", name: "Vanguard Balanced Index", price: 42.56, changePercent: 0.48, volume: "1.2M", aum: "$52B", expenseRatio: 0.07, yield: 2.12, high52w: 44.0, low52w: 38.4, color: "#8B1A1A" },
+    { symbol: "FBALX", name: "Fidelity Balanced", price: 28.34, changePercent: 0.32, volume: "0.8M", aum: "$38B", expenseRatio: 0.49, yield: 1.82, high52w: 30.0, low52w: 24.4, color: "#006400" },
+    { symbol: "DODBX", name: "Dodge & Cox Balanced", price: 108.42, changePercent: 0.56, volume: "0.4M", aum: "$18B", expenseRatio: 0.52, yield: 2.42, high52w: 112.0, low52w: 96.4, color: "#333333" },
+    { symbol: "PRWCX", name: "T. Rowe Price Cap Appr", price: 32.18, changePercent: 0.28, volume: "0.3M", aum: "$24B", expenseRatio: 0.70, yield: 1.62, high52w: 34.0, low52w: 28.4, color: "#003399" },
+    { symbol: "OAKBX", name: "Oakmark Equity & Inc", price: 34.56, changePercent: 0.42, volume: "0.2M", aum: "$12B", expenseRatio: 0.78, yield: 2.08, high52w: 36.0, low52w: 30.4, color: "#333333" },
+  ],
+};
+
+function ExploreByAssetClassWidget() {
+  const [activeClass, setActiveClass] = useState<AssetClassId>("fixed-income");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const etfs = assetClassData[activeClass];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => { const n = new Set(p); if (n.has(sym)) n.delete(sym); else n.add(sym); return n; });
+
+  const sparklines = useMemo(
+    () => etfs.reduce<Record<string, number[]>>((acc, e) => { acc[e.symbol] = makeSparkline(e.symbol, true); return acc; }, {}),
+    [etfs]
+  );
+
+  const columns = [
+    { header: "ETF", align: "left" as const },
+    { header: "Price", align: "right" as const },
+    { header: "Chg%", align: "right" as const },
+    { header: "1D", align: "center" as const, minWidth: 64 },
+    { header: "AUM", align: "right" as const, minWidth: 72 },
+    { header: "Exp%", align: "right" as const, minWidth: 58 },
+    { header: "Yield", align: "right" as const, minWidth: 58 },
+    { header: "52W Range", align: "center" as const, minWidth: 110 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = etfs.map((etf) => [
+    <div key="name" className="flex items-center gap-2.5"><div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" /><p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p></div>,
+    <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
+    <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500")}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
+    <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} color={etf.changePercent >= 0 ? "#10b981" : "#ef4444"} /></div>,
+    <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
+    <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
+    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "\u2014"}</span>,
+    <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+    <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
+  ]);
+
+  return (
+    <ScrollableTableWidget
+      title="Explore by Asset Class"
+      description="Diversify beyond stocks with different asset classes"
+      tabs={assetClassTabs}
+      activeTab={activeClass}
+      onTabChange={(id) => setActiveClass(id as AssetClassId)}
+      pillLayoutId="etf-asset-class-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={620}
+      animationKey={activeClass}
+      footer={{ label: "View All" }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Explore by Strategy Widget                                         */
+/* ------------------------------------------------------------------ */
+
+type StrategyId = "passive" | "active" | "value" | "growth" | "momentum" | "quality" | "low-vol" | "leveraged";
+
+const strategyTabs: { id: StrategyId; label: string }[] = [
+  { id: "active", label: "Active" },
+  { id: "passive", label: "Passive" },
+  { id: "value", label: "Value" },
+  { id: "growth", label: "Growth" },
+  { id: "momentum", label: "Momentum" },
+  { id: "quality", label: "Quality" },
+  { id: "low-vol", label: "Low Volatility" },
+  { id: "leveraged", label: "Leveraged" },
+];
+
+const strategyData: Record<StrategyId, ETF[]> = {
+  passive: [
+    { symbol: "VOO", name: "Vanguard S&P 500", price: 438.92, changePercent: 0.78, volume: "8.4M", aum: "$892B", expenseRatio: 0.03, yield: 1.32, high52w: 445.0, low52w: 362.5, color: "#8B1A1A" },
+    { symbol: "VTI", name: "Vanguard Total Stock", price: 248.34, changePercent: 0.62, volume: "4.2M", aum: "$384B", expenseRatio: 0.03, yield: 1.24, high52w: 252.0, low52w: 198.4, color: "#8B1A1A" },
+    { symbol: "BND", name: "Vanguard Total Bond", price: 72.45, changePercent: 0.34, volume: "8.2M", aum: "$108B", expenseRatio: 0.03, yield: 3.85, high52w: 75.2, low52w: 68.1, color: "#8B1A1A" },
+    { symbol: "VXUS", name: "Vanguard Total Intl", price: 58.34, changePercent: -0.42, volume: "4.2M", aum: "$65B", expenseRatio: 0.07, yield: 2.95, high52w: 62.8, low52w: 52.1, color: "#8B1A1A" },
+    { symbol: "VT", name: "Vanguard Total World", price: 108.42, changePercent: 0.48, volume: "2.8M", aum: "$38B", expenseRatio: 0.07, yield: 1.82, high52w: 112.0, low52w: 92.4, color: "#8B1A1A" },
+  ],
+  active: [
+    { symbol: "ARKK", name: "ARK Innovation", price: 48.92, changePercent: 4.85, volume: "22.6M", aum: "$8.2B", expenseRatio: 0.75, yield: null, high52w: 56.3, low52w: 32.8, color: "#FF4500" },
+    { symbol: "ARKG", name: "ARK Genomic Revolution", price: 32.18, changePercent: 2.42, volume: "4.8M", aum: "$2.1B", expenseRatio: 0.75, yield: null, high52w: 38.0, low52w: 22.4, color: "#FF4500" },
+    { symbol: "ARKQ", name: "ARK Autonomous Tech", price: 54.56, changePercent: 3.12, volume: "2.4M", aum: "$1.2B", expenseRatio: 0.75, yield: null, high52w: 62.0, low52w: 38.4, color: "#FF4500" },
+    { symbol: "AVUV", name: "Avantis US Small Cap Value", price: 88.42, changePercent: 1.24, volume: "1.8M", aum: "$12B", expenseRatio: 0.25, yield: 1.42, high52w: 92.0, low52w: 72.4, color: "#333333" },
+    { symbol: "DFAC", name: "Dimensional US Core Eq", price: 32.18, changePercent: 0.68, volume: "1.2M", aum: "$28B", expenseRatio: 0.19, yield: 1.12, high52w: 34.0, low52w: 26.4, color: "#333333" },
+  ],
+  value: [
+    { symbol: "VTV", name: "Vanguard Value", price: 158.42, changePercent: 0.42, volume: "2.8M", aum: "$118B", expenseRatio: 0.04, yield: 2.42, high52w: 162.0, low52w: 132.4, color: "#8B1A1A" },
+    { symbol: "SCHV", name: "Schwab US Large-Cap Value", price: 72.18, changePercent: 0.28, volume: "1.4M", aum: "$12B", expenseRatio: 0.04, yield: 2.28, high52w: 74.0, low52w: 60.4, color: "#333333" },
+    { symbol: "IWD", name: "iShares Russell 1000 Value", price: 172.34, changePercent: 0.56, volume: "3.2M", aum: "$58B", expenseRatio: 0.19, yield: 1.92, high52w: 178.0, low52w: 142.4, color: "#333333" },
+    { symbol: "RPV", name: "Invesco S&P 500 Pure Value", price: 82.56, changePercent: 0.82, volume: "0.8M", aum: "$3.2B", expenseRatio: 0.35, yield: 2.18, high52w: 86.0, low52w: 68.4, color: "#333333" },
+    { symbol: "AVLV", name: "Avantis US Large Cap Value", price: 58.42, changePercent: 0.34, volume: "0.6M", aum: "$8.4B", expenseRatio: 0.15, yield: 1.68, high52w: 60.0, low52w: 48.4, color: "#333333" },
+  ],
+  growth: [
+    { symbol: "VUG", name: "Vanguard Growth", price: 328.42, changePercent: 1.42, volume: "2.4M", aum: "$124B", expenseRatio: 0.04, yield: 0.52, high52w: 340.0, low52w: 262.4, color: "#8B1A1A" },
+    { symbol: "QQQ", name: "Invesco QQQ Trust", price: 442.18, changePercent: 1.24, volume: "52M", aum: "$252B", expenseRatio: 0.20, yield: 0.52, high52w: 460.0, low52w: 352.8, color: "#00CC66" },
+    { symbol: "IWF", name: "iShares Russell 1000 Growth", price: 308.56, changePercent: 1.18, volume: "2.8M", aum: "$82B", expenseRatio: 0.19, yield: 0.48, high52w: 320.0, low52w: 248.4, color: "#333333" },
+    { symbol: "SCHG", name: "Schwab US Large-Cap Growth", price: 88.42, changePercent: 1.34, volume: "1.8M", aum: "$28B", expenseRatio: 0.04, yield: 0.38, high52w: 92.0, low52w: 68.4, color: "#333333" },
+    { symbol: "RPG", name: "Invesco S&P 500 Pure Growth", price: 218.34, changePercent: 1.56, volume: "0.4M", aum: "$2.8B", expenseRatio: 0.35, yield: 0.12, high52w: 228.0, low52w: 172.4, color: "#333333" },
+  ],
+  momentum: [
+    { symbol: "MTUM", name: "iShares MSCI USA Momentum", price: 188.42, changePercent: 1.82, volume: "1.2M", aum: "$12B", expenseRatio: 0.15, yield: 0.82, high52w: 195.0, low52w: 152.4, color: "#333333" },
+    { symbol: "SPMO", name: "Invesco S&P 500 Momentum", price: 82.18, changePercent: 1.56, volume: "0.8M", aum: "$4.8B", expenseRatio: 0.13, yield: 0.68, high52w: 86.0, low52w: 64.4, color: "#333333" },
+    { symbol: "PDP", name: "Invesco DWA Momentum", price: 92.34, changePercent: 2.12, volume: "0.4M", aum: "$1.8B", expenseRatio: 0.62, yield: 0.42, high52w: 96.0, low52w: 72.4, color: "#333333" },
+    { symbol: "VFMO", name: "Vanguard US Momentum", price: 142.56, changePercent: 1.68, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.13, yield: 0.58, high52w: 148.0, low52w: 118.4, color: "#333333" },
+    { symbol: "DWAS", name: "Invesco DWA SmallCap Mom", price: 82.42, changePercent: 2.42, volume: "0.1M", aum: "$0.6B", expenseRatio: 0.60, yield: 0.22, high52w: 88.0, low52w: 62.4, color: "#333333" },
+  ],
+  quality: [
+    { symbol: "QUAL", name: "iShares MSCI USA Quality", price: 158.42, changePercent: 0.82, volume: "1.8M", aum: "$42B", expenseRatio: 0.15, yield: 1.12, high52w: 162.0, low52w: 128.4, color: "#333333" },
+    { symbol: "SPHQ", name: "Invesco S&P 500 Quality", price: 52.18, changePercent: 0.68, volume: "0.8M", aum: "$8.4B", expenseRatio: 0.15, yield: 1.28, high52w: 54.0, low52w: 42.4, color: "#333333" },
+    { symbol: "DGRW", name: "WisdomTree US Quality Div", price: 72.34, changePercent: 0.42, volume: "0.6M", aum: "$12B", expenseRatio: 0.28, yield: 1.82, high52w: 74.0, low52w: 60.4, color: "#333333" },
+    { symbol: "JQUA", name: "JPMorgan US Quality", price: 52.56, changePercent: 0.56, volume: "0.4M", aum: "$4.2B", expenseRatio: 0.12, yield: 0.92, high52w: 54.0, low52w: 42.4, color: "#333333" },
+    { symbol: "VFQY", name: "Vanguard US Quality", price: 128.42, changePercent: 0.72, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.13, yield: 1.08, high52w: 132.0, low52w: 104.4, color: "#333333" },
+  ],
+  "low-vol": [
+    { symbol: "USMV", name: "iShares MSCI USA Min Vol", price: 78.42, changePercent: 0.24, volume: "2.4M", aum: "$28B", expenseRatio: 0.15, yield: 1.68, high52w: 80.0, low52w: 68.4, color: "#333333" },
+    { symbol: "SPLV", name: "Invesco S&P 500 Low Vol", price: 62.18, changePercent: 0.18, volume: "1.8M", aum: "$12B", expenseRatio: 0.25, yield: 2.12, high52w: 64.0, low52w: 54.4, color: "#333333" },
+    { symbol: "SMMV", name: "iShares MSCI USA SmCap MinVol", price: 38.34, changePercent: 0.12, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.20, yield: 1.42, high52w: 40.0, low52w: 32.4, color: "#333333" },
+    { symbol: "LGLV", name: "SPDR SSGA US Large Cap LowVol", price: 148.56, changePercent: 0.28, volume: "0.1M", aum: "$0.4B", expenseRatio: 0.12, yield: 1.92, high52w: 152.0, low52w: 128.4, color: "#333333" },
+    { symbol: "XMLV", name: "Invesco S&P MidCap Low Vol", price: 52.42, changePercent: 0.08, volume: "0.1M", aum: "$0.6B", expenseRatio: 0.25, yield: 1.82, high52w: 54.0, low52w: 44.4, color: "#333333" },
+  ],
+  leveraged: [
+    { symbol: "TQQQ", name: "ProShares UltraPro QQQ", price: 58.42, changePercent: 3.72, volume: "82M", aum: "$22B", expenseRatio: 0.86, yield: null, high52w: 68.0, low52w: 32.4, color: "#FF4500" },
+    { symbol: "UPRO", name: "ProShares UltraPro S&P", price: 68.18, changePercent: 2.34, volume: "18M", aum: "$4.2B", expenseRatio: 0.91, yield: null, high52w: 74.0, low52w: 38.4, color: "#FF4500" },
+    { symbol: "SOXL", name: "Direxion Semiconductor 3X", price: 28.34, changePercent: 5.42, volume: "42M", aum: "$8.4B", expenseRatio: 0.76, yield: null, high52w: 38.0, low52w: 12.4, color: "#FF4500" },
+    { symbol: "SPXL", name: "Direxion Daily S&P 500 3X", price: 142.56, changePercent: 2.28, volume: "4.2M", aum: "$3.8B", expenseRatio: 0.97, yield: null, high52w: 152.0, low52w: 82.4, color: "#FF4500" },
+    { symbol: "TNA", name: "Direxion Small Cap 3X", price: 32.42, changePercent: -3.82, volume: "12M", aum: "$1.8B", expenseRatio: 1.06, yield: null, high52w: 42.0, low52w: 18.4, color: "#FF4500" },
+  ],
+};
+
+function ExploreByStrategyWidget() {
+  const [activeStrategy, setActiveStrategy] = useState<StrategyId>("active");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const etfs = strategyData[activeStrategy];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => { const n = new Set(p); if (n.has(sym)) n.delete(sym); else n.add(sym); return n; });
+
+  const sparklines = useMemo(
+    () => etfs.reduce<Record<string, number[]>>((acc, e) => { acc[e.symbol] = makeSparkline(e.symbol, e.changePercent >= 0); return acc; }, {}),
+    [etfs]
+  );
+
+  const columns = [
+    { header: "ETF", align: "left" as const },
+    { header: "Price", align: "right" as const },
+    { header: "Chg%", align: "right" as const },
+    { header: "1D", align: "center" as const, minWidth: 64 },
+    { header: "AUM", align: "right" as const, minWidth: 72 },
+    { header: "Exp%", align: "right" as const, minWidth: 58 },
+    { header: "Yield", align: "right" as const, minWidth: 58 },
+    { header: "52W Range", align: "center" as const, minWidth: 110 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = etfs.map((etf) => [
+    <div key="name" className="flex items-center gap-2.5"><div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" /><p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p></div>,
+    <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
+    <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500")}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
+    <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} color={etf.changePercent >= 0 ? "#10b981" : "#ef4444"} /></div>,
+    <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
+    <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
+    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "\u2014"}</span>,
+    <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+    <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
+  ]);
+
+  return (
+    <ScrollableTableWidget
+      title="Explore by Strategy"
+      description="Find ETFs that match your investment approach"
+      tabs={strategyTabs}
+      activeTab={activeStrategy}
+      onTabChange={(id) => setActiveStrategy(id as StrategyId)}
+      pillLayoutId="etf-strategy-pill"
+      columns={columns}
+      rows={rows}
+      scrollableMinWidth={620}
+      animationKey={activeStrategy}
+      footer={{ label: "View All" }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Most Efficient ETFs Widget                                         */
+/* ------------------------------------------------------------------ */
+
+type EfficiencyId = "ultra-low-cost" | "low-tracking-error";
+
+const efficiencyTabs: { id: EfficiencyId; label: string }[] = [
+  { id: "ultra-low-cost", label: "Ultra Low Cost" },
+  { id: "low-tracking-error", label: "Low Tracking Error" },
+];
+
+const efficientETFs: Record<EfficiencyId, PopularETF[]> = {
+  "ultra-low-cost": [
+    { name: "Vanguard S&P 500", symbol: "VOO", return3y: 10.8, aum: "892B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Vanguard Total Stock", symbol: "VTI", return3y: 9.6, aum: "384B", expenseRatio: 0.03, trackingError: 0.02 },
+    { name: "iShares Core S&P 500", symbol: "IVV", return3y: 10.7, aum: "478B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Schwab US Large-Cap", symbol: "SCHX", return3y: 10.4, aum: "42B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Vanguard Total Bond", symbol: "BND", return3y: 1.2, aum: "108B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Schwab US Broad Mkt", symbol: "SCHB", return3y: 9.8, aum: "28B", expenseRatio: 0.03, trackingError: 0.02 },
+    { name: "Vanguard Growth", symbol: "VUG", return3y: 12.8, aum: "124B", expenseRatio: 0.04, trackingError: 0.03 },
+    { name: "Vanguard Value", symbol: "VTV", return3y: 8.4, aum: "118B", expenseRatio: 0.04, trackingError: 0.02 },
+  ],
+  "low-tracking-error": [
+    { name: "SPDR S&P 500", symbol: "SPY", return3y: 10.6, aum: "518B", expenseRatio: 0.09, trackingError: 0.01 },
+    { name: "SPDR Gold Shares", symbol: "GLD", return3y: 8.2, aum: "58B", expenseRatio: 0.40, trackingError: 0.01 },
+    { name: "iShares Core US Agg", symbol: "AGG", return3y: 1.4, aum: "98B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "iShares MSCI USA Min Vol", symbol: "USMV", return3y: 7.8, aum: "28B", expenseRatio: 0.15, trackingError: 0.01 },
+    { name: "Vanguard Dividend Appr", symbol: "VIG", return3y: 9.4, aum: "82B", expenseRatio: 0.06, trackingError: 0.01 },
+    { name: "iShares Core S&P Mid", symbol: "IJH", return3y: 7.6, aum: "78B", expenseRatio: 0.05, trackingError: 0.01 },
+    { name: "Schwab US Dividend", symbol: "SCHD", return3y: 8.8, aum: "56B", expenseRatio: 0.06, trackingError: 0.01 },
+    { name: "iShares Core S&P Small", symbol: "IJR", return3y: 6.2, aum: "82B", expenseRatio: 0.06, trackingError: 0.01 },
+  ],
+};
+
+function MostEfficientETFsWidget() {
+  const [activeTab, setActiveTab] = useState<EfficiencyId>("ultra-low-cost");
+  const etfs = efficientETFs[activeTab];
+  const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
+  const row2 = etfs.slice(Math.ceil(etfs.length / 2));
+
+  return (
+    <div>
+      <h2 className="text-[18px] font-bold tracking-tight text-foreground">Most Efficient ETFs</h2>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">ETFs that give you more for less</p>
+
+      <div className="flex gap-2 mb-4">
+        {efficiencyTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
+              activeTab === tab.id ? "bg-foreground text-background" : "text-muted-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="-mx-5 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
+          <div className="flex gap-3">
+            {row1.map((etf) => (
+              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-3">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
+                  <div className="shrink-0 text-right">
+                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                    </span>
+                    <p className="text-[12px] text-muted-foreground">3Y return</p>
+                  </div>
+                </div>
+                <div className="space-y-1 text-[12px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">AUM</span>
+                    <span className="text-foreground font-medium">{etf.aum}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expense Ratio</span>
+                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tracking Error</span>
+                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            {row2.map((etf) => (
+              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-3">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
+                  <div className="shrink-0 text-right">
+                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
+                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
+                    </span>
+                    <p className="text-[12px] text-muted-foreground">3Y return</p>
+                  </div>
+                </div>
+                <div className="space-y-1 text-[12px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">AUM</span>
+                    <span className="text-foreground font-medium">{etf.aum}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expense Ratio</span>
+                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tracking Error</span>
+                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ETFFundedNotTraded() {
   return (
     <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
+      <PopularETFsWidget />
       <TopMoversWidget />
+      <ExploreByThemesWidget />
+      <ExploreByAssetClassWidget />
       <HeatmapWidget />
-      <LevelUpWidget />
-      <TrendingCategoriesWidget />
-      <DividendETFsWidget />
-      <ScreenerWidget />
+      <ExploreByStrategyWidget />
+      <MostEfficientETFsWidget />
     </div>
   );
 }

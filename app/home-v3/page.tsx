@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ExploreVersionProvider,
@@ -43,7 +44,21 @@ function ExploreContent() {
     setCurrentVersion,
   } = useExploreVersion()!;
 
-  const [activeTab, setActiveTab] = useState<ExploreTab>("equity");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab") as ExploreTab | null;
+  const activeTab = tabParam && ["equity", "etf", "global-etf", "options"].includes(tabParam) ? tabParam : "equity";
+
+  const setActiveTab = (tab: ExploreTab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "equity") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const qs = params.toString();
+    router.replace(`/home-v3${qs ? `?${qs}` : ""}`, { scroll: false });
+  };
 
   return (
     <>
@@ -156,7 +171,9 @@ function ExploreContent() {
 export default function HomeV3Explore() {
   return (
     <ExploreVersionProvider>
-      <ExploreContent />
+      <Suspense>
+        <ExploreContent />
+      </Suspense>
     </ExploreVersionProvider>
   );
 }

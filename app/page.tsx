@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,12 @@ const components = [
     description: "Shortcut grid — layout explorations",
     href: "/explore-quick-access",
     status: "10 variations",
+  },
+  {
+    title: "ETF Cards",
+    description: "Popular ETFs — 2-col layout explorations",
+    href: "/explore-etf-cards",
+    status: "5 variations",
   },
   {
     title: "Onboarding Widget",
@@ -167,8 +174,18 @@ function DirectoryCard({
   );
 }
 
-export default function Directory() {
-  const [activeTab, setActiveTab] = useState<Tab>("Pages");
+const tabSlugMap: Record<string, Tab> = {
+  pages: "Pages",
+  components: "Components",
+  archive: "Archive",
+};
+
+const slugForTab = (tab: Tab) => tab.toLowerCase();
+
+function DirectoryContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") ?? "pages";
+  const activeTab: Tab = tabSlugMap[tabParam] ?? "Pages";
 
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-[430px] flex-col bg-background">
@@ -196,9 +213,10 @@ export default function Directory() {
       <div className="px-5 pb-4">
         <div className="flex gap-1.5">
           {tabs.map((tab) => (
-            <button
+            <Link
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              href={`/?tab=${slugForTab(tab)}`}
+              scroll={false}
               className={cn(
                 "relative rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                 activeTab === tab
@@ -214,7 +232,7 @@ export default function Directory() {
                 />
               )}
               <span className="relative z-10">{tab}</span>
-            </button>
+            </Link>
           ))}
         </div>
       </div>
@@ -247,5 +265,13 @@ export default function Directory() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function Directory() {
+  return (
+    <Suspense>
+      <DirectoryContent />
+    </Suspense>
   );
 }
