@@ -6,8 +6,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  X, Bell, Globe, BarChart3, Bookmark,
-  PieChart, FlaskConical,
+  X, Bell, Globe, BarChart3,
+  // Bookmark, // Uncomment when restoring Watchlist tab
+  PieChart, FlaskConical, GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
@@ -21,9 +22,10 @@ import { HeaderHiddenContext } from "./header-context";
 const bottomTabs = [
   { label: "Explore", icon: Globe, href: "/home-v3" },
   { label: "Market", icon: BarChart3, href: "/home-v3/market" },
-  { label: "Watchlist", icon: Bookmark, href: "/home-v3/watchlist" },
+  // { label: "Watchlist", icon: Bookmark, href: "/home-v3/watchlist" }, // Moved to Quick Access — uncomment to restore
   { label: "Portfolio", icon: PieChart, href: "/home-v3/portfolio" },
   { label: "Advisory", icon: FlaskConical, href: "/home-v3/advisory" },
+  { label: "Level Up", icon: GraduationCap, href: "/learn" },
 ];
 
 function BottomNav() {

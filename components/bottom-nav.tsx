@@ -12,7 +12,8 @@ import {
   Compass,
   PieChart,
   MoreHorizontal,
-  Bookmark,
+  // Bookmark, // Uncomment when restoring Watchlist tab
+  GraduationCap,
   FileText,
   ShoppingBasket,
   BookOpen,
@@ -49,8 +50,9 @@ const v1Tabs = [
 const v2Tabs = [
   { label: "Explore", icon: Compass, href: "/explore" },
   { label: "Market", icon: BarChart3, href: "/market" },
-  { label: "Watchlist", icon: Bookmark, href: "/watchlist" },
+  // { label: "Watchlist", icon: Bookmark, href: "/watchlist" }, // Moved to Quick Access — uncomment to restore
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },
+  { label: "Level Up", icon: GraduationCap, href: "/learn" },
 ];
 
 /* ------------------------------------------------------------------ */

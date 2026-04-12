@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X, Bookmark, Clock, TrendingUp, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useRotatingSuffix } from "@/components/header";
 import { Button } from "@/components/ui/button";
 
@@ -571,13 +572,28 @@ function WatchlistToast({ message }: { message: string }) {
 }
 
 // ─── Search Page ─────────────────────────────────────────────────────
+// Mock watchlist data for the picker sheet
+const MOCK_WATCHLISTS = [
+  { id: "wl-1", label: "My Watchlist" },
+  { id: "wl-2", label: "AI" },
+  { id: "wl-3", label: "EV" },
+];
+
 export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const fromWatchlist = searchParams.get("from") === "watchlist";
+  const wlName = searchParams.get("wlName");
+
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
+
+  // Watchlist picker sheet (for non-watchlist flow)
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingSymbol, setPendingSymbol] = useState<string | null>(null);
 
   const results = filterResults(query, activeTab);
   const isDedicatedTab = activeTab !== "All";
@@ -613,19 +629,36 @@ export default function SearchPage() {
   }
 
   function toggleWatchlist(symbol: string) {
-    setWatchlist((prev) => {
-      const next = new Set(prev);
-      if (next.has(symbol)) {
-        next.delete(symbol);
-        setToast(`${symbol} removed from watchlist`);
-      } else {
-        next.add(symbol);
-        setToast(`${symbol} added to watchlist`);
-      }
-      return next;
-    });
+    const alreadyAdded = watchlist.has(symbol);
 
-    setTimeout(() => setToast(null), 2000);
+    if (alreadyAdded) {
+      // Remove
+      setWatchlist((prev) => { const next = new Set(prev); next.delete(symbol); return next; });
+      setToast(`Removed from watchlist`);
+      setTimeout(() => setToast(null), 2000);
+      return;
+    }
+
+    if (fromWatchlist && wlName) {
+      // Direct add to the specific watchlist
+      setWatchlist((prev) => { const next = new Set(prev); next.add(symbol); return next; });
+      setToast(`Added to ${wlName}`);
+      setTimeout(() => setToast(null), 2000);
+    } else {
+      // Open picker to choose which watchlist
+      setPendingSymbol(symbol);
+      setPickerOpen(true);
+    }
+  }
+
+  function confirmAddToWatchlist(wlLabel: string) {
+    if (pendingSymbol) {
+      setWatchlist((prev) => { const next = new Set(prev); next.add(pendingSymbol); return next; });
+      setToast(`Added to ${wlLabel}`);
+      setTimeout(() => setToast(null), 2000);
+    }
+    setPickerOpen(false);
+    setPendingSymbol(null);
   }
 
   return (
@@ -680,6 +713,27 @@ export default function SearchPage() {
       <AnimatePresence>
         {toast && <WatchlistToast message={toast} />}
       </AnimatePresence>
+
+      {/* Watchlist Picker Sheet */}
+      <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl px-0 pb-10" hideClose>
+          <div className="flex items-center justify-center px-5 pt-2 pb-4">
+            <h3 className="text-[17px] font-semibold text-foreground">Select watchlist to add</h3>
+          </div>
+          <div className="divide-y divide-border/40">
+            {MOCK_WATCHLISTS.map((wl) => (
+              <button
+                key={wl.id}
+                onClick={() => confirmAddToWatchlist(wl.label)}
+                className="flex w-full items-center justify-between px-5 py-3.5 text-left active:bg-muted/50 transition-colors"
+              >
+                <span className="text-[15px] font-medium text-foreground">{wl.label}</span>
+                <ChevronRight size={16} className="text-muted-foreground/40" />
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <HomeIndicator />
     </div>

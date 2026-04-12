@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
@@ -541,6 +542,7 @@ interface Collection {
   return3y: number;
   return5y: number;
   stocks: number;
+  etfs?: number;
   logos: string[];
   minAmount: number;
   customisable?: boolean;
@@ -574,14 +576,14 @@ const smartCollections: Collection[] = [
     name: "Global ETF Pack",
     description: "Broad exposure across US, Europe, and emerging markets through top ETFs.",
     return1y: 8.1, return3y: 12.4, return5y: 22.8,
-    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 0, etfs: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
     minAmount: 250, weighting: "Custom", type: "ETFs",
   },
   {
     name: "ETF Starter Kit",
     description: "The 5 ETFs every new investor should know. Simple, diversified, low cost.",
     return1y: 9.4, return3y: 14.2, return5y: 19.6,
-    stocks: 5, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 0, etfs: 5, logos: ["bg-muted", "bg-muted", "bg-muted"],
     minAmount: 100, weighting: "Equal", type: "ETFs",
   },
   {
@@ -602,8 +604,8 @@ const smartCollections: Collection[] = [
     name: "Healthcare Innovation",
     description: "Biotech, medtech and digital health companies reshaping how we treat disease.",
     return1y: 3.2, return3y: 15.8, return5y: 28.4,
-    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
-    minAmount: 600, weighting: "Equal", type: "Stocks",
+    stocks: 7, etfs: 3, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    minAmount: 600, weighting: "Equal", type: "Mixed",
   },
   {
     name: "Cybersecurity",
@@ -625,22 +627,35 @@ const smartCollections: Collection[] = [
 /*  Smart Collections — card                                           */
 /* ------------------------------------------------------------------ */
 
-function CollectionCard({ c }: { c: Collection }) {
+function CollectionCardAlt({ c }: { c: Collection }) {
   return (
     <button className="w-full rounded-2xl border border-border/60 p-5 text-left active:scale-[0.98] transition-transform">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="h-10 w-10 rounded-xl bg-muted-foreground/20" />
-        <h3 className="text-[16px] font-bold text-foreground">{c.name}</h3>
+      <div className="flex items-start gap-3 mb-2">
+        <div className="h-10 w-10 shrink-0 rounded-xl bg-muted-foreground/20 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[16px] font-bold text-foreground leading-tight">{c.name}</h3>
+          <p className="text-[14px] text-muted-foreground">
+            {c.type === "Stocks" && `${c.stocks} Stocks`}
+            {c.type === "ETFs" && `${c.etfs} ETFs`}
+            {c.type === "Mixed" && `${c.stocks} Stocks · ${c.etfs} ETFs`}
+          </p>
+        </div>
       </div>
       <p className="text-[14px] text-muted-foreground leading-relaxed mb-3">{c.description}</p>
-      <div className="flex flex-wrap gap-1.5">
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{c.stocks} {c.type}</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{c.weighting === "Equal" ? "Equi Weighted" : c.weighting === "Market Cap" ? "Market Cap Weighted" : "Custom Weights"}</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground tabular-nums">Min {c.minAmount.toLocaleString()}</span>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[12px] text-muted-foreground/50">Allocation</p>
+          <p className="text-[14px] font-medium text-foreground">{c.weighting === "Equal" ? "Equi Weighted" : c.weighting === "Market Cap" ? "Market Cap Weighted" : "Custom Weights"}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[12px] text-muted-foreground/50">Minimum</p>
+          <p className="text-[14px] font-medium text-foreground tabular-nums">${c.minAmount.toLocaleString()}</p>
+        </div>
       </div>
     </button>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 /*  Collections Widget                                                 */
@@ -661,7 +676,12 @@ const collectionTabs: { id: CollectionTab; label: string }[] = [
 ];
 
 const collectionsByTab: Record<CollectionTab, Collection[]> = {
-  all: smartCollections,
+  all: [
+    smartCollections.find((c) => c.name === "Tech Giants")!,
+    smartCollections.find((c) => c.name === "Global ETF Pack")!,
+    smartCollections.find((c) => c.name === "Healthcare Innovation")!,
+    ...smartCollections.filter((c) => !["Tech Giants", "Global ETF Pack", "Healthcare Innovation"].includes(c.name)),
+  ],
   invested: smartCollections.filter((c) => c.name === "Tech Giants" || c.name === "AI & Robotics"),
   saved: smartCollections.filter((c) => c.name === "Clean Energy" || c.name === "Dividend Machines" || c.name === "FAANG+"),
   tech: smartCollections.filter((c) => ["Tech Giants", "AI & Robotics", "Cybersecurity", "FAANG+"].includes(c.name)),
@@ -673,6 +693,7 @@ const collectionsByTab: Record<CollectionTab, Collection[]> = {
   sector: smartCollections.filter((c) => ["Healthcare Innovation", "Cybersecurity", "Clean Energy"].includes(c.name)),
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const collectionDescriptions: Record<CollectionTab, { title: string; body: React.ReactNode }> = {
   invested: {
     title: "Your active collections",
@@ -836,12 +857,11 @@ function RecurringBasketsWidget() {
       tabs={collectionTabs}
       activeTab={activeTab}
       onTabChange={(id) => { setActiveTab(id as CollectionTab); setExpanded(false); }}
-      tabDescription={collectionDescriptions[activeTab]}
       pillLayoutId="collection-tab-pill"
     >
       <div className="space-y-2.5">
         {visible.length > 0 ? (
-          visible.map((c) => <CollectionCard key={c.name} c={c} />)
+          visible.map((c) => <CollectionCardAlt key={c.name} c={c} />)
         ) : (
           <div className="rounded-2xl border border-border/60 py-10 text-center">
             <p className="text-[14px] text-muted-foreground">Coming soon</p>
@@ -1847,30 +1867,37 @@ function PopularStocksWidget() {
 /*  Quick Access Widget                                                */
 /* ------------------------------------------------------------------ */
 
-const quickAccessItems: { label: string; icon: LucideIcon }[] = [
-  { label: "My Watchlist", icon: Bookmark },
+const quickAccessItems: { label: string; icon: LucideIcon; href?: string }[] = [
+  { label: "My Watchlist", icon: Bookmark, href: "/watchlist" },
   { label: "Compare Stocks", icon: GitCompareArrows },
-  { label: "Level Up", icon: GraduationCap },
-  { label: "Portfolio Analysis", icon: Brain },
-  { label: "Market Summary", icon: BarChart3 },
+  { label: "Level Up", icon: GraduationCap, href: "/learn" },
   { label: "News", icon: Newspaper },
+  { label: "Market Summary", icon: BarChart3 },
+  { label: "Portfolio Analysis", icon: Brain },
   { label: "Earnings Calendar", icon: CalendarDays },
   { label: "Dividend Calendar", icon: CalendarCheck },
 ];
 
 const qaRow1 = ["My Watchlist", "Compare Stocks", "Level Up", "Earnings Calendar"];
-const qaRow2 = ["Portfolio Analysis", "Market Summary", "News", "Dividend Calendar"];
+const qaRow2 = ["News", "Market Summary", "Portfolio Analysis", "Dividend Calendar"];
 
 function QuickAccessPill({ item }: { item: (typeof quickAccessItems)[number] }) {
   const Icon = item.icon;
-  return (
-    <button className="flex shrink-0 items-center gap-2.5 rounded-full border border-border/60 px-4 py-2.5 active:scale-[0.97] transition-transform">
+  const cls = "flex shrink-0 items-center gap-2.5 rounded-full border border-border/60 px-4 py-2.5 active:scale-[0.97] transition-transform";
+  const inner = (
+    <>
       <Icon size={18} strokeWidth={1.8} className="text-foreground" />
       <span className="text-[14px] font-semibold text-foreground whitespace-nowrap">{item.label}</span>
-    </button>
+    </>
+  );
+  return item.href ? (
+    <Link href={item.href} className={cls}>{inner}</Link>
+  ) : (
+    <button className={cls}>{inner}</button>
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function QuickAccessWidget() {
   return (
     <div>
@@ -1891,6 +1918,73 @@ function QuickAccessWidget() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function QuickAccessV6() {
+  return (
+    <div>
+      <h2 className="text-[18px] font-bold tracking-tight mb-3.5">Quick Access v6</h2>
+      <div className="grid grid-cols-4 gap-3">
+        {quickAccessItems.map((item) => (
+          <button key={item.label} className="flex flex-col items-center gap-2 active:scale-[0.95] transition-transform">
+            <div className="h-12 w-12 rounded-full bg-muted" />
+            <span className="text-[14px] font-medium text-foreground text-center leading-tight">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuickAccessTogglable() {
+  const [variant, setVariant] = useState<"v6" | "pills">("v6");
+
+  return (
+    <div className="pb-2">
+      <button onClick={() => setVariant((v) => v === "v6" ? "pills" : "v6")}>
+        <h2 className="text-[18px] font-bold tracking-tight mb-3.5">Quick Access</h2>
+      </button>
+      {variant === "v6" ? (
+        <div className="grid grid-cols-4 gap-x-3 gap-y-5">
+          {quickAccessItems.map((item) => {
+            const inner = (
+              <>
+                <div className="h-12 w-12 rounded-full bg-muted" />
+                <span className="text-[14px] font-medium text-foreground text-center leading-tight">{item.label}</span>
+              </>
+            );
+            return item.href ? (
+              <Link key={item.label} href={item.href} className="flex flex-col items-center gap-3 active:scale-[0.95] transition-transform">
+                {inner}
+              </Link>
+            ) : (
+              <button key={item.label} className="flex flex-col items-center gap-3 active:scale-[0.95] transition-transform">
+                {inner}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="-mx-5 overflow-x-auto no-scrollbar">
+          <div className="flex flex-col gap-2.5 px-5" style={{ width: "max-content" }}>
+            <div className="flex gap-2.5">
+              {qaRow1.map((label) => {
+                const item = quickAccessItems.find((i) => i.label === label)!;
+                return <QuickAccessPill key={label} item={item} />;
+              })}
+            </div>
+            <div className="flex gap-2.5">
+              {qaRow2.map((label) => {
+                const item = quickAccessItems.find((i) => i.label === label)!;
+                return <QuickAccessPill key={label} item={item} />;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1989,7 +2083,7 @@ export function ExploreFundedNotTraded() {
     <div className="space-y-8 px-5 pt-5 pb-4">
       <PromoBanner />
       <PopularStocksWidget />
-      <QuickAccessWidget />
+      <QuickAccessTogglable />
       <TopMoversCardless />
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />

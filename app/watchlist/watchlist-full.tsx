@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAI } from "@/contexts/ai-context";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
+  Bookmark,
   Sparkles,
   RefreshCw,
   AlarmClock,
   Trash2,
   Plus,
-  SlidersHorizontal,
+  Search,
   Pencil,
   Check,
   X,
@@ -18,11 +19,10 @@ import {
   GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   ALL_TICKERS,
-  TickerLogo,
   formatPrice,
-  formatChange,
   formatPercent,
   isGain,
   type TickerItem,
@@ -46,7 +46,7 @@ const EV_SYMBOLS = ["TSLA", "RIVN", "LCID", "NIO", "LI", "XPEV"];
 const INITIAL_WATCHLISTS: WatchlistData[] = [
   {
     id: "wl-1",
-    label: "My Watchlist",
+    label: "Mag 7",
     stocks: ALL_TICKERS.filter((t) => MAG7_SYMBOLS.includes(t.symbol)),
   },
   {
@@ -58,6 +58,11 @@ const INITIAL_WATCHLISTS: WatchlistData[] = [
     id: "wl-3",
     label: "EV",
     stocks: ALL_TICKERS.filter((t) => EV_SYMBOLS.includes(t.symbol)),
+  },
+  {
+    id: "wl-4",
+    label: "My Watchlist",
+    stocks: [],
   },
 ];
 
@@ -355,11 +360,10 @@ function sortStocks(stocks: TickerItem[], sortKey: SortKey): TickerItem[] {
 /*  Watchlist Table                                                     */
 /* ------------------------------------------------------------------ */
 
-const ROW_H = "h-[56px]";
-const HDR_H = "h-[36px]";
-const FROZEN_W = 195;
-const thCls = "whitespace-nowrap px-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
-const tdCls = "whitespace-nowrap px-5 text-[13px] tabular-nums text-right";
+const ROW_H = "h-[64px]";
+const HDR_H = "h-[40px]";
+const thCls = "whitespace-nowrap px-4 text-[14px] font-medium text-muted-foreground";
+const tdCls = "whitespace-nowrap px-4 text-[14px] tabular-nums text-right";
 
 function WatchlistTable({
   stocks,
@@ -376,17 +380,46 @@ function WatchlistTable({
     return Math.max(0, Math.min(100, ((price - low) / (high - low)) * 100));
   };
 
+  /* Measure first 2 data column widths → derive frozen width */
+  const containerRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [frozenW, setFrozenW] = useState<number | null>(null);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    const table = tableRef.current;
+    if (!container || !table) return;
+    const ths = table.querySelectorAll("thead th");
+    if (ths.length < 2) return;
+    const col2 = ths[0].getBoundingClientRect().width;
+    const col3 = ths[1].getBoundingClientRect().width;
+    const containerW = container.getBoundingClientRect().width;
+    setFrozenW(Math.max(120, containerW - col2 - col3));
+  }, []);
+
+  useEffect(() => { measure(); }, [measure, stocks]);
+  useEffect(() => {
+    const onResize = () => measure();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [measure]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const handleTableScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsScrolled(el.scrollLeft > 0);
+  }, []);
+
   return (
-    <div className="mx-4 overflow-hidden rounded-2xl border border-border/60 bg-card">
+    <div ref={containerRef}>
       <div className="flex">
-        {/* ── Frozen left column ── */}
-        <div
-          className="z-10 flex-shrink-0 border-r border-border/20 bg-card"
-          style={{ width: FROZEN_W }}
-        >
+        {/* ── Frozen left column — dynamic width ── */}
+        <div className={cn("z-10 shrink-0 bg-background border-r transition-colors duration-200", isScrolled ? "border-border/40" : "border-transparent")} style={{ width: frozenW ?? 160 }}>
           {/* Header */}
-          <div className={cn(HDR_H, "flex items-center pl-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground")}>
-            STOCK
+          <div className={cn(HDR_H, "flex items-center pl-5 pr-3 text-[14px] font-medium text-muted-foreground")}>
+            Stock
           </div>
           {/* Rows */}
           {stocks.map((stock) => (
@@ -395,43 +428,35 @@ function WatchlistTable({
               onClick={() => onTapStock(stock.symbol)}
               className={cn(
                 ROW_H,
-                "flex items-center gap-2.5 pl-5 pr-3 border-t border-border/10 cursor-pointer active:bg-muted/20 transition-colors"
+                "flex items-center gap-2.5 pl-5 pr-3 cursor-pointer active:bg-muted/20 transition-colors"
               )}
             >
-              <div className="grayscale shrink-0">
-                <TickerLogo ticker={stock} size="sm" />
-              </div>
-              <p className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-foreground">
+              <div className="h-8 w-8 shrink-0 rounded-full bg-muted-foreground/25" />
+              <p className="min-w-0 flex-1 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">
                 {stock.name}
               </p>
             </div>
           ))}
         </div>
 
-        {/* ── Scrollable right columns ── */}
-        <div className="flex-1 overflow-x-auto no-scrollbar">
-          <table className="w-max min-w-full border-collapse" style={{ minWidth: 780 }}>
+        {/* ── Scrollable right columns — content-sized ── */}
+        <div ref={scrollRef} onScroll={handleTableScroll} className="flex-1 overflow-x-auto no-scrollbar min-w-0">
+          <table ref={tableRef} style={{ minWidth: 780 }}>
             <thead>
               <tr className={HDR_H}>
-                {/* Price action — visible in viewport */}
-                <th className={cn(thCls, "text-right w-[90px]")}>Price</th>
-                <th className={cn(thCls, "text-right w-[68px]")}>Chg%</th>
-                <th className={cn(thCls, "text-right min-w-[68px]")}>Ext Hrs</th>
-                {/* Trading activity */}
-                <th className={cn(thCls, "text-right min-w-[60px]")}>Volume</th>
-                <th className={cn(thCls, "text-right min-w-[68px]")}>Mkt Cap</th>
-                {/* Valuation */}
-                <th className={cn(thCls, "text-right min-w-[52px]")}>PE</th>
-                <th className={cn(thCls, "text-right min-w-[56px]")}>EPS</th>
-                {/* Growth */}
-                <th className={cn(thCls, "text-right min-w-[64px]")}>Rev Gr.</th>
-                <th className={cn(thCls, "text-right min-w-[68px]")}>Earn Gr.</th>
-                {/* Income & Range */}
-                <th className={cn(thCls, "text-right min-w-[56px]")}>Div %</th>
+                <th className={cn(thCls, "text-right")}>Price</th>
+                <th className={cn(thCls, "text-right")}>Chg%</th>
+                <th className={cn(thCls, "text-right")}>Ext Hrs</th>
+                <th className={cn(thCls, "text-right")}>Volume</th>
+                <th className={cn(thCls, "text-right")}>Mkt Cap</th>
+                <th className={cn(thCls, "text-right")}>PE</th>
+                <th className={cn(thCls, "text-right")}>EPS</th>
+                <th className={cn(thCls, "text-right")}>Rev Gr.</th>
+                <th className={cn(thCls, "text-right")}>Earn Gr.</th>
+                <th className={cn(thCls, "text-right")}>Div %</th>
                 <th className={cn(thCls, "text-center min-w-[120px]")}>52W Range</th>
-                {/* Actions */}
-                <th className={cn(thCls, "text-center w-[44px]")}>ALERT</th>
-                <th className={cn(thCls, "text-center w-[44px]")}>DEL</th>
+                <th className={cn(thCls, "text-center")}>Alert</th>
+                <th className={cn(thCls, "text-center")}>Del</th>
               </tr>
             </thead>
             <tbody>
@@ -442,24 +467,19 @@ function WatchlistTable({
 
                 return (
                   <tr key={stock.symbol} className={cn(ROW_H, "border-t border-border/10")}>
-                    {/* Price + change */}
+                    {/* Price */}
                     <td className={cn(tdCls, "text-right")}>
-                      <div>
-                        <p className="text-[13px] font-semibold text-foreground">{formatPrice(stock.price)}</p>
-                        <p className={cn("text-[11px] font-medium", gain ? "text-gain" : "text-loss")}>
-                          {formatChange(stock.change)}
-                        </p>
-                      </div>
+                      <span className="text-[14px] font-semibold text-foreground">{stock.price.toFixed(1)}</span>
                     </td>
                     {/* Change % */}
                     <td className={tdCls}>
-                      <span className={cn("text-[13px] font-semibold", gain ? "text-gain" : "text-loss")}>
+                      <span className={cn("text-[14px] font-semibold", gain ? "text-gain" : "text-loss")}>
                         {formatPercent(stock.changePercent)}
                       </span>
                     </td>
                     {/* Extended Hours Change */}
                     <td className={tdCls}>
-                      <span className={cn("text-[13px] font-medium", f.extHoursChg >= 0 ? "text-gain" : "text-loss")}>
+                      <span className={cn("text-[14px] font-medium", f.extHoursChg >= 0 ? "text-gain" : "text-loss")}>
                         {f.extHoursChg >= 0 ? "+" : ""}{f.extHoursChg.toFixed(2)}%
                       </span>
                     </td>
@@ -481,13 +501,13 @@ function WatchlistTable({
                     </td>
                     {/* Rev Growth */}
                     <td className={tdCls}>
-                      <span className={cn("text-[13px] font-medium", f.revGrowth >= 0 ? "text-gain" : "text-loss")}>
+                      <span className={cn("text-[14px] font-medium", f.revGrowth >= 0 ? "text-gain" : "text-loss")}>
                         {f.revGrowth >= 0 ? "+" : ""}{f.revGrowth.toFixed(1)}%
                       </span>
                     </td>
                     {/* Earnings Growth */}
                     <td className={tdCls}>
-                      <span className={cn("text-[13px] font-medium", f.earnGrowth >= 0 ? "text-gain" : "text-loss")}>
+                      <span className={cn("text-[14px] font-medium", f.earnGrowth >= 0 ? "text-gain" : "text-loss")}>
                         {f.earnGrowth === 0 && f.eps < 0 ? "—" : `${f.earnGrowth >= 0 ? "+" : ""}${f.earnGrowth.toFixed(1)}%`}
                       </span>
                     </td>
@@ -580,7 +600,7 @@ function WatchlistTabContent({
         {/* Sort flipper — cycles on tap */}
         <button
           onClick={flipSort}
-          className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 px-3.5 py-2 text-[13px] font-semibold text-foreground transition-all"
+          className="flex items-center gap-1.5 overflow-hidden text-[14px] font-semibold text-muted-foreground active:opacity-70 transition-opacity"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -605,6 +625,62 @@ function WatchlistTabContent({
         onTapStock={(symbol) => router.push(`/stocks/${symbol}`)}
       />
 
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Empty State                                                        */
+/* ------------------------------------------------------------------ */
+
+const RECOMMENDED_STOCKS = ALL_TICKERS.filter((t) =>
+  ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "TSLA", "META", "AVGO"].includes(t.symbol)
+);
+
+function WatchlistEmptyState({ watchlist }: { watchlist: WatchlistData }) {
+  return (
+    <div className="pt-6 pb-10">
+      {/* Empty message */}
+      <div className="flex flex-col items-center px-8 text-center mb-8">
+        <div className="h-14 w-14 rounded-full bg-muted mb-4" />
+        <p className="text-[14px] text-muted-foreground leading-relaxed mb-4">
+          Use the search bar above to add stocks, ETFs, or options to {watchlist.label}.
+        </p>
+        <button
+          onClick={() => window.location.href = `/search?from=watchlist&wl=${watchlist.id}&wlName=${encodeURIComponent(watchlist.label)}`}
+          className="rounded-full bg-foreground px-6 py-2.5 text-[14px] font-semibold text-background active:opacity-90 transition-opacity"
+        >
+          Search and Add
+        </button>
+      </div>
+
+      {/* Recommended */}
+      <div className="px-5">
+        <p className="text-[14px] font-semibold text-muted-foreground mb-3">Based on &quot;{watchlist.label}&quot;</p>
+        <div className="space-y-0">
+          {RECOMMENDED_STOCKS.map((stock) => {
+            const gain = stock.changePercent >= 0;
+            return (
+              <button
+                key={stock.symbol}
+                className="flex w-full items-center gap-3 py-3 text-left active:bg-muted/30 transition-colors"
+              >
+                <div className="h-9 w-9 shrink-0 rounded-full bg-muted-foreground/25" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold text-foreground">{stock.name}</p>
+                </div>
+                <div className="text-right mr-1">
+                  <p className="text-[14px] tabular-nums text-foreground">{formatPrice(stock.price)}</p>
+                  <p className={cn("text-[13px] tabular-nums font-medium", gain ? "text-gain" : "text-loss")}>
+                    {formatPercent(stock.changePercent)}
+                  </p>
+                </div>
+                <Bookmark size={20} strokeWidth={1.8} className="shrink-0 text-muted-foreground/50 active:text-foreground transition-colors" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -640,8 +716,8 @@ function WatchlistReorderItem({
   return (
     <Reorder.Item
       value={wl}
-      className="flex items-center gap-2 border-b border-border/30 bg-card px-3 py-3.5 last:border-b-0"
-      whileDrag={{ scale: 1.02, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", zIndex: 50 }}
+      className="flex items-center gap-2 px-5 py-3.5 bg-background"
+      whileDrag={{ scale: 1.02, zIndex: 50 }}
     >
       <GripVertical size={18} strokeWidth={1.5} className="flex-shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
 
@@ -694,49 +770,27 @@ function CustomizeTab({
   watchlists,
   onRename,
   onDelete,
-  onAdd,
   onReorder,
 }: {
   watchlists: WatchlistData[];
   onRename: (id: string, label: string) => void;
   onDelete: (id: string) => void;
-  onAdd: () => void;
   onReorder: (reordered: WatchlistData[]) => void;
 }) {
   return (
-    <div className="pb-6 pt-2">
-      {/* ── Manage Watchlists ── */}
-      <div className="px-5">
-        <h3 className="mb-1 text-[17px] font-bold text-foreground">Manage Watchlists</h3>
-        <p className="text-[13px] text-muted-foreground/50 mb-3">
-          Drag to reorder. {watchlists.length} watchlist{watchlists.length !== 1 ? "s" : ""}.
-        </p>
-      </div>
+    <div className="pt-1 pb-2">
+      <Reorder.Group axis="y" values={watchlists} onReorder={onReorder} className="bg-background">
+        {watchlists.map((wl) => (
+          <WatchlistReorderItem
+            key={wl.id}
+            wl={wl}
+            onRename={onRename}
+            onDelete={onDelete}
+            canDelete={watchlists.length > 1}
+          />
+        ))}
+      </Reorder.Group>
 
-      <div className="mx-4 overflow-hidden rounded-2xl border border-border/60 bg-card">
-        <Reorder.Group axis="y" values={watchlists} onReorder={onReorder} className="overflow-hidden">
-          {watchlists.map((wl) => (
-            <WatchlistReorderItem
-              key={wl.id}
-              wl={wl}
-              onRename={onRename}
-              onDelete={onDelete}
-              canDelete={watchlists.length > 1}
-            />
-          ))}
-        </Reorder.Group>
-      </div>
-
-      {/* Add new watchlist */}
-      <div className="px-5">
-        <button
-          onClick={onAdd}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border active:scale-[0.98]"
-        >
-          <Plus size={16} />
-          Create Watchlist
-        </button>
-      </div>
     </div>
   );
 }
@@ -746,14 +800,12 @@ function CustomizeTab({
 /* ------------------------------------------------------------------ */
 
 // ── Shared watchlist content (no shell) ──────────────────────────────
-export function WatchlistContent() {
+export function WatchlistContent({ onSettingsRef }: { onSettingsRef?: React.MutableRefObject<(() => void) | null> }) {
   const [watchlists, setWatchlists] = useState<WatchlistData[]>(INITIAL_WATCHLISTS);
   const [activeTabId, setActiveTabId] = useState("wl-1");
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const tabs = useMemo(() => {
-    return [
-      ...watchlists.map((wl) => ({ id: wl.id, label: wl.label })),
-      { id: "settings", label: "Customize" },
-    ];
+    return watchlists.map((wl) => ({ id: wl.id, label: wl.label }));
   }, [watchlists]);
 
   const activeWatchlist = watchlists.find((w) => w.id === activeTabId);
@@ -767,18 +819,48 @@ export function WatchlistContent() {
     setAISource({ type: "watchlist", topGainer: topGainer?.symbol });
   }, [activeWatchlist, setAISource]);
 
+
+  const [deleteToast, setDeleteToast] = useState<{ symbol: string; name: string; watchlistId: string; stock: TickerItem; index: number } | null>(null);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleDeleteStock = useCallback(
     (watchlistId: string, symbol: string) => {
+      // Find the stock before removing
+      const wl = watchlists.find((w) => w.id === watchlistId);
+      const stockIdx = wl?.stocks.findIndex((s) => s.symbol === symbol) ?? -1;
+      const stock = wl?.stocks[stockIdx];
+
       setWatchlists((prev) =>
-        prev.map((wl) =>
-          wl.id === watchlistId
-            ? { ...wl, stocks: wl.stocks.filter((s) => s.symbol !== symbol) }
-            : wl
+        prev.map((w) =>
+          w.id === watchlistId
+            ? { ...w, stocks: w.stocks.filter((s) => s.symbol !== symbol) }
+            : w
         )
       );
+
+      if (stock) {
+        if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+        setDeleteToast({ symbol, name: stock.name, watchlistId, stock, index: stockIdx });
+        deleteTimerRef.current = setTimeout(() => setDeleteToast(null), 4000);
+      }
     },
-    []
+    [watchlists]
   );
+
+  const undoDelete = useCallback(() => {
+    if (!deleteToast) return;
+    const { watchlistId, stock, index } = deleteToast;
+    setWatchlists((prev) =>
+      prev.map((wl) => {
+        if (wl.id !== watchlistId) return wl;
+        const newStocks = [...wl.stocks];
+        newStocks.splice(Math.min(index, newStocks.length), 0, stock);
+        return { ...wl, stocks: newStocks };
+      })
+    );
+    setDeleteToast(null);
+    if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+  }, [deleteToast]);
 
   const handleRenameWatchlist = useCallback((id: string, label: string) => {
     setWatchlists((prev) =>
@@ -796,68 +878,84 @@ export function WatchlistContent() {
     [activeTabId, watchlists]
   );
 
+  const [newWlSheetOpen, setNewWlSheetOpen] = useState(false);
+  const [newWlName, setNewWlName] = useState("");
+  const newWlInputRef = useRef<HTMLInputElement>(null);
+
   const handleAddWatchlist = useCallback(() => {
+    setNewWlName("");
+    setNewWlSheetOpen(true);
+  }, []);
+
+  const handleConfirmNewWatchlist = useCallback(() => {
+    const label = newWlName.trim() || `Watchlist ${watchlists.length + 1}`;
     const newId = `wl-${Date.now()}`;
     setWatchlists((prev) => [
       ...prev,
-      { id: newId, label: `Watchlist ${prev.length + 1}`, stocks: [] },
+      { id: newId, label, stocks: [] },
     ]);
     setActiveTabId(newId);
-  }, []);
+    setNewWlSheetOpen(false);
+  }, [newWlName, watchlists.length]);
 
   const handleReorderWatchlist = useCallback((reordered: WatchlistData[]) => {
     setWatchlists(reordered);
   }, []);
 
 
+  // Wire settings ref so parent header can open customize
+  useEffect(() => {
+    if (onSettingsRef) onSettingsRef.current = () => setCustomizeOpen(true);
+  }, [onSettingsRef]);
+
   return (
     <>
       {/* Tab Bar */}
       <div className="relative flex items-center border-b border-border/40">
-        <div className="no-scrollbar flex-1 flex overflow-x-auto pl-1 gap-0.5">
-          {tabs.filter((t) => t.id !== "settings").map((tab) => (
+        <div className="no-scrollbar flex-1 flex overflow-x-auto px-5 gap-0">
+          {tabs.map((tab, i) => (
             <button
               key={tab.id}
               onClick={() => setActiveTabId(tab.id)}
               className={cn(
-                "relative shrink-0 px-3 py-2.5 text-[15px] font-medium transition-colors",
+                "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
+                i === 0 ? "pr-3" : "px-3",
                 activeTabId === tab.id
                   ? "text-foreground"
-                  : "text-muted-foreground/60"
+                  : "text-muted-foreground"
               )}
             >
-              <span className="flex items-center gap-1.5">
-                {tab.label}
-                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-muted px-1 text-[11px] font-semibold tabular-nums leading-none text-muted-foreground">
-                  {watchlists.find((w) => w.id === tab.id)?.stocks.length ?? 0}
-                </span>
-              </span>
+              {tab.label}
               {activeTabId === tab.id && (
                 <motion.div
                   layoutId="watchlist-tab-underline"
-                  className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-foreground"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className={cn(
+                    "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
+                    i === 0 ? "left-0" : "left-3"
+                  )}
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}
             </button>
           ))}
-          <button
-            onClick={handleAddWatchlist}
-            className="shrink-0 px-2 py-2.5 text-muted-foreground/40 active:text-muted-foreground transition-colors"
-          >
-            <Plus size={18} strokeWidth={2} />
-          </button>
         </div>
         <button
-          onClick={() => setActiveTabId("settings")}
-          className={cn(
-            "shrink-0 px-4 py-2.5 transition-colors",
-            activeTabId === "settings" ? "text-foreground" : "text-muted-foreground/50"
-          )}
+          onClick={handleAddWatchlist}
+          className="shrink-0 px-4 py-2.5 text-muted-foreground/50 active:text-muted-foreground transition-colors"
         >
-          <SlidersHorizontal size={18} strokeWidth={1.8} />
+          <Plus size={18} strokeWidth={2} />
         </button>
       </div>
+
+      {/* Search box — below tabs */}
+      {(
+        <div className="px-5 pt-3 pb-1" onClick={() => window.location.href = "/search"}>
+          <div className="flex items-center h-11 rounded-xl bg-muted/50 px-4 cursor-pointer active:bg-muted transition-colors">
+            <Search size={16} strokeWidth={1.8} className="shrink-0 text-muted-foreground/50 mr-2.5" />
+            <span className="text-[15px] text-muted-foreground/40">Search and add</span>
+          </div>
+        </div>
+      )}
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
@@ -868,23 +966,101 @@ export function WatchlistContent() {
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.18 }}
         >
-          {activeTabId === "settings" ? (
-            <CustomizeTab
-              watchlists={watchlists}
-              onRename={handleRenameWatchlist}
-              onDelete={handleDeleteWatchlist}
-              onAdd={handleAddWatchlist}
-              onReorder={handleReorderWatchlist}
-            />
-          ) : activeWatchlist ? (
-            <WatchlistTabContent
-              watchlist={activeWatchlist}
-              onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
-            />
+          {activeWatchlist ? (
+            activeWatchlist.stocks.length > 0 ? (
+              <WatchlistTabContent
+                watchlist={activeWatchlist}
+                onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
+              />
+            ) : (
+              <WatchlistEmptyState watchlist={activeWatchlist} />
+            )
           ) : null}
         </motion.div>
       </AnimatePresence>
 
+      {/* Customize Sheet */}
+      <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] flex flex-col p-0" hideClose>
+          {/* Header */}
+          <div className="flex items-center justify-center px-5 pt-5 pb-3">
+            <h3 className="text-[17px] font-semibold text-foreground">Manage Watchlists</h3>
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto">
+            <CustomizeTab
+              watchlists={watchlists}
+              onRename={handleRenameWatchlist}
+              onDelete={handleDeleteWatchlist}
+              onReorder={handleReorderWatchlist}
+            />
+          </div>
+
+          {/* Done button */}
+          <div className="px-5 pt-3 pb-6 bg-background">
+            <button
+              onClick={() => setCustomizeOpen(false)}
+              className="w-full rounded-full bg-foreground py-3.5 text-[15px] font-semibold text-background active:opacity-90 transition-opacity"
+            >
+              Done
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* New Watchlist Sheet */}
+      <Sheet open={newWlSheetOpen} onOpenChange={setNewWlSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl px-5 pb-10"
+          hideClose
+          onOpenAutoFocus={() => setTimeout(() => newWlInputRef.current?.focus(), 100)}
+        >
+          <div className="pt-2">
+            <h3 className="text-[17px] font-semibold text-foreground mb-4">New Watchlist</h3>
+            <input
+              ref={newWlInputRef}
+              value={newWlName}
+              onChange={(e) => setNewWlName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleConfirmNewWatchlist(); }}
+              placeholder="Watchlist name"
+              className="w-full rounded-xl bg-muted/50 px-4 py-3 text-[16px] text-foreground placeholder:text-muted-foreground/40 outline-none mb-5"
+            />
+            <button
+              onClick={handleConfirmNewWatchlist}
+              className="w-full rounded-full bg-foreground py-3 text-[15px] font-semibold text-background active:opacity-90 transition-opacity"
+            >
+              Create
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete toast with undo */}
+      <AnimatePresence>
+        {deleteToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-20 left-0 right-0 z-50 mx-auto w-fit"
+          >
+            <div className="flex items-center gap-3 rounded-full bg-foreground px-5 py-2.5 shadow-lg">
+              <p className="text-[14px] font-medium text-background">
+                {deleteToast.name} removed
+              </p>
+              <button
+                onClick={undoDelete}
+                className="text-[14px] font-bold text-background/70 active:text-background transition-colors"
+              >
+                Undo
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

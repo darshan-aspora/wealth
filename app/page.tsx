@@ -77,6 +77,12 @@ const components = [
     status: "10 variations",
   },
   {
+    title: "AI Summary",
+    description: "Watchlist AI summary — layout explorations",
+    href: "/explore-ai-summary",
+    status: "10 variations",
+  },
+  {
     title: "Trust & Co-Creation",
     description: "Trust, support, and co-creation sections",
     href: "/explore-trust",
