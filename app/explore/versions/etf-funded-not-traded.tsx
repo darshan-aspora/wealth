@@ -31,10 +31,10 @@ import { StoriesViewer, type Story } from "@/components/stories-viewer";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type EtfCategory = "broad" | "sector" | "bond";
-type MoverType = "gainers" | "losers" | "most-active" | "near-52w-high" | "near-52w-low";
+export type EtfCategory = "broad" | "sector" | "bond";
+export type MoverType = "gainers" | "losers" | "most-active" | "near-52w-high" | "near-52w-low";
 
-interface ETF {
+export interface ETF {
   symbol: string;
   name: string;
   price: number;
@@ -322,12 +322,22 @@ const moverTabs = [
   { id: "near-52w-low" as MoverType, label: "Near 52W Low" },
 ];
 
-function TopMoversWidget() {
+interface TopMoversWidgetProps {
+  title?: string;
+  moverData?: Record<MoverType, Record<EtfCategory, ETF[]>>;
+  hideCategoryFlipper?: boolean;
+}
+
+export function TopMoversWidget({
+  title = "Top Movers",
+  moverData = data,
+  hideCategoryFlipper = false,
+}: TopMoversWidgetProps = {}) {
   const [moverType, setMoverType] = useState<MoverType>("gainers");
   const [category, setCategory] = useState<EtfCategory>("broad");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
-  const etfs = data[moverType][category];
+  const etfs = moverData[moverType][category];
   const isGainer = moverType === "gainers";
 
   const sparklines = useMemo(
@@ -393,8 +403,8 @@ function TopMoversWidget() {
 
   return (
     <ScrollableTableWidget
-      title="Top Movers"
-      flipper={{
+      title={title}
+      flipper={hideCategoryFlipper ? undefined : {
         label: catLabels[category],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
         onFlip: cycleCategory,
@@ -1767,7 +1777,7 @@ function PromoBanner() {
 /*  Popular ETFs Widget                                                */
 /* ------------------------------------------------------------------ */
 
-interface PopularETF {
+export interface PopularETF {
   name: string;
   symbol: string;
   return3y: number;
@@ -1798,38 +1808,53 @@ const sipETFs: PopularETF[] = [
   { name: "iShares Core S&P Mid", symbol: "IJH", return3y: 7.6, aum: "78B", expenseRatio: 0.05, trackingError: 0.02 },
 ];
 
-function PopularETFsWidget() {
+interface PopularETFsWidgetProps {
+  title?: string;
+  subtitle?: string;
+  etfs?: PopularETF[];
+  showInvestTypePills?: boolean;
+}
+
+export function PopularETFsWidget({
+  title = "Popular ETFs",
+  subtitle = "Most invested ETFs by Aspora members",
+  etfs: etfsOverride,
+  showInvestTypePills = true,
+}: PopularETFsWidgetProps = {}) {
   const [variant, setVariant] = useState<"grid" | "scroll">("scroll");
   const [investType, setInvestType] = useState<"lumpsum" | "sip">("lumpsum");
+  const pillsOn = showInvestTypePills && !etfsOverride;
 
   return (
     <div>
       <button onClick={() => setVariant((v) => v === "grid" ? "scroll" : "grid")}>
-        <h2 className="text-[18px] font-bold tracking-tight text-foreground">Popular ETFs</h2>
+        <h2 className="text-[18px] font-bold tracking-tight text-foreground">{title}</h2>
       </button>
-      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">Most invested ETFs by Aspora members</p>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">{subtitle}</p>
 
       {/* Lumpsum / SIP pills */}
-      <div className="flex gap-2 mb-4">
-        {([
-          { id: "lumpsum" as const, label: "Lumpsum" },
-          { id: "sip" as const, label: "SIP" },
-        ]).map((pill) => (
-          <button
-            key={pill.id}
-            onClick={() => setInvestType(pill.id)}
-            className={cn(
-              "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
-              investType === pill.id ? "bg-foreground text-background" : "text-muted-foreground"
-            )}
-          >
-            {pill.label}
-          </button>
-        ))}
-      </div>
+      {pillsOn && (
+        <div className="flex gap-2 mb-4">
+          {([
+            { id: "lumpsum" as const, label: "Lumpsum" },
+            { id: "sip" as const, label: "SIP" },
+          ]).map((pill) => (
+            <button
+              key={pill.id}
+              onClick={() => setInvestType(pill.id)}
+              className={cn(
+                "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
+                investType === pill.id ? "bg-foreground text-background" : "text-muted-foreground"
+              )}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {(() => {
-        const etfs = investType === "lumpsum" ? lumpsumETFs : sipETFs;
+        const etfs = etfsOverride ?? (investType === "lumpsum" ? lumpsumETFs : sipETFs);
         const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
         const row2 = etfs.slice(Math.ceil(etfs.length / 2));
 
@@ -1906,12 +1931,12 @@ type ThemeId = "ai" | "manufacturing" | "commodities" | "banking" | "emerging" |
 
 const themeTabs: { id: ThemeId; label: string }[] = [
   { id: "ai", label: "AI & Tech" },
+  { id: "clean-energy", label: "Clean Energy & ESG" },
+  { id: "commodities", label: "Niche Commodities" },
   { id: "manufacturing", label: "Manufacturing" },
-  { id: "commodities", label: "Commodities" },
   { id: "banking", label: "Banking & Finance" },
   { id: "emerging", label: "Emerging Markets" },
   { id: "healthcare", label: "Healthcare" },
-  { id: "clean-energy", label: "Clean Energy" },
 ];
 
 const themeETFs: Record<ThemeId, PopularETF[]> = {
@@ -1959,19 +1984,31 @@ const themeETFs: Record<ThemeId, PopularETF[]> = {
   ],
 };
 
-function ExploreByThemesWidget() {
-  const [activeTheme, setActiveTheme] = useState<ThemeId>("ai");
-  const etfs = themeETFs[activeTheme];
+interface ExploreByThemesWidgetProps {
+  title?: string;
+  subtitle?: string;
+  tabs?: { id: string; label: string }[];
+  themeData?: Record<string, PopularETF[]>;
+}
+
+export function ExploreByThemesWidget({
+  title = "Explore by Themes",
+  subtitle = "Invest in trends shaping the future",
+  tabs = themeTabs,
+  themeData = themeETFs,
+}: ExploreByThemesWidgetProps = {}) {
+  const [activeTheme, setActiveTheme] = useState<string>(tabs[0]?.id ?? "");
+  const etfs = themeData[activeTheme] ?? [];
 
   return (
     <div>
-      <h2 className="text-[18px] font-bold tracking-tight text-foreground">Explore by Themes</h2>
-      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">Invest in trends shaping the future</p>
+      <h2 className="text-[18px] font-bold tracking-tight text-foreground">{title}</h2>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">{subtitle}</p>
 
       {/* Theme pills */}
       <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
         <div className="flex gap-2 px-5 py-0.5">
-          {themeTabs.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTheme(tab.id)}
