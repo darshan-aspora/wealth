@@ -328,7 +328,7 @@ function TopMoversWidget() {
                       row.revGrowth >= 0 ? "text-gain" : "text-loss"
                     )}
                   >
-                    {row.revGrowth >= 0 ? "+" : ""}{row.revGrowth.toFixed(1)}%
+                    {row.revGrowth >= 0 ? "+" : ""}{Math.round(row.revGrowth)}%
                   </td>
                   <td
                     className={cn(
@@ -336,7 +336,7 @@ function TopMoversWidget() {
                       row.profitGrowth >= 0 ? "text-gain" : "text-loss"
                     )}
                   >
-                    {row.profitGrowth >= 0 ? "+" : ""}{row.profitGrowth.toFixed(1)}%
+                    {row.profitGrowth >= 0 ? "+" : ""}{Math.round(row.profitGrowth)}%
                   </td>
                   <td className="py-4 px-2 text-right tabular-nums text-foreground">
                     ${row.high1Y.toFixed(1)}

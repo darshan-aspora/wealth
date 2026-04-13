@@ -24,8 +24,33 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
+import { ETFCardLadder, type ETFCardData } from "@/components/etf-card-variants";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoriesViewer, type Story } from "@/components/stories-viewer";
+
+/* ------------------------------------------------------------------ */
+/*  Adapter: PopularETF → ETFCardData (deterministic mock fields)      */
+/* ------------------------------------------------------------------ */
+
+function popularETFToCardData(etf: PopularETF): ETFCardData {
+  const h = hashStr(etf.symbol);
+  const price = 50 + (h % 450) + ((h % 100) / 100); // 50.00 .. 500.99
+  const change1d = ((h % 600) - 300) / 100; // -3.00 .. +3.00
+  const return1y = etf.return3y + ((h % 800) - 400) / 100; // ±4 from 3Y
+  const return5y = etf.return3y + (((h >> 4) % 400) - 200) / 100; // ±2 from 3Y
+  return {
+    name: etf.name,
+    symbol: etf.symbol,
+    price,
+    change1d,
+    return1y,
+    return3y: etf.return3y,
+    return5y,
+    expenseRatio: etf.expenseRatio,
+    trackingError: etf.trackingError,
+    aum: etf.aum,
+  };
+}
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -1786,7 +1811,7 @@ export interface PopularETF {
   trackingError: number;
 }
 
-const lumpsumETFs: PopularETF[] = [
+const defaultPopularETFs: PopularETF[] = [
   { name: "Vanguard S&P 500", symbol: "VOO", return3y: 10.8, aum: "892B", expenseRatio: 0.03, trackingError: 0.01 },
   { name: "Invesco QQQ Trust", symbol: "QQQ", return3y: 14.2, aum: "252B", expenseRatio: 0.20, trackingError: 0.04 },
   { name: "Vanguard Total Stock", symbol: "VTI", return3y: 9.6, aum: "384B", expenseRatio: 0.03, trackingError: 0.02 },
@@ -1797,33 +1822,18 @@ const lumpsumETFs: PopularETF[] = [
   { name: "iShares Russell 1000", symbol: "IWB", return3y: 10.1, aum: "34B", expenseRatio: 0.15, trackingError: 0.02 },
 ];
 
-const sipETFs: PopularETF[] = [
-  { name: "Vanguard Total World", symbol: "VT", return3y: 8.2, aum: "38B", expenseRatio: 0.07, trackingError: 0.03 },
-  { name: "Vanguard Dividend", symbol: "VIG", return3y: 9.4, aum: "82B", expenseRatio: 0.06, trackingError: 0.02 },
-  { name: "Schwab US Dividend", symbol: "SCHD", return3y: 8.8, aum: "56B", expenseRatio: 0.06, trackingError: 0.02 },
-  { name: "iShares Core Agg Bond", symbol: "AGG", return3y: 1.2, aum: "108B", expenseRatio: 0.03, trackingError: 0.01 },
-  { name: "Vanguard FTSE Developed", symbol: "VEA", return3y: 6.4, aum: "118B", expenseRatio: 0.05, trackingError: 0.03 },
-  { name: "iShares MSCI Emerging", symbol: "EEM", return3y: 2.8, aum: "28B", expenseRatio: 0.68, trackingError: 0.12 },
-  { name: "Vanguard Real Estate", symbol: "VNQ", return3y: 4.2, aum: "62B", expenseRatio: 0.12, trackingError: 0.04 },
-  { name: "iShares Core S&P Mid", symbol: "IJH", return3y: 7.6, aum: "78B", expenseRatio: 0.05, trackingError: 0.02 },
-];
-
 interface PopularETFsWidgetProps {
   title?: string;
   subtitle?: string;
   etfs?: PopularETF[];
-  showInvestTypePills?: boolean;
 }
 
 export function PopularETFsWidget({
   title = "Popular ETFs",
   subtitle = "Most invested ETFs by Aspora members",
   etfs: etfsOverride,
-  showInvestTypePills = true,
 }: PopularETFsWidgetProps = {}) {
   const [variant, setVariant] = useState<"grid" | "scroll">("scroll");
-  const [investType, setInvestType] = useState<"lumpsum" | "sip">("lumpsum");
-  const pillsOn = showInvestTypePills && !etfsOverride;
 
   return (
     <div>
@@ -1832,84 +1842,37 @@ export function PopularETFsWidget({
       </button>
       <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">{subtitle}</p>
 
-      {/* Lumpsum / SIP pills */}
-      {pillsOn && (
-        <div className="flex gap-2 mb-4">
-          {([
-            { id: "lumpsum" as const, label: "Lumpsum" },
-            { id: "sip" as const, label: "SIP" },
-          ]).map((pill) => (
-            <button
-              key={pill.id}
-              onClick={() => setInvestType(pill.id)}
-              className={cn(
-                "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
-                investType === pill.id ? "bg-foreground text-background" : "text-muted-foreground"
-              )}
-            >
-              {pill.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {(() => {
-        const etfs = etfsOverride ?? (investType === "lumpsum" ? lumpsumETFs : sipETFs);
+        const etfs = etfsOverride ?? defaultPopularETFs;
         const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
         const row2 = etfs.slice(Math.ceil(etfs.length / 2));
 
-        const ETFCard = ({ etf, wide }: { etf: PopularETF; wide?: boolean }) => (
-          <button className={cn("rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform", wide && "shrink-0 w-[280px]")}>
-            {wide ? (
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
-                <div className="shrink-0 text-right">
-                  <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                    {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                  </span>
-                  <p className="text-[12px] text-muted-foreground">3Y return</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="text-[15px] font-semibold text-foreground leading-tight mb-1">{etf.name}</p>
-                <div className="flex items-baseline gap-1.5 mb-3">
-                  <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                    {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                  </span>
-                  <span className="text-[12px] text-muted-foreground">3Y</span>
-                </div>
-              </>
-            )}
-            <div className="space-y-1 text-[12px]">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">AUM</span>
-                <span className="text-foreground font-medium">{etf.aum}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Expense Ratio</span>
-                <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tracking Error</span>
-                <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
-              </div>
-            </div>
-          </button>
-        );
-
         return variant === "grid" ? (
           <div className="grid grid-cols-2 gap-3">
-            {etfs.map((etf) => <ETFCard key={etf.symbol} etf={etf} />)}
+            {etfs.map((etf) => (
+              <ETFCardLadder key={etf.symbol} etf={popularETFToCardData(etf)} />
+            ))}
           </div>
         ) : (
           <div className="-mx-5 overflow-x-auto no-scrollbar">
             <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
               <div className="flex gap-3">
-                {row1.map((etf) => <ETFCard key={etf.symbol} etf={etf} wide />)}
+                {row1.map((etf) => (
+                  <ETFCardLadder
+                    key={etf.symbol}
+                    etf={popularETFToCardData(etf)}
+                    className="shrink-0 w-[280px]"
+                  />
+                ))}
               </div>
               <div className="flex gap-3">
-                {row2.map((etf) => <ETFCard key={etf.symbol} etf={etf} wide />)}
+                {row2.map((etf) => (
+                  <ETFCardLadder
+                    key={etf.symbol}
+                    etf={popularETFToCardData(etf)}
+                    className="shrink-0 w-[280px]"
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -2030,60 +1993,20 @@ export function ExploreByThemesWidget({
         <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
           <div className="flex gap-3">
             {etfs.slice(0, 2).map((etf) => (
-              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
-                  <div className="shrink-0 text-right">
-                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                    </span>
-                    <p className="text-[12px] text-muted-foreground">3Y return</p>
-                  </div>
-                </div>
-                <div className="space-y-1 text-[12px]">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">AUM</span>
-                    <span className="text-foreground font-medium">{etf.aum}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expense Ratio</span>
-                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tracking Error</span>
-                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
-                  </div>
-                </div>
-              </button>
+              <ETFCardLadder
+                key={etf.symbol}
+                etf={popularETFToCardData(etf)}
+                className="shrink-0 w-[280px]"
+              />
             ))}
           </div>
           <div className="flex gap-3">
             {etfs.slice(2).map((etf) => (
-              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
-                  <div className="shrink-0 text-right">
-                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                    </span>
-                    <p className="text-[12px] text-muted-foreground">3Y return</p>
-                  </div>
-                </div>
-                <div className="space-y-1 text-[12px]">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">AUM</span>
-                    <span className="text-foreground font-medium">{etf.aum}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expense Ratio</span>
-                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tracking Error</span>
-                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
-                  </div>
-                </div>
-              </button>
+              <ETFCardLadder
+                key={etf.symbol}
+                etf={popularETFToCardData(etf)}
+                className="shrink-0 w-[280px]"
+              />
             ))}
           </div>
         </div>
@@ -2400,60 +2323,20 @@ function MostEfficientETFsWidget() {
         <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
           <div className="flex gap-3">
             {row1.map((etf) => (
-              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
-                  <div className="shrink-0 text-right">
-                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                    </span>
-                    <p className="text-[12px] text-muted-foreground">3Y return</p>
-                  </div>
-                </div>
-                <div className="space-y-1 text-[12px]">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">AUM</span>
-                    <span className="text-foreground font-medium">{etf.aum}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expense Ratio</span>
-                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tracking Error</span>
-                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
-                  </div>
-                </div>
-              </button>
+              <ETFCardLadder
+                key={etf.symbol}
+                etf={popularETFToCardData(etf)}
+                className="shrink-0 w-[280px]"
+              />
             ))}
           </div>
           <div className="flex gap-3">
             {row2.map((etf) => (
-              <button key={etf.symbol} className="shrink-0 w-[280px] rounded-2xl bg-muted p-4 text-left active:scale-[0.98] transition-transform">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-[15px] font-semibold text-foreground leading-tight flex-1 min-w-0 pr-3">{etf.name}</p>
-                  <div className="shrink-0 text-right">
-                    <span className={cn("text-[18px] font-bold tabular-nums", etf.return3y >= 0 ? "text-gain" : "text-loss")}>
-                      {etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%
-                    </span>
-                    <p className="text-[12px] text-muted-foreground">3Y return</p>
-                  </div>
-                </div>
-                <div className="space-y-1 text-[12px]">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">AUM</span>
-                    <span className="text-foreground font-medium">{etf.aum}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expense Ratio</span>
-                    <span className="text-foreground font-medium">{etf.expenseRatio.toFixed(2)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tracking Error</span>
-                    <span className="text-foreground font-medium">{etf.trackingError.toFixed(2)}%</span>
-                  </div>
-                </div>
-              </button>
+              <ETFCardLadder
+                key={etf.symbol}
+                etf={popularETFToCardData(etf)}
+                className="shrink-0 w-[280px]"
+              />
             ))}
           </div>
         </div>

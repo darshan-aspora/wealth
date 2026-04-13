@@ -108,14 +108,14 @@ export function RangeBar({ low, high, current }: { low: number; high: number; cu
   const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
 
   return (
-    <div className="flex items-baseline gap-1.5 w-full min-w-[140px]">
+    <div className="flex items-center gap-1.5 w-full min-w-[140px]">
       <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
       </span>
-      <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
+      <div className="relative flex-1 h-[3px] rounded-full bg-muted">
         <div
-          className="absolute h-[10px] bg-foreground rounded-sm"
-          style={{ left: `${pct}%`, width: 2, bottom: 0 }}
+          className="absolute top-1/2 -translate-y-1/2 h-[10px] w-[2px] bg-foreground rounded-sm"
+          style={{ left: `${pct}%` }}
         />
       </div>
       <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">

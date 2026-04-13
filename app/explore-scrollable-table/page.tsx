@@ -71,8 +71,8 @@ function useRows(stocks: SampleStock[]) {
       <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
       <span key="pe" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.pe != null ? Math.round(stock.pe) : "—"}</span>,
       <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap}</span>,
-      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%</span>,
-      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%</span>,
+      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{Math.round(stock.revGrowth)}%</span>,
+      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{Math.round(stock.profitGrowth)}%</span>,
       <div key="watch" className="flex justify-center">
         <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
           <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />

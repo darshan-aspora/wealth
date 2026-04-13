@@ -567,7 +567,6 @@ export function GlobalETFFundedNotTraded() {
         title={`Popular ${label} ETFs`}
         subtitle={`Most invested ${label} ETFs by Aspora members`}
         etfs={popularEtfs}
-        showInvestTypePills={false}
       />
       <TopMoversWidget
         title={`${label} Top Movers`}

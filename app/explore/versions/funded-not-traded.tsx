@@ -32,7 +32,8 @@ import { motion, AnimatePresence } from "framer-motion";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type CapSize = "mega" | "large" | "midcap" | "small";
+type BaseCapSize = "mega" | "large" | "midcap" | "small";
+type CapSize = BaseCapSize | "all";
 type MoverType = "gainers" | "losers" | "most-active" | "near-52w-high" | "near-52w-low";
 
 interface Stock {
@@ -61,80 +62,52 @@ function hashStr(s: string) {
   return Math.abs(h);
 }
 
-function makeSparkline(symbol: string, isGainer: boolean): number[] {
+// Deterministic 1Y price change % per symbol — range roughly -45% to +85%
+function oneYearChange(symbol: string): number {
   const seed = hashStr(symbol);
-  const pts: number[] = [];
-  // vary starting point & volatility per symbol
-  const startV = 30 + (seed % 40); // 30–70
-  const vol = 3 + (seed % 7);      // 3–9
-  const drift = isGainer ? 0.08 + (seed % 5) * 0.04 : -(0.08 + (seed % 5) * 0.04);
-  let v = startV;
-  for (let i = 0; i < 52; i++) {
-    const r1 = (Math.sin(seed + i * 127) + 1) / 2;
-    const r2 = (Math.cos(seed * 3 + i * 53) + 1) / 2;
-    v += ((r1 + r2) / 2 - 0.5 + drift) * vol;
-    v = Math.max(5, Math.min(95, v));
-    pts.push(v);
-  }
-  return pts;
+  const v = (seed % 1300) / 10 - 45;
+  return Math.round(v * 10) / 10;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Sparkline SVG                                                      */
-/* ------------------------------------------------------------------ */
-
-function Sparkline({
-  points,
-  color,
-  w = 52,
-  h = 22,
-  autoColor = false,
-}: {
-  points: number[];
-  color?: string;
-  w?: number;
-  h?: number;
-  autoColor?: boolean;
-}) {
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min || 1;
-
-  const startVal = points[0];
-  const endVal = points[points.length - 1];
-  const isUp = endVal >= startVal;
-  const lineColor = autoColor ? (isUp ? "#10b981" : "#ef4444") : (color ?? "#6366f1");
-
-  const baselineY = h - ((startVal - min) / range) * (h - 2) - 1;
-
-  const d = points
-    .map((p, i) => {
-      const x = (i / (points.length - 1)) * w;
-      const y = h - ((p - min) / range) * (h - 2) - 1;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={w} height={h} className="overflow-visible">
-      <line
-        x1={0} y1={baselineY} x2={w} y2={baselineY}
-        stroke="currentColor"
-        className="text-muted-foreground/20"
-        strokeWidth={1}
-        strokeDasharray="2 2"
-      />
-      <path
-        d={d}
-        fill="none"
-        stroke={lineColor}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+function fmtPct1Y(symbol: string): string {
+  const v = oneYearChange(symbol);
+  return `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
 }
+
+// Format a raw share count as "12.4M" / "842K"
+function fmtVol(n: number): string {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
+  return `${Math.round(n)}`;
+}
+
+// Deterministic 1-month traded volume per symbol (10M – 1.8B range)
+function oneMonthVol(symbol: string): number {
+  const seed = hashStr(symbol);
+  return 10e6 + (seed % 180) * 10e6;
+}
+
+// Deterministic monthly avg volume — roughly ±25% of the 1M volume
+function monthlyAvgVol(symbol: string): number {
+  const seed = hashStr(symbol);
+  const bias = (seed % 50) / 100 - 0.25; // -0.25 to +0.25
+  return Math.max(5e6, oneMonthVol(symbol) * (1 + bias));
+}
+
+// Module-level mega consensus map (shared by What's Moving + Popular Stocks)
+const MEGA_CONSENSUS: Record<string, { buy: number; hold: number; sell: number }> = {
+  NVDA: { buy: 38, hold: 5, sell: 1 },
+  META: { buy: 42, hold: 4, sell: 2 },
+  AMZN: { buy: 45, hold: 3, sell: 0 },
+  MSFT: { buy: 40, hold: 6, sell: 1 },
+  AAPL: { buy: 28, hold: 12, sell: 4 },
+  TSLA: { buy: 12, hold: 14, sell: 18 },
+  GOOGL: { buy: 36, hold: 8, sell: 2 },
+  "BRK.B": { buy: 8, hold: 18, sell: 2 },
+  JPM: { buy: 18, hold: 10, sell: 1 },
+  V: { buy: 32, hold: 6, sell: 0 },
+};
 
 /* ------------------------------------------------------------------ */
 /*  52W Range Bar                                                      */
@@ -145,14 +118,14 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
   const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
 
   return (
-    <div className="flex items-baseline gap-1.5 w-full">
+    <div className="flex items-center gap-1.5 w-full">
       <span className="text-[14px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
         {low.toFixed(0)}
       </span>
-      <div className="relative flex-1 h-[3px] rounded-full bg-muted" style={{ marginBottom: 3 }}>
+      <div className="relative flex-1 h-[3px] rounded-full bg-muted">
         <div
-          className="absolute h-[12px] bg-foreground"
-          style={{ left: `${pct}%`, width: 2, bottom: 0 }}
+          className="absolute top-1/2 -translate-y-1/2 h-[12px] w-[2px] bg-foreground"
+          style={{ left: `${pct}%` }}
         />
       </div>
       <span className="text-[14px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
@@ -167,7 +140,7 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
 /*  Mock data                                                          */
 /* ------------------------------------------------------------------ */
 
-const data: Record<MoverType, Record<CapSize, Stock[]>> = {
+const data: Record<MoverType, Record<BaseCapSize, Stock[]>> = {
   gainers: {
     mega: [
       { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, volume: "52.3M", marketCap: "$2.2T", pe: 68, high52w: 974.0, low52w: 392.3, color: "#76B900", revGrowth: 122.4, profitGrowth: 581.3, rating: "Buy" },
@@ -324,13 +297,23 @@ const data: Record<MoverType, Record<CapSize, Stock[]>> = {
 /*  Cap-size cycle config                                              */
 /* ------------------------------------------------------------------ */
 
-const capOrder: CapSize[] = ["mega", "large", "midcap", "small"];
+const capOrder: CapSize[] = ["all", "mega", "large", "midcap", "small"];
 const capLabels: Record<CapSize, string> = {
+  all: "All Caps",
   mega: "Mega Cap",
   large: "Large Cap",
   midcap: "Mid Cap",
   small: "Small Cap",
 };
+
+const baseCapOrder: BaseCapSize[] = ["mega", "large", "midcap", "small"];
+
+function getStocksForCap(moverType: MoverType, capSize: CapSize): Stock[] {
+  if (capSize === "all") {
+    return baseCapOrder.flatMap((k) => data[moverType][k]);
+  }
+  return data[moverType][capSize];
+}
 
 const moverTabs: { id: MoverType; label: string }[] = [
   { id: "gainers", label: "Gainers" },
@@ -350,17 +333,7 @@ function TopMoversCardless() {
   const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
-  const stocks = data[moverType][capSize];
-  const isGainer = moverType === "gainers";
-
-  const sparklines = useMemo(
-    () =>
-      stocks.reduce<Record<string, number[]>>((acc, s) => {
-        acc[s.symbol] = makeSparkline(s.symbol, isGainer);
-        return acc;
-      }, {}),
-    [stocks, isGainer]
-  );
+  const stocks = getStocksForCap(moverType, capSize);
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
@@ -374,7 +347,7 @@ function TopMoversCardless() {
 
   const tabDescriptions: Record<MoverType, { title: string; body: React.ReactNode }> = {
     gainers: {
-      title: "Green doesn&apos;t always mean go",
+      title: "Green doesn't always mean go",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -390,7 +363,7 @@ function TopMoversCardless() {
       ),
     },
     losers: {
-      title: "One bad day isn&apos;t the full story",
+      title: "One bad day isn't the full story",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -455,38 +428,27 @@ function TopMoversCardless() {
     },
   };
 
-  // Mock consensus data for mega cap stocks (keyed by symbol)
-  const megaConsensus: Record<string, { buy: number; hold: number; sell: number }> = {
-    NVDA: { buy: 38, hold: 5, sell: 1 },
-    META: { buy: 42, hold: 4, sell: 2 },
-    AMZN: { buy: 45, hold: 3, sell: 0 },
-    MSFT: { buy: 40, hold: 6, sell: 1 },
-    AAPL: { buy: 28, hold: 12, sell: 4 },
-    TSLA: { buy: 12, hold: 14, sell: 18 },
-    GOOGL: { buy: 36, hold: 8, sell: 2 },
-    "BRK.B": { buy: 8, hold: 18, sell: 2 },
-    JPM: { buy: 18, hold: 10, sell: 1 },
-    V: { buy: 32, hold: 6, sell: 0 },
-  };
-
   const showConsensus = capSize === "mega";
 
   const columns = [
     { header: "Stock", align: "left" as const },
     { header: "Price", align: "right" as const },
     { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const },
-    { header: "1Y", align: "center" as const, minWidth: 64 },
+    { header: "1Y Change", align: "right" as const, minWidth: 80 },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
     { header: "PE", align: "right" as const, minWidth: 48 },
     { header: "M.Cap", align: "right" as const, minWidth: 68 },
     { header: "Rev Gr.", align: "right" as const, minWidth: 74 },
     { header: "Profit Gr.", align: "right" as const, minWidth: 80 },
+    { header: "1M Volume", align: "right" as const, minWidth: 80 },
+    { header: "Monthly Avg Vol", align: "right" as const, minWidth: 110 },
     { header: "1Y Range", align: "center" as const, minWidth: 136 },
     { header: "Watchlist", align: "center" as const, minWidth: 80 },
   ];
 
   const rows = stocks.map((stock) => {
     const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    const oneY = oneYearChange(stock.symbol);
     return [
       <div key="name" className="flex items-center gap-2.5">
         <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
@@ -494,16 +456,18 @@ function TopMoversCardless() {
       </div>,
       <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
       <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
-      <div key="spark" className="flex justify-center"><Sparkline points={sparklines[stock.symbol]} autoColor /></div>,
+      <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneY >= 0 ? "text-emerald-500" : "text-red-500")}>{fmtPct1Y(stock.symbol)}</span>,
       ...(showConsensus ? [
         <div key="consensus" className="flex justify-center">
-          <ConsensusBadge {...(megaConsensus[stock.symbol] ?? { buy: 10, hold: 10, sell: 5 })} />
+          <ConsensusBadge {...(MEGA_CONSENSUS[stock.symbol] ?? { buy: 10, hold: 10, sell: 5 })} />
         </div>,
       ] : []),
       <span key="pe" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.pe != null ? Math.round(stock.pe) : "—"}</span>,
       <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap.replace("$", "")}</span>,
-      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{stock.revGrowth.toFixed(1)}%</span>,
-      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{stock.profitGrowth.toFixed(1)}%</span>,
+      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{Math.round(stock.revGrowth)}%</span>,
+      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{Math.round(stock.profitGrowth)}%</span>,
+      <span key="mvol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(oneMonthVol(stock.symbol))}</span>,
+      <span key="mavol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(monthlyAvgVol(stock.symbol))}</span>,
       <RangeBar key="range" low={stock.low52w} high={stock.high52w} current={stock.price} />,
       <div key="watch" className="flex justify-center">
         <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
@@ -529,7 +493,7 @@ function TopMoversCardless() {
       columns={columns}
       rows={rows}
       animationKey={`${moverType}-${capSize}`}
-      footer={{ label: "See All 76 Movers" }}
+      footer={{ label: "View All" }}
     />
   );
 }
@@ -877,7 +841,7 @@ function RecurringBasketsWidget() {
           onClick={() => setExpanded(true)}
           className="mt-2.5 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
-          View {collections.length - 3} More
+          View All
           <ChevronRight size={16} />
         </button>
       )}
@@ -993,7 +957,7 @@ function AnalystRatingsWidget() {
 
   const ratingDescriptions: Record<RatingTab, { title: string; body: React.ReactNode }> = {
     "strong-buy": {
-      title: "Wall Street&apos;s top picks",
+      title: "Wall Street's top picks",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -1025,7 +989,7 @@ function AnalystRatingsWidget() {
       ),
     },
     hold: {
-      title: "The market&apos;s grey zone",
+      title: "The market's grey zone",
       body: (
         <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-5 space-y-4">
@@ -1064,7 +1028,10 @@ function AnalystRatingsWidget() {
     { header: "Consensus", align: "center" as const, minWidth: 120 },
     { header: "Price", align: "right" as const, minWidth: 80 },
     { header: "Target", align: "right" as const, minWidth: 80 },
+    { header: "1Y Change", align: "right" as const, minWidth: 80 },
     { header: "Avg Vol", align: "right" as const, minWidth: 68 },
+    { header: "1M Volume", align: "right" as const, minWidth: 80 },
+    { header: "Monthly Avg Vol", align: "right" as const, minWidth: 110 },
     { header: "Mkt Cap", align: "right" as const, minWidth: 72 },
     { header: "Sector", align: "right" as const, minWidth: 64 },
     { header: "Watchlist", align: "center" as const, minWidth: 80 },
@@ -1079,7 +1046,10 @@ function AnalystRatingsWidget() {
     <div key="consensus" className="flex justify-center"><ConsensusBadge buy={stock.buy} hold={stock.hold} sell={stock.sell} /></div>,
     <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(2)}</span>,
     <span key="target" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.targetPrice.toFixed(2)}</span>,
+    <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneYearChange(stock.symbol) >= 0 ? "text-emerald-500" : "text-red-500")}>{fmtPct1Y(stock.symbol)}</span>,
     <span key="vol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.avgVolume}</span>,
+    <span key="mvol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(oneMonthVol(stock.symbol))}</span>,
+    <span key="mavol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(monthlyAvgVol(stock.symbol))}</span>,
     <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap}</span>,
     <span key="sector" className="whitespace-nowrap text-[14px] text-muted-foreground">{stock.sector}</span>,
     <div key="watch" className="flex justify-center">
@@ -1106,213 +1076,7 @@ function AnalystRatingsWidget() {
       rows={rows}
       scrollableMinWidth={620}
       animationKey={`${ratingTab}-${capSize}`}
-      footer={{ label: "View More" }}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Dividend Stocks Widget                                             */
-/* ------------------------------------------------------------------ */
-
-type DividendTab = "high-yield" | "aristocrats" | "growth" | "monthly";
-
-interface DividendStock {
-  symbol: string;
-  name: string;
-  price: number;
-  yield: number;
-  annualDiv: number;
-  payoutRatio: number;
-  growth5Y: number;
-  streak: number;
-  nextExDate: string;
-}
-
-const divTabs: { id: DividendTab; label: string }[] = [
-  { id: "high-yield", label: "High Yield" },
-  { id: "aristocrats", label: "Aristocrats" },
-  { id: "growth", label: "Growth" },
-  { id: "monthly", label: "Monthly" },
-];
-
-const dividendStocks: Record<DividendTab, DividendStock[]> = {
-  "high-yield": [
-    { symbol: "MO", name: "Altria Group", price: 48.52, yield: 8.41, annualDiv: 4.08, payoutRatio: 80, growth5Y: 4.2, streak: 54, nextExDate: "Mar 24" },
-    { symbol: "MPLX", name: "MPLX LP", price: 41.28, yield: 8.18, annualDiv: 3.38, payoutRatio: 85, growth5Y: 5.8, streak: 10, nextExDate: "Apr 8" },
-    { symbol: "ET", name: "Energy Transfer", price: 15.84, yield: 7.92, annualDiv: 1.25, payoutRatio: 72, growth5Y: 3.1, streak: 3, nextExDate: "Apr 15" },
-    { symbol: "VZ", name: "Verizon", price: 39.12, yield: 6.78, annualDiv: 2.65, payoutRatio: 57, growth5Y: 2.0, streak: 19, nextExDate: "Apr 1" },
-    { symbol: "T", name: "AT&T", price: 17.08, yield: 6.52, annualDiv: 1.11, payoutRatio: 48, growth5Y: -4.2, streak: 2, nextExDate: "Apr 1" },
-  ],
-  "aristocrats": [
-    { symbol: "PG", name: "Procter & Gamble", price: 168.42, yield: 2.38, annualDiv: 4.03, payoutRatio: 62, growth5Y: 6.1, streak: 68, nextExDate: "Apr 18" },
-    { symbol: "JNJ", name: "Johnson & Johnson", price: 160.88, yield: 3.08, annualDiv: 4.96, payoutRatio: 44, growth5Y: 5.8, streak: 62, nextExDate: "Mar 24" },
-    { symbol: "KO", name: "Coca-Cola", price: 62.14, yield: 3.12, annualDiv: 1.94, payoutRatio: 68, growth5Y: 3.8, streak: 62, nextExDate: "Mar 28" },
-    { symbol: "PEP", name: "PepsiCo", price: 172.34, yield: 2.72, annualDiv: 5.42, payoutRatio: 66, growth5Y: 7.1, streak: 52, nextExDate: "Mar 31" },
-    { symbol: "MMM", name: "3M Company", price: 102.14, yield: 5.82, annualDiv: 6.00, payoutRatio: 92, growth5Y: 1.2, streak: 66, nextExDate: "Apr 11" },
-  ],
-  "growth": [
-    { symbol: "V", name: "Visa", price: 282.50, yield: 0.78, annualDiv: 2.08, payoutRatio: 22, growth5Y: 17.4, streak: 16, nextExDate: "Apr 28" },
-    { symbol: "AVGO", name: "Broadcom", price: 168.24, yield: 1.82, annualDiv: 21.00, payoutRatio: 48, growth5Y: 14.2, streak: 14, nextExDate: "Apr 18" },
-    { symbol: "HD", name: "Home Depot", price: 362.18, yield: 2.48, annualDiv: 9.00, payoutRatio: 52, growth5Y: 10.8, streak: 15, nextExDate: "Mar 19" },
-    { symbol: "MSFT", name: "Microsoft", price: 415.80, yield: 0.72, annualDiv: 3.00, payoutRatio: 26, growth5Y: 10.2, streak: 22, nextExDate: "Apr 15" },
-    { symbol: "ABBV", name: "AbbVie", price: 166.52, yield: 3.72, annualDiv: 6.20, payoutRatio: 54, growth5Y: 8.5, streak: 52, nextExDate: "Apr 14" },
-  ],
-  "monthly": [
-    { symbol: "AGNC", name: "AGNC Investment", price: 9.72, yield: 14.82, annualDiv: 1.44, payoutRatio: 95, growth5Y: -2.1, streak: 14, nextExDate: "Mar 28" },
-    { symbol: "O", name: "Realty Income", price: 58.24, yield: 5.42, annualDiv: 3.16, payoutRatio: 74, growth5Y: 3.4, streak: 30, nextExDate: "Mar 31" },
-    { symbol: "MAIN", name: "Main Street Capital", price: 45.62, yield: 6.18, annualDiv: 2.82, payoutRatio: 68, growth5Y: 4.2, streak: 14, nextExDate: "Apr 15" },
-    { symbol: "STAG", name: "STAG Industrial", price: 35.88, yield: 4.12, annualDiv: 1.48, payoutRatio: 72, growth5Y: 2.8, streak: 13, nextExDate: "Mar 28" },
-    { symbol: "JEPI", name: "JPM Equity Premium", price: 56.12, yield: 7.24, annualDiv: 4.06, payoutRatio: 0, growth5Y: 0, streak: 3, nextExDate: "Apr 1" },
-  ],
-};
-
-function PayoutBadge({ value }: { value: number }) {
-  if (value === 0) return <span className="text-[12px] text-muted-foreground/40">—</span>;
-  const color =
-    value < 75
-      ? "bg-emerald-500/15 text-emerald-500"
-      : value < 90
-        ? "bg-amber-500/15 text-amber-500"
-        : "bg-red-500/15 text-red-500";
-  return (
-    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums", color)}>
-      {value}%
-    </span>
-  );
-}
-
-function DividendStocksWidget() {
-  const [divTab, setDivTab] = useState<DividendTab>("high-yield");
-  const [capSize, setCapSize] = useState<CapSize>("mega");
-  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
-
-  const cycleCapSize = () =>
-    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
-
-  const stocks = dividendStocks[divTab];
-
-  const toggleBookmark = (sym: string) =>
-    setBookmarks((p) => {
-      const n = new Set(p);
-      if (n.has(sym)) n.delete(sym); else n.add(sym);
-      return n;
-    });
-
-  const divDescriptions: Record<DividendTab, { title: string; body: React.ReactNode }> = {
-    "high-yield": {
-      title: "High yield comes with strings",
-      body: (
-        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Earn more income per share</p><p className="text-[14px] text-muted-foreground mt-0.5">These stocks pay some of the highest dividends in the market. Great for income-focused portfolios</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Check the payout ratio</p><p className="text-[14px] text-muted-foreground mt-0.5">Green means sustainable. Red means the company is paying out more than it can afford</p></div></div>
-          </div>
-          <div className="border-t border-border/60" />
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Yield traps are real</p><p className="text-[14px] text-muted-foreground mt-0.5">A very high yield sometimes means the stock price has crashed. The dividend might get cut next</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Negative growth is a warning</p><p className="text-[14px] text-muted-foreground mt-0.5">If the 5Y CAGR is negative, the dividend has been shrinking. Today&apos;s yield may not last</p></div></div>
-          </div>
-        </div>
-      ),
-    },
-    aristocrats: {
-      title: "Decades of reliability",
-      body: (
-        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">25+ years of dividend increases</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies have raised their dividend every year for decades. That takes serious discipline</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Look at the streak column</p><p className="text-[14px] text-muted-foreground mt-0.5">The longer the streak, the more committed the company is to rewarding shareholders</p></div></div>
-          </div>
-          <div className="border-t border-border/60" />
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Lower yields than high-yield stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">Aristocrats prioritize consistency over size. The yield is modest but the growth is steady</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Past streaks don&apos;t guarantee the future</p><p className="text-[14px] text-muted-foreground mt-0.5">Even aristocrats can cut. Watch the payout ratio for early warning signs</p></div></div>
-          </div>
-        </div>
-      ),
-    },
-    growth: {
-      title: "Small dividends, big ambition",
-      body: (
-        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Fastest-growing dividends</p><p className="text-[14px] text-muted-foreground mt-0.5">These companies are raising dividends aggressively. Today&apos;s small yield could be tomorrow&apos;s large one</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low payout = room to grow</p><p className="text-[14px] text-muted-foreground mt-0.5">A low payout ratio means the company keeps most of its earnings. There&apos;s headroom to keep raising</p></div></div>
-          </div>
-          <div className="border-t border-border/60" />
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low current income</p><p className="text-[14px] text-muted-foreground mt-0.5">If you need income now, these won&apos;t deliver much. They&apos;re a long-term play</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Growth can slow down</p><p className="text-[14px] text-muted-foreground mt-0.5">Double-digit CAGR is hard to sustain. Check if the business is still growing to support it</p></div></div>
-          </div>
-        </div>
-      ),
-    },
-    monthly: {
-      title: "Cash every single month",
-      body: (
-        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">12 paychecks a year</p><p className="text-[14px] text-muted-foreground mt-0.5">Instead of quarterly, these stocks pay every month. Great for building a regular income stream</p></div></div>
-            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compound faster</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly dividends reinvested monthly means your money compounds more frequently</p></div></div>
-          </div>
-          <div className="border-t border-border/60" />
-          <div className="p-5 space-y-4">
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Often REITs or specialty funds</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly payers tend to be real estate or mortgage-backed. They behave differently from regular stocks</p></div></div>
-            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High payout ratios are common</p><p className="text-[14px] text-muted-foreground mt-0.5">Monthly payers often distribute nearly all their income. Less buffer if earnings dip</p></div></div>
-          </div>
-        </div>
-      ),
-    },
-  };
-
-  const columns = [
-    { header: "Stock", align: "left" as const },
-    { header: "Yield", align: "right" as const },
-    { header: "Div/Yr", align: "right" as const },
-    { header: "Payout", align: "right" as const, minWidth: 80 },
-    { header: "5Y CAGR", align: "right" as const, minWidth: 72 },
-    { header: "Streak", align: "right" as const, minWidth: 56 },
-    { header: "Ex-Date", align: "right" as const, minWidth: 72 },
-    { header: "Watchlist", align: "center" as const, minWidth: 80 },
-  ];
-
-  const rows = stocks.map((stock) => [
-    <div key="name" className="flex items-center gap-2.5">
-      <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
-      <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
-    </div>,
-    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] font-bold text-gain">{stock.yield.toFixed(2)}%</span>,
-    <span key="div" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.annualDiv.toFixed(2)}</span>,
-    <PayoutBadge key="payout" value={stock.payoutRatio} />,
-    <span key="cagr" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", stock.growth5Y >= 0 ? "text-gain" : "text-loss")}>{stock.growth5Y >= 0 ? "+" : ""}{stock.growth5Y.toFixed(1)}%</span>,
-    <span key="streak" className="whitespace-nowrap tabular-nums text-[14px] font-semibold text-foreground">{stock.streak}yr</span>,
-    <span key="ex" className="whitespace-nowrap text-[14px] text-muted-foreground">{stock.nextExDate}</span>,
-    <div key="watch" className="flex justify-center">
-      <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
-        <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
-      </button>
-    </div>,
-  ]);
-
-  return (
-    <ScrollableTableWidget
-      title="Dividend Stocks"
-      flipper={{
-        label: capLabels[capSize],
-        icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
-        onFlip: cycleCapSize,
-      }}
-      tabs={divTabs}
-      activeTab={divTab}
-      onTabChange={(id) => setDivTab(id as DividendTab)}
-      tabDescription={divDescriptions[divTab]}
-      pillLayoutId="div-tab-pill"
-      columns={columns}
-      rows={rows}
-      scrollableMinWidth={580}
-      animationKey={`${divTab}-${capSize}`}
-      footer={{ label: "View More" }}
+      footer={{ label: "View All" }}
     />
   );
 }
@@ -1740,31 +1504,34 @@ interface PopularStock {
   name: string;
   price: number;
   changePercent: number;
-  investors: string;
   marketCap: string;
   pe: number | null;
+  high52w: number;
+  low52w: number;
+  revGrowth: number;
+  profitGrowth: number;
 }
 
 const popularStocksData: Record<PopularTab, PopularStock[]> = {
   "most-invested": [
-    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, investors: "4.2M", marketCap: "3.0T", pe: 31 },
-    { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, investors: "3.8M", marketCap: "568B", pe: 48 },
-    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, investors: "3.1M", marketCap: "1.9T", pe: 59 },
-    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, investors: "2.9M", marketCap: "3.2T", pe: 37 },
-    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, investors: "2.7M", marketCap: "2.2T", pe: 68 },
+    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, marketCap: "3.0T", pe: 31, high52w: 199.6, low52w: 164.1, revGrowth: 2.1, profitGrowth: 10.7 },
+    { symbol: "TSLA", name: "Tesla", price: 178.24, changePercent: -6.48, marketCap: "568B", pe: 48, high52w: 278.0, low52w: 138.8, revGrowth: -5.5, profitGrowth: -45.2 },
+    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, marketCap: "1.9T", pe: 59, high52w: 191.7, low52w: 118.4, revGrowth: 12.5, profitGrowth: 229.1 },
+    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, marketCap: "3.2T", pe: 37, high52w: 433.0, low52w: 309.5, revGrowth: 17.6, profitGrowth: 33.2 },
+    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, marketCap: "2.2T", pe: 68, high52w: 974.0, low52w: 392.3, revGrowth: 122.4, profitGrowth: 581.3 },
   ],
   "popular-sip": [
-    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, investors: "1.4M", marketCap: "3.0T", pe: 31 },
-    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, investors: "1.2M", marketCap: "3.2T", pe: 37 },
-    { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, investors: "920K", marketCap: "1.9T", pe: 27 },
-    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, investors: "850K", marketCap: "1.9T", pe: 59 },
-    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, investors: "780K", marketCap: "2.2T", pe: 68 },
+    { symbol: "AAPL", name: "Apple", price: 198.36, changePercent: 2.33, marketCap: "3.0T", pe: 31, high52w: 199.6, low52w: 164.1, revGrowth: 2.1, profitGrowth: 10.7 },
+    { symbol: "MSFT", name: "Microsoft", price: 428.15, changePercent: 2.71, marketCap: "3.2T", pe: 37, high52w: 433.0, low52w: 309.5, revGrowth: 17.6, profitGrowth: 33.2 },
+    { symbol: "GOOGL", name: "Alphabet", price: 152.67, changePercent: -3.68, marketCap: "1.9T", pe: 27, high52w: 193.0, low52w: 121.5, revGrowth: 13.8, profitGrowth: 28.6 },
+    { symbol: "AMZN", name: "Amazon", price: 186.42, changePercent: 3.17, marketCap: "1.9T", pe: 59, high52w: 191.7, low52w: 118.4, revGrowth: 12.5, profitGrowth: 229.1 },
+    { symbol: "NVDA", name: "NVIDIA", price: 892.45, changePercent: 3.97, marketCap: "2.2T", pe: 68, high52w: 974.0, low52w: 392.3, revGrowth: 122.4, profitGrowth: 581.3 },
   ],
 };
 
 const popularDescriptions: Record<PopularTab, { title: string; body: React.ReactNode }> = {
   "most-invested": {
-    title: "What everyone&apos;s buying",
+    title: "What everyone's buying",
     body: (
       <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
         <div className="p-5 space-y-4">
@@ -1814,18 +1581,27 @@ function PopularStocksWidget() {
       return n;
     });
 
+  const showConsensus = capSize === "mega";
+
   const columns = [
     { header: "Stock", align: "left" as const },
     { header: "Price", align: "right" as const },
     { header: "Chg%", align: "right" as const },
-    { header: "Investors", align: "right" as const, minWidth: 72 },
-    { header: "M.Cap", align: "right" as const, minWidth: 68 },
+    { header: "1Y Change", align: "right" as const, minWidth: 80 },
+    ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
     { header: "PE", align: "right" as const, minWidth: 48 },
+    { header: "M.Cap", align: "right" as const, minWidth: 68 },
+    { header: "Rev Gr.", align: "right" as const, minWidth: 74 },
+    { header: "Profit Gr.", align: "right" as const, minWidth: 80 },
+    { header: "1M Volume", align: "right" as const, minWidth: 80 },
+    { header: "Monthly Avg Vol", align: "right" as const, minWidth: 110 },
+    { header: "1Y Range", align: "center" as const, minWidth: 136 },
     { header: "Watchlist", align: "center" as const, minWidth: 80 },
   ];
 
   const rows = stocks.map((stock) => {
     const chgColor = stock.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    const oneY = oneYearChange(stock.symbol);
     return [
       <div key="name" className="flex items-center gap-2.5">
         <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
@@ -1833,9 +1609,19 @@ function PopularStocksWidget() {
       </div>,
       <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
       <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
-      <span key="inv" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.investors}</span>,
-      <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap}</span>,
+      <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneY >= 0 ? "text-emerald-500" : "text-red-500")}>{fmtPct1Y(stock.symbol)}</span>,
+      ...(showConsensus ? [
+        <div key="consensus" className="flex justify-center">
+          <ConsensusBadge {...(MEGA_CONSENSUS[stock.symbol] ?? { buy: 10, hold: 10, sell: 5 })} />
+        </div>,
+      ] : []),
       <span key="pe" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.pe != null ? Math.round(stock.pe) : "—"}</span>,
+      <span key="mcap" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{stock.marketCap.replace("$", "")}</span>,
+      <span key="rev" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.revGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.revGrowth >= 0 ? "+" : ""}{Math.round(stock.revGrowth)}%</span>,
+      <span key="profit" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", stock.profitGrowth >= 0 ? "text-emerald-500" : "text-red-500")}>{stock.profitGrowth >= 0 ? "+" : ""}{Math.round(stock.profitGrowth)}%</span>,
+      <span key="mvol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(oneMonthVol(stock.symbol))}</span>,
+      <span key="mavol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{fmtVol(monthlyAvgVol(stock.symbol))}</span>,
+      <RangeBar key="range" low={stock.low52w} high={stock.high52w} current={stock.price} />,
       <div key="watch" className="flex justify-center">
         <button onClick={() => toggleBookmark(stock.symbol)} className="transition-transform active:scale-90">
           <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(stock.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
@@ -1861,7 +1647,7 @@ function PopularStocksWidget() {
       rows={rows}
       scrollableMinWidth={500}
       animationKey={`${tab}-${capSize}`}
-      footer={{ label: "See All Popular Stocks" }}
+      footer={{ label: "View All" }}
     />
   );
 }
@@ -2235,7 +2021,6 @@ export function ExploreFundedNotTraded() {
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />
       <HeatmapWidget />
-      <DividendStocksWidget />
     </div>
   );
 }

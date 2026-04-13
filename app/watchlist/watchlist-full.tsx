@@ -517,13 +517,13 @@ function WatchlistTable({
                     {/* Rev Growth */}
                     <td className={tdCls}>
                       <span className={cn("text-[14px] font-medium", f.revGrowth >= 0 ? "text-gain" : "text-loss")}>
-                        {f.revGrowth >= 0 ? "+" : ""}{f.revGrowth.toFixed(1)}%
+                        {f.revGrowth >= 0 ? "+" : ""}{Math.round(f.revGrowth)}%
                       </span>
                     </td>
                     {/* Earnings Growth */}
                     <td className={tdCls}>
                       <span className={cn("text-[14px] font-medium", f.earnGrowth >= 0 ? "text-gain" : "text-loss")}>
-                        {f.earnGrowth === 0 && f.eps < 0 ? "—" : `${f.earnGrowth >= 0 ? "+" : ""}${f.earnGrowth.toFixed(1)}%`}
+                        {f.earnGrowth === 0 && f.eps < 0 ? "—" : `${f.earnGrowth >= 0 ? "+" : ""}${Math.round(f.earnGrowth)}%`}
                       </span>
                     </td>
                     {/* Div Yield */}
