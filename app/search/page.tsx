@@ -403,7 +403,7 @@ function PriceBlock({ item }: { item: SearchItem }) {
   const changeColor = item.change >= 0 ? "text-emerald-500" : "text-red-500";
   return (
     <div className="shrink-0 text-right">
-      <p className="text-[16px] font-semibold tabular-nums text-foreground">{item.price}</p>
+      <p className="text-[14px] font-semibold tabular-nums text-foreground">{item.price}</p>
       <p className={`text-[13px] font-medium tabular-nums ${changeColor}`}>
         {item.change >= 0 ? "+" : ""}{item.changePct.toFixed(2)}%
       </p>
@@ -424,10 +424,10 @@ function ResultRow({
   hideBookmark?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5">
+    <div className="flex items-center gap-3 pl-5 pr-3 py-3.5">
       <LogoCircle />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-left text-[16px] font-medium text-foreground leading-tight">{item.name}</p>
+        <p className="truncate text-left text-[14px] font-medium text-foreground leading-tight">{item.name}</p>
         <p className="text-left text-[13px] text-muted-foreground/50 leading-tight mt-0.5">
           {itemSubtext(item)}
         </p>
@@ -456,11 +456,11 @@ function DetailResultRow({
 }) {
   const stats = getStats(item);
   return (
-    <div className="px-5 py-3.5">
+    <div className="pl-5 pr-3 py-3.5">
       <div className="flex items-center gap-3">
         <LogoCircle />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[16px] font-medium text-foreground leading-tight">{item.name}</p>
+          <p className="truncate text-[14px] font-medium text-foreground leading-tight">{item.name}</p>
           <p className="text-[13px] text-muted-foreground leading-tight mt-0.5">
             {itemSubtext(item)}
           </p>

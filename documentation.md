@@ -170,6 +170,16 @@ Full-screen search page opened by tapping the search bar on Home.
 4. **Dense Tape** — Two-line auto-scroll, edit label pinned left
 5. **Gradient Glow** — Premium cards with gain/loss gradients, edit card at end
 
+### 5b. Search Result Row Variations (`app/explore-search-results/page.tsx`) — Route: `/explore-search-results`
+
+5 list-design explorations for the search results list (mix of Stock / Index / ETF / Option items). Every variation surfaces the full type-specific stats (Stock: Cap size, PE, Sector — Index: YTD, 1Y — ETF: AUM, Expense Ratio — Option: IV, Volume, Expiry) rendered in a distinct visual style:
+
+1. **Dense Minimal** — Two-line row; stats as a muted dot-separated micro-line beneath the ticker
+2. **Gradient Cards** — Subtle gain/loss gradient card with filled muted stat chips
+3. **Grouped by Type** — Typed section headers with count chips; stats inline as labeled fragments with bold values
+4. **Type Badge** — Colored type pill replaces the logo; stats as outlined (ring-only) tags below the name
+5. **Inline Sparkline** — Mini deterministic SVG trend sparkline; stats as type-tinted (sky / amber / violet / pink) mini chips below the name
+
 ### 6. Markets (`app/market/page.tsx`) — Route: `/market`
 
 Comprehensive markets page with 4 top-level tabs: US Markets, Global, News, India. Collapsible header on scroll, sticky tabs with Framer Motion animated indicator.

@@ -90,6 +90,12 @@ const components = [
     status: "3 versions",
   },
   {
+    title: "Add Funds Hero",
+    description: "KYC complete — USD + stablecoin funding nudge",
+    href: "/explore-add-funds",
+    status: "4 versions",
+  },
+  {
     title: "Explore Footer",
     description: "Co-create, talk, trust — 5 creative concepts",
     href: "/explore-footer",
@@ -124,6 +130,12 @@ const components = [
     description: "Recent, Popular, Collections, Options Under 10",
     href: "/explore-search-widgets",
     status: "12 variations",
+  },
+  {
+    title: "Search Result Row",
+    description: "List design for stocks, index, ETF, options",
+    href: "/explore-search-results",
+    status: "5 variations",
   },
 ];
 
