@@ -2476,7 +2476,7 @@ function ETFLearnHero() {
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-3xl bg-foreground cursor-pointer"
+      className="relative overflow-hidden rounded-3xl bg-foreground hero-invert cursor-pointer"
     >
       <div className="absolute inset-0 opacity-[0.03]" style={heroNoiseStyle} />
       <div className="relative pt-36 pb-5">

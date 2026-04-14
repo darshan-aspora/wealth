@@ -71,6 +71,13 @@ html.font-inter  { --font-sans: var(--font-inter); letter-spacing: normal; }
     --loss: 0 72% 51%;
   }
 
+  /* Hero cards use bg-foreground / text-background (inverted scheme).
+     In dark mode foreground = white which looks wrong — override to grey. */
+  .dark .hero-invert {
+    --foreground: 240 3.7% 15.9%;   /* zinc-800 — dark grey card bg */
+    --background: 0 0% 98%;          /* near-white text on grey card */
+  }
+
   * {
     @apply border-border;
   }

@@ -1919,7 +1919,7 @@ function HeroWidget() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.4 }}
-            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pb-6 pt-48"
+            className="relative overflow-hidden rounded-3xl bg-foreground hero-invert px-6 pb-6 pt-48"
           >
             <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
             <div className="relative flex flex-col items-center text-center">
@@ -1943,7 +1943,7 @@ function HeroWidget() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.4 }}
-            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pt-12 pb-8"
+            className="relative overflow-hidden rounded-3xl bg-foreground hero-invert px-6 pt-12 pb-8"
           >
             <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
             <div className="relative flex flex-col items-center text-center">

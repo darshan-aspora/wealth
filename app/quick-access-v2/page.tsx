@@ -430,7 +430,7 @@ function V5() {
       </div>
 
       {/* Row 2 — AI ribbon with marquee */}
-      <div className="relative mt-1 overflow-hidden rounded-3xl bg-foreground">
+      <div className="relative mt-1 overflow-hidden rounded-3xl bg-foreground hero-invert">
         <div className="absolute inset-0 opacity-[0.04]" style={noiseStyle} />
 
         <div className="relative">

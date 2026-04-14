@@ -21,7 +21,7 @@ export function AddFundsHeroV1() {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-[28px] bg-foreground"
+        className="relative overflow-hidden rounded-[28px] bg-foreground hero-invert"
         style={{ aspectRatio: "0.92" }}
       >
         <div className="absolute inset-0 opacity-[0.04]" style={noiseStyle} />

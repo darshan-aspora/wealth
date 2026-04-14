@@ -31,7 +31,7 @@ function HeroShell({
       transition={{ duration: 0.5 }}
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden rounded-3xl bg-foreground cursor-pointer",
+        "relative overflow-hidden rounded-3xl bg-foreground cursor-pointer hero-invert",
         className
       )}
     >
@@ -84,7 +84,7 @@ export function Video1BSpotlight() {
   return (
     <HeroShell className="p-0">
       {/* Video placeholder */}
-      <div className="relative aspect-[4/5] bg-foreground flex items-center justify-center">
+      <div className="relative aspect-[4/5] bg-foreground hero-invert flex items-center justify-center">
         {/* Play button */}
         <motion.div
           whileHover={{ scale: 1.05 }}

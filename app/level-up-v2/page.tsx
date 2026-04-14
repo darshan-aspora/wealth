@@ -169,7 +169,7 @@ function V4() {
           {modules.map((mod, i) => (
             <button
               key={mod.id}
-              className="shrink-0 w-[200px] relative overflow-hidden rounded-2xl bg-foreground text-left active:scale-[0.98] transition-transform"
+              className="shrink-0 w-[200px] relative overflow-hidden rounded-2xl bg-foreground hero-invert text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 opacity-[0.04]" style={noiseStyle} />
               <div className="relative p-4">
@@ -226,7 +226,7 @@ function V5() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="w-full relative overflow-hidden rounded-3xl bg-foreground text-left active:scale-[0.99] transition-transform mb-4"
+        className="w-full relative overflow-hidden rounded-3xl bg-foreground hero-invert text-left active:scale-[0.99] transition-transform mb-4"
       >
         <div className="absolute inset-0 opacity-[0.04]" style={noiseStyle} />
         <div className="relative px-6 py-5">
