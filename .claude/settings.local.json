@@ -40,7 +40,10 @@
       "Bash(python3 -c ':*)",
       "Bash(find /Users/apple/Dev/02-US-Equity -type f -name \"*.tsx\" -exec grep -l \"search.*page\\\\|/search\" {} \\\\;)",
       "Bash(npm run:*)",
-      "Bash(ls /Users/apple/Dev/02-US-Equity/*.skill /Users/apple/Dev/02-US-Equity/*.md)"
+      "Bash(ls /Users/apple/Dev/02-US-Equity/*.skill /Users/apple/Dev/02-US-Equity/*.md)",
+      "Read(//tmp/aspora-design-extract/aspora-design/**)",
+      "Read(//private/tmp/aspora-design-extract/aspora-design/**)",
+      "Bash(wc -l /tmp/aspora-design-extract/aspora-design/references/*.md)"
     ],
     "additionalDirectories": [
       "/Users/apple/Dev/02-US-Equity/app/baskets"

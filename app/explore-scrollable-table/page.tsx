@@ -41,7 +41,7 @@ const capLabels = ["Mega Cap", "Large Cap", "Mid Cap", "Small Cap"];
 function useColumns() {
   return [
     { header: "Stock", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const },
     { header: "PE", align: "right" as const, minWidth: 48 },
     { header: "M.Cap", align: "right" as const, minWidth: 68 },

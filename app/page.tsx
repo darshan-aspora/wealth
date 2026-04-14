@@ -78,6 +78,12 @@ const components = [
     status: "10 variations",
   },
   {
+    title: "Quick Access 2.0",
+    description: "3 shortcuts + horizontal AI Summary — bold visual variations",
+    href: "/quick-access-v2",
+    status: "5 variations",
+  },
+  {
     title: "ETF Cards",
     description: "Popular ETFs — 2-col layout explorations",
     href: "/explore-etf-cards",

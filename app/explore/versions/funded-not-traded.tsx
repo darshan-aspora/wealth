@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/components/theme-provider";
 import {
@@ -27,6 +27,19 @@ import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { WidgetHeader } from "@/components/widget-header";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  MarketStatusCombinedBar,
+  marketStates,
+  sentimentOrder,
+  getBrowserTz,
+  type Sentiment,
+} from "@/components/market-status-widget";
+import { QuickAccessV5B } from "@/components/quick-access-v3";
+import {
+  Video1BSpotlight,
+  Funds2DWarmHandoff,
+  Learn3DFriendVoice,
+} from "@/components/hero-widget-v2";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -432,7 +445,7 @@ function TopMoversCardless() {
 
   const columns = [
     { header: "Stock", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const },
     { header: "1Y Change", align: "right" as const, minWidth: 80 },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
@@ -480,6 +493,7 @@ function TopMoversCardless() {
   return (
     <ScrollableTableWidget
       title="What's Moving"
+      description="Today's biggest moves, sliced by direction and size. Green doesn't always mean go — context tells you why."
       flipper={{
         label: capLabels[capSize],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -820,7 +834,7 @@ function RecurringBasketsWidget() {
   return (
     <WidgetHeader
       title="Collections"
-      description="One tap, multiple stocks. Cheaper than buying individually, and not financial advice."
+      description="One tap, a basket of stocks. Built around a theme, priced cheaper than buying each one yourself."
       tabs={collectionTabs}
       activeTab={activeTab}
       onTabChange={(id) => { setActiveTab(id as CollectionTab); setExpanded(false); }}
@@ -1026,7 +1040,7 @@ function AnalystRatingsWidget() {
     { header: "Stock", align: "left" as const },
     { header: "Upside", align: "right" as const },
     { header: "Consensus", align: "center" as const, minWidth: 120 },
-    { header: "Price", align: "right" as const, minWidth: 80 },
+    { header: "Price ($)", align: "right" as const, minWidth: 80 },
     { header: "Target", align: "right" as const, minWidth: 80 },
     { header: "1Y Change", align: "right" as const, minWidth: 80 },
     { header: "Avg Vol", align: "right" as const, minWidth: 68 },
@@ -1062,6 +1076,7 @@ function AnalystRatingsWidget() {
   return (
     <ScrollableTableWidget
       title="Analyst Ratings"
+      description="What Wall Street pros think. Useful as a second opinion — never the final word on anything."
       flipper={{
         label: capLabels[capSize],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -1342,17 +1357,27 @@ function HeatmapWidget() {
 
   const rawItems = view === "stocks" ? heatmapStocks[index] : heatmapSectors[index];
 
-  // Remove items too small to tap, then re-layout so remaining ones fill the space
+  // Remove items too small to tap, then re-layout so remaining ones fill the space.
+  // The final (smallest) tile is relabeled "Others" to represent the tail of the index.
   const rects = useMemo(() => {
     const MIN_DIM = 50;
     let items = rawItems;
+    let result: HeatRect[] = [];
     for (let pass = 0; pass < 3; pass++) {
       const allRects = treemapLayout(items);
       const tooSmall = new Set(allRects.filter((r) => Math.min(r.w, r.h) < MIN_DIM).map((r) => r.symbol));
-      if (tooSmall.size === 0) return allRects;
+      if (tooSmall.size === 0) {
+        result = allRects;
+        break;
+      }
       items = items.filter((i) => !tooSmall.has(i.symbol));
     }
-    return treemapLayout(items);
+    if (result.length === 0) result = treemapLayout(items);
+    if (result.length > 0) {
+      const last = result[result.length - 1];
+      result[result.length - 1] = { ...last, symbol: "Others" };
+    }
+    return result;
   }, [rawItems]);
 
   const cycleView = () =>
@@ -1361,6 +1386,7 @@ function HeatmapWidget() {
   return (
     <WidgetHeader
       title="Market at a Glance"
+      description="The whole US market in one frame. Bigger squares are bigger companies. Color shows today's move."
       flipper={{
         label: heatViewLabels[view],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -1413,7 +1439,7 @@ function HeatmapWidget() {
                         {r.symbol}
                       </span>
                     )}
-                    {showChange && (
+                    {showChange && r.symbol !== "Others" && (
                       <span
                         className={cn("mt-0.5 leading-none", isDark ? "text-white/80" : "text-black/50")}
                         style={{ fontSize: isLarge ? 11 : 9 }}
@@ -1431,7 +1457,7 @@ function HeatmapWidget() {
 
       <button className="mt-3 flex w-full items-center justify-center gap-2 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
         <Maximize2 size={15} />
-        Open in Fullscreen
+        View All
       </button>
     </WidgetHeader>
   );
@@ -1585,7 +1611,7 @@ function PopularStocksWidget() {
 
   const columns = [
     { header: "Stock", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: "Chg%", align: "right" as const },
     { header: "1Y Change", align: "right" as const, minWidth: 80 },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
@@ -1633,6 +1659,7 @@ function PopularStocksWidget() {
   return (
     <ScrollableTableWidget
       title="Popular Stocks"
+      description="What other Aspora members are buying right now. A pulse check on the crowd, not a green light to follow."
       flipper={{
         label: capLabels[capSize],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -1728,6 +1755,7 @@ function QuickAccessV6() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function QuickAccessTogglable() {
   const [variant, setVariant] = useState<"v6" | "pills">("v6");
 
@@ -1870,74 +1898,56 @@ export function ExploreFooter() {
 const KYC_STEPS = ["Email", "Phone", "Identity", "Funding", "Review"];
 const KYC_CURRENT = 2;
 
-function OnboardingWidget() {
-  const [started, setStarted] = useState(false);
-  const [cardVisible, setCardVisible] = useState(true);
-  const cardRef = useRef<HTMLDivElement>(null);
+const HERO_STATES = ["start", "kyc", "video", "fund", "learn"] as const;
+type HeroState = (typeof HERO_STATES)[number];
 
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setCardVisible(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+function HeroWidget() {
+  const [heroState, setHeroState] = useState<HeroState>("start");
+
+  const cycle = () =>
+    setHeroState((s) => HERO_STATES[(HERO_STATES.indexOf(s) + 1) % HERO_STATES.length]);
 
   const noiseStyle = { backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E')" };
 
   return (
-    <>
-      <div ref={cardRef}>
-        {!started ? (
+    <div onClick={cycle} className="cursor-pointer">
+      <AnimatePresence mode="wait">
+        {heroState === "start" && (
           <motion.div
+            key="start"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            onClick={() => setStarted(true)}
-            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pb-6 pt-48 cursor-pointer"
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pb-6 pt-48"
           >
             <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
             <div className="relative flex flex-col items-center text-center">
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
-                className="text-[20px] font-bold text-background leading-[1.3] mb-1"
-              >
+              <p className="text-[20px] font-bold text-background leading-[1.3] mb-1">
                 No rush. Explore all you want.
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.4 }}
-                className="text-[15px] text-background/50 leading-relaxed mb-6"
-              >
+              </p>
+              <p className="text-[15px] text-background/50 leading-relaxed mb-6">
                 When you&apos;re ready to invest, we&apos;re here.
-              </motion.p>
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.3 }}
-                className="rounded-full bg-background px-6 py-3 text-[15px] font-semibold text-foreground active:opacity-90 transition-opacity"
-              >
+              </p>
+              <button className="rounded-full bg-background px-6 py-3 text-[15px] font-semibold text-foreground active:opacity-90 transition-opacity">
                 Start Investing
-              </motion.button>
+              </button>
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {heroState === "kyc" && (
           <motion.div
+            key="kyc"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            onClick={() => setStarted(false)}
-            className="relative overflow-hidden rounded-3xl bg-foreground p-6 cursor-pointer"
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-3xl bg-foreground px-6 pt-12 pb-8"
           >
             <div className="absolute inset-0 opacity-[0.03]" style={noiseStyle} />
             <div className="relative flex flex-col items-center text-center">
-              <div className="mb-5">
+              <div className="mb-8 mt-4">
                 <svg width={80} height={80} viewBox="0 0 80 80">
                   <circle cx={40} cy={40} r={34} fill="none" stroke="hsl(var(--background) / 0.15)" strokeWidth={5} />
                   <circle
@@ -1947,76 +1957,88 @@ function OnboardingWidget() {
                     strokeDashoffset={2 * Math.PI * 34 * (1 - (KYC_CURRENT + 1) / KYC_STEPS.length)}
                     transform="rotate(-90 40 40)"
                   />
-                      </svg>
+                </svg>
               </div>
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
-                className="text-[20px] font-bold text-background leading-tight mb-1"
-              >
+              <p className="text-[20px] font-bold text-background leading-tight mb-1">
                 Your account is almost ready
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.4 }}
-                className="text-[15px] text-background/50 leading-relaxed mb-5"
-              >
+              </p>
+              <p className="text-[15px] text-background/50 leading-relaxed mb-5">
                 We saved your progress.<br />Pick up where you left off.
-              </motion.p>
+              </p>
               <button className="rounded-full bg-background px-6 py-3 text-[15px] font-semibold text-foreground active:opacity-90 transition-opacity">
                 Continue Setup
               </button>
             </div>
           </motion.div>
         )}
-      </div>
 
-      {/* Sticky snackbar — appears when card scrolls off */}
-      <AnimatePresence>
-        {!cardVisible && started && (
+        {heroState === "video" && (
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 20, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed bottom-[60px] left-0 right-0 z-50 mx-auto max-w-[430px]"
+            key="video"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="flex items-center gap-3 bg-card border-y border-border/40 px-5 py-3">
-              {/* Mini ring */}
-              <svg width={36} height={36} viewBox="0 0 36 36" className="shrink-0">
-                <circle cx={18} cy={18} r={15} fill="none" stroke="hsl(var(--border))" strokeWidth={3} />
-                <circle
-                  cx={18} cy={18} r={15}
-                  fill="none" stroke="hsl(var(--foreground))" strokeWidth={3} strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 15}
-                  strokeDashoffset={2 * Math.PI * 15 * (1 - (KYC_CURRENT + 1) / KYC_STEPS.length)}
-                  transform="rotate(-90 18 18)"
-                />
-              </svg>
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-semibold text-foreground">{started ? "Account setup" : "Start investing"}</p>
-                <p className="text-[13px] text-muted-foreground">{started ? "Pick up where you left off" : "No minimums, no pressure"}</p>
-              </div>
-              <button className="shrink-0 rounded-full bg-foreground px-4 py-2.5 text-[14px] font-semibold text-background active:opacity-90 transition-opacity">
-                {started ? "Continue" : "Start"}
-              </button>
-            </div>
+            <Video1BSpotlight />
+          </motion.div>
+        )}
+
+        {heroState === "fund" && (
+          <motion.div
+            key="fund"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Funds2DWarmHandoff />
+          </motion.div>
+        )}
+
+        {heroState === "learn" && (
+          <motion.div
+            key="learn"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Learn3DFriendVoice />
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
 
 export function ExploreFundedNotTraded() {
+  const [msIdx, setMsIdx] = useState(0);
+  const [sentiment, setSentiment] = useState<Sentiment>("fear");
+  const [userTz, setUserTz] = useState("America/New_York");
+
+  useEffect(() => {
+    setUserTz(getBrowserTz());
+  }, []);
+
+  const cycleStatus = () =>
+    setMsIdx((i) => (i + 1) % marketStates.length);
+  const cycleSentiment = () =>
+    setSentiment((s) => sentimentOrder[(sentimentOrder.indexOf(s) + 1) % sentimentOrder.length]);
+
   return (
-    <div className="space-y-8 px-5 pt-5 pb-4">
-      <OnboardingWidget />
+    <div className="space-y-14 px-5 pt-5 pb-4">
+      <HeroWidget />
+      <MarketStatusCombinedBar
+        state={marketStates[msIdx]}
+        userTz={userTz}
+        sentiment={sentiment}
+        onToggleStatus={cycleStatus}
+        onToggleSentiment={cycleSentiment}
+      />
       <PopularStocksWidget />
       <PromoBanner />
-      <QuickAccessTogglable />
+      <QuickAccessV5B />
       <TopMoversCardless />
       <RecurringBasketsWidget />
       <AnalystRatingsWidget />

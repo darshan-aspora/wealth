@@ -55,7 +55,7 @@ function getCols(sortKey: SortKey): Col[] {
   // First two columns are always: Price, then the primary metric
   // Then two secondary columns that rotate based on sort key
   const price: Col = {
-    header: "Price",
+    header: "Price ($)",
     width: 80,
     render: (r) => ({ text: r.ltp.toFixed(2), colored: false }),
   };

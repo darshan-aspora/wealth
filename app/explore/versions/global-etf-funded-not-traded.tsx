@@ -560,22 +560,23 @@ export function GlobalETFFundedNotTraded() {
   const label = regionTitle[region];
 
   return (
-    <div className="space-y-8 px-5 pt-5 pb-4">
+    <div className="space-y-14 px-5 pt-5 pb-4">
       <PromoBanner />
       <RegionFlagTiles active={region} onChange={setRegion} />
       <PopularETFsWidget
         title={`Popular ${label} ETFs`}
-        subtitle={`Most invested ${label} ETFs by Aspora members`}
+        subtitle={`What other Aspora members are buying in ${label}. A starting point for going beyond your home market.`}
         etfs={popularEtfs}
       />
       <TopMoversWidget
         title={`${label} Top Movers`}
+        description={`Today's biggest moves in ${label} ETFs. A quick read on what's working in this market right now.`}
         moverData={moverData}
         hideCategoryFlipper
       />
       <ExploreByThemesWidget
         title="Explore by Unique Themes"
-        subtitle={`Stand-out narratives from ${label} markets`}
+        subtitle={`Story angles you won't find back home — ${label} markets, packaged into investable ETFs.`}
         tabs={themes.tabs}
         themeData={themes.data}
       />

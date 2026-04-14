@@ -349,12 +349,14 @@ const moverTabs = [
 
 interface TopMoversWidgetProps {
   title?: string;
+  description?: string;
   moverData?: Record<MoverType, Record<EtfCategory, ETF[]>>;
   hideCategoryFlipper?: boolean;
 }
 
 export function TopMoversWidget({
   title = "Top Movers",
+  description = "Today's biggest ETF moves, by category. A quick read on which corners of the market are leading and which are lagging.",
   moverData = data,
   hideCategoryFlipper = false,
 }: TopMoversWidgetProps = {}) {
@@ -386,7 +388,7 @@ export function TopMoversWidget({
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: "Chg%", align: "right" as const },
     { header: "1Y", align: "center" as const, minWidth: 64 },
     { header: "1 Year", align: "right" as const, minWidth: 58 },
@@ -429,6 +431,7 @@ export function TopMoversWidget({
   return (
     <ScrollableTableWidget
       title={title}
+      description={description}
       flipper={hideCategoryFlipper ? undefined : {
         label: catLabels[category],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -1673,18 +1676,30 @@ function HeatmapWidget() {
   const rects = useMemo(() => {
     const MIN_DIM = 40;
     let items = rawItems;
+    let result: HeatRect[] = [];
     for (let pass = 0; pass < 3; pass++) {
       const allRects = treemapLayout(items);
       const tooSmall = new Set(allRects.filter((r) => Math.min(r.w, r.h) < MIN_DIM).map((r) => r.symbol));
-      if (tooSmall.size === 0) return allRects;
+      if (tooSmall.size === 0) {
+        result = allRects;
+        break;
+      }
       items = items.filter((i) => !tooSmall.has(i.symbol));
     }
-    return treemapLayout(items);
+    if (result.length === 0) result = treemapLayout(items);
+    if (result.length > 0) {
+      const last = result[result.length - 1];
+      result[result.length - 1] = { ...last, symbol: "Others" };
+    }
+    return result;
   }, [rawItems]);
 
   return (
     <div>
-      <h2 className="mb-4 text-[18px] font-bold tracking-tight">ETF at a Glance</h2>
+      <h2 className="mb-1 text-[18px] font-bold tracking-tight">ETF at a Glance</h2>
+      <p className="mb-4 text-[13px] text-muted-foreground leading-snug">
+        Every ETF category in one frame. Bigger squares hold more money. Color shows today&apos;s move.
+      </p>
 
       <div
         className="relative w-full overflow-hidden rounded-2xl"
@@ -1726,7 +1741,7 @@ function HeatmapWidget() {
                           {r.symbol}
                         </span>
                       )}
-                      {showChange && (
+                      {showChange && r.symbol !== "Others" && (
                         <span
                           className={cn("mt-0.5 leading-none", isDark ? "text-white/80" : "text-black/50")}
                           style={{ fontSize: isLarge ? 11 : 9 }}
@@ -1744,7 +1759,7 @@ function HeatmapWidget() {
 
       <button className="mt-3 flex w-full items-center justify-center gap-2 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground">
         <Maximize2 size={15} />
-        Open in Fullscreen
+        View All
       </button>
     </div>
   );
@@ -1830,7 +1845,7 @@ interface PopularETFsWidgetProps {
 
 export function PopularETFsWidget({
   title = "Popular ETFs",
-  subtitle = "Most invested ETFs by Aspora members",
+  subtitle = "What other Aspora members are putting their money into. A starting point for ideas, not a buy signal.",
   etfs: etfsOverride,
 }: PopularETFsWidgetProps = {}) {
   const [variant, setVariant] = useState<"grid" | "scroll">("scroll");
@@ -1956,7 +1971,7 @@ interface ExploreByThemesWidgetProps {
 
 export function ExploreByThemesWidget({
   title = "Explore by Themes",
-  subtitle = "Invest in trends shaping the future",
+  subtitle = "ETFs grouped by the trend behind them — AI, clean energy, banking. Pick the wave first, the ticker second.",
   tabs = themeTabs,
   themeData = themeETFs,
 }: ExploreByThemesWidgetProps = {}) {
@@ -2090,7 +2105,7 @@ function ExploreByAssetClassWidget() {
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: "Chg%", align: "right" as const },
     { header: "1D", align: "center" as const, minWidth: 64 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
@@ -2115,7 +2130,7 @@ function ExploreByAssetClassWidget() {
   return (
     <ScrollableTableWidget
       title="Explore by Asset Class"
-      description="Diversify beyond stocks with different asset classes"
+      description="Stocks aren't the only game. Bonds, gold, real estate — each one moves on its own cycle. Mix to smooth the ride."
       tabs={assetClassTabs}
       activeTab={activeClass}
       onTabChange={(id) => setActiveClass(id as AssetClassId)}
@@ -2220,7 +2235,7 @@ function ExploreByStrategyWidget() {
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const },
+    { header: "Price ($)", align: "right" as const },
     { header: "Chg%", align: "right" as const },
     { header: "1D", align: "center" as const, minWidth: 64 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
@@ -2245,7 +2260,7 @@ function ExploreByStrategyWidget() {
   return (
     <ScrollableTableWidget
       title="Explore by Strategy"
-      description="Find ETFs that match your investment approach"
+      description="Filter ETFs by how they invest — growth, value, dividends, low-volatility. Pick the approach first, ticker second."
       tabs={strategyTabs}
       activeTab={activeStrategy}
       onTabChange={(id) => setActiveStrategy(id as StrategyId)}
@@ -2302,7 +2317,9 @@ function MostEfficientETFsWidget() {
   return (
     <div>
       <h2 className="text-[18px] font-bold tracking-tight text-foreground">Most Efficient ETFs</h2>
-      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">ETFs that give you more for less</p>
+      <p className="text-[13px] text-muted-foreground leading-snug mt-1 mb-3">
+        Lowest fees, tightest tracking. Two ETFs holding the same thing aren&apos;t equal — costs compound over decades.
+      </p>
 
       <div className="flex gap-2 mb-4">
         {efficiencyTabs.map((tab) => (
@@ -2347,7 +2364,7 @@ function MostEfficientETFsWidget() {
 
 export function ETFFundedNotTraded() {
   return (
-    <div className="space-y-8 px-5 pt-5 pb-4">
+    <div className="space-y-14 px-5 pt-5 pb-4">
       <PromoBanner />
       <PopularETFsWidget />
       <TopMoversWidget />
