@@ -157,7 +157,7 @@ export function ScrollableTableWidget({
                       <th
                         key={i}
                         className={cn(
-                          "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-4",
+                          "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
                           alignCls(col.align),
                           col.className
                         )}
@@ -175,7 +175,7 @@ export function ScrollableTableWidget({
                         <td
                           key={colIdx}
                           className={cn(
-                            "px-4 whitespace-nowrap",
+                            "px-3 whitespace-nowrap",
                             alignCls(scrollCols[colIdx]?.align),
                             scrollCols[colIdx]?.className
                           )}

@@ -43,7 +43,10 @@
       "Bash(ls /Users/apple/Dev/02-US-Equity/*.skill /Users/apple/Dev/02-US-Equity/*.md)",
       "Read(//tmp/aspora-design-extract/aspora-design/**)",
       "Read(//private/tmp/aspora-design-extract/aspora-design/**)",
-      "Bash(wc -l /tmp/aspora-design-extract/aspora-design/references/*.md)"
+      "Bash(wc -l /tmp/aspora-design-extract/aspora-design/references/*.md)",
+      "Bash(ls -d /Users/apple/Dev/02-US-Equity/app/*/)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
+      "Bash(grep -n \"bg-white\" /Users/apple/Dev/02-US-Equity/components/add-funds-hero-*.tsx)"
     ],
     "additionalDirectories": [
       "/Users/apple/Dev/02-US-Equity/app/baskets"

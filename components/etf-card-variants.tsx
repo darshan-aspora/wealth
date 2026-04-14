@@ -127,12 +127,6 @@ export function ETFCardLadder({
   etf?: ETFCardData;
   className?: string;
 }) {
-  const returns = [
-    { label: "1Y", value: etf.return1y },
-    { label: "3Y", value: etf.return3y },
-    { label: "5Y", value: etf.return5y },
-  ];
-
   return (
     <div className={cn("rounded-2xl bg-muted p-4", className)}>
       {/* Header row */}
@@ -148,20 +142,14 @@ export function ETFCardLadder({
         </div>
       </div>
 
-      {/* Return ladder */}
-      <div className="flex items-stretch gap-1.5 mb-4">
-        {returns.map((r) => (
-          <div key={r.label} className="flex-1">
-            <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{r.label}</p>
-            <p className={cn("text-[13px] font-bold tabular-nums mt-1 leading-none", returnClass(r.value))}>
-              {fmtPct(r.value)}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Metadata row */}
+      {/* Stats row — 1Y, AUM, Expense */}
       <div className="grid grid-cols-3 text-[13px]">
+        <div>
+          <p className="text-muted-foreground text-[12px]">1Y</p>
+          <p className={cn("font-bold tabular-nums", returnClass(etf.return1y))}>
+            {fmtPct(etf.return1y)}
+          </p>
+        </div>
         <div>
           <p className="text-muted-foreground text-[12px]">AUM</p>
           <p className="text-foreground font-semibold">{etf.aum}</p>
@@ -169,10 +157,6 @@ export function ETFCardLadder({
         <div>
           <p className="text-muted-foreground text-[12px]">Expense</p>
           <p className="text-foreground font-semibold">{etf.expenseRatio.toFixed(2)}%</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[12px]">Tracking</p>
-          <p className="text-foreground font-semibold">{etf.trackingError.toFixed(2)}%</p>
         </div>
       </div>
     </div>

@@ -149,6 +149,9 @@ function ExploreContent() {
               </div>
             )}
             {currentVersion === "funded-not-traded" && <ExploreFundedNotTraded />}
+            <div className="px-5">
+              <ExploreFooter />
+            </div>
           </>
         )}
         {activeTab === "etf" && (
@@ -177,9 +180,6 @@ function ExploreContent() {
         {activeTab === "algo" && (
           <AlgoStrategies />
         )}
-        <div className="px-5">
-          <ExploreFooter />
-        </div>
       </main>
 
       <BottomNavV2 />

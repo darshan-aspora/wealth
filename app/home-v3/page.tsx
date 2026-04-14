@@ -105,6 +105,9 @@ function ExploreContent() {
             </div>
           )}
           {currentVersion === "funded-not-traded" && <ExploreFundedNotTraded />}
+          <div className="px-5">
+            <ExploreFooter />
+          </div>
         </>
       )}
       {activeTab === "etf" && (
@@ -128,10 +131,6 @@ function ExploreContent() {
           <p className="text-[16px] text-muted-foreground">Options — coming soon</p>
         </div>
       )}
-
-      <div className="px-5">
-        <ExploreFooter />
-      </div>
 
       {/* Version Picker */}
       <Sheet open={showVersionPicker} onOpenChange={setShowVersionPicker}>

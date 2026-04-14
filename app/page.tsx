@@ -12,6 +12,12 @@ type Tab = (typeof tabs)[number];
 
 const pages = [
   {
+    title: "Explore",
+    description: "Stocks, ETF, Options, Baskets, Algo — 3 user states",
+    href: "/explore",
+    status: "3 versions",
+  },
+  {
     title: "Home v3",
     description: "Home screen iteration",
     href: "/home-v3",
@@ -53,47 +59,55 @@ const archive = [
 ];
 
 const components = [
+  // — 2026-04-14 —
   {
-    title: "Header Design",
-    description: "Search bar, navigation, and customisation controls",
-    href: "/explore-headers",
-    status: "5 variations",
-  },
-  {
-    title: "Ticker",
-    description: "Market tickers — marquee, pills, cards, dense, glow",
-    href: "/explore-tickers",
-    status: "5 variations",
-  },
-  {
-    title: "Bottom Nav",
-    description: "Tab bar — icon, label, active indicator",
-    href: "/explore-bottom-nav",
-    status: "2 variations",
-  },
-  {
-    title: "Quick Access",
-    description: "Shortcut grid — layout explorations",
-    href: "/explore-quick-access",
+    title: "ETF Top Movers v2",
+    description: "Frozen-6 + scroll-5 — 10 layout directions",
+    href: "/etf-top-movers-v2",
     status: "10 variations",
   },
   {
-    title: "Quick Access 2.0",
+    title: "Market Status Widget",
+    description: "Pulse bar, day arc, dial, typographic, atmospheric",
+    href: "/market-status-widget",
+    status: "5 directions",
+  },
+  {
+    title: "Hero Widget v2",
+    description: "3 states · 12 visual variations",
+    href: "/hero-widget-v2",
+    status: "12 variations",
+  },
+  {
+    title: "Level Up Widget",
+    description: "ETF learning modules — 5 entry-point designs",
+    href: "/level-up-v2",
+    status: "5 variations",
+  },
+  {
+    title: "Quick Access v3",
+    description: "3 tools + living AI row — text-flipping variations",
+    href: "/quick-access-v3",
+    status: "5 variations",
+  },
+  {
+    title: "Quick Access v2",
     description: "3 shortcuts + horizontal AI Summary — bold visual variations",
     href: "/quick-access-v2",
     status: "5 variations",
   },
+  // — 2026-04-13 —
   {
-    title: "ETF Cards",
-    description: "Popular ETFs — 2-col layout explorations",
-    href: "/explore-etf-cards",
+    title: "ETF Card Variants",
+    description: "Popular ETFs — 5 layout explorations",
+    href: "/etf-cards",
     status: "5 variations",
   },
   {
-    title: "Onboarding Widget",
-    description: "Fresh user + KYC drop-off — 3 versions",
-    href: "/explore-onboarding",
-    status: "3 versions",
+    title: "Search Result Row",
+    description: "List design for stocks, index, ETF, options",
+    href: "/explore-search-results",
+    status: "5 variations",
   },
   {
     title: "Add Funds Hero",
@@ -102,11 +116,30 @@ const components = [
     status: "4 versions",
   },
   {
+    title: "ETF Cards",
+    description: "Popular ETFs — 2-col layout explorations",
+    href: "/explore-etf-cards",
+    status: "5 variations",
+  },
+  {
+    title: "Search Widgets",
+    description: "Recent, Popular, Collections, Options Under 10",
+    href: "/explore-search-widgets",
+    status: "12 variations",
+  },
+  {
+    title: "Onboarding Widget",
+    description: "Fresh user + KYC drop-off — 3 versions",
+    href: "/explore-onboarding",
+    status: "3 versions",
+  },
+  {
     title: "Explore Footer",
     description: "Co-create, talk, trust — 5 creative concepts",
     href: "/explore-footer",
     status: "5 concepts",
   },
+  // — 2026-04-12 —
   {
     title: "AI Summary",
     description: "Watchlist AI summary — layout explorations",
@@ -126,21 +159,35 @@ const components = [
     status: "7 variations",
   },
   {
+    title: "Quick Access",
+    description: "Shortcut grid — layout explorations",
+    href: "/explore-quick-access",
+    status: "10 variations",
+  },
+  {
     title: "Scrollable Table Widget",
     description: "Frozen first col, scrollable data, pills, flipper",
     href: "/explore-scrollable-table",
     status: "component",
   },
+  // — 2026-03-04 —
   {
-    title: "Search Widgets",
-    description: "Recent, Popular, Collections, Options Under 10",
-    href: "/explore-search-widgets",
-    status: "12 variations",
+    title: "Bottom Nav",
+    description: "Tab bar — icon, label, active indicator",
+    href: "/explore-bottom-nav",
+    status: "2 variations",
+  },
+  // — 2026-03-03 —
+  {
+    title: "Ticker",
+    description: "Market tickers — marquee, pills, cards, dense, glow",
+    href: "/explore-tickers",
+    status: "5 variations",
   },
   {
-    title: "Search Result Row",
-    description: "List design for stocks, index, ETF, options",
-    href: "/explore-search-results",
+    title: "Header Design",
+    description: "Search bar, navigation, and customisation controls",
+    href: "/explore-headers",
     status: "5 variations",
   },
 ];

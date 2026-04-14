@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTheme } from "@/components/theme-provider";
 import {
   Bookmark,
@@ -20,13 +21,15 @@ import {
   Scale,
   Maximize2,
   Play,
+  Check,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { ETFCardLadder, type ETFCardData } from "@/components/etf-card-variants";
 import { motion, AnimatePresence } from "framer-motion";
-import { StoriesViewer, type Story } from "@/components/stories-viewer";
+import { StoriesViewer, StoryRing, type Story } from "@/components/stories-viewer";
 
 /* ------------------------------------------------------------------ */
 /*  Adapter: PopularETF → ETFCardData (deterministic mock fields)      */
@@ -50,6 +53,19 @@ function popularETFToCardData(etf: PopularETF): ETFCardData {
     trackingError: etf.trackingError,
     aum: etf.aum,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Scroll pill to center helper                                       */
+/* ------------------------------------------------------------------ */
+
+function scrollPillToCenter(btn: HTMLButtonElement) {
+  requestAnimationFrame(() => {
+    const container = btn.closest(".no-scrollbar") as HTMLElement | null;
+    if (!container) return;
+    const sl = btn.offsetLeft - container.offsetWidth / 2 + btn.offsetWidth / 2;
+    container.scrollTo({ left: Math.max(0, sl), behavior: "smooth" });
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -86,23 +102,6 @@ function hashStr(s: string) {
   return Math.abs(h);
 }
 
-function makeSparkline(symbol: string, isGainer: boolean): number[] {
-  const seed = hashStr(symbol);
-  const pts: number[] = [];
-  const startV = 30 + (seed % 40);
-  const vol = 3 + (seed % 7);
-  const drift = isGainer ? 0.08 + (seed % 5) * 0.04 : -(0.08 + (seed % 5) * 0.04);
-  let v = startV;
-  for (let i = 0; i < 52; i++) {
-    const r1 = (Math.sin(seed + i * 127) + 1) / 2;
-    const r2 = (Math.cos(seed * 3 + i * 53) + 1) / 2;
-    v += ((r1 + r2) / 2 - 0.5 + drift) * vol;
-    v = Math.max(5, Math.min(95, v));
-    pts.push(v);
-  }
-  return pts;
-}
-
 // Mock returns based on symbol hash
 function mockReturns(symbol: string): { r1y: number; r3y: number; r5y: number } {
   const seed = hashStr(symbol);
@@ -114,90 +113,27 @@ function mockReturns(symbol: string): { r1y: number; r3y: number; r5y: number } 
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sparkline SVG                                                      */
+/*  Range Bars                                                         */
 /* ------------------------------------------------------------------ */
 
-function Sparkline({
-  points,
-  color,
-  w = 52,
-  h = 22,
-  autoColor = false,
-}: {
-  points: number[];
-  color?: string;
-  w?: number;
-  h?: number;
-  autoColor?: boolean;
-}) {
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min || 1;
-
-  const startVal = points[0];
-  const endVal = points[points.length - 1];
-  const isUp = endVal >= startVal;
-  const lineColor = autoColor ? (isUp ? "#10b981" : "#ef4444") : (color ?? "#6366f1");
-
-  const baselineY = h - ((startVal - min) / range) * (h - 2) - 1;
-
-  const d = points
-    .map((p, i) => {
-      const x = (i / (points.length - 1)) * w;
-      const y = h - ((p - min) / range) * (h - 2) - 1;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={w} height={h} className="overflow-visible">
-      <line
-        x1={0} y1={baselineY} x2={w} y2={baselineY}
-        stroke="currentColor"
-        className="text-muted-foreground/20"
-        strokeWidth={1}
-        strokeDasharray="2 2"
-      />
-      <path
-        d={d}
-        fill="none"
-        stroke={lineColor}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  52-Week Range Bar                                                  */
-/* ------------------------------------------------------------------ */
-
-function Range52W({
-  low,
-  high,
-  current,
-}: {
-  low: number;
-  high: number;
-  current: number;
-}) {
+function RangeBarInline({ low, high, current }: { low: number; high: number; current: number }) {
   const range = high - low || 1;
-  const pct = Math.min(Math.max(((current - low) / range) * 100, 4), 96);
+  const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
 
   return (
-    <div className="flex w-[90px] flex-col gap-1">
-      <div className="relative h-[5px] w-full rounded-full bg-muted">
+    <div className="flex items-center gap-1.5 w-full">
+      <span className="text-[12px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+        {low.toFixed(0)}
+      </span>
+      <div className="relative flex-1 h-[3px] rounded-full bg-muted">
         <div
-          className="absolute top-1/2 h-[9px] w-[9px] -translate-y-1/2 rounded-full bg-foreground ring-2 ring-card"
-          style={{ left: `${pct}%`, transform: `translate(-50%, -50%)` }}
+          className="absolute top-1/2 -translate-y-1/2 h-[12px] w-[2px] bg-foreground"
+          style={{ left: `${pct}%` }}
         />
       </div>
-      <div className="flex justify-between tabular-nums text-[10px] tabular-nums text-muted-foreground">
-        <span>{low < 10 ? low.toFixed(1) : low.toFixed(0)}</span>
-        <span>{high < 10 ? high.toFixed(1) : high.toFixed(0)}</span>
-      </div>
+      <span className="text-[12px] tabular-nums text-muted-foreground whitespace-nowrap leading-none">
+        {high.toFixed(0)}
+      </span>
     </div>
   );
 }
@@ -209,11 +145,11 @@ function Range52W({
 const data: Record<MoverType, Record<EtfCategory, ETF[]>> = {
   gainers: {
     broad: [
-      { symbol: "SPY", name: "SPDR S&P 500", price: 512.34, changePercent: 1.42, volume: "78.2M", aum: "$562B", expenseRatio: 0.09, yield: 1.32, high52w: 524.0, low52w: 410.3, color: "#1A5276" },
-      { symbol: "QQQ", name: "Invesco QQQ", price: 438.67, changePercent: 1.85, volume: "52.1M", aum: "$280B", expenseRatio: 0.20, yield: 0.55, high52w: 452.0, low52w: 342.5, color: "#00A86B" },
-      { symbol: "VTI", name: "Vanguard Total Mkt", price: 262.18, changePercent: 1.28, volume: "4.8M", aum: "$410B", expenseRatio: 0.03, yield: 1.35, high52w: 270.0, low52w: 212.4, color: "#8B1A1A" },
-      { symbol: "IWM", name: "iShares Russell 2K", price: 198.45, changePercent: 2.14, volume: "28.3M", aum: "$72B", expenseRatio: 0.19, yield: 1.18, high52w: 212.0, low52w: 162.8, color: "#4A148C" },
-      { symbol: "VOO", name: "Vanguard S&P 500", price: 471.82, changePercent: 1.38, volume: "5.2M", aum: "$482B", expenseRatio: 0.03, yield: 1.34, high52w: 482.0, low52w: 378.6, color: "#8B1A1A" },
+      { symbol: "SPY", name: "SPDR S&P 500 ETF Trust", price: 512.34, changePercent: 1.42, volume: "78.2M", aum: "$562B", expenseRatio: 0.09, yield: 1.32, high52w: 524.0, low52w: 410.3, color: "#1A5276" },
+      { symbol: "QQQ", name: "Invesco QQQ Trust Series 1", price: 438.67, changePercent: 1.85, volume: "52.1M", aum: "$280B", expenseRatio: 0.20, yield: 0.55, high52w: 452.0, low52w: 342.5, color: "#00A86B" },
+      { symbol: "VTI", name: "Vanguard Total Stock Market Index Fund ETF", price: 262.18, changePercent: 1.28, volume: "4.8M", aum: "$410B", expenseRatio: 0.03, yield: 1.35, high52w: 270.0, low52w: 212.4, color: "#8B1A1A" },
+      { symbol: "IWM", name: "iShares Russell 2000 ETF", price: 198.45, changePercent: 2.14, volume: "28.3M", aum: "$72B", expenseRatio: 0.19, yield: 1.18, high52w: 212.0, low52w: 162.8, color: "#4A148C" },
+      { symbol: "VOO", name: "Vanguard S&P 500 ETF", price: 471.82, changePercent: 1.38, volume: "5.2M", aum: "$482B", expenseRatio: 0.03, yield: 1.34, high52w: 482.0, low52w: 378.6, color: "#8B1A1A" },
     ],
     sector: [
       { symbol: "XLK", name: "Tech Select SPDR", price: 212.45, changePercent: 2.87, volume: "12.4M", aum: "$68B", expenseRatio: 0.09, yield: 0.62, high52w: 222.0, low52w: 164.3, color: "#0066CC" },
@@ -356,7 +292,7 @@ interface TopMoversWidgetProps {
 
 export function TopMoversWidget({
   title = "Top Movers",
-  description = "Today's biggest ETF moves, by category. A quick read on which corners of the market are leading and which are lagging.",
+  description = "Today's biggest ETF moves, by category.",
   moverData = data,
   hideCategoryFlipper = false,
 }: TopMoversWidgetProps = {}) {
@@ -365,16 +301,6 @@ export function TopMoversWidget({
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
   const etfs = moverData[moverType][category];
-  const isGainer = moverType === "gainers";
-
-  const sparklines = useMemo(
-    () =>
-      etfs.reduce<Record<string, number[]>>((acc, e) => {
-        acc[e.symbol] = makeSparkline(e.symbol, isGainer);
-        return acc;
-      }, {}),
-    [etfs, isGainer]
-  );
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
@@ -388,38 +314,37 @@ export function TopMoversWidget({
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price ($)", align: "right" as const },
-    { header: "Chg%", align: "right" as const },
-    { header: "1Y", align: "center" as const, minWidth: 64 },
-    { header: "1 Year", align: "right" as const, minWidth: 58 },
-    { header: "3 Year", align: "right" as const, minWidth: 58 },
-    { header: "5 Year", align: "right" as const, minWidth: 58 },
+    { header: "Price", align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
-    { header: "Yield", align: "right" as const, minWidth: 58 },
-    { header: "52W Range", align: "center" as const, minWidth: 110 },
+    { header: "1Y", align: "right" as const, minWidth: 72 },
+    { header: "3Y", align: "right" as const, minWidth: 72 },
+    { header: "5Y", align: "right" as const, minWidth: 72 },
+    { header: "Track Err", align: "right" as const, minWidth: 72 },
+    { header: "1Y Range", align: "center" as const, minWidth: 110 },
+    { header: "Volume", align: "right" as const, minWidth: 72 },
     { header: "Watchlist", align: "center" as const, minWidth: 80 },
   ];
 
   const rows = etfs.map((etf) => {
     const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    const r = mockReturns(etf.symbol);
     return [
-      <div key="name" className="flex items-center gap-2.5">
-        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
-        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
+      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
+          {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
+        </span>
       </div>,
-      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
-      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
-      <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} autoColor /></div>,
-      ...(() => { const r = mockReturns(etf.symbol); return [
-        <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
-        <span key="r3y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r3y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r3y >= 0 ? "+" : ""}{r.r3y.toFixed(1)}%</span>,
-        <span key="r5y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r5y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r5y >= 0 ? "+" : ""}{r.r5y.toFixed(1)}%</span>,
-      ]; })(),
       <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
       <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
-      <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "—"}</span>,
-      <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+      <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
+      <span key="r3y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r3y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r3y >= 0 ? "+" : ""}{r.r3y.toFixed(1)}%</span>,
+      <span key="r5y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r5y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r5y >= 0 ? "+" : ""}{r.r5y.toFixed(1)}%</span>,
+      <span key="te" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio < 0.2 ? (etf.expenseRatio * 3).toFixed(2) : (etf.expenseRatio * 0.8).toFixed(2)}%</span>,
+      <RangeBarInline key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+      <span key="vol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.volume}</span>,
       <div key="watch" className="flex justify-center">
         <button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90">
           <Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} />
@@ -427,6 +352,89 @@ export function TopMoversWidget({
       </div>,
     ];
   });
+
+  const moverDescriptions: Record<MoverType, { title: string; body: React.ReactNode }> = {
+    gainers: {
+      title: "Not all green is good",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Check what&apos;s behind the move</p><p className="text-[14px] text-muted-foreground mt-0.5">Scroll right to see returns over 1Y, 3Y, 5Y. A good day means nothing if the trend is down</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low expense + strong return = quality</p><p className="text-[14px] text-muted-foreground mt-0.5">ETFs that rise with low fees tend to hold gains better than expensive ones</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Niche ETFs spiking on hype</p><p className="text-[14px] text-muted-foreground mt-0.5">Thematic ETFs can jump on news but crash just as fast. Check the AUM and expense ratio</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High tracking error on a green day</p><p className="text-[14px] text-muted-foreground mt-0.5">If the ETF is up but its tracking error is wide, the move may not reflect the index</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    losers: {
+      title: "Red can mean opportunity",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Broad index ETFs dipping</p><p className="text-[14px] text-muted-foreground mt-0.5">When the whole market pulls back, low-cost index ETFs often bounce first</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compare the 1Y return to today</p><p className="text-[14px] text-muted-foreground mt-0.5">A fund down 2% today but up 15% this year is very different from one that&apos;s down all year</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Leveraged or inverse ETFs dropping</p><p className="text-[14px] text-muted-foreground mt-0.5">These are designed for day traders, not dip buyers. Losses compound differently</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sector ETFs in structural decline</p><p className="text-[14px] text-muted-foreground mt-0.5">If the sector itself is shrinking, the ETF won&apos;t recover just because it&apos;s cheap</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "most-active": {
+      title: "Volume tells you where attention is",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">High volume on broad ETFs</p><p className="text-[14px] text-muted-foreground mt-0.5">When SPY or QQQ volume spikes, the market is making a big move. Pay attention</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sector rotation signals</p><p className="text-[14px] text-muted-foreground mt-0.5">Money flowing into bond or gold ETFs often signals risk-off sentiment</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Volume from creation/redemption</p><p className="text-[14px] text-muted-foreground mt-0.5">ETF volume can spike from institutional rebalancing, not retail interest</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Thin ETFs with sudden volume</p><p className="text-[14px] text-muted-foreground mt-0.5">Low-AUM ETFs with volume spikes can have wide spreads. Check bid-ask before buying</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "near-52w-high": {
+      title: "New highs can mean new legs",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Broad index ETFs at highs</p><p className="text-[14px] text-muted-foreground mt-0.5">Historically, markets spend more time near highs than lows. This is normal</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Strong 1Y return backing the high</p><p className="text-[14px] text-muted-foreground mt-0.5">If the trailing return is solid, the high is earned, not a fluke</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Niche ETFs at highs with high expense</p><p className="text-[14px] text-muted-foreground mt-0.5">Expensive thematic ETFs at 52W highs may be priced for perfection</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don&apos;t chase highs without context</p><p className="text-[14px] text-muted-foreground mt-0.5">A 52W high with weak long-term returns could just be recovering from a deep fall</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+    "near-52w-low": {
+      title: "Lows deserve extra scrutiny",
+      body: (
+        <div className="text-left rounded-2xl border border-border/60 overflow-hidden">
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Bond ETFs near lows in a rate hike cycle</p><p className="text-[14px] text-muted-foreground mt-0.5">When rates peak, bond ETFs often recover. Timing matters here</p></div></div>
+            <div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low expense, diversified, and beaten down</p><p className="text-[14px] text-muted-foreground mt-0.5">A cheap, broad ETF at a 52W low is often a better buy than a cheap stock at a 52W low</p></div></div>
+          </div>
+          <div className="border-t border-border/60" />
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sector in structural decline</p><p className="text-[14px] text-muted-foreground mt-0.5">Coal, legacy retail, print media. Some lows are the new normal</p></div></div>
+            <div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low AUM + high tracking error at lows</p><p className="text-[14px] text-muted-foreground mt-0.5">Small ETFs at lows risk closure. If AUM is under 100M, tread carefully</p></div></div>
+          </div>
+        </div>
+      ),
+    },
+  };
 
   return (
     <ScrollableTableWidget
@@ -440,10 +448,13 @@ export function TopMoversWidget({
       tabs={moverTabs}
       activeTab={moverType}
       onTabChange={(id) => setMoverType(id as MoverType)}
+      tabDescription={moverDescriptions[moverType]}
       pillLayoutId="etf-mover-tab-pill"
       columns={columns}
       rows={rows}
-      scrollableMinWidth={620}
+      visibleDataCols={3}
+      rowHeight="h-[80px]"
+      scrollableMinWidth={480}
       animationKey={`${moverType}-${category}`}
       footer={{ label: "View More" }}
     />
@@ -1989,7 +2000,7 @@ export function ExploreByThemesWidget({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTheme(tab.id)}
+              onClick={(e) => { setActiveTheme(tab.id); scrollPillToCenter(e.currentTarget); }}
               className={cn(
                 "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
                 activeTheme === tab.id
@@ -2098,34 +2109,51 @@ function ExploreByAssetClassWidget() {
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => { const n = new Set(p); if (n.has(sym)) n.delete(sym); else n.add(sym); return n; });
 
-  const sparklines = useMemo(
-    () => etfs.reduce<Record<string, number[]>>((acc, e) => { acc[e.symbol] = makeSparkline(e.symbol, true); return acc; }, {}),
-    [etfs]
-  );
-
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price ($)", align: "right" as const },
-    { header: "Chg%", align: "right" as const },
-    { header: "1D", align: "center" as const, minWidth: 64 },
+    { header: "Price", align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
-    { header: "Yield", align: "right" as const, minWidth: 58 },
-    { header: "52W Range", align: "center" as const, minWidth: 110 },
+    { header: "1Y", align: "right" as const, minWidth: 72 },
+    { header: "3Y", align: "right" as const, minWidth: 72 },
+    { header: "5Y", align: "right" as const, minWidth: 72 },
+    { header: "Track Err", align: "right" as const, minWidth: 72 },
+    { header: "1Y Range", align: "center" as const, minWidth: 110 },
+    { header: "Volume", align: "right" as const, minWidth: 72 },
     { header: "Watchlist", align: "center" as const, minWidth: 80 },
   ];
 
-  const rows = etfs.map((etf) => [
-    <div key="name" className="flex items-center gap-2.5"><div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" /><p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p></div>,
-    <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
-    <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500")}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
-    <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} color={etf.changePercent >= 0 ? "#10b981" : "#ef4444"} /></div>,
-    <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
-    <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
-    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "\u2014"}</span>,
-    <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
-    <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
-  ]);
+  const rows = etfs.map((etf) => {
+    const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
+    const r = mockReturns(etf.symbol);
+    return [
+      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
+          {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
+        </span>
+      </div>,
+      <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
+      <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
+      <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
+      <span key="r3y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r3y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r3y >= 0 ? "+" : ""}{r.r3y.toFixed(1)}%</span>,
+      <span key="r5y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r5y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r5y >= 0 ? "+" : ""}{r.r5y.toFixed(1)}%</span>,
+      <span key="te" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio < 0.2 ? (etf.expenseRatio * 3).toFixed(2) : (etf.expenseRatio * 0.8).toFixed(2)}%</span>,
+      <RangeBarInline key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
+      <span key="vol" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.volume}</span>,
+      <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
+    ];
+  });
+
+  const assetClassDescriptions: Record<AssetClassId, { title: string; body: React.ReactNode }> = {
+    "fixed-income": { title: "Bonds are boring until they save you", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Cushion when stocks fall</p><p className="text-[14px] text-muted-foreground mt-0.5">Bond ETFs often hold steady or rise when equities drop. That&apos;s the whole point</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Predictable income</p><p className="text-[14px] text-muted-foreground mt-0.5">Look at the yield and expense ratio. After fees, that&apos;s roughly what you&apos;ll earn</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Rising rates hurt bond prices</p><p className="text-[14px] text-muted-foreground mt-0.5">When rates go up, existing bond ETFs lose value. Check the duration before buying</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Don&apos;t expect stock-like returns</p><p className="text-[14px] text-muted-foreground mt-0.5">Bonds are for stability, not growth. If you want 10%+ returns, this isn&apos;t it</p></div></div></div></div>) },
+    commodities: { title: "Gold, oil, and the things you can touch", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Inflation hedge</p><p className="text-[14px] text-muted-foreground mt-0.5">Gold and commodity ETFs tend to rise when inflation erodes the value of cash</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Uncorrelated to stocks</p><p className="text-[14px] text-muted-foreground mt-0.5">When equities zig, commodities sometimes zag. Good for diversification</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">No dividends, no earnings</p><p className="text-[14px] text-muted-foreground mt-0.5">Commodities don&apos;t generate income. Returns come purely from price movement</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Contango can eat returns</p><p className="text-[14px] text-muted-foreground mt-0.5">Futures-based commodity ETFs can lose value over time even if the commodity price is flat</p></div></div></div></div>) },
+    "real-estate": { title: "Own real estate without owning a building", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Regular dividend income</p><p className="text-[14px] text-muted-foreground mt-0.5">REITs must pay out 90% of income as dividends. Yields are often higher than stocks</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Real asset exposure</p><p className="text-[14px] text-muted-foreground mt-0.5">Office buildings, warehouses, apartments. Tangible assets backing your investment</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sensitive to interest rates</p><p className="text-[14px] text-muted-foreground mt-0.5">When rates rise, REITs often fall. They borrow heavily, so rate hikes hit hard</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Sector-specific risks</p><p className="text-[14px] text-muted-foreground mt-0.5">Office REITs post-COVID are very different from warehouse REITs. Know what you own</p></div></div></div></div>) },
+    currency: { title: "Betting on currencies is tricky", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Hedge your home currency risk</p><p className="text-[14px] text-muted-foreground mt-0.5">If you earn in INR but invest in USD, currency ETFs can offset FX swings</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Short-term tactical plays</p><p className="text-[14px] text-muted-foreground mt-0.5">Currency ETFs move on macro events. Useful if you have a view on rates or trade policy</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Not a long-term hold</p><p className="text-[14px] text-muted-foreground mt-0.5">Currencies don&apos;t compound like stocks. Long-term, they tend to revert to fair value</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Fees erode small moves</p><p className="text-[14px] text-muted-foreground mt-0.5">Currency ETFs have expense ratios that eat into already-small moves</p></div></div></div></div>) },
+    "multi-asset": { title: "One ETF, multiple asset classes", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Built-in diversification</p><p className="text-[14px] text-muted-foreground mt-0.5">Stocks, bonds, and alternatives in one fund. Set it and mostly forget it</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Good for beginners</p><p className="text-[14px] text-muted-foreground mt-0.5">If you&apos;re not sure how to allocate, these do it for you</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Less control</p><p className="text-[14px] text-muted-foreground mt-0.5">You can&apos;t adjust the mix. If you want more stocks and fewer bonds, you&apos;re stuck</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Higher expense ratios</p><p className="text-[14px] text-muted-foreground mt-0.5">The convenience costs more than buying the components yourself</p></div></div></div></div>) },
+    balanced: { title: "The steady middle ground", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Smoother ride</p><p className="text-[14px] text-muted-foreground mt-0.5">60/40 or similar stock-bond mixes reduce volatility without killing returns</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Auto-rebalancing</p><p className="text-[14px] text-muted-foreground mt-0.5">The fund rebalances for you. No need to sell winners to buy losers yourself</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Capped upside in bull runs</p><p className="text-[14px] text-muted-foreground mt-0.5">When stocks rally hard, the bond portion drags. That&apos;s the tradeoff for stability</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Not all balanced funds are equal</p><p className="text-[14px] text-muted-foreground mt-0.5">Check the actual allocation. Some balanced funds are 80% stocks</p></div></div></div></div>) },
+  };
 
   return (
     <ScrollableTableWidget
@@ -2134,141 +2162,14 @@ function ExploreByAssetClassWidget() {
       tabs={assetClassTabs}
       activeTab={activeClass}
       onTabChange={(id) => setActiveClass(id as AssetClassId)}
+      tabDescription={assetClassDescriptions[activeClass]}
       pillLayoutId="etf-asset-class-pill"
       columns={columns}
       rows={rows}
-      scrollableMinWidth={620}
+      visibleDataCols={3}
+      rowHeight="h-[80px]"
+      scrollableMinWidth={480}
       animationKey={activeClass}
-      footer={{ label: "View All" }}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Explore by Strategy Widget                                         */
-/* ------------------------------------------------------------------ */
-
-type StrategyId = "passive" | "active" | "value" | "growth" | "momentum" | "quality" | "low-vol" | "leveraged";
-
-const strategyTabs: { id: StrategyId; label: string }[] = [
-  { id: "active", label: "Active" },
-  { id: "passive", label: "Passive" },
-  { id: "value", label: "Value" },
-  { id: "growth", label: "Growth" },
-  { id: "momentum", label: "Momentum" },
-  { id: "quality", label: "Quality" },
-  { id: "low-vol", label: "Low Volatility" },
-  { id: "leveraged", label: "Leveraged" },
-];
-
-const strategyData: Record<StrategyId, ETF[]> = {
-  passive: [
-    { symbol: "VOO", name: "Vanguard S&P 500", price: 438.92, changePercent: 0.78, volume: "8.4M", aum: "$892B", expenseRatio: 0.03, yield: 1.32, high52w: 445.0, low52w: 362.5, color: "#8B1A1A" },
-    { symbol: "VTI", name: "Vanguard Total Stock", price: 248.34, changePercent: 0.62, volume: "4.2M", aum: "$384B", expenseRatio: 0.03, yield: 1.24, high52w: 252.0, low52w: 198.4, color: "#8B1A1A" },
-    { symbol: "BND", name: "Vanguard Total Bond", price: 72.45, changePercent: 0.34, volume: "8.2M", aum: "$108B", expenseRatio: 0.03, yield: 3.85, high52w: 75.2, low52w: 68.1, color: "#8B1A1A" },
-    { symbol: "VXUS", name: "Vanguard Total Intl", price: 58.34, changePercent: -0.42, volume: "4.2M", aum: "$65B", expenseRatio: 0.07, yield: 2.95, high52w: 62.8, low52w: 52.1, color: "#8B1A1A" },
-    { symbol: "VT", name: "Vanguard Total World", price: 108.42, changePercent: 0.48, volume: "2.8M", aum: "$38B", expenseRatio: 0.07, yield: 1.82, high52w: 112.0, low52w: 92.4, color: "#8B1A1A" },
-  ],
-  active: [
-    { symbol: "ARKK", name: "ARK Innovation", price: 48.92, changePercent: 4.85, volume: "22.6M", aum: "$8.2B", expenseRatio: 0.75, yield: null, high52w: 56.3, low52w: 32.8, color: "#FF4500" },
-    { symbol: "ARKG", name: "ARK Genomic Revolution", price: 32.18, changePercent: 2.42, volume: "4.8M", aum: "$2.1B", expenseRatio: 0.75, yield: null, high52w: 38.0, low52w: 22.4, color: "#FF4500" },
-    { symbol: "ARKQ", name: "ARK Autonomous Tech", price: 54.56, changePercent: 3.12, volume: "2.4M", aum: "$1.2B", expenseRatio: 0.75, yield: null, high52w: 62.0, low52w: 38.4, color: "#FF4500" },
-    { symbol: "AVUV", name: "Avantis US Small Cap Value", price: 88.42, changePercent: 1.24, volume: "1.8M", aum: "$12B", expenseRatio: 0.25, yield: 1.42, high52w: 92.0, low52w: 72.4, color: "#333333" },
-    { symbol: "DFAC", name: "Dimensional US Core Eq", price: 32.18, changePercent: 0.68, volume: "1.2M", aum: "$28B", expenseRatio: 0.19, yield: 1.12, high52w: 34.0, low52w: 26.4, color: "#333333" },
-  ],
-  value: [
-    { symbol: "VTV", name: "Vanguard Value", price: 158.42, changePercent: 0.42, volume: "2.8M", aum: "$118B", expenseRatio: 0.04, yield: 2.42, high52w: 162.0, low52w: 132.4, color: "#8B1A1A" },
-    { symbol: "SCHV", name: "Schwab US Large-Cap Value", price: 72.18, changePercent: 0.28, volume: "1.4M", aum: "$12B", expenseRatio: 0.04, yield: 2.28, high52w: 74.0, low52w: 60.4, color: "#333333" },
-    { symbol: "IWD", name: "iShares Russell 1000 Value", price: 172.34, changePercent: 0.56, volume: "3.2M", aum: "$58B", expenseRatio: 0.19, yield: 1.92, high52w: 178.0, low52w: 142.4, color: "#333333" },
-    { symbol: "RPV", name: "Invesco S&P 500 Pure Value", price: 82.56, changePercent: 0.82, volume: "0.8M", aum: "$3.2B", expenseRatio: 0.35, yield: 2.18, high52w: 86.0, low52w: 68.4, color: "#333333" },
-    { symbol: "AVLV", name: "Avantis US Large Cap Value", price: 58.42, changePercent: 0.34, volume: "0.6M", aum: "$8.4B", expenseRatio: 0.15, yield: 1.68, high52w: 60.0, low52w: 48.4, color: "#333333" },
-  ],
-  growth: [
-    { symbol: "VUG", name: "Vanguard Growth", price: 328.42, changePercent: 1.42, volume: "2.4M", aum: "$124B", expenseRatio: 0.04, yield: 0.52, high52w: 340.0, low52w: 262.4, color: "#8B1A1A" },
-    { symbol: "QQQ", name: "Invesco QQQ Trust", price: 442.18, changePercent: 1.24, volume: "52M", aum: "$252B", expenseRatio: 0.20, yield: 0.52, high52w: 460.0, low52w: 352.8, color: "#00CC66" },
-    { symbol: "IWF", name: "iShares Russell 1000 Growth", price: 308.56, changePercent: 1.18, volume: "2.8M", aum: "$82B", expenseRatio: 0.19, yield: 0.48, high52w: 320.0, low52w: 248.4, color: "#333333" },
-    { symbol: "SCHG", name: "Schwab US Large-Cap Growth", price: 88.42, changePercent: 1.34, volume: "1.8M", aum: "$28B", expenseRatio: 0.04, yield: 0.38, high52w: 92.0, low52w: 68.4, color: "#333333" },
-    { symbol: "RPG", name: "Invesco S&P 500 Pure Growth", price: 218.34, changePercent: 1.56, volume: "0.4M", aum: "$2.8B", expenseRatio: 0.35, yield: 0.12, high52w: 228.0, low52w: 172.4, color: "#333333" },
-  ],
-  momentum: [
-    { symbol: "MTUM", name: "iShares MSCI USA Momentum", price: 188.42, changePercent: 1.82, volume: "1.2M", aum: "$12B", expenseRatio: 0.15, yield: 0.82, high52w: 195.0, low52w: 152.4, color: "#333333" },
-    { symbol: "SPMO", name: "Invesco S&P 500 Momentum", price: 82.18, changePercent: 1.56, volume: "0.8M", aum: "$4.8B", expenseRatio: 0.13, yield: 0.68, high52w: 86.0, low52w: 64.4, color: "#333333" },
-    { symbol: "PDP", name: "Invesco DWA Momentum", price: 92.34, changePercent: 2.12, volume: "0.4M", aum: "$1.8B", expenseRatio: 0.62, yield: 0.42, high52w: 96.0, low52w: 72.4, color: "#333333" },
-    { symbol: "VFMO", name: "Vanguard US Momentum", price: 142.56, changePercent: 1.68, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.13, yield: 0.58, high52w: 148.0, low52w: 118.4, color: "#333333" },
-    { symbol: "DWAS", name: "Invesco DWA SmallCap Mom", price: 82.42, changePercent: 2.42, volume: "0.1M", aum: "$0.6B", expenseRatio: 0.60, yield: 0.22, high52w: 88.0, low52w: 62.4, color: "#333333" },
-  ],
-  quality: [
-    { symbol: "QUAL", name: "iShares MSCI USA Quality", price: 158.42, changePercent: 0.82, volume: "1.8M", aum: "$42B", expenseRatio: 0.15, yield: 1.12, high52w: 162.0, low52w: 128.4, color: "#333333" },
-    { symbol: "SPHQ", name: "Invesco S&P 500 Quality", price: 52.18, changePercent: 0.68, volume: "0.8M", aum: "$8.4B", expenseRatio: 0.15, yield: 1.28, high52w: 54.0, low52w: 42.4, color: "#333333" },
-    { symbol: "DGRW", name: "WisdomTree US Quality Div", price: 72.34, changePercent: 0.42, volume: "0.6M", aum: "$12B", expenseRatio: 0.28, yield: 1.82, high52w: 74.0, low52w: 60.4, color: "#333333" },
-    { symbol: "JQUA", name: "JPMorgan US Quality", price: 52.56, changePercent: 0.56, volume: "0.4M", aum: "$4.2B", expenseRatio: 0.12, yield: 0.92, high52w: 54.0, low52w: 42.4, color: "#333333" },
-    { symbol: "VFQY", name: "Vanguard US Quality", price: 128.42, changePercent: 0.72, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.13, yield: 1.08, high52w: 132.0, low52w: 104.4, color: "#333333" },
-  ],
-  "low-vol": [
-    { symbol: "USMV", name: "iShares MSCI USA Min Vol", price: 78.42, changePercent: 0.24, volume: "2.4M", aum: "$28B", expenseRatio: 0.15, yield: 1.68, high52w: 80.0, low52w: 68.4, color: "#333333" },
-    { symbol: "SPLV", name: "Invesco S&P 500 Low Vol", price: 62.18, changePercent: 0.18, volume: "1.8M", aum: "$12B", expenseRatio: 0.25, yield: 2.12, high52w: 64.0, low52w: 54.4, color: "#333333" },
-    { symbol: "SMMV", name: "iShares MSCI USA SmCap MinVol", price: 38.34, changePercent: 0.12, volume: "0.2M", aum: "$0.8B", expenseRatio: 0.20, yield: 1.42, high52w: 40.0, low52w: 32.4, color: "#333333" },
-    { symbol: "LGLV", name: "SPDR SSGA US Large Cap LowVol", price: 148.56, changePercent: 0.28, volume: "0.1M", aum: "$0.4B", expenseRatio: 0.12, yield: 1.92, high52w: 152.0, low52w: 128.4, color: "#333333" },
-    { symbol: "XMLV", name: "Invesco S&P MidCap Low Vol", price: 52.42, changePercent: 0.08, volume: "0.1M", aum: "$0.6B", expenseRatio: 0.25, yield: 1.82, high52w: 54.0, low52w: 44.4, color: "#333333" },
-  ],
-  leveraged: [
-    { symbol: "TQQQ", name: "ProShares UltraPro QQQ", price: 58.42, changePercent: 3.72, volume: "82M", aum: "$22B", expenseRatio: 0.86, yield: null, high52w: 68.0, low52w: 32.4, color: "#FF4500" },
-    { symbol: "UPRO", name: "ProShares UltraPro S&P", price: 68.18, changePercent: 2.34, volume: "18M", aum: "$4.2B", expenseRatio: 0.91, yield: null, high52w: 74.0, low52w: 38.4, color: "#FF4500" },
-    { symbol: "SOXL", name: "Direxion Semiconductor 3X", price: 28.34, changePercent: 5.42, volume: "42M", aum: "$8.4B", expenseRatio: 0.76, yield: null, high52w: 38.0, low52w: 12.4, color: "#FF4500" },
-    { symbol: "SPXL", name: "Direxion Daily S&P 500 3X", price: 142.56, changePercent: 2.28, volume: "4.2M", aum: "$3.8B", expenseRatio: 0.97, yield: null, high52w: 152.0, low52w: 82.4, color: "#FF4500" },
-    { symbol: "TNA", name: "Direxion Small Cap 3X", price: 32.42, changePercent: -3.82, volume: "12M", aum: "$1.8B", expenseRatio: 1.06, yield: null, high52w: 42.0, low52w: 18.4, color: "#FF4500" },
-  ],
-};
-
-function ExploreByStrategyWidget() {
-  const [activeStrategy, setActiveStrategy] = useState<StrategyId>("active");
-  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
-  const etfs = strategyData[activeStrategy];
-
-  const toggleBookmark = (sym: string) =>
-    setBookmarks((p) => { const n = new Set(p); if (n.has(sym)) n.delete(sym); else n.add(sym); return n; });
-
-  const sparklines = useMemo(
-    () => etfs.reduce<Record<string, number[]>>((acc, e) => { acc[e.symbol] = makeSparkline(e.symbol, e.changePercent >= 0); return acc; }, {}),
-    [etfs]
-  );
-
-  const columns = [
-    { header: "ETF", align: "left" as const },
-    { header: "Price ($)", align: "right" as const },
-    { header: "Chg%", align: "right" as const },
-    { header: "1D", align: "center" as const, minWidth: 64 },
-    { header: "AUM", align: "right" as const, minWidth: 72 },
-    { header: "Exp%", align: "right" as const, minWidth: 58 },
-    { header: "Yield", align: "right" as const, minWidth: 58 },
-    { header: "52W Range", align: "center" as const, minWidth: 110 },
-    { header: "Watchlist", align: "center" as const, minWidth: 80 },
-  ];
-
-  const rows = etfs.map((etf) => [
-    <div key="name" className="flex items-center gap-2.5"><div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" /><p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p></div>,
-    <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(1)}</span>,
-    <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500")}>{etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%</span>,
-    <div key="spark" className="flex justify-center"><Sparkline points={sparklines[etf.symbol]} color={etf.changePercent >= 0 ? "#10b981" : "#ef4444"} /></div>,
-    <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
-    <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
-    <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "\u2014"}</span>,
-    <Range52W key="range" low={etf.low52w} high={etf.high52w} current={etf.price} />,
-    <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
-  ]);
-
-  return (
-    <ScrollableTableWidget
-      title="Explore by Strategy"
-      description="Filter ETFs by how they invest — growth, value, dividends, low-volatility. Pick the approach first, ticker second."
-      tabs={strategyTabs}
-      activeTab={activeStrategy}
-      onTabChange={(id) => setActiveStrategy(id as StrategyId)}
-      pillLayoutId="etf-strategy-pill"
-      columns={columns}
-      rows={rows}
-      scrollableMinWidth={620}
-      animationKey={activeStrategy}
       footer={{ label: "View All" }}
     />
   );
@@ -2310,32 +2211,184 @@ const efficientETFs: Record<EfficiencyId, PopularETF[]> = {
 
 function MostEfficientETFsWidget() {
   const [activeTab, setActiveTab] = useState<EfficiencyId>("ultra-low-cost");
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const etfs = efficientETFs[activeTab];
+
+  const toggleBookmark = (sym: string) =>
+    setBookmarks((p) => { const n = new Set(p); if (n.has(sym)) n.delete(sym); else n.add(sym); return n; });
+
+  const columns = [
+    { header: "ETF", align: "left" as const },
+    { header: "Price", align: "right" as const, minWidth: 72 },
+    { header: "AUM", align: "right" as const, minWidth: 72 },
+    { header: "Exp%", align: "right" as const, minWidth: 58 },
+    { header: "1Y", align: "right" as const, minWidth: 72 },
+    { header: "3Y", align: "right" as const, minWidth: 72 },
+    { header: "5Y", align: "right" as const, minWidth: 72 },
+    { header: "Track Err", align: "right" as const, minWidth: 72 },
+    { header: "1Y Range", align: "center" as const, minWidth: 110 },
+    { header: "Watchlist", align: "center" as const, minWidth: 80 },
+  ];
+
+  const rows = etfs.map((etf) => {
+    const cd = popularETFToCardData(etf);
+    const chgColor = cd.change1d >= 0 ? "text-emerald-500" : "text-red-500";
+    return [
+      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{cd.price.toFixed(2)}</span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
+          {cd.change1d >= 0 ? "+" : ""}{cd.change1d.toFixed(2)}%
+        </span>
+      </div>,
+      <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
+      <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
+      <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", cd.return1y >= 0 ? "text-emerald-500" : "text-red-500")}>{cd.return1y >= 0 ? "+" : ""}{cd.return1y.toFixed(1)}%</span>,
+      <span key="r3y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", etf.return3y >= 0 ? "text-emerald-500" : "text-red-500")}>{etf.return3y >= 0 ? "+" : ""}{etf.return3y.toFixed(1)}%</span>,
+      <span key="r5y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", cd.return5y >= 0 ? "text-emerald-500" : "text-red-500")}>{cd.return5y >= 0 ? "+" : ""}{cd.return5y.toFixed(1)}%</span>,
+      <span key="te" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.trackingError.toFixed(2)}%</span>,
+      <RangeBarInline key="range" low={cd.price * 0.82} high={cd.price * 1.08} current={cd.price} />,
+      <div key="watch" className="flex justify-center"><button onClick={() => toggleBookmark(etf.symbol)} className="transition-transform active:scale-90"><Bookmark size={20} strokeWidth={1.8} className={cn("transition-colors", bookmarks.has(etf.symbol) ? "fill-foreground text-foreground" : "text-muted-foreground/50")} /></button></div>,
+    ];
+  });
+
+  const efficiencyDescriptions: Record<EfficiencyId, { title: string; body: React.ReactNode }> = {
+    "ultra-low-cost": { title: "Fees are the only guaranteed cost", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">0.03% means almost free</p><p className="text-[14px] text-muted-foreground mt-0.5">On 10,000 invested, you pay about 3 per year. That&apos;s less than a coffee</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Compare similar ETFs on expense</p><p className="text-[14px] text-muted-foreground mt-0.5">VOO and SPY hold the same stocks. VOO costs 0.03%, SPY costs 0.09%. Over 20 years, that gap matters</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Cheap doesn&apos;t mean good</p><p className="text-[14px] text-muted-foreground mt-0.5">A 0.03% ETF tracking a bad index is still a bad investment. Fees are just one input</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Watch for hidden costs</p><p className="text-[14px] text-muted-foreground mt-0.5">Tracking error, bid-ask spread, and FX conversion costs aren&apos;t in the expense ratio</p></div></div></div></div>) },
+    "low-tracking-error": { title: "Precision matters in passive investing", body: (<div className="text-left rounded-2xl border border-border/60 overflow-hidden"><div className="p-5 space-y-4"><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Low TE means it does what it says</p><p className="text-[14px] text-muted-foreground mt-0.5">A tracking error under 0.05% means the ETF closely mirrors the index. No surprises</p></div></div><div className="flex gap-3"><Check size={18} strokeWidth={2.5} className="shrink-0 text-gain mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Better for long-term holds</p><p className="text-[14px] text-muted-foreground mt-0.5">Small tracking errors compound. Over decades, tighter tracking means more of the index return</p></div></div></div><div className="border-t border-border/60" /><div className="p-5 space-y-4"><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">TE varies by market</p><p className="text-[14px] text-muted-foreground mt-0.5">Emerging market ETFs naturally have higher TE than US ones. Compare within the same category</p></div></div><div className="flex gap-3"><X size={18} strokeWidth={2.5} className="shrink-0 text-loss mt-0.5" /><div><p className="text-[15px] font-semibold text-foreground">Past TE doesn&apos;t guarantee future TE</p><p className="text-[14px] text-muted-foreground mt-0.5">Fund manager changes, rebalancing events, and market stress can all widen tracking error</p></div></div></div></div>) },
+  };
+
+  return (
+    <ScrollableTableWidget
+      title="Most Efficient ETFs"
+      description="Lowest fees, tightest tracking. Costs compound over decades."
+      tabs={efficiencyTabs}
+      activeTab={activeTab}
+      onTabChange={(id) => setActiveTab(id as EfficiencyId)}
+      tabDescription={efficiencyDescriptions[activeTab]}
+      pillLayoutId="etf-efficiency-pill"
+      columns={columns}
+      rows={rows}
+      visibleDataCols={3}
+      rowHeight="h-[80px]"
+      scrollableMinWidth={480}
+      animationKey={activeTab}
+      footer={{ label: "View All" }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Explore by Top AMCs Widget                                         */
+/* ------------------------------------------------------------------ */
+
+type AMCId = "vanguard" | "ishares" | "spdr" | "invesco" | "schwab" | "ark" | "fidelity";
+
+const amcTabs: { id: AMCId; label: string }[] = [
+  { id: "vanguard", label: "Vanguard" },
+  { id: "ishares", label: "iShares" },
+  { id: "spdr", label: "SPDR" },
+  { id: "invesco", label: "Invesco" },
+  { id: "schwab", label: "Schwab" },
+  { id: "ark", label: "ARK" },
+  { id: "fidelity", label: "Fidelity" },
+];
+
+const amcETFs: Record<AMCId, PopularETF[]> = {
+  vanguard: [
+    { name: "Vanguard S&P 500 ETF", symbol: "VOO", return3y: 10.8, aum: "892B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Vanguard Total Stock Market", symbol: "VTI", return3y: 9.6, aum: "384B", expenseRatio: 0.03, trackingError: 0.02 },
+    { name: "Vanguard Growth ETF", symbol: "VUG", return3y: 12.8, aum: "124B", expenseRatio: 0.04, trackingError: 0.03 },
+    { name: "Vanguard Value ETF", symbol: "VTV", return3y: 8.4, aum: "118B", expenseRatio: 0.04, trackingError: 0.02 },
+    { name: "Vanguard Total Bond Market", symbol: "BND", return3y: 1.2, aum: "108B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Vanguard Dividend Appreciation", symbol: "VIG", return3y: 9.4, aum: "82B", expenseRatio: 0.06, trackingError: 0.02 },
+    { name: "Vanguard FTSE Developed Markets", symbol: "VEA", return3y: 6.4, aum: "118B", expenseRatio: 0.05, trackingError: 0.03 },
+    { name: "Vanguard Total International", symbol: "VXUS", return3y: 6.2, aum: "65B", expenseRatio: 0.07, trackingError: 0.03 },
+  ],
+  ishares: [
+    { name: "iShares Core S&P 500", symbol: "IVV", return3y: 10.7, aum: "478B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "iShares Russell 2000 ETF", symbol: "IWM", return3y: 6.8, aum: "72B", expenseRatio: 0.19, trackingError: 0.04 },
+    { name: "iShares Core US Aggregate Bond", symbol: "AGG", return3y: 1.4, aum: "98B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "iShares Core MSCI EAFE", symbol: "IEFA", return3y: 7.1, aum: "112B", expenseRatio: 0.07, trackingError: 0.02 },
+    { name: "iShares MSCI USA Min Vol", symbol: "USMV", return3y: 7.8, aum: "28B", expenseRatio: 0.15, trackingError: 0.01 },
+    { name: "iShares 20+ Year Treasury Bond", symbol: "TLT", return3y: -4.2, aum: "52B", expenseRatio: 0.15, trackingError: 0.02 },
+    { name: "iShares MSCI USA Quality", symbol: "QUAL", return3y: 10.2, aum: "42B", expenseRatio: 0.15, trackingError: 0.02 },
+    { name: "iShares Core S&P Mid-Cap", symbol: "IJH", return3y: 7.6, aum: "78B", expenseRatio: 0.05, trackingError: 0.02 },
+  ],
+  spdr: [
+    { name: "SPDR S&P 500 ETF Trust", symbol: "SPY", return3y: 10.6, aum: "518B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "Technology Select Sector SPDR", symbol: "XLK", return3y: 16.2, aum: "68B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "Financial Select Sector SPDR", symbol: "XLF", return3y: 11.4, aum: "42B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "Energy Select Sector SPDR", symbol: "XLE", return3y: 18.6, aum: "38B", expenseRatio: 0.09, trackingError: 0.03 },
+    { name: "Health Care Select Sector SPDR", symbol: "XLV", return3y: 8.4, aum: "41B", expenseRatio: 0.09, trackingError: 0.02 },
+    { name: "SPDR Gold Shares", symbol: "GLD", return3y: 8.2, aum: "62B", expenseRatio: 0.40, trackingError: 0.01 },
+  ],
+  invesco: [
+    { name: "Invesco QQQ Trust Series 1", symbol: "QQQ", return3y: 14.2, aum: "252B", expenseRatio: 0.20, trackingError: 0.04 },
+    { name: "Invesco S&P 500 Equal Weight", symbol: "RSP", return3y: 8.8, aum: "52B", expenseRatio: 0.20, trackingError: 0.06 },
+    { name: "Invesco S&P 500 Low Volatility", symbol: "SPLV", return3y: 6.4, aum: "12B", expenseRatio: 0.25, trackingError: 0.04 },
+    { name: "Invesco DB Commodity Index", symbol: "DBC", return3y: 12.6, aum: "2.4B", expenseRatio: 0.85, trackingError: 0.18 },
+    { name: "Invesco Solar ETF", symbol: "TAN", return3y: -8.4, aum: "1.8B", expenseRatio: 0.67, trackingError: 0.22 },
+    { name: "Invesco S&P 500 Momentum", symbol: "SPMO", return3y: 12.8, aum: "4.8B", expenseRatio: 0.13, trackingError: 0.04 },
+  ],
+  schwab: [
+    { name: "Schwab US Large-Cap ETF", symbol: "SCHX", return3y: 10.4, aum: "42B", expenseRatio: 0.03, trackingError: 0.01 },
+    { name: "Schwab US Dividend Equity", symbol: "SCHD", return3y: 8.8, aum: "56B", expenseRatio: 0.06, trackingError: 0.02 },
+    { name: "Schwab US Broad Market", symbol: "SCHB", return3y: 9.8, aum: "28B", expenseRatio: 0.03, trackingError: 0.02 },
+    { name: "Schwab US Small-Cap ETF", symbol: "SCHA", return3y: 6.2, aum: "18B", expenseRatio: 0.04, trackingError: 0.03 },
+    { name: "Schwab International Equity", symbol: "SCHF", return3y: 5.8, aum: "38B", expenseRatio: 0.06, trackingError: 0.03 },
+    { name: "Schwab Emerging Markets Equity", symbol: "SCHE", return3y: 2.6, aum: "8.4B", expenseRatio: 0.11, trackingError: 0.05 },
+  ],
+  ark: [
+    { name: "ARK Innovation ETF", symbol: "ARKK", return3y: -12.4, aum: "8.2B", expenseRatio: 0.75, trackingError: 0.28 },
+    { name: "ARK Genomic Revolution", symbol: "ARKG", return3y: -18.2, aum: "2.1B", expenseRatio: 0.75, trackingError: 0.32 },
+    { name: "ARK Autonomous Tech & Robotics", symbol: "ARKQ", return3y: -4.6, aum: "1.2B", expenseRatio: 0.75, trackingError: 0.26 },
+    { name: "ARK Next Generation Internet", symbol: "ARKW", return3y: -8.8, aum: "1.4B", expenseRatio: 0.75, trackingError: 0.30 },
+    { name: "ARK Fintech Innovation", symbol: "ARKF", return3y: -6.2, aum: "0.8B", expenseRatio: 0.75, trackingError: 0.24 },
+    { name: "ARK Space Exploration", symbol: "ARKX", return3y: -10.4, aum: "0.3B", expenseRatio: 0.75, trackingError: 0.34 },
+  ],
+  fidelity: [
+    { name: "Fidelity MSCI Information Tech", symbol: "FTEC", return3y: 15.8, aum: "8.4B", expenseRatio: 0.08, trackingError: 0.03 },
+    { name: "Fidelity Total Market Index", symbol: "FSKAX", return3y: 9.8, aum: "82B", expenseRatio: 0.015, trackingError: 0.01 },
+    { name: "Fidelity US Bond Index", symbol: "FXNAX", return3y: 1.4, aum: "62B", expenseRatio: 0.025, trackingError: 0.01 },
+    { name: "Fidelity Blue Chip Growth", symbol: "FBGRX", return3y: 14.2, aum: "42B", expenseRatio: 0.48, trackingError: 0.18 },
+    { name: "Fidelity MSCI Health Care", symbol: "FHLC", return3y: 8.2, aum: "4.2B", expenseRatio: 0.08, trackingError: 0.03 },
+    { name: "Fidelity Low Volatility Factor", symbol: "FDLO", return3y: 9.2, aum: "2.8B", expenseRatio: 0.29, trackingError: 0.06 },
+  ],
+};
+
+function ExploreByTopAMCsWidget() {
+  const [activeAMC, setActiveAMC] = useState<AMCId>("vanguard");
+  const etfs = amcETFs[activeAMC];
   const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
   const row2 = etfs.slice(Math.ceil(etfs.length / 2));
 
   return (
     <div>
-      <h2 className="text-[18px] font-bold tracking-tight text-foreground">Most Efficient ETFs</h2>
-      <p className="text-[13px] text-muted-foreground leading-snug mt-1 mb-3">
-        Lowest fees, tightest tracking. Two ETFs holding the same thing aren&apos;t equal — costs compound over decades.
-      </p>
+      <h2 className="text-[18px] font-bold tracking-tight text-foreground">Explore by Top AMCs</h2>
+      <p className="text-[14px] text-muted-foreground mt-0.5 mb-3">The biggest names in ETFs. Pick the house, browse the best.</p>
 
-      <div className="flex gap-2 mb-4">
-        {efficiencyTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors",
-              activeTab === tab.id ? "bg-foreground text-background" : "text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* AMC pills */}
+      <div className="-mx-5 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-5 py-0.5">
+          {amcTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={(e) => { setActiveAMC(tab.id); scrollPillToCenter(e.currentTarget); }}
+              className={cn(
+                "flex-shrink-0 whitespace-nowrap rounded-full flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 text-[14px] font-semibold transition-colors",
+                activeAMC === tab.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground"
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-muted-foreground/25 shrink-0" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Cards — horizontal scroll, 2 rows */}
       <div className="-mx-5 overflow-x-auto no-scrollbar">
         <div className="flex flex-col gap-3 px-5" style={{ width: "max-content" }}>
           <div className="flex gap-3">
@@ -2362,17 +2415,517 @@ function MostEfficientETFsWidget() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  ETF Learn Hero (Thumbnail Grid)                                    */
+/* ------------------------------------------------------------------ */
+
+const etfLearnRow1 = [
+  "What is an ETF?",
+  "Why expense ratios matter",
+  "How to compare ETFs",
+  "Index funds explained",
+  "ETF vs mutual fund",
+];
+
+const etfLearnRow2 = [
+  "How to read a factsheet",
+  "What is AUM?",
+  "Tracking error explained",
+  "Dividend ETFs 101",
+  "Sector ETFs demystified",
+];
+
+const heroNoiseStyle = {
+  backgroundImage:
+    "url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E')",
+};
+
+function MarqueePillRow({ items, direction = "left", speed = 30 }: { items: string[]; direction?: "left" | "right"; speed?: number }) {
+  const doubled = [...items, ...items];
+  return (
+    <div className="overflow-hidden">
+      <motion.div
+        className="flex gap-2 whitespace-nowrap"
+        animate={{ x: direction === "left" ? ["0%", "-50%"] : ["-50%", "0%"] }}
+        transition={{ duration: speed, repeat: Infinity, ease: "linear" }}
+      >
+        {doubled.map((title, i) => (
+          <button
+            key={`${title}-${i}`}
+            className="shrink-0 flex items-center gap-2 rounded-full bg-background/10 border border-background/10 px-4 py-2.5 active:scale-[0.97] transition-transform"
+          >
+            <Play
+              size={12}
+              strokeWidth={2.5}
+              className="text-background/60 shrink-0"
+              fill="hsl(var(--background) / 0.6)"
+            />
+            <span className="text-[13px] font-semibold text-background/80">
+              {title}
+            </span>
+          </button>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function ETFLearnHero() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="relative overflow-hidden rounded-3xl bg-foreground cursor-pointer"
+    >
+      <div className="absolute inset-0 opacity-[0.03]" style={heroNoiseStyle} />
+      <div className="relative pt-36 pb-5">
+        <div className="flex flex-col items-center text-center mb-5 px-6">
+          <p className="text-[20px] font-bold text-background leading-[1.3] mb-1">
+            New to ETFs? Start here.
+          </p>
+          <p className="text-[15px] text-background/50 leading-relaxed">
+            Short, visual, no finance degree required.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <MarqueePillRow items={etfLearnRow1} direction="left" speed={45} />
+          <MarqueePillRow items={etfLearnRow2} direction="right" speed={40} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  ETF Level Up — 7 modules, each with bite-size stories              */
+/* ------------------------------------------------------------------ */
+
+interface LearnStory {
+  id: string;
+  format: "statement" | "comparison" | "number" | "action";
+  headline: string;
+  body: string;
+  leftLabel?: string;
+  rightLabel?: string;
+  leftPoints?: string[];
+  rightPoints?: string[];
+  stat?: string;
+  statCaption?: string;
+}
+
+interface LearnModule {
+  id: string;
+  title: string;
+  stories: LearnStory[];
+}
+
+const etfModules: LearnModule[] = [
+  {
+    id: "what-is-etf",
+    title: "What's an ETF?",
+    stories: [
+      { id: "m1s1", format: "statement", headline: "An ETF is a playlist,\nnot a single song.", body: "A basket of stocks, bonds, or assets — packaged into one thing you can buy and sell like a single stock." },
+      { id: "m1s2", format: "number", headline: "One purchase.\nHundreds of companies.", body: "Instead of picking individual stocks, an ETF gives you instant exposure to an entire market, sector, or theme.", stat: "500+", statCaption: "stocks in one S&P 500 ETF" },
+      { id: "m1s3", format: "comparison", headline: "ETF vs Stock.\nWhat's the difference?", body: "", leftLabel: "ETF", rightLabel: "Stock", leftPoints: ["Holds many companies", "Built-in diversification", "Lower risk per holding", "Managed by a fund"], rightPoints: ["One company", "Concentrated bet", "Higher risk per pick", "You pick everything"] },
+      { id: "m1s4", format: "statement", headline: "ETFs trade live,\njust like stocks.", body: "Buy at 10am, sell at 2pm. Real-time pricing, no waiting for end-of-day settlement." },
+      { id: "m1s5", format: "statement", headline: "Who makes ETFs?", body: "Vanguard, iShares (BlackRock), SPDR (State Street), Invesco, Schwab, ARK, Fidelity. The biggest names in finance compete to give you the lowest fees." },
+      { id: "m1s6", format: "action", headline: "You're already smarter\nthan most beginners.", body: "That's the foundation. The next modules go deeper — fees, comparisons, and how to pick your first." },
+    ],
+  },
+  {
+    id: "why-etfs",
+    title: "Why ETFs?",
+    stories: [
+      { id: "m2s1", format: "statement", headline: "Diversification used\nto be expensive.", body: "Before ETFs, you'd need thousands of dollars and dozens of trades to build a diversified portfolio. Now it takes one click." },
+      { id: "m2s2", format: "number", headline: "One purchase.\nHundreds of companies.", body: "An S&P 500 ETF gives you ownership in Apple, Microsoft, Amazon, and 497 other companies — in a single trade.", stat: "500+", statCaption: "stocks in one S&P 500 ETF" },
+      { id: "m2s3", format: "statement", headline: "Lower fees than\nalmost every alternative.", body: "The best ETFs charge 0.03% per year. That's 30 cents for every 1,000 invested. Try finding that in a mutual fund." },
+      { id: "m2s4", format: "statement", headline: "Buy and sell\nall day long.", body: "Unlike mutual funds that settle once a day, ETFs trade on the exchange in real-time. You're always in control of your timing." },
+      { id: "m2s5", format: "statement", headline: "Buffett's advice:\njust buy an index ETF.", body: "Warren Buffett has said most people would be better off buying a low-cost index fund and holding it forever. He's not wrong." },
+      { id: "m2s6", format: "number", headline: "The fastest-growing\ninvestment product.", body: "Globally, trillions of dollars have moved into ETFs in the last decade. This isn't a trend — it's a structural shift in how people invest.", stat: "10T+", statCaption: "global ETF assets under management" },
+    ],
+  },
+  {
+    id: "etf-vs-mf",
+    title: "ETF vs Mutual Fund",
+    stories: [
+      { id: "m3s1", format: "statement", headline: "Same idea.\nDifferent packaging.", body: "Both ETFs and mutual funds pool money to buy a basket of assets. The difference is in how they trade, what they cost, and how they're taxed." },
+      { id: "m3s2", format: "comparison", headline: "Side by side.", body: "", leftLabel: "ETF", rightLabel: "Mutual Fund", leftPoints: ["Trades on exchange", "Real-time pricing", "Buy/sell anytime", "You set the price"], rightPoints: ["Trades once a day", "End-of-day NAV", "Orders settle at close", "Fund sets the price"] },
+      { id: "m3s3", format: "number", headline: "Fees: ETFs\nusually win.", body: "The average mutual fund charges 0.50-1.00% per year. The best ETFs charge 0.03%. Over decades, that gap is enormous.", stat: "0.03%", statCaption: "vs 0.75% average mutual fund" },
+      { id: "m3s4", format: "statement", headline: "Trading flexibility\nis a superpower.", body: "Need to exit a position at 11am because news just broke? With an ETF, you can. With a mutual fund, you wait until market close." },
+      { id: "m3s5", format: "statement", headline: "Tax efficiency:\nETFs have the edge.", body: "ETFs use a creation/redemption mechanism that minimizes capital gains distributions. Translation: you keep more of your returns." },
+      { id: "m3s6", format: "statement", headline: "So when would you\npick a mutual fund?", body: "Some workplace retirement plans only offer mutual funds. Some active managers only run mutual funds. Outside those cases, ETFs usually win." },
+      { id: "m3s7", format: "action", headline: "Now you know\nthe difference.", body: "ETFs: lower cost, more flexible, more tax efficient. Mutual funds: still useful, but for specific situations." },
+    ],
+  },
+  {
+    id: "reading-label",
+    title: "Reading the Label",
+    stories: [
+      { id: "m4s1", format: "statement", headline: "Every ETF has\na nutrition label.", body: "Expense ratio, AUM, tracking error, yield. These four numbers tell you almost everything you need to know." },
+      { id: "m4s2", format: "number", headline: "Expense ratio:\nthe annual fee.", body: "This is what the fund charges you per year, as a percentage of your investment. Lower is almost always better.", stat: "0.03%", statCaption: "is what a good ETF costs" },
+      { id: "m4s3", format: "number", headline: "AUM: how big\nis the fund?", body: "Assets Under Management. Bigger funds are more liquid, have tighter spreads, and are less likely to shut down.", stat: "892B", statCaption: "Vanguard S&P 500 ETF" },
+      { id: "m4s4", format: "number", headline: "Tracking error:\nhow accurate is it?", body: "An index ETF tries to match its benchmark. Tracking error measures how far off it lands. Think of it as precision.", stat: "<0.05%", statCaption: "is excellent tracking" },
+      { id: "m4s5", format: "statement", headline: "Yield: what it\npays you.", body: "Some ETFs distribute dividends. Yield tells you how much income you'll earn as a percentage of the price. Not every ETF pays one." },
+      { id: "m4s6", format: "comparison", headline: "Good label vs\nbad label.", body: "", leftLabel: "Good", rightLabel: "Watch out", leftPoints: ["Exp ratio under 0.10%", "AUM over 1B", "Tracking error < 0.05%", "Clear benchmark"], rightPoints: ["Exp ratio over 0.50%", "AUM under 100M", "Tracking error > 0.20%", "Vague strategy"] },
+      { id: "m4s7", format: "action", headline: "You can now read\nany ETF page.", body: "Four numbers. That's your cheat sheet. From here, it's just practice." },
+    ],
+  },
+  {
+    id: "low-fees",
+    title: "Power of Low Fees",
+    stories: [
+      { id: "m5s1", format: "statement", headline: "Fees are invisible.\nThat's the problem.", body: "You never see a bill. The fee is quietly deducted from your returns every day. Out of sight, out of mind — and out of your pocket." },
+      { id: "m5s2", format: "statement", headline: "0.03% vs 1.00%.\nBarely a difference?", body: "It sounds trivial. Less than a dollar per year on a small investment. But money compounds — and so do fees." },
+      { id: "m5s3", format: "number", headline: "Over 30 years,\nthat's 9,000 gone.", body: "Invest 10,000 at 8% annual return. At 0.03%, you'd have about 33,000. At 1.00%, only 24,000. Same market. Different fee. 9,000 gap.", stat: "9,000", statCaption: "lost to high fees over 30 years" },
+      { id: "m5s4", format: "statement", headline: "Compound interest\nworks for you.\nFees work against you.", body: "Every dollar taken in fees is a dollar that can't compound. Over decades, the missing growth on those dollars adds up silently." },
+      { id: "m5s5", format: "statement", headline: "The cheapest ETFs\nin the world.", body: "Vanguard, Schwab, and iShares compete fiercely on price. Some ETFs now charge 0.03% or even 0.00%. The fee war benefits you." },
+      { id: "m5s6", format: "action", headline: "Always check the fee\nbefore you buy.", body: "It's the one thing guaranteed to affect your returns. Everything else is uncertain. The fee is a fact." },
+    ],
+  },
+  {
+    id: "first-etf",
+    title: "Your First ETF",
+    stories: [
+      { id: "m6s1", format: "statement", headline: "Start broad.\nGet fancy later.", body: "Your first ETF should be boring. A total market or S&P 500 fund. Low fee, high AUM, tight tracking. That's your foundation." },
+      { id: "m6s2", format: "statement", headline: "S&P 500 ETFs:\nthe default starting point.", body: "VOO, IVV, SPY — they all track the same 500 companies. The difference is tiny (fees, AUM). Any of them works." },
+      { id: "m6s3", format: "statement", headline: "Total market ETFs:\neven broader.", body: "VTI or ITOT hold thousands of stocks — large, mid, and small cap. One fund, the entire US stock market." },
+      { id: "m6s4", format: "comparison", headline: "What to check.\nWhat to skip.", body: "", leftLabel: "Check", rightLabel: "Skip", leftPoints: ["Expense ratio", "AUM size", "Tracking error", "What index it follows"], rightPoints: ["Past week's returns", "Fund manager's name", "Star ratings", "Marketing material"] },
+      { id: "m6s5", format: "comparison", headline: "Smart moves vs\ncommon traps.", body: "", leftLabel: "Smart moves", rightLabel: "Common traps", leftPoints: ["Start with broad index", "Keep fees under 0.10%", "Stay consistent", "Think in decades"], rightPoints: ["Chase hot sector ETFs", "Ignore the expense ratio", "Buy 10 overlapping ETFs", "Try leveraged ETFs blind"] },
+      { id: "m6s6", format: "statement", headline: "Your first ETF doesn't\nhave to be perfect.", body: "It just has to be started. You can always add more, switch later, or refine. The biggest mistake is waiting." },
+      { id: "m6s7", format: "action", headline: "Go explore.\nYou're ready.", body: "Browse the ETF tab, compare a few options, and when you're confident — start small." },
+    ],
+  },
+  {
+    id: "beyond-basics",
+    title: "Beyond Basics",
+    stories: [
+      { id: "m7s1", format: "statement", headline: "You know the basics.\nLet's go deeper.", body: "There's a whole world beyond S&P 500 ETFs. Sectors, bonds, international, dividends, themes — each serves a different purpose." },
+      { id: "m7s2", format: "statement", headline: "Sector ETFs:\nbetting on industries.", body: "Technology, healthcare, energy, financials. Sector ETFs let you overweight industries you believe in — without picking individual stocks." },
+      { id: "m7s3", format: "statement", headline: "Bond ETFs:\nthe safety net.", body: "Bonds are the counterweight to stocks. When markets crash, bonds often hold steady. A bond ETF adds stability to your portfolio." },
+      { id: "m7s4", format: "statement", headline: "International ETFs:\nbeyond the US.", body: "The US is 60% of the global stock market. The other 40% includes Europe, Asia, and emerging markets. Diversify geographically." },
+      { id: "m7s5", format: "number", headline: "Dividend ETFs:\ngetting paid to hold.", body: "Some ETFs focus on companies that pay regular dividends. It's like earning rent on your investments.", stat: "3.8%", statCaption: "average yield on dividend ETFs" },
+      { id: "m7s6", format: "statement", headline: "Thematic ETFs:\nAI, clean energy, crypto.", body: "These ETFs bet on trends and narratives. Higher risk, more exciting, but make sure you understand what you're buying." },
+      { id: "m7s7", format: "statement", headline: "Leveraged ETFs:\nhandle with care.", body: "2x and 3x ETFs amplify daily returns. Great for a day, dangerous for a year. They decay over time. Not for beginners." },
+      { id: "m7s8", format: "action", headline: "Keep learning.\nThe market rewards\nthe curious.", body: "Every concept you understand is an edge. Not against others — against your own impulses." },
+    ],
+  },
+];
+
+/* ── Fullscreen Module Viewer ── */
+
+const LEARN_DURATION = 8000;
+
+function ModuleViewer({
+  isOpen,
+  onClose,
+  initialModuleIdx = 0,
+  onStorySeen,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  initialModuleIdx?: number;
+  onStorySeen?: (moduleId: string, storyIdx: number) => void;
+}) {
+  const [modIdx, setModIdx] = useState(initialModuleIdx);
+  const [idx, setIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startRef = useRef(0);
+  const elapsedRef = useRef(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const currentMod = etfModules[modIdx];
+  const total = currentMod.stories.length;
+  const story = currentMod.stories[idx];
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const resetStory = useCallback(() => {
+    setIdx(0);
+    setProgress(0);
+    elapsedRef.current = 0;
+  }, []);
+
+  const goNextModule = useCallback(() => {
+    if (modIdx < etfModules.length - 1) {
+      setModIdx(modIdx + 1);
+      resetStory();
+    } else {
+      onClose();
+    }
+  }, [modIdx, onClose, resetStory]);
+
+  const goNext = useCallback(() => {
+    if (idx < total - 1) { setIdx(idx + 1); setProgress(0); elapsedRef.current = 0; }
+    else goNextModule();
+  }, [idx, total, goNextModule]);
+
+  const goPrev = useCallback(() => {
+    if (idx > 0) { setIdx(idx - 1); setProgress(0); elapsedRef.current = 0; }
+  }, [idx]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setModIdx(initialModuleIdx);
+    resetStory();
+  }, [isOpen, initialModuleIdx, resetStory]);
+
+  useEffect(() => {
+    if (isOpen && currentMod) onStorySeen?.(currentMod.id, idx);
+  }, [isOpen, modIdx, idx, currentMod, onStorySeen]);
+
+  useEffect(() => {
+    if (!isOpen || paused) { clearTimer(); return; }
+    startRef.current = Date.now();
+    timerRef.current = setInterval(() => {
+      const el = elapsedRef.current + (Date.now() - startRef.current);
+      const p = Math.min(el / LEARN_DURATION, 1);
+      setProgress(p);
+      if (p >= 1) goNext();
+    }, 50);
+    return clearTimer;
+  }, [isOpen, paused, idx, modIdx, goNext, clearTimer]);
+
+  const handleTap = (e: React.MouseEvent) => {
+    const x = e.clientX;
+    const w = window.innerWidth;
+    if (x < w * 0.3) goPrev();
+    else goNext();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    setPaused(true);
+    elapsedRef.current += Date.now() - startRef.current;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setPaused(false);
+    if (!touchStartRef.current) return;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStartRef.current.x);
+    touchStartRef.current = null;
+    if (dy < -60 && dx < Math.abs(dy) * 0.7) {
+      goNextModule();
+    }
+  };
+
+  if (!isOpen || !story) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-neutral-950 overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={modIdx}
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "-100%" }}
+          transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+          className="absolute inset-0 flex flex-col bg-neutral-950"
+          onClick={handleTap}
+          onPointerDown={() => { setPaused(true); elapsedRef.current += Date.now() - startRef.current; }}
+          onPointerUp={() => setPaused(false)}
+        >
+          {/* Progress bars */}
+          <div className="flex gap-1 px-4 pt-3 pb-2">
+            {currentMod.stories.map((_, i) => (
+              <div key={i} className="flex-1 h-[2px] rounded-full bg-white/20 overflow-hidden">
+                <div
+                  className="h-full bg-white rounded-full"
+                  style={{ width: i < idx ? "100%" : i === idx ? `${progress * 100}%` : "0%", transition: i === idx ? "none" : "width 0.2s" }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-2">
+            <span className="text-[12px] font-semibold text-white/50 tracking-wider uppercase">
+              {currentMod.title} · {modIdx + 1}/{etfModules.length}
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="text-white/60 text-[14px] font-semibold active:text-white transition-colors"
+            >
+              Close
+            </button>
+          </div>
+
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center px-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={story.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="w-full max-w-[380px]"
+          >
+            {story.format === "statement" && (
+              <div className="text-center">
+                <p className="text-[28px] font-bold text-white leading-[1.2] tracking-tight whitespace-pre-line mb-5">{story.headline}</p>
+                <div className="h-px w-10 bg-white/20 mx-auto mb-5" />
+                <p className="text-[16px] text-white/55 leading-relaxed">{story.body}</p>
+              </div>
+            )}
+            {story.format === "number" && (
+              <div className="text-center">
+                <p className="text-[56px] font-black text-white leading-none tracking-tight tabular-nums mb-2">{story.stat}</p>
+                <p className="text-[14px] text-white/40 mb-8">{story.statCaption}</p>
+                <p className="text-[24px] font-bold text-white leading-[1.2] tracking-tight whitespace-pre-line mb-4">{story.headline}</p>
+                <p className="text-[15px] text-white/50 leading-relaxed">{story.body}</p>
+              </div>
+            )}
+            {story.format === "comparison" && (
+              <div>
+                <p className="text-[24px] font-bold text-white leading-[1.2] tracking-tight whitespace-pre-line text-center mb-6">{story.headline}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-white/8 p-4">
+                    <p className="text-[13px] font-bold text-white/80 uppercase tracking-wider mb-3">{story.leftLabel}</p>
+                    <div className="space-y-2.5">
+                      {story.leftPoints?.map((p, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <Check size={14} strokeWidth={3} className="shrink-0 text-white/60 mt-0.5" />
+                          <span className="text-[13px] text-white/60 leading-tight">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/4 p-4">
+                    <p className="text-[13px] font-bold text-white/40 uppercase tracking-wider mb-3">{story.rightLabel}</p>
+                    <div className="space-y-2.5">
+                      {story.rightPoints?.map((p, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <X size={14} strokeWidth={3} className="shrink-0 text-white/30 mt-0.5" />
+                          <span className="text-[13px] text-white/40 leading-tight">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {story.format === "action" && (
+              <div className="text-center">
+                <p className="text-[28px] font-bold text-white leading-[1.2] tracking-tight whitespace-pre-line mb-5">{story.headline}</p>
+                <div className="h-px w-10 bg-white/20 mx-auto mb-5" />
+                <p className="text-[16px] text-white/55 leading-relaxed">{story.body}</p>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+          {/* Footer */}
+          <div className="px-8 pb-8 text-center space-y-2">
+            <p className="text-[11px] font-semibold text-white/30 uppercase tracking-[0.2em]">
+              {idx + 1} of {total}
+            </p>
+            {modIdx < etfModules.length - 1 && (
+              <p className="text-[10px] text-white/20">
+                Swipe up for next module
+              </p>
+            )}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Level Up Footer — Module Rings ── */
+
+function ETFLevelUpFooter() {
+  const [activeModuleIdx, setActiveModuleIdx] = useState<number | null>(null);
+  const [seenMap, setSeenMap] = useState<Record<string, Set<number>>>({});
+
+  const handleStorySeen = useCallback((moduleId: string, storyIdx: number) => {
+    setSeenMap((prev) => {
+      const modSeen = new Set(prev[moduleId] ?? []);
+      modSeen.add(storyIdx);
+      return { ...prev, [moduleId]: modSeen };
+    });
+  }, []);
+
+
+  return (
+    <>
+      <div>
+        <div className="flex items-baseline justify-between mb-3">
+          <div>
+            <h2 className="text-[18px] font-bold tracking-tight text-foreground">Level Up</h2>
+            <p className="text-[14px] text-muted-foreground mt-0.5">Pick a topic. Start from your level.</p>
+          </div>
+        </div>
+
+        <div className="-mx-5 overflow-x-auto no-scrollbar">
+          <div className="flex gap-4 px-5 py-1">
+            {etfModules.map((mod) => {
+              const modSeen = seenMap[mod.id]?.size ?? 0;
+              return (
+                <div key={mod.id} className="flex flex-col items-center gap-1.5 shrink-0">
+                  <StoryRing
+                    totalStories={mod.stories.length}
+                    readCount={modSeen}
+                    size={64}
+                    onClick={() => setActiveModuleIdx(etfModules.indexOf(mod))}
+                  >
+                    <div className="h-full w-full bg-neutral-800 flex items-center justify-center">
+                      <span className="text-[16px] font-bold text-white/70">
+                        {etfModules.indexOf(mod) + 1}
+                      </span>
+                    </div>
+                  </StoryRing>
+                  <p className="text-[13px] font-semibold text-muted-foreground text-center leading-tight w-[76px]">
+                    {mod.title}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {activeModuleIdx !== null && (
+            <ModuleViewer
+              isOpen={activeModuleIdx !== null}
+              onClose={() => setActiveModuleIdx(null)}
+              initialModuleIdx={activeModuleIdx}
+              onStorySeen={handleStorySeen}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
+  );
+}
+
 export function ETFFundedNotTraded() {
   return (
     <div className="space-y-14 px-5 pt-5 pb-4">
+      <ETFLearnHero />
+      <ExploreByTopAMCsWidget />
       <PromoBanner />
       <PopularETFsWidget />
       <TopMoversWidget />
       <ExploreByThemesWidget />
       <ExploreByAssetClassWidget />
       <HeatmapWidget />
-      <ExploreByStrategyWidget />
       <MostEfficientETFsWidget />
+      <ETFLevelUpFooter />
     </div>
   );
 }
