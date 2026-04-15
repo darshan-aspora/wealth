@@ -86,7 +86,7 @@ export function MarketTable<T>({ columns, data, onRowClick }: MarketTableProps<T
 // Helper: render a percentage cell with gain/loss color
 export function PctCell({ value }: { value: number }) {
   return (
-    <span className={cn("tabular-nums", value >= 0 ? "text-gain" : "text-loss")}>
+    <span className={cn("text-[14px] tabular-nums font-medium", value >= 0 ? "text-gain" : "text-loss")}>
       {value >= 0 ? "+" : ""}
       {value.toFixed(2)}%
     </span>
@@ -128,7 +128,7 @@ export function RangeBar({ low, high, current }: { low: number; high: number; cu
 // Helper: render a change cell with color
 export function ChangeCell({ value, isUp }: { value: string; isUp: boolean }) {
   return (
-    <span className={cn("tabular-nums", isUp ? "text-gain" : "text-loss")}>
+    <span className={cn("text-[14px] tabular-nums font-medium", isUp ? "text-gain" : "text-loss")}>
       {value}
     </span>
   );

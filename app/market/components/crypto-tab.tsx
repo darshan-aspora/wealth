@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MarketTable, ChangeCell, type TableColumn } from "./market-table";
-import { SectionHeader } from "./section-header";
+
+
+import { ScrollableTableWidget, type STWColumn } from "@/components/scrollable-table-widget";
+import { ChangeCell } from "./market-table";
 
 // ---- Types ----
 interface CryptoRow {
@@ -18,14 +17,6 @@ interface CryptoRow {
   marketCap: string;
   volume: string;
   category: string[];
-}
-
-interface TrendingCoin {
-  name: string;
-  symbol: string;
-  price: string;
-  changePct: string;
-  isUp: boolean;
 }
 
 // ---- Filter config ----
@@ -49,68 +40,29 @@ const CRYPTO_DATA: CryptoRow[] = [
   { name: "Shiba Inu",  symbol: "SHIB", price: "0.00002",change: "+0.000001",changePct: "+3.54%", isUp: true,  marketCap: "13.8B",  volume: "982M",   category: ["Meme"] },
 ];
 
-const TRENDING_COINS: TrendingCoin[] = [
-  { name: "Solana",    symbol: "SOL",  price: "172.45",    changePct: "+5.32%", isUp: true },
-  { name: "Uniswap",   symbol: "UNI",  price: "12.47",     changePct: "+5.32%", isUp: true },
-  { name: "Avalanche", symbol: "AVAX", price: "38.72",     changePct: "+4.21%", isUp: true },
-  { name: "Shiba Inu", symbol: "SHIB", price: "0.00002341",changePct: "+3.54%", isUp: true },
-  { name: "Cardano",   symbol: "ADA",  price: "0.4521",    changePct: "+3.08%", isUp: true },
+// ---- STW columns ----
+const cryptoColumns: STWColumn[] = [
+  { header: "Name", align: "left" },
+  { header: "Price", align: "right", minWidth: 90 },
+  { header: "% Chg", align: "right", minWidth: 80 },
+  { header: "Change", align: "right", minWidth: 80 },
+  { header: "Mkt Cap", align: "right", minWidth: 80 },
+  { header: "Vol (24h)", align: "right", minWidth: 80 },
 ];
 
-// ---- Table columns ----
-const cryptoColumns: TableColumn<CryptoRow>[] = [
-  {
-    key: "name",
-    label: "Name",
-    align: "left",
-    frozen: true,
-    minWidth: 150,
-    render: (r) => (
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold">
-          {r.symbol.slice(0, 2)}
-        </div>
-        <div className="text-[14px] font-bold text-foreground">{r.name}</div>
-      </div>
-    ),
-  },
-  {
-    key: "price",
-    label: "Price",
-    align: "right",
-    render: (r) => (
-      <span className="tabular-nums text-foreground">{r.price}</span>
-    ),
-  },
-  {
-    key: "changePct",
-    label: "% Chg",
-    align: "right",
-    render: (r) => <ChangeCell value={r.changePct} isUp={r.isUp} />,
-  },
-  {
-    key: "change",
-    label: "Change",
-    align: "right",
-    render: (r) => <ChangeCell value={r.change} isUp={r.isUp} />,
-  },
-  {
-    key: "marketCap",
-    label: "Mkt Cap",
-    align: "right",
-    render: (r) => (
-      <span className="tabular-nums text-muted-foreground">{r.marketCap}</span>
-    ),
-  },
-  {
-    key: "volume",
-    label: "Vol (24h)",
-    align: "right",
-    render: (r) => (
-      <span className="tabular-nums text-muted-foreground">{r.volume}</span>
-    ),
-  },
-];
+function cryptoRows(data: CryptoRow[]): React.ReactNode[][] {
+  return data.map((r) => [
+    <div key="name" className="flex items-center gap-2.5">
+      <div className="h-8 w-8 shrink-0 rounded-full bg-muted" />
+      <div className="text-[14px] font-semibold text-foreground">{r.name}</div>
+    </div>,
+    <span key="price" className="text-[14px] tabular-nums font-medium text-foreground">{r.price}</span>,
+    <ChangeCell key="pct" value={r.changePct} isUp={r.isUp} />,
+    <ChangeCell key="chg" value={r.change} isUp={r.isUp} />,
+    <span key="mcap" className="text-[14px] tabular-nums font-medium text-muted-foreground">{r.marketCap}</span>,
+    <span key="vol" className="text-[14px] tabular-nums font-medium text-muted-foreground">{r.volume}</span>,
+  ]);
+}
 
 // ---- Component ----
 export function CryptoTab() {
@@ -123,101 +75,23 @@ export function CryptoTab() {
 
   return (
     <div className="pb-8">
-      {/* ── Top Cryptocurrencies ── */}
+      {/* Top Cryptocurrencies */}
       <div className="px-5 pt-5">
-        <SectionHeader
+        <ScrollableTableWidget
           title="Top Cryptocurrencies"
-          subtitle="Real-time prices across major crypto assets"
+          description="Real-time prices across major crypto assets"
+          tabs={FILTERS.map((f) => ({ id: f, label: f }))}
+          activeTab={filter}
+          onTabChange={(id) => setFilter(id as CryptoFilter)}
+          pillLayoutId="crypto-pill"
+          columns={cryptoColumns}
+          rows={cryptoRows(filteredData)}
+          visibleDataCols={2}
+          scrollableMinWidth={420}
+          rowHeight="h-[64px]"
+          animationKey={`crypto-${filter}`}
+          footer={{ label: "View All Crypto" }}
         />
-
-        {/* Filter pills */}
-        <div className="mb-3 -mx-5 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 px-5 py-0.5">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  filter === f
-                    ? "bg-foreground text-background"
-                    : "border border-border/60 text-muted-foreground"
-                )}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`crypto-${filter}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <MarketTable columns={cryptoColumns} data={filteredData} />
-          </motion.div>
-        </AnimatePresence>
-
-        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-          View All Crypto
-          <ChevronRight size={14} />
-        </button>
-      </div>
-
-      <div className="h-6" />
-
-      {/* ── Trending ── */}
-      <div className="px-5">
-        <SectionHeader
-          title="Trending"
-          subtitle="Most searched coins in the last 24 hours"
-        />
-
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-          {TRENDING_COINS.map((coin, i) => (
-            <div
-              key={coin.symbol}
-              className={cn(
-                "flex items-center justify-between px-4 py-3.5 transition-colors active:bg-muted/30",
-                i > 0 && "border-t border-border/30"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className="w-5 text-[13px] font-bold text-muted-foreground tabular-nums">
-                  {i + 1}
-                </span>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold">
-                  {coin.symbol.slice(0, 2)}
-                </div>
-                <div>
-                  <p className="text-[15px] font-semibold text-foreground">
-                    {coin.name}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground">
-                    {coin.symbol}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[14px] font-semibold tabular-nums text-foreground">
-                  {coin.price}
-                </p>
-                <p
-                  className={cn(
-                    "text-[13px] font-medium tabular-nums",
-                    coin.isUp ? "text-gain" : "text-loss"
-                  )}
-                >
-                  {coin.changePct}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

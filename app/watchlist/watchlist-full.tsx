@@ -581,12 +581,19 @@ function WatchlistTable({
 function WatchlistTabContent({
   watchlist,
   onDeleteStock,
+  onRename,
+  onDeleteWatchlist,
+  canDeleteWatchlist,
 }: {
   watchlist: WatchlistData;
   onDeleteStock: (symbol: string) => void;
+  onRename: (id: string, label: string) => void;
+  onDeleteWatchlist: (id: string) => void;
+  canDeleteWatchlist: boolean;
 }) {
   const router = useRouter();
   const [sortIdx, setSortIdx] = useState(0);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   const sortKey = SORT_CYCLE[sortIdx].key;
   const sortLabel = SORT_CYCLE[sortIdx].label;
@@ -608,9 +615,12 @@ function WatchlistTabContent({
 
       {/* Stats bar + flipper sort */}
       <div className="flex items-center justify-between px-5 py-2.5">
-        <span className="text-[14px] text-muted-foreground">
-          {watchlist.stocks.length} items
-        </span>
+        <button
+          onClick={() => setEditSheetOpen(true)}
+          className="text-[14px] font-semibold text-muted-foreground active:opacity-70 transition-opacity"
+        >
+          Edit
+        </button>
 
         {/* Sort flipper — cycles on tap */}
         <button
@@ -640,7 +650,130 @@ function WatchlistTabContent({
         onTapStock={(symbol) => router.push(`/stocks/${symbol}`)}
       />
 
+      {/* Edit watchlist sheet */}
+      <EditWatchlistSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        watchlist={watchlist}
+        onDeleteStock={onDeleteStock}
+        onRename={onRename}
+        onDeleteWatchlist={() => {
+          onDeleteWatchlist(watchlist.id);
+          setEditSheetOpen(false);
+        }}
+        canDeleteWatchlist={canDeleteWatchlist}
+      />
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Edit Watchlist Sheet                                               */
+/* ------------------------------------------------------------------ */
+
+function EditWatchlistSheet({
+  open,
+  onOpenChange,
+  watchlist,
+  onDeleteStock,
+  onRename,
+  onDeleteWatchlist,
+  canDeleteWatchlist,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  watchlist: WatchlistData;
+  onDeleteStock: (symbol: string) => void;
+  onRename: (id: string, label: string) => void;
+  onDeleteWatchlist: () => void;
+  canDeleteWatchlist: boolean;
+}) {
+  const [name, setName] = useState(watchlist.label);
+
+  useEffect(() => {
+    if (open) setName(watchlist.label);
+  }, [open, watchlist.label]);
+
+  const commitRename = () => {
+    const trimmed = name.trim();
+    if (trimmed && trimmed !== watchlist.label) onRename(watchlist.id, trimmed);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] flex flex-col p-0" hideClose>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <h3 className="text-[17px] font-semibold text-foreground">Edit watchlist</h3>
+          {canDeleteWatchlist && (
+            <button
+              onClick={onDeleteWatchlist}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground active:bg-muted/40"
+              aria-label="Delete watchlist"
+            >
+              <Trash2 size={18} strokeWidth={1.8} />
+            </button>
+          )}
+        </div>
+
+        {/* Name input */}
+        <div className="px-5 pb-4">
+          <div className="flex items-center gap-2 rounded-xl border border-border/60 px-4 py-3">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { commitRename(); (e.target as HTMLInputElement).blur(); }
+              }}
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-foreground outline-none"
+              placeholder="Watchlist name"
+            />
+            <Pencil size={16} strokeWidth={1.8} className="flex-shrink-0 text-muted-foreground/70" />
+          </div>
+        </div>
+
+        {/* Stock list */}
+        <div className="flex-1 overflow-y-auto">
+          {watchlist.stocks.length === 0 ? (
+            <p className="px-5 py-8 text-center text-[14px] text-muted-foreground">
+              No stocks in this watchlist yet.
+            </p>
+          ) : (
+            watchlist.stocks.map((stock, i) => (
+              <div
+                key={stock.symbol}
+                className={cn(
+                  "flex items-center gap-3 px-5 py-3.5",
+                  i < watchlist.stocks.length - 1 && "border-b border-border/30"
+                )}
+              >
+                <p className="flex-1 min-w-0 text-[15px] font-medium text-foreground truncate">
+                  {stock.name}
+                </p>
+                <button
+                  onClick={() => onDeleteStock(stock.symbol)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 active:bg-muted/40"
+                  aria-label={`Remove ${stock.symbol}`}
+                >
+                  <X size={18} strokeWidth={1.8} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Save button */}
+        <div className="px-5 pt-3 pb-6 bg-background border-t border-border/30">
+          <button
+            onClick={() => { commitRename(); onOpenChange(false); }}
+            className="w-full rounded-full bg-foreground py-3.5 text-[15px] font-semibold text-background active:opacity-90 transition-opacity"
+          >
+            Save
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -986,6 +1119,9 @@ export function WatchlistContent({ onSettingsRef }: { onSettingsRef?: React.Muta
               <WatchlistTabContent
                 watchlist={activeWatchlist}
                 onDeleteStock={(symbol) => handleDeleteStock(activeWatchlist.id, symbol)}
+                onRename={handleRenameWatchlist}
+                onDeleteWatchlist={handleDeleteWatchlist}
+                canDeleteWatchlist={watchlists.length > 1}
               />
             ) : (
               <WatchlistEmptyState watchlist={activeWatchlist} />

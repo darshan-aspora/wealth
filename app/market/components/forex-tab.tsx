@@ -1,7 +1,7 @@
 "use client";
 
-import { MarketTable, ChangeCell, type TableColumn } from "./market-table";
-import { SectionHeader } from "./section-header";
+import { ScrollableTableWidget, type STWColumn } from "@/components/scrollable-table-widget";
+import { ChangeCell } from "./market-table";
 
 // ---- Types ----
 interface ForexRow {
@@ -50,49 +50,43 @@ const FOREX_DATA: ForexRow[] = [
   { pair: "USD/AED", fullName: "US Dollar / UAE Dirham", last: "3.6725", change: "+0.0001", changePct: "+0.00%", dayRange: "3.6722 — 3.6728", spread: "1.0", isUp: true, category: "Exotic" },
 ];
 
-// ---- Table columns: Currency Pairs ----
-const forexColumns: TableColumn<ForexRow>[] = [
-  {
-    key: "pair", label: "Pair", align: "left", frozen: true, minWidth: 150,
-    render: (r) => (
-      <div>
-        <div className="text-[14px] font-semibold text-foreground">{r.pair}</div>
-        <div className="text-[12px] text-muted-foreground">{r.fullName}</div>
-      </div>
-    ),
-  },
-  {
-    key: "last", label: "Last Price", align: "right",
-    render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last}</span>,
-  },
-  {
-    key: "change", label: "Change", align: "right",
-    render: (r) => <ChangeCell value={r.change} isUp={r.isUp} />,
-  },
-  {
-    key: "changePct", label: "Change %", align: "right",
-    render: (r) => <ChangeCell value={r.changePct} isUp={r.isUp} />,
-  },
-  {
-    key: "dayRange", label: "Day Range", align: "right",
-    render: (r) => <span className="text-[12px] tabular-nums text-muted-foreground">{r.dayRange}</span>,
-  },
-  {
-    key: "spread", label: "Spread", align: "right",
-    render: (r) => <span className="tabular-nums text-muted-foreground">{r.spread}</span>,
-  },
+// ---- STW columns ----
+const forexColumns: STWColumn[] = [
+  { header: "Pair", align: "left" },
+  { header: "Last Price", align: "right", minWidth: 80 },
+  { header: "Change", align: "right", minWidth: 80 },
+  { header: "Change %", align: "right", minWidth: 80 },
+  { header: "Day Range", align: "right", minWidth: 140 },
+  { header: "Spread", align: "right", minWidth: 70 },
 ];
+
+function forexRows(data: ForexRow[]): React.ReactNode[][] {
+  return data.map((r) => [
+    <span key="pair" className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.pair}</span>,
+    <span key="last" className="text-[14px] tabular-nums font-medium text-foreground">{r.last}</span>,
+    <ChangeCell key="chg" value={r.change} isUp={r.isUp} />,
+    <ChangeCell key="pct" value={r.changePct} isUp={r.isUp} />,
+    <span key="range" className="text-[14px] tabular-nums font-medium text-muted-foreground">{r.dayRange}</span>,
+    <span key="spread" className="text-[14px] tabular-nums font-medium text-muted-foreground">{r.spread}</span>,
+  ]);
+}
 
 // ---- Component ----
 export function ForexTab() {
   return (
     <div className="pb-8">
       <div className="px-5 pt-5">
-        <SectionHeader
+        <ScrollableTableWidget
           title="Currency Pairs"
-          subtitle="Real-time forex rates across major, minor & exotic pairs"
+          description="Real-time forex rates across major, minor & exotic pairs"
+          pillLayoutId="forex-pill"
+          columns={forexColumns}
+          rows={forexRows(FOREX_DATA)}
+          visibleDataCols={2}
+          scrollableMinWidth={450}
+          rowHeight="h-[58px]"
+          footer={{ label: "View All Pairs" }}
         />
-        <MarketTable columns={forexColumns} data={FOREX_DATA} />
       </div>
     </div>
   );

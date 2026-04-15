@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+
+/** Mock day-change for every ticker referenced in news */
+const TICKER_DAY_CHANGE: Record<string, number> = {
+  NVDA: +5.42, AMD: +3.18, PLTR: +7.61, LMT: +1.05,
+  CRWD: +4.83, PANW: +2.14, AAPL: +0.92, ASML: +3.47,
+  TSM: +2.65, TSLA: -2.81, MSFT: +2.36, AMZN: +1.74,
+  LLY: +3.92, NVO: +1.53, JPM: +1.28, SPY: +0.86,
+  META: +2.97, SNAP: -1.24, BA: +4.15, UAL: +3.62,
+  COIN: +6.38, MSTR: +4.71, WMT: +0.63, V: +1.41,
+  MA: +1.18,
+};
 
 interface NewsArticle {
   title: string;
@@ -99,30 +109,18 @@ const NEWS_ARTICLES: NewsArticle[] = [
 
 export function NewsTab() {
   return (
-    <div className="pb-8 pt-3">
-      <div className="px-5 mb-4">
-        <h3 className="text-[17px] font-bold text-foreground">Market News</h3>
-        <p className="mt-0.5 text-[13px] text-muted-foreground">
-          {NEWS_ARTICLES.length} articles &middot; Latest first
-        </p>
-      </div>
-
+    <div className="pb-8 pt-1">
       <div className="flex flex-col">
         {NEWS_ARTICLES.map((article, i) => (
           <article
             key={i}
-            className={cn(
-              "flex gap-3.5 px-5 py-3.5",
-              i < NEWS_ARTICLES.length - 1 && "border-b border-border/30"
-            )}
+            className="flex gap-3.5 px-5 py-5"
           >
             {/* Text content */}
             <div className="flex-1 min-w-0">
               {/* Publisher + time */}
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground shrink-0">
-                  {article.publisher[0]}
-                </span>
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="flex h-[18px] w-[18px] rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0" />
                 <span className="text-[13px] font-medium text-muted-foreground">
                   {article.publisher}
                 </span>
@@ -133,28 +131,35 @@ export function NewsTab() {
               </div>
 
               {/* Title */}
-              <h4 className="text-[15px] font-semibold leading-snug text-foreground line-clamp-2">
+              <h4 className="text-[14px] font-semibold leading-snug text-foreground line-clamp-2">
                 {article.title}
               </h4>
 
               {/* Ticker badges */}
               {article.tickers.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {article.tickers.map((ticker) => (
-                    <Link
-                      key={ticker}
-                      href={`/stocks/${ticker}`}
-                      className="inline-flex items-center rounded-md bg-muted/60 px-2 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors active:bg-muted"
-                    >
-                      {ticker}
-                    </Link>
-                  ))}
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {article.tickers.map((ticker) => {
+                    const pct = TICKER_DAY_CHANGE[ticker] ?? 0;
+                    const isGain = pct >= 0;
+                    return (
+                      <Link
+                        key={ticker}
+                        href={`/stocks/${ticker}`}
+                        className="inline-flex items-center gap-1.5 text-[13px] font-semibold transition-colors active:opacity-70"
+                      >
+                        <span className="text-muted-foreground">{ticker}</span>
+                        <span className={isGain ? "text-gain" : "text-loss"}>
+                          {isGain ? "+" : ""}{pct.toFixed(2)}%
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Placeholder image */}
-            <div className="h-[72px] w-[72px] shrink-0 rounded-xl self-center bg-muted" />
+            <div className="h-[72px] w-[72px] shrink-0 rounded-xl self-center bg-zinc-300 dark:bg-zinc-700" />
           </article>
         ))}
       </div>

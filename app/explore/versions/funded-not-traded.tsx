@@ -536,70 +536,70 @@ const smartCollections: Collection[] = [
     name: "Tech Giants",
     description: "High-growth silicon leaders dominating the global digital infrastructure and AI sector.",
     return1y: 4.2, return3y: 18.7, return5y: 32.4,
-    stocks: 15, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 15, logos: ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"],
     minAmount: 1234, customisable: true, weighting: "Market Cap", type: "Stocks",
   },
   {
     name: "AI & Robotics",
     description: "Top AI, automation & chip companies driving the next wave of computing.",
     return1y: 12.8, return3y: 42.1, return5y: 68.3,
-    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 10, logos: ["NVDA", "AMD", "PLTR", "GOOGL", "MSFT"],
     minAmount: 500, weighting: "Equal", type: "Stocks",
   },
   {
     name: "Clean Energy",
     description: "Solar, wind & EV ecosystem shaping the future of sustainable infrastructure.",
     return1y: -2.4, return3y: 8.9, return5y: 24.1,
-    stocks: 12, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 12, logos: ["TSLA", "ENPH", "FSLR", "NEE", "PLUG"],
     minAmount: 750, customisable: true, weighting: "Equal", type: "Stocks",
   },
   {
     name: "Global ETF Pack",
     description: "Broad exposure across US, Europe, and emerging markets through top ETFs.",
     return1y: 8.1, return3y: 12.4, return5y: 22.8,
-    stocks: 0, etfs: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 0, etfs: 8, logos: ["SPY", "QQQ", "VWO", "EFA", "AGG"],
     minAmount: 250, weighting: "Custom", type: "ETFs",
   },
   {
     name: "ETF Starter Kit",
     description: "The 5 ETFs every new investor should know. Simple, diversified, low cost.",
     return1y: 9.4, return3y: 14.2, return5y: 19.6,
-    stocks: 0, etfs: 5, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 0, etfs: 5, logos: ["VOO", "VTI", "QQQ", "BND", "VEA"],
     minAmount: 100, weighting: "Equal", type: "ETFs",
   },
   {
     name: "Nano Cap Winners",
     description: "Small companies with outsized returns. High risk, high reward micro-cap picks.",
     return1y: 34.2, return3y: 52.8, return5y: 78.1,
-    stocks: 12, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 12, logos: ["SMCI", "IONQ", "RKLB", "JOBY", "DNA"],
     minAmount: 200, weighting: "Equal", type: "Stocks",
   },
   {
     name: "Dividend Machines",
     description: "Stocks that pay you to hold them. 25+ years of consecutive dividend increases.",
     return1y: 6.8, return3y: 10.2, return5y: 14.5,
-    stocks: 10, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 10, logos: ["JNJ", "KO", "PG", "PEP", "MMM"],
     minAmount: 500, customisable: true, weighting: "Market Cap", type: "Stocks",
   },
   {
     name: "Healthcare Innovation",
     description: "Biotech, medtech and digital health companies reshaping how we treat disease.",
     return1y: 3.2, return3y: 15.8, return5y: 28.4,
-    stocks: 7, etfs: 3, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 7, etfs: 3, logos: ["LLY", "UNH", "ISRG", "DXCM", "MRNA"],
     minAmount: 600, weighting: "Equal", type: "Mixed",
   },
   {
     name: "Cybersecurity",
     description: "The companies protecting the digital world. Every breach makes this sector more essential.",
     return1y: 11.4, return3y: 28.6, return5y: 45.2,
-    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 8, logos: ["CRWD", "PANW", "ZS", "FTNT", "NET"],
     minAmount: 400, weighting: "Custom", type: "Stocks",
   },
   {
     name: "FAANG+",
     description: "The original tech titans plus the next generation. The stocks that move the market.",
     return1y: 5.8, return3y: 20.4, return5y: 35.6,
-    stocks: 8, logos: ["bg-muted", "bg-muted", "bg-muted"],
+    stocks: 8, logos: ["META", "AAPL", "AMZN", "NFLX", "GOOGL"],
     minAmount: 800, customisable: true, weighting: "Market Cap", type: "Stocks",
   },
 ];
@@ -611,8 +611,7 @@ const smartCollections: Collection[] = [
 function CollectionCardAlt({ c }: { c: Collection }) {
   return (
     <button className="w-full rounded-2xl border border-border/60 p-5 text-left active:scale-[0.98] transition-transform">
-      <div className="flex items-start gap-3 mb-2">
-        <div className="h-10 w-10 shrink-0 rounded-xl bg-muted-foreground/20 mt-0.5" />
+      <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-[16px] font-bold text-foreground leading-tight">{c.name}</h3>
           <p className="text-[14px] text-muted-foreground">
@@ -620,6 +619,16 @@ function CollectionCardAlt({ c }: { c: Collection }) {
             {c.type === "ETFs" && `${c.etfs} ETFs`}
             {c.type === "Mixed" && `${c.stocks} Stocks · ${c.etfs} ETFs`}
           </p>
+        </div>
+        {/* Overlapping logo stack */}
+        <div className="flex shrink-0">
+          {c.logos.slice(0, 4).map((_, i) => (
+            <div
+              key={i}
+              className="h-7 w-7 rounded-full bg-zinc-300 dark:bg-zinc-600 border-2 border-background"
+              style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 5 - i }}
+            />
+          ))}
         </div>
       </div>
       <p className="text-[14px] text-muted-foreground leading-relaxed mb-3">{c.description}</p>

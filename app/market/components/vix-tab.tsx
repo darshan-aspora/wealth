@@ -1,7 +1,7 @@
 "use client";
 
-import { MarketTable, PctCell, AlertButton, type TableColumn } from "./market-table";
-import { SectionHeader } from "./section-header";
+import { ScrollableTableWidget, type STWColumn } from "@/components/scrollable-table-widget";
+import { PctCell, AlertButton } from "./market-table";
 
 // ---- Types ----
 interface VixRow {
@@ -42,93 +42,60 @@ const VIX_DATA: VixRow[] = [
   { name: "MOVE Index (Bond VIX)", country: "US", last: 98.42, today: -0.84, fiveDays: -2.14, oneMonth: -5.82, ytd: -3.42, oneYear: -8.14, level: "Moderate" },
 ];
 
-// ---- Level badge ----
-function LevelBadge({ level }: { level: VixRow["level"] }) {
-  const colors: Record<VixRow["level"], string> = {
-    Low: "bg-gain/15 text-gain",
-    Moderate: "bg-amber-500/15 text-amber-500",
-    Elevated: "bg-orange-500/15 text-orange-500",
-    High: "bg-loss/15 text-loss",
-    Extreme: "bg-red-600/15 text-red-600",
-  };
+// ---- Level text ----
+const levelColor: Record<VixRow["level"], string> = {
+  Low: "text-gain",
+  Moderate: "text-amber-500",
+  Elevated: "text-orange-500",
+  High: "text-loss",
+  Extreme: "text-red-600",
+};
 
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${colors[level]}`}>
-      {level}
-    </span>
-  );
-}
-
-// ---- Table columns ----
-const vixColumns: TableColumn<VixRow>[] = [
-  {
-    key: "name",
-    label: "Index",
-    align: "left",
-    frozen: true,
-    width: 180,
-    render: (r) => (
-      <div>
-        <div className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</div>
-        <div className="text-[12px] text-muted-foreground">{r.country}</div>
-      </div>
-    ),
-  },
-  {
-    key: "last",
-    label: "Level",
-    align: "right",
-    render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last.toFixed(2)}</span>,
-  },
-  {
-    key: "sentiment",
-    label: "Sentiment",
-    align: "right",
-    render: (r) => <LevelBadge level={r.level} />,
-  },
-  {
-    key: "today",
-    label: "Today",
-    align: "right",
-    render: (r) => <PctCell value={r.today} />,
-  },
-  {
-    key: "5d",
-    label: "5 Days",
-    align: "right",
-    render: (r) => <PctCell value={r.fiveDays} />,
-  },
-  {
-    key: "1m",
-    label: "1 Month",
-    align: "right",
-    render: (r) => <PctCell value={r.oneMonth} />,
-  },
-  {
-    key: "ytd",
-    label: "YTD",
-    align: "right",
-    render: (r) => <PctCell value={r.ytd} />,
-  },
-  {
-    key: "1y",
-    label: "1 Year",
-    align: "right",
-    render: (r) => <PctCell value={r.oneYear} />,
-  },
-  { key: "alert", label: "Set Alert", align: "center", render: () => <AlertButton /> },
+// ---- STW columns ----
+const vixColumns: STWColumn[] = [
+  { header: "Index", align: "left" },
+  { header: "Level", align: "right", minWidth: 80 },
+  { header: "Sentiment", align: "right", minWidth: 80 },
+  { header: "Today", align: "right", minWidth: 80 },
+  { header: "5 Days", align: "right", minWidth: 80 },
+  { header: "1 Month", align: "right", minWidth: 80 },
+  { header: "YTD", align: "right", minWidth: 80 },
+  { header: "1 Year", align: "right", minWidth: 80 },
+  { header: "Set Alert", align: "center", minWidth: 70 },
 ];
+
+function vixRows(): React.ReactNode[][] {
+  return VIX_DATA.map((r) => [
+    <div key="name">
+      <div className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</div>
+      <div className="text-[12px] text-muted-foreground">{r.country}</div>
+    </div>,
+    <span key="last" className="text-[14px] tabular-nums font-medium text-foreground">{r.last.toFixed(2)}</span>,
+    <span key="level" className={`text-[14px] font-medium ${levelColor[r.level]}`}>{r.level}</span>,
+    <PctCell key="today" value={r.today} />,
+    <PctCell key="5d" value={r.fiveDays} />,
+    <PctCell key="1m" value={r.oneMonth} />,
+    <PctCell key="ytd" value={r.ytd} />,
+    <PctCell key="1y" value={r.oneYear} />,
+    <AlertButton key="alert" />,
+  ]);
+}
 
 // ---- Component ----
 export function VixTab() {
   return (
     <div className="pb-8">
       <div className="px-5 pt-5">
-        <SectionHeader
+        <ScrollableTableWidget
           title="Volatility Indices"
-          subtitle="Fear gauges across global markets"
+          description="Fear gauges across global markets"
+          pillLayoutId="vix-pill"
+          columns={vixColumns}
+          rows={vixRows()}
+          visibleDataCols={2}
+          rowHeight="h-[58px]"
+          footer={{ label: "View All Indices" }}
         />
-        <MarketTable columns={vixColumns} data={VIX_DATA} />
       </div>
     </div>
   );

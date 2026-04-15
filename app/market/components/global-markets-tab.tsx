@@ -1,86 +1,61 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MarketTable, PctCell, RangeBar, AlertButton, type TableColumn } from "./market-table";
-import { SectionHeader } from "./section-header";
-import { NewsAccordion } from "./news-accordion";
-import { GLOBAL_INDICES, GLOBAL_NEWS, type PerformanceRow } from "../data";
+import { ScrollableTableWidget, type STWColumn } from "@/components/scrollable-table-widget";
+import { PctCell, RangeBar, AlertButton } from "./market-table";
+import { GLOBAL_INDICES, type PerformanceRow } from "../data";
 
 const INDEX_TABS = Object.keys(GLOBAL_INDICES);
 
-// ---- Global Indices columns (same as US) ----
-const indicesColumns: TableColumn<PerformanceRow>[] = [
-  { key: "name", label: "Name", align: "left", frozen: true, width: 200, render: (r) => <span className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</span> },
-  { key: "last", label: "Level", align: "right", render: (r) => <span className="tabular-nums font-semibold text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> },
-  { key: "today", label: "Today", align: "right", render: (r) => <PctCell value={r.today} /> },
-  { key: "5d", label: "5 Days", align: "right", render: (r) => <PctCell value={r.fiveDays} /> },
-  { key: "1m", label: "1 Month", align: "right", render: (r) => <PctCell value={r.oneMonth} /> },
-  { key: "ytd", label: "YTD", align: "right", render: (r) => <PctCell value={r.ytd} /> },
-  { key: "1y", label: "1 Year", align: "right", render: (r) => <PctCell value={r.oneYear} /> },
-  { key: "3y", label: "3 Years", align: "right", render: (r) => <PctCell value={r.threeYears} /> },
-  { key: "dayRange", label: "Day Range", align: "center", render: (r) => <RangeBar low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} /> },
-  { key: "1yRange", label: "1Y Range", align: "center", render: (r) => <RangeBar low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} /> },
-  { key: "alert", label: "Set Alert", align: "center", render: () => <AlertButton /> },
+const perfColumns: STWColumn[] = [
+  { header: "Name", align: "left" },
+  { header: "Level", align: "right", minWidth: 90 },
+  { header: "Today", align: "right", minWidth: 80 },
+  { header: "5 Days", align: "right", minWidth: 80 },
+  { header: "1 Month", align: "right", minWidth: 80 },
+  { header: "YTD", align: "right", minWidth: 80 },
+  { header: "1 Year", align: "right", minWidth: 80 },
+  { header: "3 Years", align: "right", minWidth: 80 },
+  { header: "Day Range", align: "center", minWidth: 160 },
+  { header: "1Y Range", align: "center", minWidth: 160 },
+  { header: "Set Alert", align: "center", minWidth: 70 },
 ];
+
+function perfRows(data: PerformanceRow[]): React.ReactNode[][] {
+  return data.map((r) => [
+    <span key="name" className="text-[14px] font-semibold text-foreground whitespace-normal leading-tight">{r.name}</span>,
+    <span key="last" className="text-[14px] tabular-nums font-medium text-foreground">{r.last.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>,
+    <PctCell key="today" value={r.today} />,
+    <PctCell key="5d" value={r.fiveDays} />,
+    <PctCell key="1m" value={r.oneMonth} />,
+    <PctCell key="ytd" value={r.ytd} />,
+    <PctCell key="1y" value={r.oneYear} />,
+    <PctCell key="3y" value={r.threeYears} />,
+    <RangeBar key="dr" low={r.dayRange[0]} high={r.dayRange[1]} current={r.last} />,
+    <RangeBar key="yr" low={r.weekRange52[0]} high={r.weekRange52[1]} current={r.last} />,
+    <AlertButton key="alert" />,
+  ]);
+}
 
 export function GlobalMarketsTab() {
   const [idxTab, setIdxTab] = useState(INDEX_TABS[0]);
 
   return (
     <div className="pb-8">
-      {/* Global Indices */}
       <div className="px-5 pt-5">
-        <SectionHeader
+        <ScrollableTableWidget
           title="Indices"
-          subtitle="Real-time index performance"
-        />
-        <div className="mb-3 -mx-5 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 px-5 py-0.5">
-            {INDEX_TABS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setIdxTab(f)}
-                className={cn(
-                  "flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  idxTab === f
-                    ? "bg-foreground text-background"
-                    : "border border-border/60 text-muted-foreground"
-                )}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={idxTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-          >
-            <MarketTable columns={indicesColumns} data={GLOBAL_INDICES[idxTab]} />
-          </motion.div>
-        </AnimatePresence>
-        <button className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground active:bg-muted/40">
-          View All Indices
-          <ChevronRight size={14} />
-        </button>
-      </div>
-
-      <div className="h-6" />
-
-      {/* Global Market Summary */}
-      <div className="px-5">
-        <NewsAccordion
-          title="Market Summary"
-          subtitle="AI-curated global headlines with expandable summaries"
-          items={GLOBAL_NEWS}
-          sourceCount={38}
+          description="Real-time index performance"
+          tabs={INDEX_TABS.map((f) => ({ id: f, label: f }))}
+          activeTab={idxTab}
+          onTabChange={setIdxTab}
+          pillLayoutId="global-idx-pill"
+          columns={perfColumns}
+          rows={perfRows(GLOBAL_INDICES[idxTab])}
+          visibleDataCols={2}
+          rowHeight="h-[48px]"
+          animationKey={`gidx-${idxTab}`}
+          footer={{ label: "View All Indices" }}
         />
       </div>
     </div>

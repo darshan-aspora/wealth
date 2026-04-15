@@ -10,28 +10,13 @@ import { BottomNavV2 } from "@/components/bottom-nav";
 import {
   ExploreVersionProvider,
   useExploreVersion,
-  type ExploreVersion,
 } from "./explore-version-context";
 import { ExploreFTUX } from "./versions/ftux";
 import { ExploreFundedNotTraded, ExploreFooter } from "./versions/funded-not-traded";
 import { ETFFundedNotTraded } from "./versions/etf-funded-not-traded";
 import { AdvisoryBaskets } from "./versions/advisory-baskets";
 import { AlgoStrategies } from "./versions/algo-strategies";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const versions: { id: ExploreVersion; label: string; description: string }[] = [
-  { id: "ftux", label: "FTUX", description: "First Time User Experience" },
-  { id: "not-funded", label: "Not Funded", description: "Signed up but not funded" },
-  { id: "funded-not-traded", label: "Funded, Not Traded", description: "Funded but hasn't traded yet" },
-];
-
 
 type ExploreTab = "equity" | "etf" | "options" | "advisory" | "algo";
 
@@ -44,12 +29,7 @@ const exploreTabs: { id: ExploreTab; label: string }[] = [
 ];
 
 function ExploreContent() {
-  const {
-    currentVersion,
-    showVersionPicker,
-    setShowVersionPicker,
-    setCurrentVersion,
-  } = useExploreVersion()!;
+  const { currentVersion } = useExploreVersion()!;
 
   const [activeTab, setActiveTab] = useState<ExploreTab>("equity");
   const prevTabRef = useRef<ExploreTab>("equity");
@@ -184,43 +164,6 @@ function ExploreContent() {
 
       <BottomNavV2 />
       <HomeIndicator />
-
-      {/* Version Picker */}
-      <Sheet open={showVersionPicker} onOpenChange={setShowVersionPicker}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-5 pb-10">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="text-[17px]">Explore Versions</SheetTitle>
-          </SheetHeader>
-
-          <div className="space-y-1.5">
-            {versions.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => {
-                  setCurrentVersion(v.id);
-                  setShowVersionPicker(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-5 py-3.5 text-left transition-colors",
-                  currentVersion === v.id
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50"
-                )}
-              >
-                <div className="flex-1">
-                  <p className="text-[16px] font-semibold">{v.label}</p>
-                  <p className="text-[14px] text-muted-foreground">
-                    {v.description}
-                  </p>
-                </div>
-                {currentVersion === v.id && (
-                  <Check size={20} className="text-foreground" />
-                )}
-              </button>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

@@ -13,7 +13,6 @@ import {
   PieChart,
   MoreHorizontal,
   // Bookmark, // Uncomment when restoring Watchlist tab
-  GraduationCap,
   FileText,
   ShoppingBasket,
   BookOpen,
@@ -29,7 +28,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useExploreVersion } from "@/app/explore/explore-version-context";
 
 /* ------------------------------------------------------------------ */
 /*  V1 — Home · Market · Portfolio · Advisory · Autopilot             */
@@ -52,7 +50,7 @@ const v2Tabs = [
   { label: "Market", icon: BarChart3, href: "/market" },
   // { label: "Watchlist", icon: Bookmark, href: "/watchlist" }, // Moved to Quick Access — uncomment to restore
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },
-  { label: "Level Up", icon: GraduationCap, href: "/learn" },
+  { label: "Advisory", icon: FlaskConical, href: "/advisory" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -81,7 +79,6 @@ function TabBar({
 }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const exploreVersion = useExploreVersion();
 
   return (
     <>
@@ -97,36 +94,19 @@ function TabBar({
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  onClick={(e) => {
-                    if (
-                      isActive &&
-                      tab.href === "/explore" &&
-                      exploreVersion
-                    ) {
-                      e.preventDefault();
-                      exploreVersion.setShowVersionPicker(true);
-                    }
-                  }}
                   className={cn(
                     "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
                     isActive ? "text-foreground" : "text-muted-foreground"
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="tab-pill"
-                      className="absolute inset-0 rounded-xl bg-muted/50"
-                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                    />
-                  )}
                   <motion.div
-                    className="relative z-10"
+                    className="relative"
                     animate={{ scale: isActive ? 1.05 : 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 24 }}
                   >
                     <tab.icon size={24} strokeWidth={1.6} />
                   </motion.div>
-                  <span className="relative z-10">{tab.label}</span>
+                  <span>{tab.label}</span>
                 </Link>
               );
             })}
@@ -194,5 +174,5 @@ export function BottomNavV1() {
 }
 
 export function BottomNavV2() {
-  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" moreSheet />;
+  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" />;
 }

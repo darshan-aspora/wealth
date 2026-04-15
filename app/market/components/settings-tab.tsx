@@ -34,10 +34,13 @@ function MarketRow({
   return (
     <Reorder.Item
       value={item}
-      className="flex items-center gap-3 border-b border-border/30 bg-card px-5 py-3.5 last:border-b-0"
+      className="flex items-center gap-3 -mx-5 px-5 py-3.5 bg-background"
       dragListener={true}
       whileDrag={{ scale: 1.02, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", zIndex: 50 }}
     >
+      {/* Drag handle (left side) */}
+      <GripVertical size={18} strokeWidth={1.5} className="flex-shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
+
       {/* Label */}
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-semibold text-foreground">{item.label}</p>
@@ -52,9 +55,6 @@ function MarketRow({
           <X size={14} />
         </Button>
       )}
-
-      {/* Drag handle (right side) */}
-      <GripVertical size={18} strokeWidth={1.5} className="flex-shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
     </Reorder.Item>
   );
 }
@@ -75,22 +75,19 @@ export function SettingsTab() {
           Drag to reorder your market tabs.
         </p>
 
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-          <Reorder.Group
-            axis="y"
-            values={markets}
-            onReorder={setMarkets}
-            className="overflow-hidden"
-          >
-            {markets.map((item) => (
-              <MarketRow
-                key={item.id}
-                item={item}
-                onRemove={item.isCustom ? () => removeMarket(item.id) : undefined}
-              />
-            ))}
-          </Reorder.Group>
-        </div>
+        <Reorder.Group
+          axis="y"
+          values={markets}
+          onReorder={setMarkets}
+        >
+          {markets.map((item) => (
+            <MarketRow
+              key={item.id}
+              item={item}
+              onRemove={item.isCustom ? () => removeMarket(item.id) : undefined}
+            />
+          ))}
+        </Reorder.Group>
       </div>
     </div>
   );

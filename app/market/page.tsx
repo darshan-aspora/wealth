@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { Suspense, useState, useRef, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
@@ -23,8 +24,22 @@ import { SettingsTab } from "./components/settings-tab";
 const MARKET_TABS = ["US", "Global", "VIX", "India", "UK", "News", "Crypto", "Commodity", "Forex", "UAE", "Customize"] as const;
 type MarketTab = (typeof MARKET_TABS)[number];
 
-export default function MarketPage() {
-  const [activeTab, setActiveTab] = useState<MarketTab>("US");
+const tabSlugMap: Record<string, MarketTab> = Object.fromEntries(
+  MARKET_TABS.map((t) => [t.toLowerCase(), t])
+);
+
+function MarketPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab")?.toLowerCase() ?? "us";
+  const activeTab: MarketTab = tabSlugMap[tabParam] ?? "US";
+
+  const setActiveTab = useCallback(
+    (tab: MarketTab) => {
+      router.replace(`/market?tab=${tab.toLowerCase()}`, { scroll: false });
+    },
+    [router]
+  );
 
   // Collapsible header on scroll
   const [headerHidden, setHeaderHidden] = useState(false);
@@ -121,5 +136,13 @@ export default function MarketPage() {
       <BottomNavV2 />
       <HomeIndicator />
     </div>
+  );
+}
+
+export default function MarketPage() {
+  return (
+    <Suspense>
+      <MarketPageContent />
+    </Suspense>
   );
 }

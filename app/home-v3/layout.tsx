@@ -1,75 +1,17 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useRef, useCallback, useState } from "react";
-import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
-import {
-  X, Bell, Globe, BarChart3,
-  // Bookmark, // Uncomment when restoring Watchlist tab
-  PieChart, FlaskConical, BookOpen,
-} from "lucide-react";
+import { X, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { TickerMarquee } from "@/components/ticker";
 import { SearchPlaceholder } from "@/components/header";
+import { BottomNavV2 } from "@/components/bottom-nav";
 
 import { HeaderHiddenContext } from "./header-context";
-
-// ── Bottom Nav (route links) ──────────────────────────────────────────
-
-const bottomTabs = [
-  { label: "Explore", icon: Globe, href: "/home-v3" },
-  { label: "Market", icon: BarChart3, href: "/home-v3/market" },
-  // { label: "Watchlist", icon: Bookmark, href: "/home-v3/watchlist" }, // Moved to Quick Access — uncomment to restore
-  { label: "Portfolio", icon: PieChart, href: "/home-v3/portfolio" },
-  { label: "Advisory", icon: FlaskConical, href: "/home-v3/advisory" },
-  { label: "Level Up", icon: BookOpen, href: "/learn" },
-];
-
-function BottomNav() {
-  const pathname = usePathname();
-
-  return (
-    <nav className="relative border-t border-border/50 bg-background/80 backdrop-blur-xl overflow-visible z-10">
-      <div className="flex items-center justify-around px-2 pb-0 pt-2">
-        {bottomTabs.map((tab) => {
-          const isActive =
-            tab.href === "/home-v3"
-              ? pathname === "/home-v3"
-              : pathname.startsWith(tab.href);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={cn(
-                "relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[13px] font-medium transition-colors",
-                isActive ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="bnav-v3-pill"
-                  className="absolute -top-[11px] inset-x-0 mx-auto h-[3px] w-6 rounded-full bg-foreground"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <motion.div
-                animate={{ scale: isActive ? 1.05 : 1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 24 }}
-              >
-                <tab.icon size={24} strokeWidth={1.6} />
-              </motion.div>
-              <span>{tab.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
 
 // ── Shared Layout ─────────────────────────────────────────────────────
 
@@ -161,7 +103,7 @@ export default function HomeV3Layout({ children }: { children: React.ReactNode }
         </main>
 
         {/* ── Bottom Nav ──────────────────────────────────────────────── */}
-        <BottomNav />
+        <BottomNavV2 />
         <HomeIndicator />
       </div>
     </HeaderHiddenContext.Provider>
