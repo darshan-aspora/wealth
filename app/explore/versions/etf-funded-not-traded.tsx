@@ -9,6 +9,7 @@ import {
   Layers,
   Landmark,
   Leaf,
+  ArrowDown,
   ArrowUpDown,
   ChevronRight,
   Target,
@@ -314,7 +315,8 @@ export function TopMoversWidget({
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const, minWidth: 72 },
+    { header: "Price ($)", align: "right" as const, minWidth: 72 },
+    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
     { header: "1Y", align: "right" as const, minWidth: 72 },
@@ -330,13 +332,14 @@ export function TopMoversWidget({
     const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
     const r = mockReturns(etf.symbol);
     return [
-      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
-      <div key="price" className="flex flex-col items-end">
-        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>
-        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
-          {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
-        </span>
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
       </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>
+        {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
+      </span>,
       <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
       <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
       <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
@@ -452,7 +455,7 @@ export function TopMoversWidget({
       pillLayoutId="etf-mover-tab-pill"
       columns={columns}
       rows={rows}
-      visibleDataCols={3}
+      visibleDataCols={2}
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={`${moverType}-${category}`}
@@ -2111,7 +2114,8 @@ function ExploreByAssetClassWidget() {
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const, minWidth: 72 },
+    { header: "Price ($)", align: "right" as const, minWidth: 72 },
+    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
     { header: "1Y", align: "right" as const, minWidth: 72 },
@@ -2127,13 +2131,14 @@ function ExploreByAssetClassWidget() {
     const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
     const r = mockReturns(etf.symbol);
     return [
-      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
-      <div key="price" className="flex flex-col items-end">
-        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>
-        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
-          {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
-        </span>
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
       </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>
+        {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
+      </span>,
       <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
       <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
       <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", r.r1y >= 0 ? "text-emerald-500" : "text-red-500")}>{r.r1y >= 0 ? "+" : ""}{r.r1y.toFixed(1)}%</span>,
@@ -2166,7 +2171,7 @@ function ExploreByAssetClassWidget() {
       pillLayoutId="etf-asset-class-pill"
       columns={columns}
       rows={rows}
-      visibleDataCols={3}
+      visibleDataCols={2}
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeClass}
@@ -2219,7 +2224,8 @@ function MostEfficientETFsWidget() {
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const, minWidth: 72 },
+    { header: "Price ($)", align: "right" as const, minWidth: 72 },
+    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
     { header: "1Y", align: "right" as const, minWidth: 72 },
@@ -2234,13 +2240,14 @@ function MostEfficientETFsWidget() {
     const cd = popularETFToCardData(etf);
     const chgColor = cd.change1d >= 0 ? "text-emerald-500" : "text-red-500";
     return [
-      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
-      <div key="price" className="flex flex-col items-end">
-        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{cd.price.toFixed(2)}</span>
-        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
-          {cd.change1d >= 0 ? "+" : ""}{cd.change1d.toFixed(2)}%
-        </span>
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
       </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{cd.price.toFixed(2)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>
+        {cd.change1d >= 0 ? "+" : ""}{cd.change1d.toFixed(2)}%
+      </span>,
       <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
       <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
       <span key="r1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-medium", cd.return1y >= 0 ? "text-emerald-500" : "text-red-500")}>{cd.return1y >= 0 ? "+" : ""}{cd.return1y.toFixed(1)}%</span>,
@@ -2268,7 +2275,7 @@ function MostEfficientETFsWidget() {
       pillLayoutId="etf-efficiency-pill"
       columns={columns}
       rows={rows}
-      visibleDataCols={3}
+      visibleDataCols={2}
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeTab}

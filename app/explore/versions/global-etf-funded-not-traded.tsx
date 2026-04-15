@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Bookmark, ArrowUpDown, Check, X } from "lucide-react";
+import { Bookmark, ArrowDown, ArrowUpDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -349,7 +349,8 @@ function AllETFsWidget({ etfs }: { etfs: ETF[] }) {
 
   const columns = [
     { header: "ETF", align: "left" as const },
-    { header: "Price", align: "right" as const, minWidth: 72 },
+    { header: "Price ($)", align: "right" as const, minWidth: 72 },
+    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const, minWidth: 72 },
     { header: "AUM", align: "right" as const, minWidth: 72 },
     { header: "Exp%", align: "right" as const, minWidth: 58 },
     { header: "Yield", align: "right" as const, minWidth: 58 },
@@ -361,13 +362,14 @@ function AllETFsWidget({ etfs }: { etfs: ETF[] }) {
   const rows = sorted.map((etf) => {
     const chgColor = etf.changePercent >= 0 ? "text-emerald-500" : "text-red-500";
     return [
-      <p key="name" className="text-[14px] font-semibold leading-tight text-foreground line-clamp-2 min-w-0">{etf.name}</p>,
-      <div key="price" className="flex flex-col items-end">
-        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>
-        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
-          {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
-        </span>
+      <div key="name" className="flex items-center gap-2.5">
+        <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
+        <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{etf.name}</p>
       </div>,
+      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{etf.price.toFixed(2)}</span>,
+      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>
+        {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
+      </span>,
       <span key="aum" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.aum}</span>,
       <span key="exp" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.expenseRatio.toFixed(2)}%</span>,
       <span key="yield" className="whitespace-nowrap tabular-nums text-[14px] text-muted-foreground">{etf.yield != null ? `${etf.yield.toFixed(2)}%` : "—"}</span>,
@@ -391,7 +393,7 @@ function AllETFsWidget({ etfs }: { etfs: ETF[] }) {
       }}
       columns={columns}
       rows={rows}
-      visibleDataCols={3}
+      visibleDataCols={2}
       rowHeight="h-[80px]"
       scrollableMinWidth={400}
       animationKey={sortMode}

@@ -27,12 +27,10 @@ import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { WidgetHeader } from "@/components/widget-header";
 import { motion, AnimatePresence } from "framer-motion";
+import { MarketStatusCombinedBar } from "@/components/market-status-widget-v2";
 import {
-  MarketStatusCombinedBar,
   marketStates,
-  sentimentOrder,
   getBrowserTz,
-  type Sentiment,
 } from "@/components/market-status-widget";
 import { QuickAccessV5B } from "@/components/quick-access-v3";
 import {
@@ -2023,7 +2021,6 @@ function HeroWidget() {
 
 export function ExploreFundedNotTraded() {
   const [msIdx, setMsIdx] = useState(0);
-  const [sentiment, setSentiment] = useState<Sentiment>("fear");
   const [userTz, setUserTz] = useState("America/New_York");
 
   useEffect(() => {
@@ -2032,8 +2029,6 @@ export function ExploreFundedNotTraded() {
 
   const cycleStatus = () =>
     setMsIdx((i) => (i + 1) % marketStates.length);
-  const cycleSentiment = () =>
-    setSentiment((s) => sentimentOrder[(sentimentOrder.indexOf(s) + 1) % sentimentOrder.length]);
 
   return (
     <div className="space-y-14 px-5 pt-5 pb-4">
@@ -2041,9 +2036,7 @@ export function ExploreFundedNotTraded() {
       <MarketStatusCombinedBar
         state={marketStates[msIdx]}
         userTz={userTz}
-        sentiment={sentiment}
         onToggleStatus={cycleStatus}
-        onToggleSentiment={cycleSentiment}
       />
       <PopularStocksWidget />
       <PromoBanner />

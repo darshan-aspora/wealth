@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
 import { AIProvider } from "@/contexts/ai-context";
 import { FontProvider } from "@/components/font-toggle";
+import { Agentation } from "agentation";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
             </AIProvider>
           </TickerVisibilityProvider>
         </ThemeProvider>
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );

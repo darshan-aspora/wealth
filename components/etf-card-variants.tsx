@@ -129,16 +129,21 @@ export function ETFCardLadder({
 }) {
   return (
     <div className={cn("rounded-2xl bg-muted p-4", className)}>
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <p className="text-[14px] font-semibold text-foreground leading-tight line-clamp-2">{etf.name}</p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-[14px] font-semibold tabular-nums text-foreground leading-none">{fmtPrice(etf.price)}</p>
-          <p className={cn("text-[12px] font-semibold tabular-nums mt-1", returnClass(etf.change1d))}>
-            {fmtPct(etf.change1d, 2)}
+      {/* Header — logo + (title stacked over price/day %) */}
+      <div className="flex items-start gap-2.5 mb-4">
+        <div className="h-8 w-8 rounded-full bg-muted-foreground/20 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-semibold text-foreground leading-tight line-clamp-2">
+            {etf.name}
           </p>
+          <div className="flex items-baseline gap-2 mt-1.5">
+            <p className="text-[14px] font-semibold tabular-nums text-foreground leading-none">
+              {fmtPrice(etf.price)}
+            </p>
+            <p className={cn("text-[12px] font-semibold tabular-nums leading-none", returnClass(etf.change1d))}>
+              {fmtPct(etf.change1d, 2)}
+            </p>
+          </div>
         </div>
       </div>
 
