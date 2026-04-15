@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Bookmark, ArrowDown, ArrowUpDown, Check, X } from "lucide-react";
+import { Bookmark, ArrowDown, ArrowRight, ArrowUpDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,7 +11,6 @@ import {
   type PopularETF,
 } from "@/app/explore/versions/etf-funded-not-traded";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
-import { StoryRing } from "@/components/stories-viewer";
 
 /* ------------------------------------------------------------------ */
 /*  Region tabs (no "All")                                             */
@@ -639,7 +638,15 @@ function GlobalModuleViewer({
   );
 }
 
-/* ── Level Up Footer ── */
+/* ── Level Up Footer — Horizontal scroll of square module cards ── */
+
+const globalModuleDescriptions: Record<string, string> = {
+  "why-global": "The other 40% of the market worth owning",
+  "how-global-etfs": "Same mechanics, bigger playground",
+  "reading-global": "Country, currency, and tax — decoded",
+  "picking-markets": "Developed, emerging, or everywhere",
+  "pitfalls": "The traps to sidestep before you buy",
+};
 
 function GlobalLevelUpFooter() {
   const [activeModuleIdx, setActiveModuleIdx] = useState<number | null>(null);
@@ -655,29 +662,43 @@ function GlobalLevelUpFooter() {
 
   return (
     <>
-      <div>
-        <div className="flex items-baseline justify-between mb-3">
-          <div>
-            <h2 className="text-[18px] font-bold tracking-tight text-foreground">Level Up</h2>
-            <p className="text-[14px] text-muted-foreground mt-0.5">Pick a topic. Start from your level.</p>
-          </div>
-        </div>
-        <div className="-mx-5 overflow-x-auto no-scrollbar">
-          <div className="flex gap-4 px-5 py-1">
-            {globalModules.map((mod, i) => {
-              const modSeen = seenMap[mod.id]?.size ?? 0;
-              return (
-                <div key={mod.id} className="flex flex-col items-center gap-1.5 shrink-0">
-                  <StoryRing totalStories={mod.stories.length} readCount={modSeen} size={64} onClick={() => setActiveModuleIdx(i)}>
-                    <div className="h-full w-full bg-neutral-800 flex items-center justify-center">
-                      <span className="text-[16px] font-bold text-white/70">{i + 1}</span>
+      <div className="-mx-5 overflow-x-auto no-scrollbar">
+        <div className="flex gap-3 px-5">
+          {globalModules.map((mod, i) => {
+            const seen = seenMap[mod.id]?.size ?? 0;
+            return (
+              <button
+                key={mod.id}
+                onClick={() => setActiveModuleIdx(i)}
+                className="shrink-0 w-[260px] h-[320px] relative overflow-hidden rounded-3xl bg-muted text-left active:scale-[0.98] transition-transform"
+              >
+                <div className="relative flex h-full flex-col p-5">
+                  {/* Top — title + one-liner */}
+                  <div>
+                    <p className="text-[20px] font-bold text-foreground leading-[1.15] tracking-tight mb-1">
+                      {mod.title}
+                    </p>
+                    <p className="text-[13px] text-muted-foreground leading-snug">
+                      {globalModuleDescriptions[mod.id] ?? ""}
+                    </p>
+                  </div>
+
+                  {/* Illustration slot — placeholder until art drops in */}
+                  <div className="flex-1" aria-hidden />
+
+                  {/* Bottom — stories count + arrow */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-semibold text-muted-foreground">
+                      {seen > 0 ? `${seen} of ${mod.stories.length} stories` : `${mod.stories.length} stories`}
+                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
+                      <ArrowRight size={14} strokeWidth={2.5} />
                     </div>
-                  </StoryRing>
-                  <p className="text-[13px] font-semibold text-muted-foreground text-center leading-tight w-[76px]">{mod.title}</p>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              </button>
+            );
+          })}
         </div>
       </div>
       {typeof document !== "undefined" && createPortal(

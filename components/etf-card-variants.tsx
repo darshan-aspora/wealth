@@ -128,7 +128,7 @@ export function ETFCardLadder({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl bg-muted p-4", className)}>
+    <div className={cn("rounded-2xl bg-muted p-4 flex flex-col", className)}>
       {/* Header — logo + (title stacked over price/day %) */}
       <div className="flex items-start gap-2.5 mb-4">
         <div className="h-8 w-8 rounded-full bg-muted-foreground/20 shrink-0" />
@@ -147,8 +147,9 @@ export function ETFCardLadder({
         </div>
       </div>
 
-      {/* Stats row — 1Y, AUM, Expense */}
-      <div className="grid grid-cols-3 text-[13px]">
+      {/* Stats row — pinned to bottom so 1Y/AUM/Expense stay aligned
+          across cards in the same row even when names wrap */}
+      <div className="grid grid-cols-3 text-[13px] mt-auto">
         <div>
           <p className="text-muted-foreground text-[12px]">1Y</p>
           <p className={cn("font-bold tabular-nums", returnClass(etf.return1y))}>

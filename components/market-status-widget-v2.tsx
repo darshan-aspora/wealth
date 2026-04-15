@@ -348,7 +348,7 @@ export const marketStates: MarketState[] = [
     kind: "holiday",
     pulse: "off",
     ambience: "festive",
-    notice: "US markets are closed today in observance of Juneteenth.",
+    notice: "Closed today for Juneteenth.",
   },
   {
     id: "holiday_early_close",
@@ -362,7 +362,7 @@ export const marketStates: MarketState[] = [
     kind: "live",
     pulse: "slow",
     ambience: "golden",
-    notice: "Early close today. Markets shut early for Thanksgiving eve.",
+    notice: "Closing early at 1 PM for Thanksgiving eve.",
   },
   {
     id: "holiday_tomorrow",
@@ -376,7 +376,7 @@ export const marketStates: MarketState[] = [
     kind: "live",
     pulse: "normal",
     ambience: "afternoon",
-    notice: "Heads up. US markets are closed tomorrow for Independence Day.",
+    notice: "Closed tomorrow for Independence Day.",
   },
   {
     id: "emergency_closure",
@@ -396,7 +396,7 @@ export const marketStates: MarketState[] = [
     kind: "emergency",
     pulse: "off",
     ambience: "muted",
-    notice: "Markets closed today by exchange order. Regular sessions resume Monday.",
+    notice: "Closed by exchange order. Back Monday.",
   },
   {
     id: "circuit_breaker",
@@ -411,7 +411,7 @@ export const marketStates: MarketState[] = [
     kind: "paused",
     pulse: "stutter",
     ambience: "muted",
-    notice: "Trading paused across all US exchanges due to a volatility circuit breaker.",
+    notice: "Volatility halt. Resumes in ~15 min.",
   },
   {
     id: "data_delay",
@@ -425,7 +425,7 @@ export const marketStates: MarketState[] = [
     kind: "delay",
     pulse: "off",
     ambience: "muted",
-    notice: "Our market data feed is running a few minutes behind. Working on it.",
+    notice: "Data feed is a few minutes behind.",
   },
 ];
 

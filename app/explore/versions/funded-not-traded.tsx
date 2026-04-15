@@ -27,11 +27,11 @@ import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 import { WidgetHeader } from "@/components/widget-header";
 import { motion, AnimatePresence } from "framer-motion";
-import { MarketStatusCombinedBar } from "@/components/market-status-widget-v2";
+import { CompactInlineStrip } from "@/components/market-status-compact";
 import {
   marketStates,
   getBrowserTz,
-} from "@/components/market-status-widget";
+} from "@/components/market-status-widget-v2";
 import { QuickAccessV5B } from "@/components/quick-access-v3";
 import {
   Video1BSpotlight,
@@ -2033,10 +2033,10 @@ export function ExploreFundedNotTraded() {
   return (
     <div className="space-y-14 px-5 pt-5 pb-4">
       <HeroWidget />
-      <MarketStatusCombinedBar
+      <CompactInlineStrip
         state={marketStates[msIdx]}
         userTz={userTz}
-        onToggleStatus={cycleStatus}
+        onToggle={cycleStatus}
       />
       <PopularStocksWidget />
       <PromoBanner />

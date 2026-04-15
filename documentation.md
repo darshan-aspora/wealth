@@ -180,6 +180,16 @@ Full-screen search page opened by tapping the search bar on Home.
 4. **Type Badge** — Colored type pill replaces the logo; stats as outlined (ring-only) tags below the name
 5. **Inline Sparkline** — Mini deterministic SVG trend sparkline; stats as type-tinted (sky / amber / violet / pink) mini chips below the name
 
+### 5c. Footer Variations (`app/explore/footer-variations/page.tsx`) — Route: `/explore/footer-variations`
+
+5 visual variations of the Explore stocks footer. Structure identical across all (hero → 3 co-create actions → "need a human?" divider → 3 contact methods → trust strip); only visual treatment changes. Shared variants live in [app/explore/components/footer-variations.tsx](app/explore/components/footer-variations.tsx).
+
+1. **Editorial** — Magazine back-page: left-aligned hero, numbered index rows (01/02/03), outlined contact cards
+2. **Tactile Cards** — Soft gradient backdrop, elevated cards with accent stripes, chip-style trust badges
+3. **Swiss Grid** — Monochrome, hairline rules, strict 12-column grid, no rounding
+4. **Inverted Hero** — Dark premium hero block up top, clean light rows below, ribbon-divided contacts
+5. **Warm Conversational** — Pill-heavy, hero CTA emphasized, rounded everywhere
+
 ### 6. Markets (`app/market/page.tsx`) — Route: `/market`
 
 Comprehensive markets page with 4 top-level tabs: US Markets, Global, News, India. Collapsible header on scroll, sticky tabs with Framer Motion animated indicator.
