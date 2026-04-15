@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAI } from "@/contexts/ai-context";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-import { Header } from "@/components/header";
+import { HeaderV3 } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
 import { BottomNavV2 } from "@/components/bottom-nav";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,39 +34,55 @@ export default function PortfolioPage() {
   const { setAISource } = useAI();
   useEffect(() => { setAISource({ type: "portfolio" }); }, [setAISource]);
 
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const scrollTabToCenter = useCallback((el: HTMLButtonElement) => {
+    requestAnimationFrame(() => {
+      const container = tabsRef.current;
+      if (!container) return;
+      const scrollLeft = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
+      container.scrollTo({ left: Math.max(0, scrollLeft), behavior: "smooth" });
+    });
+  }, []);
+
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
 
       {/* Scrollable area — header & ticker scroll away, tabs stick */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        <Header />
+        <HeaderV3 />
         <TickerMarquee />
 
         {/* Sticky tab bar */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border/40">
-          <div className="no-scrollbar flex overflow-x-auto px-5">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "relative whitespace-nowrap px-3.5 py-3 text-[15px] font-medium transition-colors",
-                  activeTab === tab
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                )}
-              >
-                {tab}
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="portfolio-tab-indicator"
-                    className="absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full bg-foreground"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </button>
-            ))}
+        <div className="sticky top-0 z-20 border-b border-border/40 bg-background">
+          <div ref={tabsRef} className="overflow-x-auto no-scrollbar">
+            <div className="flex gap-2 px-5">
+              {tabs.map((tab, i) => (
+                <button
+                  key={tab}
+                  onClick={(e) => { setActiveTab(tab); scrollTabToCenter(e.currentTarget); }}
+                  className={cn(
+                    "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
+                    i === 0 ? "pr-3" : "px-3",
+                    activeTab === tab
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {tab}
+                  {activeTab === tab && (
+                    <motion.span
+                      layoutId="portfolio-tab-indicator"
+                      className={cn(
+                        "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
+                        i === 0 ? "left-0" : "left-3"
+                      )}
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

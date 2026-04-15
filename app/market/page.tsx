@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-import { Header } from "@/components/header";
+import { HeaderV3 } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
 import { BottomNavV2 } from "@/components/bottom-nav";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,17 @@ function MarketPageContent() {
     [router]
   );
 
+  // Auto-scroll active tab to center
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const scrollTabToCenter = useCallback((el: HTMLButtonElement) => {
+    requestAnimationFrame(() => {
+      const container = tabsRef.current;
+      if (!container) return;
+      const scrollLeft = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
+      container.scrollTo({ left: Math.max(0, scrollLeft), behavior: "smooth" });
+    });
+  }, []);
+
   // Collapsible header on scroll
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollTop = useRef(0);
@@ -74,18 +85,18 @@ function MarketPageContent() {
           headerHidden ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100"
         )}
       >
-        <Header />
+        <HeaderV3 />
         <TickerMarquee />
       </div>
 
       {/* Sticky top-level tabs */}
       <div className="border-b border-border/40 bg-background">
-        <div className="no-scrollbar overflow-x-auto">
+        <div ref={tabsRef} className="no-scrollbar overflow-x-auto">
           <div className="flex gap-0.5 px-5">
             {MARKET_TABS.map((tab, i) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={(e) => { setActiveTab(tab); scrollTabToCenter(e.currentTarget); }}
                 className={cn(
                   "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
                   i === 0 ? "pr-3" : "px-3",

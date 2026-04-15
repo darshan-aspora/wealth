@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -41,16 +41,26 @@ function ExploreContent() {
     router.replace(`/home-v3${qs ? `?${qs}` : ""}`, { scroll: false });
   };
 
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const scrollTabToCenter = useCallback((el: HTMLButtonElement) => {
+    requestAnimationFrame(() => {
+      const container = tabsRef.current;
+      if (!container) return;
+      const scrollLeft = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
+      container.scrollTo({ left: Math.max(0, scrollLeft), behavior: "smooth" });
+    });
+  }, []);
+
   return (
     <>
       {/* Tabs — sticky on scroll */}
       <div className="sticky top-0 z-20 border-b border-border/40 bg-background">
-        <div className="overflow-x-auto no-scrollbar">
+        <div ref={tabsRef} className="overflow-x-auto no-scrollbar">
           <div className="flex gap-2 px-5">
             {exploreTabs.map((tab, i) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={(e) => { setActiveTab(tab.id); scrollTabToCenter(e.currentTarget); }}
                 className={cn(
                   "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
                   i === 0 ? "pr-3" : "px-3",

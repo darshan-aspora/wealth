@@ -46,7 +46,7 @@ const v1Tabs = [
 /* ------------------------------------------------------------------ */
 
 const v2Tabs = [
-  { label: "Explore", icon: Compass, href: "/explore" },
+  { label: "Explore", icon: Compass, href: "/home-v3" },
   { label: "Market", icon: BarChart3, href: "/market" },
   // { label: "Watchlist", icon: Bookmark, href: "/watchlist" }, // Moved to Quick Access — uncomment to restore
   { label: "Portfolio", icon: PieChart, href: "/portfolio" },

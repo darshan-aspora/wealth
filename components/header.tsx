@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { X, Bell, EllipsisVertical, LayoutPanelLeft, BarChart3, ArrowUpDown, Pencil, FolderPlus } from "lucide-react";
 import { useTickerVisibility } from "@/components/ticker-visibility";
@@ -187,5 +188,52 @@ export function Header() {
         onStorySeen={handleStorySeen}
       />
     </>
+  );
+}
+
+// ─── New-style Header (X · Search · Bell · Profile) ─────────────────────
+export function HeaderV3() {
+  const router = useRouter();
+
+  return (
+    <header className="flex items-center gap-1.5 pl-3 pr-3 py-3">
+      <button
+        onClick={() => router.push("/")}
+        className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50"
+      >
+        <X size={20} strokeWidth={2} />
+      </button>
+
+      <div
+        onClick={() => router.push("/search")}
+        className="relative mx-1 flex h-12 min-w-0 flex-1 cursor-pointer items-center rounded-full bg-muted/50 px-4"
+      >
+        <div className="min-w-0 flex-1 overflow-hidden text-[16px] text-muted-foreground">
+          <SearchPlaceholder />
+        </div>
+      </div>
+
+      <button
+        onClick={() => router.push("/notifications")}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/50"
+      >
+        <Bell size={20} strokeWidth={1.8} />
+      </button>
+
+      <button
+        onClick={() => router.push("/profile")}
+        className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95 transition-transform"
+      >
+        <div className="h-8 w-8 overflow-hidden rounded-full">
+          <Image
+            src="/profile_dp.png"
+            alt="Profile"
+            width={32}
+            height={32}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      </button>
+    </header>
   );
 }
