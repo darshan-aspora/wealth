@@ -31,7 +31,6 @@ interface AnalystStock {
   holdCount: number;
   sellCount: number;
   targetPrice: number;
-  volume?: string;
   sector?: string;
 }
 
