@@ -65,7 +65,7 @@ function TopMoversCardless() {
   const [moverType, setMoverType] = useState<MoverType>("gainers");
   const [capSize, setCapSize] = useState<CapSize>("mega");
 
-  const stocks = getStocksForCap(moverType, capSize);
+  const stocks = getStocksForCap(moverType, capSize).slice(0, 6);
 
   const cycleCapSize = () =>
     setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
@@ -578,13 +578,13 @@ function RecurringBasketsWidget() {
       </div>
 
       {hasMore && !expanded && (
-        <button
-          onClick={() => setExpanded(true)}
+        <Link
+          href="/explore/popular-stocks"
           className="mt-2.5 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
           View All
           <ChevronRight size={16} />
-        </button>
+        </Link>
       )}
     </WidgetHeader>
   );
@@ -793,7 +793,7 @@ function AnalystRatingsWidget() {
       rows={rows}
       scrollableMinWidth={620}
       animationKey={`${ratingTab}-${capSize}`}
-      footer={{ label: "View All" }}
+      footer={{ label: "View All", href: "/explore/analyst-ratings" }}
     />
   );
 }
@@ -1379,7 +1379,7 @@ function PopularStocksWidget() {
       rows={rows}
       scrollableMinWidth={500}
       animationKey={`${tab}-${capSize}`}
-      footer={{ label: "View All" }}
+      footer={{ label: "View All", href: "/explore/popular-stocks" }}
     />
   );
 }

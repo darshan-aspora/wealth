@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useRef, useCallback, useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { WidgetHeader, type WHTab, type WHFlipper } from "@/components/widget-header";
@@ -20,6 +21,7 @@ export interface STWColumn {
 export interface STWFooter {
   label: string;
   onPress?: () => void;
+  href?: string;
 }
 
 export interface ScrollableTableWidgetProps {
@@ -194,13 +196,23 @@ export function ScrollableTableWidget({
 
       {/* ── Footer CTA ── */}
       {footer && (
-        <button
-          onClick={footer.onPress}
-          className="mt-3 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {footer.label}
-          <ChevronRight size={16} />
-        </button>
+        footer.href ? (
+          <Link
+            href={footer.href}
+            className="mt-3 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {footer.label}
+            <ChevronRight size={16} />
+          </Link>
+        ) : (
+          <button
+            onClick={footer.onPress}
+            className="mt-3 flex w-full items-center justify-center gap-1 py-3 text-[14px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {footer.label}
+            <ChevronRight size={16} />
+          </button>
+        )
       )}
     </WidgetHeader>
   );

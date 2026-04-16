@@ -460,7 +460,7 @@ export function TopMoversWidget({
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={`${moverType}-${category}`}
-      footer={{ label: "View More" }}
+      footer={{ label: "View More", href: "/explore/etf-top-movers" }}
     />
   );
 }
@@ -1438,13 +1438,6 @@ function LevelUpWidget() {
 
   return (
     <div>
-      <h2 className="mb-0.5 text-[18px] font-bold tracking-tight">
-        Level Up
-      </h2>
-      <p className="mb-3 text-[14px] text-muted-foreground">
-        Master ETF investing from beginner to advanced
-      </p>
-
       <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
         <div className="flex gap-3" style={{ width: "max-content" }}>
           {etfLevelUpCards.map((card, i) => (
@@ -2176,7 +2169,7 @@ function ExploreByAssetClassWidget() {
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeClass}
-      footer={{ label: "View All" }}
+      footer={{ label: "View All", href: "/explore/etf-asset-class" }}
     />
   );
 }
@@ -2280,7 +2273,7 @@ function MostEfficientETFsWidget() {
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeTab}
-      footer={{ label: "View All" }}
+      footer={{ label: "View All", href: "/explore/efficient-etfs" }}
     />
   );
 }

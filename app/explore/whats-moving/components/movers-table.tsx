@@ -126,7 +126,7 @@ export function MoversTable({
   }, [columns]);
 
   return (
-    <div ref={containerRef} className="-mx-5 flex">
+    <div ref={containerRef} className="flex">
       {/* Frozen Name column — matches widget's frozen col exactly */}
       <div
         className={cn(

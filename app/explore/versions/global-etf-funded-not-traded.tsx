@@ -396,7 +396,7 @@ function AllETFsWidget({ etfs }: { etfs: ETF[] }) {
       rowHeight="h-[80px]"
       scrollableMinWidth={400}
       animationKey={sortMode}
-      footer={{ label: "View All" }}
+      footer={{ label: "View All", href: "/explore/all-etfs" }}
     />
   );
 }

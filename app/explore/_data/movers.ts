@@ -323,6 +323,129 @@ export const data: Record<MoverType, Record<BaseCapSize, Stock[]>> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Pad every list to ~15 stocks using deterministic generation         */
+/* ------------------------------------------------------------------ */
+
+const EXTRA_SYMBOLS: Record<BaseCapSize, { symbol: string; name: string; color: string }[]> = {
+  mega: [
+    { symbol: "UNH", name: "UnitedHealth", color: "#002B5C" },
+    { symbol: "LLY", name: "Eli Lilly", color: "#D52B1E" },
+    { symbol: "AVGO", name: "Broadcom", color: "#CC0000" },
+    { symbol: "HD", name: "Home Depot", color: "#F96302" },
+    { symbol: "PG", name: "Procter & Gamble", color: "#003DA5" },
+    { symbol: "MA", name: "Mastercard", color: "#EB001B" },
+    { symbol: "COST", name: "Costco", color: "#E31837" },
+    { symbol: "ABBV", name: "AbbVie", color: "#071D49" },
+    { symbol: "WMT", name: "Walmart", color: "#0071CE" },
+    { symbol: "CRM", name: "Salesforce", color: "#00A1E0" },
+  ],
+  large: [
+    { symbol: "MRVL", name: "Marvell Tech", color: "#8C1D40" },
+    { symbol: "SNPS", name: "Synopsys", color: "#A020F0" },
+    { symbol: "PANW", name: "Palo Alto", color: "#FA582D" },
+    { symbol: "FTNT", name: "Fortinet", color: "#EE3124" },
+    { symbol: "LULU", name: "Lululemon", color: "#D31334" },
+    { symbol: "ROP", name: "Roper Tech", color: "#003E7E" },
+    { symbol: "MNST", name: "Monster Beverage", color: "#95C11F" },
+    { symbol: "DASH", name: "DoorDash", color: "#FF3008" },
+    { symbol: "TTD", name: "Trade Desk", color: "#2ACA4E" },
+    { symbol: "WDAY", name: "Workday", color: "#0075C9" },
+  ],
+  midcap: [
+    { symbol: "NET", name: "Cloudflare", color: "#F48120" },
+    { symbol: "MDB", name: "MongoDB", color: "#13AA52" },
+    { symbol: "SNOW", name: "Snowflake", color: "#29B5E8" },
+    { symbol: "S", name: "SentinelOne", color: "#5F2DE1" },
+    { symbol: "PATH", name: "UiPath", color: "#FA4616" },
+    { symbol: "TOST", name: "Toast", color: "#FF4C00" },
+    { symbol: "DUOL", name: "Duolingo", color: "#58CC02" },
+    { symbol: "CELH", name: "Celsius", color: "#FF6600" },
+    { symbol: "GLBE", name: "Global-e", color: "#3559E0" },
+    { symbol: "DOCS", name: "Doximity", color: "#1D8DCB" },
+  ],
+  small: [
+    { symbol: "UPST", name: "Upstart", color: "#5A3FE1" },
+    { symbol: "ASTS", name: "AST SpaceMobile", color: "#1E3A5F" },
+    { symbol: "RKLB", name: "Rocket Lab", color: "#FF4400" },
+    { symbol: "AI", name: "C3.ai", color: "#0052CC" },
+    { symbol: "STEM", name: "Stem Inc", color: "#00B894" },
+    { symbol: "DM", name: "Desktop Metal", color: "#333333" },
+    { symbol: "PRCH", name: "Porch Group", color: "#00B388" },
+    { symbol: "BIRD", name: "Allbirds", color: "#333333" },
+    { symbol: "DNA", name: "Ginkgo Bioworks", color: "#4CAF50" },
+    { symbol: "GSAT", name: "Globalstar", color: "#FF6600" },
+  ],
+};
+
+const MCAP_RANGE: Record<BaseCapSize, [string, string]> = {
+  mega: ["$500B", "$3.2T"],
+  large: ["$20B", "$150B"],
+  midcap: ["$5B", "$40B"],
+  small: ["$200M", "$8B"],
+};
+
+const PE_RANGE: Record<BaseCapSize, [number | null, number | null]> = {
+  mega: [18, 65],
+  large: [25, 180],
+  midcap: [null, 400],
+  small: [null, null],
+};
+
+function generateStock(
+  sym: { symbol: string; name: string; color: string },
+  cap: BaseCapSize,
+  moverType: MoverType,
+  idx: number,
+): Stock {
+  const h = hashStr(sym.symbol + moverType + idx);
+  const sign = moverType === "losers" || moverType === "near-52w-low" ? -1 : 1;
+  const baseChg = ((h % 800) / 100) + 0.5;
+  const chg = +(sign * baseChg).toFixed(2);
+  const price = +((h % 900) + 10 + idx * 7.3).toFixed(2);
+  const vol = `${((h % 80) + 2).toFixed(1)}M`;
+  const mcRange = MCAP_RANGE[cap];
+  const mc = idx % 2 === 0 ? mcRange[0] : mcRange[1];
+  const peRange = PE_RANGE[cap];
+  const pe = peRange[0] === null ? (idx % 3 === 0 ? null : +(((h % 400) + 10).toFixed(0))) : +(((h % (peRange[1]! - peRange[0]!)) + peRange[0]!).toFixed(0));
+  const high52w = +(price * (1 + (h % 40) / 100 + 0.1)).toFixed(1);
+  const low52w = +(price * (1 - (h % 35) / 100 - 0.1)).toFixed(1);
+  const revGr = +((h % 120) - 30 + sign * 15).toFixed(1);
+  const profGr = +((h % 200) - 60 + sign * 20).toFixed(1);
+  const ratings: AnalystRating[] = ["Buy", "Hold", "Sell"];
+  const rating = moverType === "losers" ? ratings[(h + idx) % 3] : ratings[h % 2 === 0 ? 0 : 1];
+  return {
+    symbol: sym.symbol,
+    name: sym.name,
+    price,
+    changePercent: chg,
+    volume: vol,
+    marketCap: mc,
+    pe,
+    high52w,
+    low52w,
+    color: sym.color,
+    revGrowth: revGr,
+    profitGrowth: profGr,
+    rating,
+  };
+}
+
+// Pad each list to ~15 stocks
+for (const moverType of Object.keys(data) as MoverType[]) {
+  for (const cap of Object.keys(data[moverType]) as BaseCapSize[]) {
+    const list = data[moverType][cap];
+    const existing = new Set(list.map((s) => s.symbol));
+    const extras = EXTRA_SYMBOLS[cap];
+    let added = 0;
+    for (let i = 0; i < extras.length && list.length < 15; i++) {
+      if (existing.has(extras[i].symbol)) continue;
+      list.push(generateStock(extras[i], cap, moverType, added));
+      added++;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Cap-size config                                                    */
 /* ------------------------------------------------------------------ */
 

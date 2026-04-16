@@ -3,7 +3,7 @@
 import { Suspense, useState, useMemo, useEffect, useDeferredValue } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { useWatchlist } from "@/components/watchlist-context";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,6 @@ import {
   type SortKey,
   type Stock,
 } from "@/app/explore/_data/movers";
-import { Toolbar } from "./components/toolbar";
 import { SortSheet } from "./components/sort-sheet";
 import { FiltersSheet } from "./components/filters-sheet";
 import {
@@ -30,10 +29,8 @@ import {
   ALL_COLUMNS,
   type ColumnId,
 } from "./components/columns-sheet";
-import { ActiveFilters } from "./components/active-filters";
 import { MoversTable } from "./components/movers-table";
 import {
-  activeFilterCount,
   emptyFilters,
   type MoversFilters,
 } from "./components/filter-state";
@@ -153,7 +150,7 @@ function WhatsMovingContent() {
       VALID_MOVER_TYPES.includes(initialType) ? initialType : "gainers"
     ]
   );
-  const [query, setQuery] = useState(params?.get("q") ?? "");
+  const [query] = useState(params?.get("q") ?? "");
   const deferredQuery = useDeferredValue(query);
 
   const [filters, setFilters] = useState<MoversFilters>(emptyFilters);
@@ -226,140 +223,82 @@ function WhatsMovingContent() {
   const matchCount = (draft: MoversFilters) =>
     applySearch(applyFilters(baseStocks, draft), deferredQuery).length;
 
-  const activeCount = activeFilterCount(filters);
-  const sortLabel =
-    sort.key in sortLabels
-      ? `${sortLabels[sort.key]} ${sort.dir === "desc" ? "↓" : "↑"}`
-      : "Sort";
-
-  // Cap chip toggle — "all" is mutually exclusive with individual caps.
-  const toggleCap = (id: "all" | BaseCapSize) => {
-    setCaps((prev) => {
-      if (id === "all") return new Set(baseCapOrder);
-      const next = new Set(prev);
-      // If we're coming from "all" (== full set), start fresh with just this one.
-      if (next.size === baseCapOrder.length) return new Set([id]);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      // Never leave an empty selection — snap back to all.
-      if (next.size === 0) return new Set(baseCapOrder);
-      return next;
-    });
-  };
-
-  const capChipActive = (id: "all" | BaseCapSize): boolean => {
-    if (id === "all") return caps.size === baseCapOrder.length;
-    return caps.has(id) && caps.size < baseCapOrder.length;
-  };
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
 
       {/* Header */}
-      <div className="flex items-center gap-2 px-5 pt-3 pb-3 border-b border-border/40">
+      <header className="flex items-center justify-between px-3 py-2">
         <button
           onClick={() => router.back()}
           aria-label="Back"
-          className="flex h-9 w-9 items-center justify-center -ml-2 rounded-full active:bg-foreground/[0.06] transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
         >
-          <ChevronLeft size={22} strokeWidth={2} className="text-foreground" />
+          <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <div className="min-w-0">
-          <h1 className="text-[20px] font-bold tracking-tight text-foreground leading-tight">
-            What&apos;s Moving
-          </h1>
-          <p className="text-[12px] text-muted-foreground leading-tight">
-            Slice the market. Your rules.
-          </p>
+        <h1 className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1">
+          What&apos;s Moving
+        </h1>
+        {/* Cap size flipper */}
+        <button
+          onClick={() => {
+            const order = CAP_CHIPS.map((c) => c.id);
+            const currentIdx = order.findIndex((id) =>
+              id === "all"
+                ? caps.size === baseCapOrder.length
+                : caps.has(id) && caps.size === 1,
+            );
+            const nextIdx = (currentIdx + 1) % order.length;
+            const next = order[nextIdx];
+            setCaps(next === "all" ? new Set(baseCapOrder) : new Set([next]));
+          }}
+          className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:scale-[0.97] transition-transform"
+        >
+          <span className="leading-none">
+            {caps.size === baseCapOrder.length
+              ? "All"
+              : CAP_CHIPS.find((c) => c.id !== "all" && caps.has(c.id as BaseCapSize))?.label ?? "All"}
+          </span>
+          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
+        </button>
+      </header>
+
+      {/* Mover type tabs — fixed between header and scrollable content */}
+      <div className="shrink-0 border-b border-border/40 bg-background">
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 px-5">
+            {moverTabs.map((tab, i) => {
+              const active = moverType === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setMoverType(tab.id)}
+                  className={cn(
+                    "relative whitespace-nowrap py-1.5 text-[14px] font-semibold transition-colors",
+                    i === 0 ? "pr-3" : "px-3",
+                    active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {tab.label}
+                  {active && (
+                    <motion.span
+                      layoutId="whats-moving-tab-underline"
+                      className={cn(
+                        "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
+                        i === 0 ? "left-0" : "left-3",
+                      )}
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <main className="no-scrollbar flex-1 overflow-y-auto">
-        {/* Mover type tabs — horizontally scrollable pill strip */}
-        <div className="sticky top-0 z-20 bg-background border-b border-border/40">
-          <div className="overflow-x-auto no-scrollbar">
-            <div className="flex gap-1 px-5 py-3">
-              {moverTabs.map((tab) => {
-                const active = moverType === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setMoverType(tab.id)}
-                    className={cn(
-                      "relative whitespace-nowrap px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-colors",
-                      active
-                        ? "text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="whats-moving-pill"
-                        className="absolute inset-0 rounded-full bg-foreground"
-                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                    <span className="relative">{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Cap size multi-select chips */}
-          <div className="overflow-x-auto no-scrollbar border-t border-border/30">
-            <div className="flex gap-1.5 px-5 py-2.5">
-              {CAP_CHIPS.map((c) => {
-                const on = capChipActive(c.id);
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => toggleCap(c.id)}
-                    className={cn(
-                      "whitespace-nowrap px-3 py-1 rounded-full text-[12px] font-semibold transition-colors",
-                      on
-                        ? "bg-foreground text-background"
-                        : "border border-border/60 text-foreground"
-                    )}
-                  >
-                    {c.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Toolbar */}
-          <div className="border-t border-border/30">
-            <Toolbar
-              query={query}
-              onQueryChange={setQuery}
-              activeFilterCount={activeCount}
-              onOpenFilters={() => setFiltersOpen(true)}
-              sortLabel={sortLabel}
-              onOpenSort={() => setSortOpen(true)}
-              onOpenColumns={() => setColumnsOpen(true)}
-            />
-          </div>
-
-          {/* Active-filters chip row (only when present) */}
-          <ActiveFilters filters={filters} onChange={setFilters} />
-
-          {/* Result strip */}
-          <div className="px-5 pb-2 flex items-center justify-between">
-            <p className="text-[12px] text-muted-foreground">
-              <span className="font-semibold text-foreground tabular-nums">
-                {visibleStocks.length}
-              </span>{" "}
-              {visibleStocks.length === 1 ? "stock" : "stocks"}
-              <span className="text-muted-foreground/40 mx-1.5">·</span>
-              sorted by {sortLabels[sort.key]}{" "}
-              {sort.dir === "desc" ? "↓" : "↑"}
-            </p>
-          </div>
-        </div>
-
         {/* Table */}
         {visibleStocks.length > 0 ? (
           <div className="pt-2 pb-8">
