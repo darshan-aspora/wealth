@@ -78,7 +78,9 @@
       "Bash(curl -s -o /dev/null -w \"/compare/saved %{http_code}\\\\n\" http://localhost:3000/compare/saved)",
       "Bash(curl -s -o /dev/null -w \"/compare?symbols=AAPL,NVDA %{http_code}\\\\n\" \"http://localhost:3000/compare?symbols=AAPL,NVDA\")",
       "Bash(echo \"---TSC_EXIT:$?---\")",
-      "Bash(echo \"---LINT_EXIT:$?---\")"
+      "Bash(echo \"---LINT_EXIT:$?---\")",
+      "Bash(echo \"---TSC:$?---\")",
+      "Bash(echo \"---LINT:$?---\")"
     ],
     "additionalDirectories": [
       "/Users/apple/Dev/02-US-Equity/app/baskets",

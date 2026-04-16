@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useDeferredValue } from "react";
+import { Suspense, useState, useMemo, useEffect, useDeferredValue } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
@@ -127,6 +127,14 @@ function applySort(stocks: Stock[], key: SortKey, dir: SortDir): Stock[] {
 /* ------------------------------------------------------------------ */
 
 export default function WhatsMovingPage() {
+  return (
+    <Suspense>
+      <WhatsMovingContent />
+    </Suspense>
+  );
+}
+
+function WhatsMovingContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { bookmarkedSymbols, toggleBookmark } = useWatchlist();
