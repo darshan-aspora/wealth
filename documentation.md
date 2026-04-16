@@ -190,6 +190,22 @@ Full-screen search page opened by tapping the search bar on Home.
 4. **Inverted Hero** — Dark premium hero block up top, clean light rows below, ribbon-divided contacts
 5. **Warm Conversational** — Pill-heavy, hero CTA emphasized, rounded everywhere
 
+### 5d. What's Moving — Power-User Page (`app/explore/whats-moving/page.tsx`) — Route: `/explore/whats-moving`
+
+Full-page advanced slicer for the What's Moving widget. Opened by tapping "View All" on the widget. URL-synced state (`?type=gainers&cap=mega,large&sort=changePercent:desc&q=nvda`). Mobile bottom-sheet UX for all power-user interactions.
+
+- **Mover type tabs** (5): Gainers / Losers / Most Active / Near 52W High / Near 52W Low — horizontally scrollable pill strip with animated Framer Motion indicator (`layoutId="whats-moving-pill"`)
+- **Cap size chips** (multi-select): All / Mega / Large / Mid / Small — replaces the widget's sequential flipper. Tapping All selects full set; any individual chip deselects All
+- **Toolbar**: Search (ticker/name, debounced via `useDeferredValue`), Filters button with active-count badge, Sort button with current sort label, Columns icon
+- **Filters sheet** ([filters-sheet.tsx](app/explore/whats-moving/components/filters-sheet.tsx)): Sector chips, PE min/max + Profitable-only toggle, Revenue growth ≥, Profit growth ≥, Analyst rating (Buy/Hold/Sell). Draft state; Apply with live match count
+- **Sort sheet** ([sort-sheet.tsx](app/explore/whats-moving/components/sort-sheet.tsx)): 7 keys (Chg% / Price / M.Cap / 1M Vol / Rev Gr / Profit Gr / PE) × asc/desc. Column headers in the table are also tap-to-sort
+- **Columns sheet** ([columns-sheet.tsx](app/explore/whats-moving/components/columns-sheet.tsx)): 12 toggleable columns. Choice persisted in localStorage (`whats-moving:cols`)
+- **Active filters** strip ([active-filters.tsx](app/explore/whats-moving/components/active-filters.tsx)): only shown when filters applied; each chip is dismissable
+- **Movers table** ([movers-table.tsx](app/explore/whats-moving/components/movers-table.tsx)): frozen Name column + horizontally scrollable data columns with sortable headers
+- **Bookmarks** wired to shared `WatchlistContext` (`bookmarkedSymbols` / `toggleBookmark`) — persists across navigation
+
+Shared data module at [app/explore/_data/movers.ts](app/explore/_data/movers.ts) (types, mock data, helpers, sector tagging, sort keys) feeds both the widget and this page. Shared UI atoms (`RangeBar`, `ConsensusBadge`) live at [app/explore/components/movers-atoms.tsx](app/explore/components/movers-atoms.tsx).
+
 ### 6. Markets (`app/market/page.tsx`) — Route: `/market`
 
 Comprehensive markets page with 4 top-level tabs: US Markets, Global, News, India. Collapsible header on scroll, sticky tabs with Framer Motion animated indicator.
@@ -240,7 +256,34 @@ Portfolio management page with 6 top-level tabs: Portfolio, Holdings, Orders, Po
 - **Collections tab** (`tabs/collections.tsx`): Portfolio collections with P&L summary
 - All mock data for Portfolio tab centralized in `app/portfolio/components/portfolio-mock-data.ts`
 
-### 9. Order Flow (`app/order-flow/page.tsx`) — Route: `/order-flow`
+### 10. Compare Stocks (`app/compare/page.tsx`) — Route: `/compare`
+
+Side-by-side stock comparison with save/share/alert/buy actions per stock. Stocks sit as **columns** (scrollable horizontally), metrics as **rows** (grouped into sections: Snapshot, Returns, Valuation, Range, Analyst). Sticky left column for metric labels, sticky top row for stock column headers.
+
+- **Entry points:** Quick Access tile ("Compare Stocks" in `components/quick-access-v3.tsx`) and stock detail page overflow (`onCompare` wired to `/compare?symbols=SYMBOL`).
+- **Empty state:** warm welcome with CTA + 3 suggested pairs (AAPL vs NVDA, TSLA vs RIVN, GOOGL vs META) for one-tap quick start.
+- **Add stock sheet (bottom):** search input, "Already comparing" chips, "Suggested based on your picks" (from `SIMILAR_STOCKS` map), "Popular" fallback. Soft 4-stock cap — never a hard block.
+- **Per-stock column header:** symbol, price, change%, an X to remove, tap to open actions sheet. Framer `layout` + spring entrance on add.
+- **Stock actions sheet:** Buy (hands off to `/order-flow/v2?symbol=X`), Set price alert (opens nested sub-sheet), View details (`/stocks/X`), Remove (with undo toast).
+- **Alert sub-sheet:** Price mode (numeric input) and % move mode (6 chips: ±2.5/5/10). Success toast: "Alert set. We'll tell you when NVDA crosses $135."
+- **Insight card:** "Where they actually differ" — one AI line per comparison. Hand-authored pairs for common sets (AAPL+NVDA, AAPL+MSFT, MSFT+NVDA, AAPL+MSFT+NVDA, NVDA+AMD, GOOGL+META, TSLA+RIVN, AMZN+WMT), templated fallback for the rest.
+- **Save sheet:** auto-suggested smart name ("Semis (3)", "Big Tech (4)", "AAPL vs NVDA", "AAPL and 2 others"). "Don't name it — just save" → saves as `Untitled (Mar 16)`.
+- **Share sheet:** preview card + "Share via…" (`navigator.share`), "Copy link" (`/compare/shared?symbols=…`), "Copy as text" (with the insight line baked in for chat-app previews).
+- **Top bar:** back, title (uses saved list name when loaded), Save/Saved ✓, Share, overflow (Saved comparisons, Rename, Duplicate, Clear all).
+- **Persistence:** `localStorage` via `CompareProvider` — active session + all saved lists survive refresh.
+- **Best/worst highlighting:** subtle weight/color shift per row (bold + full foreground for best, muted for worst). Gain/loss semantic colors only on directional metrics (change%, returns).
+- **Undo toast:** bottom-centered, 4s, with "Undo" action for Remove, Clear all, and Delete-saved.
+
+### 10b. Saved Comparisons (`app/compare/saved/page.tsx`) — Route: `/compare/saved`
+
+Library of saved compare lists.
+
+- Each card: name, symbols (· joined), "Updated 2h ago · 3 stocks", chevron → open.
+- Overflow (⋯) per card: Rename / Duplicate / Delete (with undo via `restoreSaved`).
+- Empty state: "You haven't saved any comparisons yet. Build one, then tap Save."
+- `/compare/saved/[id]` is a loader route — loads the saved list into the active session and redirects to `/compare`.
+
+### 11. Order Flow (`app/order-flow/page.tsx`) — Route: `/order-flow`
 
 Stock order placement screen with Glass Premium aesthetic — glassmorphism cards, gradient mesh background, frosted glass tabs.
 
@@ -340,6 +383,17 @@ Bottom sheet for sorting watchlist stocks.
 - 5 sort options: Symbol A–Z, % Change, Volume, Market Cap, Flag
 - Active sort shows checkmark; tapping active sort deselects
 - Uses shadcn Sheet (side="bottom", rounded-t-2xl)
+
+### `CompareProvider` / `useCompare()` — `contexts/compare-context.tsx`
+
+State management for the compare stocks flow. Persists `activeSymbols`, `saved` lists, and `activeSavedId` to `localStorage`.
+
+- `activeSymbols`, `addStock`, `removeStock`, `clearAll`, `setActiveSymbols`, `reorderStock`
+- `saved`, `saveCurrent(name)`, `renameSaved`, `deleteSaved`, `duplicateSaved`, `loadSaved`, `restoreSaved`
+- `activeSavedId` — tracks which saved list is currently loaded (null = unsaved session)
+- `toast`, `showToast(msg, undo?)`, `dismissToast` — 4-second auto-dismiss undo toasts
+
+Mounted at root inside `AIProvider` in `app/layout.tsx`.
 
 ### `WatchlistProvider` / `useWatchlist()` — `components/watchlist-context.tsx`
 

@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TickerVisibilityProvider } from "@/components/ticker-visibility";
 import { AIProvider } from "@/contexts/ai-context";
+import { CompareProvider } from "@/contexts/compare-context";
 import { FontProvider } from "@/components/font-toggle";
 import { Agentation } from "agentation";
 import "./globals.css";
@@ -42,9 +43,11 @@ export default function RootLayout({
         <ThemeProvider>
           <TickerVisibilityProvider>
             <AIProvider>
-              <FontProvider>
-                {children}
-              </FontProvider>
+              <CompareProvider>
+                <FontProvider>
+                  {children}
+                </FontProvider>
+              </CompareProvider>
             </AIProvider>
           </TickerVisibilityProvider>
         </ThemeProvider>

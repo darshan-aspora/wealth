@@ -102,7 +102,7 @@ export default function StockDetailPage() {
             navigator.share({ title: `${ticker.name} (${ticker.symbol})`, url: window.location.href });
           }
         }}
-        onCompare={() => {}}
+        onCompare={() => router.push(`/compare?symbols=${symbol}`)}
         onSetAlert={() => router.push(`/stocks/${symbol}/alerts`)}
       />
 

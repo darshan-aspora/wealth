@@ -21,7 +21,7 @@ type Row1Item = { label: string; icon: LucideIcon; href?: string };
 
 const row1Items: Row1Item[] = [
   { label: "My Watchlist", icon: Bookmark, href: "/watchlist" },
-  { label: "Compare Stocks", icon: GitCompareArrows },
+  { label: "Compare Stocks", icon: GitCompareArrows, href: "/compare" },
   { label: "News", icon: Newspaper },
 ];
 

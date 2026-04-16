@@ -46,6 +46,9 @@ type WatchlistCtx = {
   // Flags
   flaggedSymbols: Set<string>;
   toggleFlag: (symbol: string) => void;
+  // Bookmarks (used by movers widgets + /explore/whats-moving)
+  bookmarkedSymbols: Set<string>;
+  toggleBookmark: (symbol: string) => void;
   // Deletes (swipe delete)
   deletedSymbols: Set<string>;
   deleteSymbol: (symbol: string) => void;
@@ -69,6 +72,8 @@ const Ctx = createContext<WatchlistCtx>({
   closeEditSheet: () => {},
   flaggedSymbols: new Set(),
   toggleFlag: () => {},
+  bookmarkedSymbols: new Set(),
+  toggleBookmark: () => {},
   deletedSymbols: new Set(),
   deleteSymbol: () => {},
   deletedSections: new Set(),
@@ -83,12 +88,22 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [currentSort, setCurrentSort] = useState<SortOption>(null);
   const [flaggedSymbols, setFlagged] = useState<Set<string>>(new Set());
+  const [bookmarkedSymbols, setBookmarked] = useState<Set<string>>(new Set());
   const [deletedSymbols, setDeleted] = useState<Set<string>>(new Set());
   const [deletedSections, setDeletedSections] = useState<Set<string>>(new Set());
   const [collapsedSections, setCollapsed] = useState<Set<string>>(new Set());
 
   const toggleFlag = (symbol: string) => {
     setFlagged((prev) => {
+      const next = new Set(prev);
+      if (next.has(symbol)) next.delete(symbol);
+      else next.add(symbol);
+      return next;
+    });
+  };
+
+  const toggleBookmark = (symbol: string) => {
+    setBookmarked((prev) => {
       const next = new Set(prev);
       if (next.has(symbol)) next.delete(symbol);
       else next.add(symbol);
@@ -128,6 +143,8 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
         closeEditSheet: () => setEditSheetOpen(false),
         flaggedSymbols,
         toggleFlag,
+        bookmarkedSymbols,
+        toggleBookmark,
         deletedSymbols,
         deleteSymbol,
         deletedSections,
