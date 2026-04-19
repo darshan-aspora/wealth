@@ -11,7 +11,6 @@ import {
   X,
   ArrowUpDown,
   ChevronRight,
-  ArrowDown,
   BarChart3,
   Maximize2,
   GitCompareArrows,
@@ -157,9 +156,8 @@ function TopMoversCardless() {
 
   const columns = [
     { header: "Stock", align: "left" as const },
-    { header: "Price ($)", align: "right" as const },
-    { header: (<span className="inline-flex items-center justify-end gap-1"><ArrowDown size={10} className="text-foreground" />Chg%</span>), align: "right" as const },
-    { header: "1Y Change", align: "right" as const, minWidth: 80 },
+    { header: "Price", align: "right" as const },
+    { header: "1Y", align: "right" as const, minWidth: 80 },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
     { header: "PE", align: "right" as const, minWidth: 48 },
     { header: "M.Cap", align: "right" as const, minWidth: 68 },
@@ -179,8 +177,10 @@ function TopMoversCardless() {
         <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
         <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
       </div>,
-      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
-      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>
+      </div>,
       <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneY >= 0 ? "text-emerald-500" : "text-red-500")}>{fmtPct1Y(stock.symbol)}</span>,
       ...(showConsensus ? [
         <div key="consensus" className="flex justify-center">
@@ -205,7 +205,7 @@ function TopMoversCardless() {
   return (
     <ScrollableTableWidget
       title="What's Moving"
-      description="Today's biggest moves, sliced by direction and size. Green doesn't always mean go — context tells you why."
+      description="Today&apos;s biggest moves, sliced by direction and size. Green doesn&apos;t always mean go. Context tells you why."
       flipper={{
         label: capLabels[capSize],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -744,7 +744,7 @@ function AnalystRatingsWidget() {
     { header: "Consensus", align: "center" as const, minWidth: 120 },
     { header: "Price ($)", align: "right" as const, minWidth: 80 },
     { header: "Target", align: "right" as const, minWidth: 80 },
-    { header: "1Y Change", align: "right" as const, minWidth: 80 },
+    { header: "1Y", align: "right" as const, minWidth: 80 },
     { header: "Avg Vol", align: "right" as const, minWidth: 68 },
     { header: "1M Volume", align: "right" as const, minWidth: 80 },
     { header: "Monthly Avg Vol", align: "right" as const, minWidth: 110 },
@@ -778,7 +778,7 @@ function AnalystRatingsWidget() {
   return (
     <ScrollableTableWidget
       title="Analyst Ratings"
-      description="What Wall Street pros think. Useful as a second opinion — never the final word on anything."
+      description="What Wall Street pros think. Useful as a second opinion, never the final word on anything."
       flipper={{
         label: capLabels[capSize],
         icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />,
@@ -1316,9 +1316,8 @@ function PopularStocksWidget() {
 
   const columns = [
     { header: "Stock", align: "left" as const },
-    { header: "Price ($)", align: "right" as const },
-    { header: "Chg%", align: "right" as const },
-    { header: "1Y Change", align: "right" as const, minWidth: 80 },
+    { header: "Price", align: "right" as const },
+    { header: "1Y", align: "right" as const, minWidth: 80 },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
     { header: "PE", align: "right" as const, minWidth: 48 },
     { header: "M.Cap", align: "right" as const, minWidth: 68 },
@@ -1338,8 +1337,10 @@ function PopularStocksWidget() {
         <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
         <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">{stock.name}</p>
       </div>,
-      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>,
-      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>,
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">{stock.price.toFixed(1)}</span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span>
+      </div>,
       <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneY >= 0 ? "text-emerald-500" : "text-red-500")}>{fmtPct1Y(stock.symbol)}</span>,
       ...(showConsensus ? [
         <div key="consensus" className="flex justify-center">

@@ -12,12 +12,6 @@ type Tab = (typeof tabs)[number];
 
 const pages = [
   {
-    title: "Explore",
-    description: "Stocks, ETF, Options, Baskets, Algo — 3 user states",
-    href: "/explore",
-    status: "3 versions",
-  },
-  {
     title: "Home v3",
     description: "Home screen iteration",
     href: "/home-v3",
@@ -26,6 +20,12 @@ const pages = [
 ];
 
 const archive = [
+  {
+    title: "Explore",
+    description: "Stocks, ETF, Options, Baskets, Algo — 3 user states",
+    href: "/explore",
+    status: "3 versions",
+  },
   {
     title: "Home",
     description: "Watchlist, header, and bottom navigation",

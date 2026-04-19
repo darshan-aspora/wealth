@@ -103,22 +103,24 @@ function ComparePageInner() {
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
-      <StatusBar />
+      <div className="shrink-0 relative z-50 bg-background -mb-px">
+        <StatusBar />
 
-      <CompareHeader
-        symbolCount={activeSymbols.length}
-        isSaved={isSaved}
-        listName={activeSavedList?.name ?? null}
-        canSave={activeSymbols.length > 0 && !isSaved}
-        onSave={() => setSaveSheetOpen(true)}
-        onShare={() => setShareSheetOpen(true)}
-        onRename={() => setRenameSheetOpen(true)}
-        onDuplicate={handleDuplicate}
-        onClearAll={handleClearAll}
-        onViewSaved={() => router.push("/compare/saved")}
-      />
+        <CompareHeader
+          symbolCount={activeSymbols.length}
+          isSaved={isSaved}
+          listName={activeSavedList?.name ?? null}
+          canSave={activeSymbols.length > 0 && !isSaved}
+          onSave={() => setSaveSheetOpen(true)}
+          onShare={() => setShareSheetOpen(true)}
+          onRename={() => setRenameSheetOpen(true)}
+          onDuplicate={handleDuplicate}
+          onClearAll={handleClearAll}
+          onViewSaved={() => router.push("/compare/saved")}
+        />
+      </div>
 
-      <main className="no-scrollbar flex-1 overflow-y-auto overflow-x-hidden">
+      <main className="no-scrollbar flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
         {isEmpty ? (
           <EmptyState
             onAddStock={() => setAddSheetOpen(true)}
