@@ -80,7 +80,11 @@
       "Bash(echo \"---TSC_EXIT:$?---\")",
       "Bash(echo \"---LINT_EXIT:$?---\")",
       "Bash(echo \"---TSC:$?---\")",
-      "Bash(echo \"---LINT:$?---\")"
+      "Bash(echo \"---LINT:$?---\")",
+      "Bash(xargs ls:*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(ls -la /Users/apple/Dev/02-US-Equity/app/order-flow/*/page.tsx)",
+      "Bash(curl -s http://localhost:3000/stocks -o /dev/null -w \"%{http_code}\")"
     ],
     "additionalDirectories": [
       "/Users/apple/Dev/02-US-Equity/app/baskets",

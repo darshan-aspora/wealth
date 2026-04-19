@@ -26,6 +26,66 @@ const versions = [
     description: "Based on V3 — in progress",
     href: "/order-flow/v4",
   },
+  {
+    title: "V5 — Calculator",
+    description: "Keypad-dominant, always visible. Amount displayed huge and centered.",
+    href: "/order-flow/v5",
+  },
+  {
+    title: "V6 — Conversational",
+    description: "Chat-flow order building. Assistant asks, user selects via bubbles.",
+    href: "/order-flow/v6",
+  },
+  {
+    title: "V7 — Terminal",
+    description: "Maximum density. Everything visible — market depth, charges, buying power.",
+    href: "/order-flow/v7",
+  },
+  {
+    title: "V8 — Gradient Wave",
+    description: "Glass card over animated gradient mesh. Buy=teal, Sell=crimson.",
+    href: "/order-flow/v8",
+  },
+  {
+    title: "V9 — Bottom Sheet",
+    description: "iOS-native sheet with two detents over blurred stock context.",
+    href: "/order-flow/v9",
+  },
+  {
+    title: "V10 — Split Pane",
+    description: "Fixed 50/50 split. Config scrolls top, keypad+CTA fixed bottom.",
+    href: "/order-flow/v10",
+  },
+  {
+    title: "V11 — Card Stack",
+    description: "Accordion cards — one expanded at a time, others show summaries.",
+    href: "/order-flow/v11",
+  },
+  {
+    title: "V12 — Brutalist",
+    description: "No rounded corners, thick borders, uppercase labels. Raw and confident.",
+    href: "/order-flow/v12",
+  },
+  {
+    title: "V13 — Overlay",
+    description: "Floating panel over blurred stock page. Quick-action, non-disruptive.",
+    href: "/order-flow/v13",
+  },
+  {
+    title: "V14 — Spatial",
+    description: "Depth layers with shadow hierarchy. Vision Pro-inspired spatial design.",
+    href: "/order-flow/v14",
+  },
+  {
+    title: "V15 — Iteration",
+    description: "Based on V3 — iterating towards the final order flow.",
+    href: "/order-flow/v15",
+  },
+  {
+    title: "V16 — Tabs Variant",
+    description: "Like V15 but with order type tabs on top instead of flipper.",
+    href: "/order-flow/v16",
+  },
 ];
 
 export default function OrderFlowIndex() {
@@ -46,7 +106,7 @@ export default function OrderFlowIndex() {
         </div>
       </div>
 
-      <div className="flex-1 px-5 pt-2 space-y-3">
+      <div className="flex-1 overflow-y-auto px-5 pt-2 pb-4 space-y-3">
         {versions.map((v, i) => (
           <motion.div
             key={v.href}

@@ -17,6 +17,18 @@ const pages = [
     href: "/home-v3",
     status: "wip",
   },
+  {
+    title: "Stocks",
+    description: "Stock detail view with charts and trading",
+    href: "/stocks",
+    status: "v1",
+  },
+  {
+    title: "Order Flow",
+    description: "Buy/sell order placement with swipe to confirm",
+    href: "/order-flow/v16",
+    status: "v16",
+  },
 ];
 
 const archive = [
@@ -30,12 +42,6 @@ const archive = [
     title: "Home",
     description: "Watchlist, header, and bottom navigation",
     href: "/home",
-    status: "v1",
-  },
-  {
-    title: "Stocks",
-    description: "Stock detail view with charts and trading",
-    href: "/stocks",
     status: "v1",
   },
   {
@@ -59,6 +65,13 @@ const archive = [
 ];
 
 const components = [
+  // — 2026-04-19 —
+  {
+    title: "Stock Header",
+    description: "Stock info header — 5 layouts · 3 market states",
+    href: "/stock-header-variants",
+    status: "5 variations",
+  },
   // — 2026-04-14 —
   {
     title: "ETF Top Movers v2",
