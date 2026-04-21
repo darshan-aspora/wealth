@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { createChart, ColorType, AreaSeries, LineSeries } from "lightweight-charts";
-import { PORTFOLIO_SUMMARY, PERIOD_RETURNS, WEALTH_GROWTH_DATA } from "./portfolio-mock-data";
+import { PORTFOLIO_SUMMARY, WEALTH_GROWTH_DATA } from "./portfolio-mock-data";
 
 /* ------------------------------------------------------------------ */
 /*  Chart period tabs                                                  */
@@ -173,8 +173,7 @@ function WealthGrowthChart({
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const MASK = "••••";
-const f = (n: number, d = 2) => n.toLocaleString("en-US", { minimumFractionDigits: d });
+const f =(n: number, d = 2) => n.toLocaleString("en-US", { minimumFractionDigits: d });
 const fs = (n: number, d = 2) => `${n > 0 ? "+" : ""}${f(n, d)}`;
 
 /* ------------------------------------------------------------------ */

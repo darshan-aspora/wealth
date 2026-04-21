@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+
 
 const SIPS = [
   { name: "Alibaba Group Holding Limited", type: null,   amount: 20,  schedule: "Weekly on Friday",       daysLeft: 1 },
