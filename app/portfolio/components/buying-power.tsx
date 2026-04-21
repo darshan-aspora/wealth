@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronRight,
-  DollarSign,
-  Coins,
-  ArrowUpRight,
-} from "lucide-react";
+import { ChevronRight, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +14,6 @@ import {
 import { PORTFOLIO_SUMMARY } from "./portfolio-mock-data";
 
 const QUICK_AMOUNTS = [500, 1_000, 5_000, 10_000];
-const PENDING_COUNT = 2;
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
@@ -107,49 +101,19 @@ export function BuyingPower() {
           <ChevronRight size={20} strokeWidth={1.8} className="text-muted-foreground" />
         </button>
 
-        {/* Divider */}
-        <div className="h-px bg-border/40" />
-
-        {/* Bottom section — 3 action buttons */}
-        <div className="px-4 pt-2.5 pb-2">
-          <div className="flex">
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="flex-1 flex flex-col items-center gap-2 py-2 active:opacity-70 transition-opacity"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/60">
-                <DollarSign size={19} strokeWidth={1.8} className="text-muted-foreground" />
-              </div>
-              <span className="text-[13px] font-medium text-foreground">Add USD</span>
-            </button>
-
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="flex-1 flex flex-col items-center gap-2 py-2 active:opacity-70 transition-opacity"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/60">
-                <Coins size={19} strokeWidth={1.8} className="text-muted-foreground" />
-              </div>
-              <span className="text-[13px] font-medium text-foreground">Add USDT</span>
-            </button>
-
-            <button
-              className="flex-1 flex flex-col items-center gap-2 py-2 active:opacity-70 transition-opacity"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/60">
-                <ArrowUpRight size={19} strokeWidth={1.8} className="text-muted-foreground" />
-              </div>
-              <span className="text-[13px] font-medium text-foreground">Withdraw</span>
-            </button>
-          </div>
-
-          {/* Pending payments line */}
-          <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-border/30">
-            <span className="inline-flex h-[5px] w-[5px] rounded-full bg-amber-500 animate-pulse" />
-            <p className="text-[13px] text-muted-foreground">
-              {PENDING_COUNT} payments in progress
-            </p>
-          </div>
+        {/* Bottom section — Withdraw + Deposit buttons */}
+        <div className="px-4 pb-4 pt-1 flex gap-3">
+          <button className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full border border-border/60 bg-background text-[15px] font-semibold text-foreground active:opacity-70 transition-opacity">
+            <Wallet size={16} strokeWidth={2} />
+            Withdraw
+          </button>
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full bg-foreground text-[15px] font-semibold text-background active:opacity-70 transition-opacity"
+          >
+            <span className="text-[18px] leading-none">+</span>
+            Deposit
+          </button>
         </div>
       </div>
 

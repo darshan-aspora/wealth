@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowUpRight, LineChart, Eye, EyeOff } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -189,44 +189,27 @@ export function PortfolioSummary() {
     dayChangePct,
     unrealizedPnl,
     unrealizedPnlPct,
-    xirr,
   } = PORTFOLIO_SUMMARY;
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("1Y");
   const [crosshairData, setCrosshairData] = useState<CrosshairData | null>(null);
-
 
   const handleCrosshairMove = useCallback((data: CrosshairData | null) => {
     setCrosshairData(data);
   }, []);
 
-  const val = (n: number, d = 2) => (hidden ? MASK : f(n, d));
+  const val = (n: number, d = 2) => f(n, d);
 
   return (
     <Card className="border-border/50 shadow-none overflow-hidden">
       <CardContent className="p-6">
-        {/* Top row — icons only, no "Portfolio" label */}
-        <div className="flex items-center justify-between mb-1">
+        {/* Top row */}
+        <div className="flex items-center justify-center mb-1">
           <span className="text-[13px] text-muted-foreground">Current Value</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setHidden(!hidden)}
-              className="rounded-lg p-2 transition-colors hover:bg-muted/60 active:bg-muted"
-            >
-              {hidden ? (
-                <EyeOff size={20} className="text-muted-foreground" />
-              ) : (
-                <Eye size={20} className="text-muted-foreground" />
-              )}
-            </button>
-            <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (!open) setCrosshairData(null); }}>
+          <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (!open) setCrosshairData(null); }}>
               <SheetTrigger asChild>
-                <button className="rounded-lg p-2 transition-colors hover:bg-muted/60 active:bg-muted">
-                  <LineChart size={20} className="text-muted-foreground" />
-                </button>
-              </SheetTrigger>
+                <span /></SheetTrigger>
               <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-5 pb-8">
                 <SheetHeader className="pb-1">
                   <SheetTitle className="text-[17px] font-semibold text-foreground">Wealth Growth</SheetTitle>
@@ -323,7 +306,6 @@ export function PortfolioSummary() {
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
         </div>
 
         {/* Big value — centered */}
@@ -333,12 +315,8 @@ export function PortfolioSummary() {
           </p>
           <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-gain/10 px-3 py-1">
             <ArrowUpRight size={14} className="text-gain" />
-            {!hidden && (
-              <span className="text-[14px] font-semibold text-gain">{f(dayChange)}</span>
-            )}
-            <span className="text-[13px] font-medium text-gain/80">
-              {hidden ? `${dayChangePct > 0 ? "+" : ""}${dayChangePct}%` : `(${dayChangePct > 0 ? "+" : ""}${dayChangePct}%)`}
-            </span>
+            <span className="text-[14px] font-semibold text-gain">{f(dayChange)}</span>
+            <span className="text-[13px] font-medium text-gain/80">({dayChangePct > 0 ? "+" : ""}{dayChangePct}%)</span>
             <span className="text-[12px] text-gain/50 ml-0.5">today</span>
           </div>
         </div>
@@ -353,39 +331,11 @@ export function PortfolioSummary() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[14px] text-muted-foreground">Unrealized P&L</span>
-            {hidden ? (
-              <span className="text-[16px] font-semibold text-gain">+{unrealizedPnlPct}%</span>
-            ) : (
-              <div className="text-right">
-                <span className="text-[16px] font-semibold text-gain">{fs(unrealizedPnl)}</span>
-                <span className="text-[13px] text-gain/70 ml-1.5">+{unrealizedPnlPct}%</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Est. XIRR</span>
-            <span className="text-[16px] font-semibold text-gain">{xirr}%</span>
-          </div>
-        </div>
-
-        <Separator className="mt-4 mb-3 bg-border/30" />
-
-        {/* Returns — 4 columns, label on top, percentage below */}
-        <p className="text-[12px] font-medium text-muted-foreground mb-2.5">Returns</p>
-        <div className="grid grid-cols-4 gap-2">
-          {PERIOD_RETURNS.map((r) => (
-            <div key={r.period}>
-              <p className="text-[13px] text-muted-foreground">{r.period}</p>
-              <p
-                className={cn(
-                  "text-[15px] font-semibold mt-0.5",
-                  r.value >= 0 ? "text-gain" : "text-loss"
-                )}
-              >
-                {r.value >= 0 ? "+" : ""}{r.value}%
-              </p>
+            <div className="text-right">
+              <span className="text-[16px] font-semibold text-gain">{fs(unrealizedPnl)}</span>
+              <span className="text-[13px] text-gain/70 ml-1.5">+{unrealizedPnlPct}%</span>
             </div>
-          ))}
+          </div>
         </div>
 
       </CardContent>

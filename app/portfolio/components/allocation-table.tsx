@@ -41,6 +41,14 @@ function computeRows(rows: AllocationRow[]) {
   });
 }
 
+function computeTotal(rows: AllocationRow[]) {
+  const totalCurrent = rows.reduce((s, r) => s + r.current, 0);
+  const totalInvested = rows.reduce((s, r) => s + r.invested, 0);
+  const pnl = totalCurrent - totalInvested;
+  const pnlPct = totalInvested > 0 ? (pnl / totalInvested) * 100 : 0;
+  return { current: totalCurrent, invested: totalInvested, pnl, pnlPct };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -52,6 +60,7 @@ export function AllocationTable({
   firstColumnLabel = "Asset",
 }: AllocationTableProps) {
   const rows = computeRows(rawRows);
+  const total = computeTotal(rawRows);
 
   return (
     <Card className="border-border/50 shadow-none overflow-hidden">
@@ -85,8 +94,8 @@ export function AllocationTable({
             <thead>
               <tr className="text-muted-foreground text-[11px] uppercase tracking-wider">
                 <th className="text-left py-2.5 pl-5 pr-2 font-medium sticky left-0 bg-card z-10">{firstColumnLabel}</th>
-                <th className="text-right py-2.5 px-2 font-medium">Invested</th>
                 <th className="text-right py-2.5 px-2 font-medium">Current</th>
+                <th className="text-right py-2.5 px-2 font-medium">Invested</th>
                 <th className="text-right py-2.5 px-2 font-medium">P&L</th>
                 <th className="text-right py-2.5 px-2 font-medium">P&L %</th>
                 <th className="text-right py-2.5 px-2 font-medium">Alloc.</th>
@@ -108,10 +117,10 @@ export function AllocationTable({
                     </div>
                   </td>
                   <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
-                    {fmt(r.invested)}
+                    {fmt(r.current)}
                   </td>
                   <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
-                    {fmt(r.current)}
+                    {fmt(r.invested)}
                   </td>
                   <td className={cn(
                     "py-3.5 px-2 text-right text-[13px] tabular-nums font-medium",
@@ -136,6 +145,20 @@ export function AllocationTable({
                   </td>
                 </tr>
               ))}
+              {/* Total row */}
+              <tr className="border-t-2 border-border/60">
+                <td className="py-3.5 pl-5 pr-2 sticky left-0 bg-card z-10">
+                  <p className="text-[13px] font-bold text-foreground">Total</p>
+                </td>
+                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.current)}</td>
+                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.invested)}</td>
+                <td className={cn("py-3.5 px-2 text-right text-[13px] tabular-nums font-bold", total.pnl >= 0 ? "text-gain" : "text-loss")}>
+                  {total.pnl >= 0 ? "+" : ""}{fmt(total.pnl)} ({total.pnl >= 0 ? "+" : ""}{total.pnlPct.toFixed(1)}%)
+                </td>
+                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">—</td>
+                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">100%</td>
+                <td className="py-3.5 pr-5 pl-2 text-right text-[13px] tabular-nums text-foreground">—</td>
+              </tr>
             </tbody>
           </table>
         </div>
