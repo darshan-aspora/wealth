@@ -1,202 +1,364 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { ArrowUpRight, ArrowDownRight, ArrowUpDown } from "lucide-react";
+import { useState } from "react";
+import { Briefcase, X, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+
+type ChangeRange = "1M" | "3M" | "6M" | "1Y" | "Max";
+type ChangeType = "Percentage" | "Absolute";
+const CHANGE_RANGES: ChangeRange[] = ["1M", "3M", "6M", "1Y", "Max"];
 
 /* ------------------------------------------------------------------ */
 /*  Types & data                                                       */
 /* ------------------------------------------------------------------ */
 
-type Category = "All" | "Stocks" | "ETFs" | "Options";
-type SortKey = "current" | "invested" | "dayChange" | "xirr";
+type Category = "All" | "Stocks" | "ETFs" | "G. ETFs";
+type ValueMode = "Change" | "Value";
 
 interface Holding {
-  symbol: string;
   name: string;
+  tag?: "ETF" | "G.ETF";
   qty: number;
-  avg: number;
-  ltp: number;
+  avgPrice: number;
+  currentPrice: number;
+  currentValue: number;
   pnl: number;
   pnlPct: number;
-  dayChange: number;
   dayChangePct: number;
-  category: "Stocks" | "ETFs" | "Options";
   xirr: number;
-  logoColor: string;
-  strike?: number;
+  category: "Stocks" | "ETFs" | "G. ETFs";
 }
 
-const holdingsData: Holding[] = [
-  { symbol: "AAPL", name: "Apple Inc.", qty: 15, avg: 178.25, ltp: 192.40, pnl: 212.25, pnlPct: 7.94, dayChange: 28.50, dayChangePct: 0.99, category: "Stocks", xirr: 24.5, logoColor: "bg-neutral-600" },
-  { symbol: "MSFT", name: "Microsoft Corp.", qty: 8, avg: 385.10, ltp: 412.85, pnl: 222.00, pnlPct: 7.21, dayChange: 18.40, dayChangePct: 0.56, category: "Stocks", xirr: 19.2, logoColor: "bg-blue-600" },
-  { symbol: "NVDA", name: "NVIDIA Corp.", qty: 5, avg: 820.50, ltp: 878.30, pnl: 289.00, pnlPct: 7.04, dayChange: 42.50, dayChangePct: 0.97, category: "Stocks", xirr: 32.1, logoColor: "bg-green-600" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", qty: 12, avg: 142.80, ltp: 155.20, pnl: 148.80, pnlPct: 8.68, dayChange: 15.60, dayChangePct: 0.84, category: "Stocks", xirr: 21.8, logoColor: "bg-red-500" },
-  { symbol: "VOO", name: "Vanguard S&P 500", qty: 20, avg: 445.30, ltp: 462.10, pnl: 336.00, pnlPct: 3.77, dayChange: 54.00, dayChangePct: 0.59, category: "ETFs", xirr: 14.6, logoColor: "bg-rose-700" },
-  { symbol: "QQQ", name: "Invesco QQQ Trust", qty: 10, avg: 425.60, ltp: 445.80, pnl: 202.00, pnlPct: 4.75, dayChange: 32.00, dayChangePct: 0.72, category: "ETFs", xirr: 16.8, logoColor: "bg-indigo-600" },
-  { symbol: "TSLA", name: "Tesla Inc.", qty: 6, avg: 248.30, ltp: 231.10, pnl: -103.20, pnlPct: -6.92, dayChange: -22.80, dayChangePct: -1.62, category: "Stocks", xirr: -8.4, logoColor: "bg-red-600" },
-  { symbol: "META", name: "Meta Platforms", qty: 7, avg: 490.20, ltp: 512.40, pnl: 155.40, pnlPct: 4.53, dayChange: 19.60, dayChangePct: 0.55, category: "Stocks", xirr: 18.9, logoColor: "bg-blue-500" },
-  { symbol: "AAPL 195C", name: "AAPL Mar 28 Call", qty: 3, avg: 4.20, ltp: 5.85, pnl: 4.95, pnlPct: 39.29, dayChange: 1.35, dayChangePct: 8.33, category: "Options", xirr: 142.0, logoColor: "bg-amber-600", strike: 195 },
-  { symbol: "SPY 510P", name: "SPY Apr 18 Put", qty: 5, avg: 3.80, ltp: 2.90, pnl: -4.50, pnlPct: -23.68, dayChange: -1.25, dayChangePct: -7.95, category: "Options", xirr: -52.3, logoColor: "bg-violet-600", strike: 510 },
+const HOLDINGS: Holding[] = [
+  // Stocks (9)
+  { name: "Apple Inc.",                  category: "Stocks",  xirr: 22.1, qty: 15,       avgPrice: 178.25, currentPrice: 211.50, currentValue: 3_172, pnl:   499, pnlPct:  18.7, dayChangePct:  1.2  },
+  { name: "Microsoft Corporation",       category: "Stocks",  xirr: 10.4, qty: 8,        avgPrice: 385.10, currentPrice: 415.80, currentValue: 3_326, pnl:   245, pnlPct:   7.9, dayChangePct:  0.6  },
+  { name: "NVIDIA Corporation",          category: "Stocks",  xirr: 18.9, qty: 5,        avgPrice: 820.50, currentPrice: 875.20, currentValue: 4_376, pnl:   273, pnlPct:   6.7, dayChangePct:  2.1  },
+  { name: "Alphabet Inc.",               category: "Stocks",  xirr: 24.3, qty: 12,       avgPrice: 142.80, currentPrice: 172.40, currentValue: 2_068, pnl:   355, pnlPct:  20.7, dayChangePct:  0.9  },
+  { name: "Meta Platforms, Inc.",        category: "Stocks",  xirr:  9.6, qty: 3.02584,  avgPrice: 490.20, currentPrice: 528.60, currentValue: 1_599, pnl:   116, pnlPct:   7.8, dayChangePct: -0.4  },
+  { name: "Tesla, Inc.",                 category: "Stocks",  xirr:-31.2, qty: 6,        avgPrice: 248.30, currentPrice: 178.90, currentValue: 1_073, pnl:  -416, pnlPct: -27.9, dayChangePct: -3.2  },
+  { name: "Amazon.com, Inc.",            category: "Stocks",  xirr: 13.8, qty: 10,       avgPrice: 178.40, currentPrice: 196.80, currentValue: 1_968, pnl:   184, pnlPct:  10.3, dayChangePct:  0.7  },
+  { name: "Netflix, Inc.",               category: "Stocks",  xirr: 11.2, qty: 4,        avgPrice: 580.00, currentPrice: 628.40, currentValue: 2_513, pnl:   193, pnlPct:   8.3, dayChangePct:  1.5  },
+  { name: "Super Micro Computer, Inc.",  category: "Stocks",  xirr:-18.6, qty: 20,       avgPrice:  42.10, currentPrice:  35.60, currentValue:   712, pnl:  -130, pnlPct: -15.4, dayChangePct: -2.8  },
+  // ETFs (5)
+  { name: "SPDR S&P 500 ETF Trust",      category: "ETFs",    xirr: 20.1, qty: 20,       avgPrice: 445.30, currentPrice: 528.40, currentValue: 10_568, pnl: 1_662, pnlPct:  18.7, dayChangePct:  0.5,  tag: "ETF" },
+  { name: "Invesco QQQ Trust",           category: "ETFs",    xirr: 14.2, qty: 10,       avgPrice: 425.60, currentPrice: 471.20, currentValue:  4_712, pnl:   456, pnlPct:  10.7, dayChangePct:  0.8,  tag: "ETF" },
+  { name: "SPDR Gold Shares",            category: "ETFs",    xirr: 12.8, qty: 8,        avgPrice: 184.20, currentPrice: 218.60, currentValue:  1_748, pnl:   275, pnlPct:  18.7, dayChangePct:  0.3,  tag: "ETF" },
+  { name: "iShares Core S&P 500 ETF",   category: "ETFs",    xirr: 19.4, qty: 15,       avgPrice: 448.10, currentPrice: 527.80, currentValue:  7_917, pnl: 1_195, pnlPct:  17.8, dayChangePct:  0.5,  tag: "ETF" },
+  { name: "Vanguard Total Stock Market", category: "ETFs",    xirr: 15.6, qty: 12,       avgPrice: 220.40, currentPrice: 248.30, currentValue:  2_979, pnl:   334, pnlPct:  12.7, dayChangePct:  0.4,  tag: "ETF" },
+  // Global ETFs (4)
+  { name: "iShares MSCI World ETF",              category: "G. ETFs", xirr: 11.0, qty: 25, avgPrice:  88.20, currentPrice:  96.40, currentValue: 2_410, pnl:  205, pnlPct:   9.3, dayChangePct:  0.3, tag: "G.ETF" },
+  { name: "Vanguard FTSE All-World ETF",         category: "G. ETFs", xirr: 10.2, qty: 18, avgPrice:  98.50, currentPrice: 106.80, currentValue: 1_922, pnl:  149, pnlPct:   8.4, dayChangePct:  0.2, tag: "G.ETF" },
+  { name: "iShares MSCI Emerging Markets ETF",   category: "G. ETFs", xirr: -4.1, qty: 30, avgPrice:  40.10, currentPrice:  38.60, currentValue: 1_158, pnl:  -45, pnlPct:  -3.7, dayChangePct: -0.6, tag: "G.ETF" },
+  { name: "SPDR MSCI ACWI ex-US ETF",            category: "G. ETFs", xirr:  9.8, qty: 22, avgPrice:  82.30, currentPrice:  89.10, currentValue: 1_960, pnl:  149, pnlPct:   8.3, dayChangePct:  0.4, tag: "G.ETF" },
 ];
 
-const categories: Category[] = ["All", "Stocks", "ETFs", "Options"];
-const sortOptions: { key: SortKey; label: string }[] = [
-  { key: "xirr", label: "Est. XIRR" },
-  { key: "current", label: "Current Value" },
-  { key: "invested", label: "Invested Amount" },
-  { key: "dayChange", label: "1D Change %" },
-];
+const CATEGORIES: Category[] = ["All", "Stocks", "ETFs", "G. ETFs"];
+
+const PORTFOLIO = { invested: 46_284.20, currentValue: 52_183.60, pnl: 5_899.40, pnlPct: 12.7, xirr: 14, todayPnl: 118.12, todayPnlPct: 2 };
+
+const fmtMoney = (n: number) =>
+  n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtInt = (n: number) =>
+  n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 export function HoldingsTab() {
-  const [filter, setFilter] = useState<Category>("All");
-  const [sortIdx, setSortIdx] = useState(0);
-  const sortBy = sortOptions[sortIdx].key;
+  const [category, setCategory] = useState<Category>("All");
+  const [valueMode, setValueMode] = useState<ValueMode>("Value");
+  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
+  const [pnlExpanded, setPnlExpanded] = useState(false);
+  const [changeSheetOpen, setChangeSheetOpen] = useState(false);
+  const [changeRange, setChangeRange] = useState<ChangeRange>("Max");
+  const [changeType, setChangeType] = useState<ChangeType>("Percentage");
 
-  const filtered = useMemo(() => {
-    const list = filter === "All" ? [...holdingsData] : holdingsData.filter((h) => h.category === filter);
+  const filtered =
+    category === "All" ? HOLDINGS : HOLDINGS.filter((h) => h.category === category);
 
-    const getValue = (h: Holding) => {
-      switch (sortBy) {
-        case "current": return h.ltp * h.qty;
-        case "invested": return h.avg * h.qty;
-        case "dayChange": return h.dayChangePct;
-        case "xirr": return h.xirr;
-      }
-    };
-
-    list.sort((a, b) => getValue(b) - getValue(a));
-    return list;
-  }, [filter, sortBy]);
-
-  const totalCurrent = filtered.reduce((s, h) => s + h.ltp * h.qty, 0);
-  const totalInvested = filtered.reduce((s, h) => s + h.avg * h.qty, 0);
-  const totalDayChange = filtered.reduce((s, h) => s + h.dayChange, 0);
-  const totalDayChangePct = totalCurrent > 0 ? (totalDayChange / (totalCurrent - totalDayChange)) * 100 : 0;
-  const totalXirr = 18.42;
+  const heroInvested = filtered.reduce((s, h) => s + h.qty * h.avgPrice, 0);
+  const heroCurrentValue = filtered.reduce((s, h) => s + h.currentValue, 0);
+  const heroPnl = heroCurrentValue - heroInvested;
+  const heroPnlPct = heroInvested > 0 ? (heroPnl / heroInvested) * 100 : 0;
+  const heroTodayPnl = filtered.reduce((s, h) => s + h.currentValue * (h.dayChangePct / 100), 0);
+  const heroTodayPnlPct = heroCurrentValue > 0 ? (heroTodayPnl / heroCurrentValue) * 100 : 0;
+  // Unrealised = open positions P&L (pnl from holdings with positive currentValue)
+  const heroUnrealisedPnl = filtered.filter((h) => h.pnl > 0).reduce((s, h) => s + h.pnl, 0);
+  const heroUnrealisedPct = heroInvested > 0 ? (heroUnrealisedPnl / heroInvested) * 100 : 0;
+  const heroRealisedPnl = heroPnl - heroUnrealisedPnl;
+  const heroRealisedPct = heroInvested > 0 ? (heroRealisedPnl / heroInvested) * 100 : 0;
+  // Weighted average XIRR by current value
+  const heroXirr = heroCurrentValue > 0
+    ? filtered.reduce((s, h) => s + h.xirr * h.currentValue, 0) / heroCurrentValue
+    : 0;
 
   return (
-    <div className="px-5 pb-6">
-      {/* Summary card */}
-      <div className="mb-4 rounded-xl border border-border/40 bg-card/60 px-5 py-3">
-        <div className="flex items-baseline justify-between">
-          <p className="text-[20px] font-bold tabular-nums text-foreground">
-            {totalCurrent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-          </p>
-          <div className={cn("flex items-center gap-1", totalDayChange >= 0 ? "text-gain" : "text-loss")}>
-            {totalDayChange >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-            <span className="text-[13px] font-semibold tabular-nums">
-              {totalDayChange >= 0 ? "+" : ""}{totalDayChange.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[12px] font-medium tabular-nums">
-              ({totalDayChangePct >= 0 ? "+" : ""}{totalDayChangePct.toFixed(2)}%)
-            </span>
-          </div>
-        </div>
-        <div className="mt-1.5 flex items-center gap-4 text-[12px] text-muted-foreground">
-          <span>Invested <span className="font-medium tabular-nums text-foreground/80">{totalInvested.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
-          <span>·</span>
-          <span>Est. XIRR <span className={cn("font-medium tabular-nums", totalXirr >= 0 ? "text-gain" : "text-loss")}>{totalXirr >= 0 ? "+" : ""}{totalXirr}%</span></span>
-        </div>
-      </div>
+    <div className="pb-24">
 
-      {/* Filter pills + Sort */}
-      <div className="mb-4 flex items-center gap-2">
-        <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
-          {categories.map((cat) => (
+      {/* Advisory banner — top */}
+      {!advisoryDismissed && (
+        <div className="mx-5 mb-4 flex items-center justify-between rounded-xl bg-[#F2F2F2] px-4 py-3">
+          <p className="text-[13px] text-muted-foreground">Advisory holding won&apos;t be visible here</p>
+          <button onClick={() => setAdvisoryDismissed(true)} className="ml-3 shrink-0 active:opacity-60">
+            <X size={17} className="text-muted-foreground" />
+          </button>
+        </div>
+      )}
+
+      {/* Segmented filter */}
+      <div className="px-5 mb-5">
+        <div className="flex rounded-2xl bg-[#F0F3FF] p-1 gap-0.5">
+          {CATEGORIES.map((cat) => (
             <button
               key={cat}
-              onClick={() => setFilter(cat)}
+              onClick={() => { setCategory(cat); setPnlExpanded(false); }}
               className={cn(
-                "whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
-                filter === cat
-                  ? "bg-foreground text-background"
-                  : "border border-border/60 text-muted-foreground"
+                "flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap",
+                category === cat
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-[#41484B]"
               )}
             >
               {cat}
             </button>
           ))}
         </div>
-
-        {/* Sort flipper */}
-        <button
-          onClick={() => setSortIdx((i) => (i + 1) % sortOptions.length)}
-          className="flex shrink-0 items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-[13px] font-medium text-background transition-colors active:scale-95"
-        >
-          <ArrowUpDown size={13} />
-          {sortOptions[sortIdx].label}
-        </button>
       </div>
 
-      {/* Holdings list */}
-      <div className="space-y-2">
-        {filtered.map((h) => {
-          const invested = h.avg * h.qty;
-          return (
-            <div
-              key={h.symbol}
-              className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 active:scale-[0.98] transition-transform"
+      {/* Hero card — white card stacked above gray Today's P&L strip */}
+      <div className="mx-5 mb-5">
+        {/* Front card */}
+        <div className="rounded-2xl border border-border/40 bg-white px-4 py-4 shadow-sm">
+          {/* Invested + Current value */}
+          <div className="flex gap-10 mb-3.5">
+            <div>
+              <p className="text-[13px] text-muted-foreground mb-1">Invested</p>
+              <p className="text-[20px] font-bold text-foreground">${fmtMoney(heroInvested)}</p>
+            </div>
+            <div>
+              <p className="text-[13px] text-muted-foreground mb-1">Current value</p>
+              <p className="text-[20px] font-bold text-foreground">${fmtMoney(heroCurrentValue)}</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-border/40 mb-3.5" />
+
+          {/* P&L row — tappable to expand */}
+          <button
+            className="w-full flex items-center justify-between mb-2.5 active:opacity-70 transition-opacity"
+            onClick={() => setPnlExpanded((v) => !v)}
+          >
+            <span className="text-[14px] text-muted-foreground">P&L</span>
+            <div className="flex items-center gap-1.5">
+              <span className={cn("text-[15px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                {heroPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroPnl))} ({heroPnlPct >= 0 ? "+" : ""}{heroPnlPct.toFixed(1)}%)
+              </span>
+              <ChevronDown
+                size={16}
+                className={cn("text-[#10B981] transition-transform duration-200", pnlExpanded && "rotate-180")}
+              />
+            </div>
+          </button>
+
+          {/* Expanded: Unrealised + Realised */}
+          {pnlExpanded && (
+            <>
+              <div className="flex items-center justify-between mb-2.5 pl-2">
+                <span className="text-[14px] text-muted-foreground">Unrealised P&L</span>
+                <span className={cn("text-[15px] font-semibold", heroUnrealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                  {heroUnrealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroUnrealisedPnl))} ({heroUnrealisedPct >= 0 ? "+" : ""}{heroUnrealisedPct.toFixed(1)}%)
+                </span>
+              </div>
+              <div className="flex items-center justify-between mb-2.5 pl-2">
+                <span className="text-[14px] text-muted-foreground">Realised P&L</span>
+                <span className={cn("text-[15px] font-semibold", heroRealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                  {heroRealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroRealisedPnl))} ({heroRealisedPct >= 0 ? "+" : ""}{heroRealisedPct.toFixed(1)}%)
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Estimated XIRR row */}
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-muted-foreground">Estimated XIRR</span>
+            <span className={cn("text-[15px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              {heroXirr >= 0 ? "+" : ""}{heroXirr.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Gray strip — Today's P&L, peeks below the white card */}
+        <div className="bg-[#F2F3F7] rounded-b-2xl px-4 pt-3 pb-3.5 -mt-3 pt-[calc(0.75rem+12px)]">
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] text-muted-foreground">Today&apos;s P&L</span>
+            <span className={cn("text-[15px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                {heroTodayPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroTodayPnl))} ({heroTodayPnlPct >= 0 ? "+" : ""}{heroTodayPnlPct.toFixed(1)}%)
+              </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Holdings count + Change/Value toggle */}
+      <div className="mx-5 mb-3 flex items-center justify-between">
+        <p className="text-[14px] font-semibold text-foreground">{filtered.length} Holdings</p>
+        <div className="flex items-center gap-2">
+          {/* Settings button — only shown when "Change" is active */}
+          {valueMode === "Change" && (
+            <button
+              onClick={() => setChangeSheetOpen(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-[#F5F5F5] active:opacity-60 transition-opacity"
             >
-              {/* Logo */}
-              <div
+              <SlidersHorizontal size={16} className="text-foreground" />
+            </button>
+          )}
+          <div className="flex rounded-full bg-[#F5F5F5] p-0.5">
+            {(["Change", "Value"] as ValueMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setValueMode(mode)}
                 className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white",
-                  h.logoColor
+                  "px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all",
+                  valueMode === mode ? "bg-black text-white" : "text-muted-foreground"
                 )}
               >
-                {h.symbol.slice(0, 2)}
-              </div>
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-semibold text-foreground truncate">
-                  {h.name}{h.strike ? ` · ${h.strike} Strike` : ""}
-                </p>
-                <div className="mt-0.5 flex items-center gap-3 text-[12px] text-muted-foreground/60">
-                  <span>Avg {h.avg.toFixed(2)}</span>
-                  <span>·</span>
-                  <span>Inv {invested.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                  {h.xirr !== 0 && (
-                    <>
-                      <span>·</span>
-                      <span className={cn(h.xirr >= 0 ? "text-gain/70" : "text-loss/70")}>
-                        Est. XIRR {h.xirr > 0 ? "+" : ""}{h.xirr}%
-                      </span>
-                    </>
+      {/* Change data bottom sheet */}
+      <Sheet open={changeSheetOpen} onOpenChange={setChangeSheetOpen}>
+        <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-5 pb-10">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-[20px] font-bold text-foreground text-left pl-8">Change data</SheetTitle>
+          </SheetHeader>
+
+          {/* Range row */}
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-[15px] text-muted-foreground">Range</span>
+            <div className="flex items-center gap-1.5">
+              {CHANGE_RANGES.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setChangeRange(r)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+                    changeRange === r
+                      ? "bg-foreground text-background border-foreground"
+                      : "border-border/60 text-foreground bg-transparent"
                   )}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Change type row */}
+          <div className="flex items-center justify-between">
+            <span className="text-[15px] text-muted-foreground">Change</span>
+            <div className="flex rounded-xl border border-border/50 overflow-hidden">
+              {(["Percentage", "Absolute"] as ChangeType[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setChangeType(t)}
+                  className={cn(
+                    "px-4 py-2 text-[13px] font-semibold transition-all",
+                    changeType === t
+                      ? "bg-foreground text-background"
+                      : "text-foreground bg-background"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Holdings list */}
+      <div className="px-5 space-y-2.5">
+        {filtered.map((h) => {
+          const isGain = h.pnl >= 0;
+          const gainColor = isGain ? "text-[#2FC15A]" : "text-[#C12F2F]";
+
+          const sign = isGain ? "+" : "-";
+          const absPnl = `${sign}$${fmtInt(Math.abs(h.pnl))}`;
+          const pctPnl = `${sign}${Math.abs(h.pnlPct).toFixed(1)}%`;
+
+          // In "Value" mode always show current value + absolute P&L sub
+          // In "Change" mode, show only what the user selected in the sheet
+          const rightTop =
+            valueMode === "Value"
+              ? `$${fmtInt(h.currentValue)}`
+              : changeType === "Percentage"
+              ? pctPnl
+              : absPnl;
+
+          // Only used in Value mode (sub-line below current value)
+          const rightSub = absPnl;
+
+          const dayIsGain = h.dayChangePct >= 0;
+
+          return (
+            <div
+              key={h.name}
+              className="flex items-center justify-between rounded-2xl border border-[#E9E9E9] bg-white px-4 py-3 active:opacity-75 transition-opacity"
+            >
+              {/* Left */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
+                {/* Square logo */}
+                <div className="w-[42px] h-[42px] shrink-0 rounded-xl bg-[#D9D9D9]" />
+
+                <div className="min-w-0">
+                  {/* Name + tag badge */}
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[14px] font-bold text-foreground leading-snug truncate">{h.name}</p>
+                    {h.tag && (
+                      <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+                        {h.tag}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Qty | avg → current (chg%) */}
+                  <div className="mt-1 flex items-center gap-1 text-[12px]">
+                    <Briefcase size={11} className="text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground">
+                      {h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5)}
+                    </span>
+                    <span className="text-border mx-0.5">|</span>
+                    <span className="text-[#484848]">${h.avgPrice}</span>
+                    <span className="text-muted-foreground mx-0.5">→</span>
+                    <span className={dayIsGain ? "text-[#2FC15A]" : "text-[#C12F2F]"}>
+                      ${h.currentPrice} ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Price + P&L */}
+              {/* Right: value + sub */}
               <div className="text-right shrink-0">
-                <p className="text-[15px] font-semibold tabular-nums text-foreground">
-                  {h.ltp.toFixed(2)}
+                <p className={cn("text-[18px] font-bold leading-tight", gainColor)}>
+                  {rightTop}
                 </p>
-                <div className={cn("flex items-center justify-end gap-0.5", h.pnl >= 0 ? "text-gain" : "text-loss")}>
-                  {h.pnl >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                  <span className="text-[13px] font-medium tabular-nums">
-                    {h.pnl >= 0 ? "+" : ""}{h.pnl.toFixed(2)}
-                  </span>
-                </div>
-                <p className={cn("text-[11px] tabular-nums", h.pnlPct >= 0 ? "text-gain/70" : "text-loss/70")}>
-                  {h.pnlPct >= 0 ? "+" : ""}{h.pnlPct.toFixed(2)}%
-                </p>
+                {/* In Change mode only one metric is shown — no sub-line needed */}
+                {valueMode === "Value" && (
+                  <p className={cn("text-[12px] mt-0.5", gainColor)}>
+                    {rightSub}
+                  </p>
+                )}
               </div>
             </div>
           );
         })}
       </div>
-
-      {filtered.length === 0 && (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-[15px] text-muted-foreground/50">No {filter.toLowerCase()} holdings</p>
-        </div>
-      )}
     </div>
   );
 }

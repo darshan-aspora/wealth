@@ -149,6 +149,8 @@ export const INVESTMENT_STYLES: { lumpsum: InvestmentStyle; sip: InvestmentStyle
 
 // ── Top Movers (Portfolio Holdings) ──
 
+export type MoverCategory = "Stocks" | "ETF" | "Global ETF" | "Collections";
+
 export interface PortfolioMover {
   symbol: string;
   name: string;
@@ -165,29 +167,53 @@ export interface PortfolioMover {
   monthlyPnl: number;
   yearlyPnl: number;
   allocationPct: number;
+  category: MoverCategory;
 }
 
 export const ALL_HOLDINGS: PortfolioMover[] = [
-  // Gainers
-  { symbol: "NVDA",  name: "NVIDIA",    ltp: 924.80, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 3.8,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "AAPL",  name: "Apple",     ltp: 198.50, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 2.9,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "MSFT",  name: "Microsoft", ltp: 425.30, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 2.2,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "GOOGL", name: "Alphabet",  ltp: 176.80, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 1.7,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "META",  name: "Meta",      ltp: 502.40, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 1.5,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "JPM",   name: "JPMorgan",  ltp: 198.20, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 0.6,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
-  { symbol: "AMZN",  name: "Amazon",    ltp: 186.40, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 0.9,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733, weeklyPnl: 733, monthlyPnl: 733, yearlyPnl: 733, allocationPct: 81.2 },
+  // Stocks — Gainers
+  { category: "Stocks", symbol: "NVDA",  name: "NVIDIA",    ltp: 924.80, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 3.8,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "AAPL",  name: "Apple",     ltp: 198.50, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 2.9,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "MSFT",  name: "Microsoft", ltp: 425.30, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 2.2,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "GOOGL", name: "Alphabet",  ltp: 176.80, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 1.7,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "META",  name: "Meta",      ltp: 502.40, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 1.5,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "JPM",   name: "JPMorgan",  ltp: 198.20, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 0.6,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  { category: "Stocks", symbol: "AMZN",  name: "Amazon",    ltp: 186.40, invested: 41_580, current: 34_250, pnl: 7_330, pnlPct: 21.4, dayChangePct: 0.9,  xirr: 21.4, logoColor: "bg-neutral-500", dailyPnl: 733,  weeklyPnl: 733,  monthlyPnl: 733,  yearlyPnl: 733,  allocationPct: 81.2 },
+  // Stocks — Losers
+  { category: "Stocks", symbol: "TSLA",  name: "Tesla",     ltp: 231.10, invested: 1_490,  current: 1_387,  pnl: -103, pnlPct: -6.92,  dayChangePct: -1.62, xirr: -8.4,  logoColor: "bg-neutral-500", dailyPnl: -103, weeklyPnl: -210, monthlyPnl: -320, yearlyPnl: -450, allocationPct: 3.2 },
+  { category: "Stocks", symbol: "SNAP",  name: "Snap",      ltp: 11.20,  invested: 1_680,  current: 1_344,  pnl: -336, pnlPct: -20.00, dayChangePct: -3.10, xirr: -28.4, logoColor: "bg-neutral-500", dailyPnl: -85,  weeklyPnl: -180, monthlyPnl: -280, yearlyPnl: -336, allocationPct: 2.5 },
+  { category: "Stocks", symbol: "PYPL",  name: "PayPal",    ltp: 64.80,  invested: 2_590,  current: 2_268,  pnl: -322, pnlPct: -12.43, dayChangePct: -1.85, xirr: -15.6, logoColor: "bg-neutral-500", dailyPnl: -62,  weeklyPnl: -140, monthlyPnl: -220, yearlyPnl: -322, allocationPct: 4.2 },
+  { category: "Stocks", symbol: "INTC",  name: "Intel",     ltp: 31.20,  invested: 1_872,  current: 1_685,  pnl: -187, pnlPct: -10.00, dayChangePct: -0.95, xirr: -14.8, logoColor: "bg-neutral-500", dailyPnl: -42,  weeklyPnl: -95,  monthlyPnl: -150, yearlyPnl: -187, allocationPct: 3.1 },
+  { category: "Stocks", symbol: "BA",    name: "Boeing",    ltp: 178.40, invested: 2_140,  current: 1_962,  pnl: -178, pnlPct: -8.34,  dayChangePct: -2.10, xirr: -11.2, logoColor: "bg-neutral-500", dailyPnl: -55,  weeklyPnl: -110, monthlyPnl: -165, yearlyPnl: -178, allocationPct: 3.6 },
+  // Stocks — Neutral
+  { category: "Stocks", symbol: "JNJ",   name: "J&J",       ltp: 158.40, invested: 3_160,  current: 3_168,  pnl: 8,   pnlPct: 0.25,  dayChangePct: 0.12,  xirr: 1.2,  logoColor: "bg-neutral-500", dailyPnl: 4,   weeklyPnl: 6,   monthlyPnl: 8,   yearlyPnl: 8,   allocationPct: 5.8 },
+  { category: "Stocks", symbol: "WMT",   name: "Walmart",   ltp: 168.20, invested: 2_523,  current: 2_580,  pnl: 57,  pnlPct: 2.26,  dayChangePct: 0.32,  xirr: 5.4,  logoColor: "bg-neutral-500", dailyPnl: 12,  weeklyPnl: 28,  monthlyPnl: 42,  yearlyPnl: 57,  allocationPct: 4.7 },
 
-  // Losers
-  { symbol: "TSLA",  name: "Tesla",     ltp: 231.10, invested: 1_490, current: 1_387, pnl: -103, pnlPct: -6.92,  dayChangePct: -1.62, xirr: -8.4,  logoColor: "bg-neutral-500", dailyPnl: -103, weeklyPnl: -210, monthlyPnl: -320, yearlyPnl: -450, allocationPct: 3.2 },
-  { symbol: "SNAP",  name: "Snap",      ltp: 11.20,  invested: 1_680, current: 1_344, pnl: -336, pnlPct: -20.00, dayChangePct: -3.10, xirr: -28.4, logoColor: "bg-neutral-500", dailyPnl: -85,  weeklyPnl: -180, monthlyPnl: -280, yearlyPnl: -336, allocationPct: 2.5 },
-  { symbol: "PYPL",  name: "PayPal",    ltp: 64.80,  invested: 2_590, current: 2_268, pnl: -322, pnlPct: -12.43, dayChangePct: -1.85, xirr: -15.6, logoColor: "bg-neutral-500", dailyPnl: -62,  weeklyPnl: -140, monthlyPnl: -220, yearlyPnl: -322, allocationPct: 4.2 },
-  { symbol: "INTC",  name: "Intel",     ltp: 31.20,  invested: 1_872, current: 1_685, pnl: -187, pnlPct: -10.00, dayChangePct: -0.95, xirr: -14.8, logoColor: "bg-neutral-500", dailyPnl: -42,  weeklyPnl: -95,  monthlyPnl: -150, yearlyPnl: -187, allocationPct: 3.1 },
-  { symbol: "BA",    name: "Boeing",    ltp: 178.40, invested: 2_140, current: 1_962, pnl: -178, pnlPct: -8.34,  dayChangePct: -2.10, xirr: -11.2, logoColor: "bg-neutral-500", dailyPnl: -55,  weeklyPnl: -110, monthlyPnl: -165, yearlyPnl: -178, allocationPct: 3.6 },
+  // ETF — Gainers
+  { category: "ETF", symbol: "VOO",  name: "Vanguard S&P 500",  ltp: 462.10, invested: 8_906, current: 9_242, pnl: 336,  pnlPct: 3.77,  dayChangePct: 0.59,  xirr: 14.6, logoColor: "bg-neutral-500", dailyPnl: 54,  weeklyPnl: 120,  monthlyPnl: 210,  yearlyPnl: 336,  allocationPct: 17.0 },
+  { category: "ETF", symbol: "QQQ",  name: "Invesco QQQ",       ltp: 438.20, invested: 6_200, current: 7_030, pnl: 830,  pnlPct: 13.39, dayChangePct: 1.10,  xirr: 16.2, logoColor: "bg-neutral-500", dailyPnl: 95,  weeklyPnl: 210,  monthlyPnl: 380,  yearlyPnl: 830,  allocationPct: 13.0 },
+  { category: "ETF", symbol: "SPY",  name: "SPDR S&P 500",      ltp: 518.40, invested: 5_100, current: 5_700, pnl: 600,  pnlPct: 11.76, dayChangePct: 0.82,  xirr: 13.8, logoColor: "bg-neutral-500", dailyPnl: 72,  weeklyPnl: 160,  monthlyPnl: 290,  yearlyPnl: 600,  allocationPct: 10.5 },
+  // ETF — Losers
+  { category: "ETF", symbol: "ARKK", name: "ARK Innovation",    ltp: 44.60,  invested: 3_200, current: 2_676, pnl: -524, pnlPct: -16.38, dayChangePct: -2.40, xirr: -19.2, logoColor: "bg-neutral-500", dailyPnl: -88, weeklyPnl: -190, monthlyPnl: -300, yearlyPnl: -524, allocationPct: 4.9 },
+  { category: "ETF", symbol: "GLD",  name: "SPDR Gold Shares",  ltp: 218.30, invested: 2_800, current: 2_548, pnl: -252, pnlPct: -9.00,  dayChangePct: -0.85, xirr: -10.4, logoColor: "bg-neutral-500", dailyPnl: -30, weeklyPnl: -80,  monthlyPnl: -130, yearlyPnl: -252, allocationPct: 4.7 },
+  // ETF — Neutral
+  { category: "ETF", symbol: "IWM",  name: "iShares Russell 2000", ltp: 198.40, invested: 4_100, current: 4_182, pnl: 82, pnlPct: 2.00, dayChangePct: 0.25, xirr: 4.8, logoColor: "bg-neutral-500", dailyPnl: 18, weeklyPnl: 40, monthlyPnl: 60, yearlyPnl: 82, allocationPct: 7.7 },
 
-  // Neutral
-  { symbol: "VOO",   name: "Vanguard S&P 500",   ltp: 462.10, invested: 8_906, current: 9_242, pnl: 336, pnlPct: 3.77,  dayChangePct: 0.59,  xirr: 14.6, logoColor: "bg-neutral-500", dailyPnl: 54,  weeklyPnl: 120, monthlyPnl: 210, yearlyPnl: 336, allocationPct: 17.0 },
-  { symbol: "JNJ",   name: "Johnson & Johnson",  ltp: 158.40, invested: 3_160, current: 3_168, pnl: 8,   pnlPct: 0.25,  dayChangePct: 0.12,  xirr: 1.2,  logoColor: "bg-neutral-500", dailyPnl: 4,   weeklyPnl: 6,   monthlyPnl: 8,   yearlyPnl: 8,   allocationPct: 5.8 },
-  { symbol: "WMT",   name: "Walmart",            ltp: 168.20, invested: 2_523, current: 2_580, pnl: 57,  pnlPct: 2.26,  dayChangePct: 0.32,  xirr: 5.4,  logoColor: "bg-neutral-500", dailyPnl: 12,  weeklyPnl: 28,  monthlyPnl: 42,  yearlyPnl: 57,  allocationPct: 4.7 },
+  // Global ETF — Gainers
+  { category: "Global ETF", symbol: "EEM",  name: "iShares MSCI EM",    ltp: 41.80,  invested: 3_500, current: 4_060, pnl: 560,  pnlPct: 16.00, dayChangePct: 1.80,  xirr: 18.4, logoColor: "bg-neutral-500", dailyPnl: 88,  weeklyPnl: 200, monthlyPnl: 320, yearlyPnl: 560, allocationPct: 7.5 },
+  { category: "Global ETF", symbol: "VEA",  name: "Vanguard Dev Markets", ltp: 50.20, invested: 4_200, current: 4_620, pnl: 420,  pnlPct: 10.00, dayChangePct: 0.95,  xirr: 12.2, logoColor: "bg-neutral-500", dailyPnl: 55,  weeklyPnl: 130, monthlyPnl: 230, yearlyPnl: 420, allocationPct: 8.5 },
+  // Global ETF — Losers
+  { category: "Global ETF", symbol: "FXI",  name: "iShares China Large", ltp: 28.60,  invested: 2_600, current: 2_288, pnl: -312, pnlPct: -12.00, dayChangePct: -1.50, xirr: -14.8, logoColor: "bg-neutral-500", dailyPnl: -48, weeklyPnl: -110, monthlyPnl: -180, yearlyPnl: -312, allocationPct: 4.2 },
+  // Global ETF — Neutral
+  { category: "Global ETF", symbol: "IEFA", name: "iShares Core MSCI EAFE", ltp: 72.40, invested: 3_800, current: 3_876, pnl: 76, pnlPct: 2.00, dayChangePct: 0.18, xirr: 4.2, logoColor: "bg-neutral-500", dailyPnl: 10, weeklyPnl: 24, monthlyPnl: 42, yearlyPnl: 76, allocationPct: 7.1 },
+
+  // Collections — Gainers
+  { category: "Collections", symbol: "TECH5", name: "Tech Top 5",      ltp: 0, invested: 5_000, current: 6_200, pnl: 1_200, pnlPct: 24.00, dayChangePct: 2.10, xirr: 28.4, logoColor: "bg-neutral-500", dailyPnl: 180, weeklyPnl: 400, monthlyPnl: 700, yearlyPnl: 1_200, allocationPct: 11.4 },
+  { category: "Collections", symbol: "DIV10", name: "Dividend 10",     ltp: 0, invested: 3_200, current: 3_712, pnl: 512,   pnlPct: 16.00, dayChangePct: 0.70, xirr: 18.2, logoColor: "bg-neutral-500", dailyPnl: 38,  weeklyPnl: 90,  monthlyPnl: 160, yearlyPnl: 512,   allocationPct: 6.8 },
+  // Collections — Losers
+  { category: "Collections", symbol: "GRWTH", name: "Growth Bundle",   ltp: 0, invested: 2_800, current: 2_380, pnl: -420,  pnlPct: -15.00, dayChangePct: -1.80, xirr: -18.0, logoColor: "bg-neutral-500", dailyPnl: -65, weeklyPnl: -150, monthlyPnl: -240, yearlyPnl: -420, allocationPct: 4.4 },
+  // Collections — Neutral
+  { category: "Collections", symbol: "BLCHP", name: "Blue Chips",      ltp: 0, invested: 4_500, current: 4_590, pnl: 90,    pnlPct: 2.00,  dayChangePct: 0.22,  xirr: 4.6,  logoColor: "bg-neutral-500", dailyPnl: 14,  weeklyPnl: 32,  monthlyPnl: 55,  yearlyPnl: 90,   allocationPct: 8.4 },
 ];
 
 export const TOP_GAINERS = ALL_HOLDINGS.filter((h) => h.pnlPct > 5).sort((a, b) => b.pnlPct - a.pnlPct);

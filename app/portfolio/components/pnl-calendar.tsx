@@ -1,27 +1,67 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, ChevronDown, Briefcase, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PNL_CALENDAR, type DayPnL } from "./portfolio-mock-data";
 
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI"];
-const MONTH_NAMES_FULL = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+const MONTH_NAMES_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTH_NAMES_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+interface MonthStats {
+  pnl: number;
+  trades: number;
+  greenDays: number;
+  redDays: number;
+  winRate: number;
+  days: DayPnL[];
+}
+
+interface AllTimeStats {
+  pnl: number;
+  trades: number;
+  greenDays: number;
+  redDays: number;
+  winRate: number;
+  bestDay: number;
+  worstDay: number;
+  avgPerDay: number;
+}
+
+type PeriodSelection =
+  | { type: "day";     label: string; pnl: number; trades: number; dayData: DayPnL }
+  | { type: "month";   label: string; pnl: number; trades: number; stats: MonthStats }
+  | { type: "alltime"; label: string; pnl: number; stats: AllTimeStats };
+
+/* ------------------------------------------------------------------ */
+/*  Mock order data (shared across all sheet types)                    */
+/* ------------------------------------------------------------------ */
+
+interface DayOrder { symbol: string; qty: number; avgPrice: number; exitPrice: number; pnl: number }
+
+const MOCK_ORDERS: DayOrder[] = [
+  { symbol: "TSLA", qty: 10, avgPrice: 244, exitPrice: 222, pnl: -220 },
+  { symbol: "SPY",  qty: 20, avgPrice: 100, exitPrice: 120, pnl:  400 },
 ];
-const MONTH_NAMES_SHORT = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+
+const MOCK_CHARGES = {
+  brokerage: 7,
+  regulatory: [
+    { label: "SEC Fee",       amount: 0.80 },
+    { label: "FINRA Fee",     amount: 0.50 },
+    { label: "Exchange Fees", amount: 1.20 },
+    { label: "OPRA Fee",      amount: 0.50 },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -34,26 +74,270 @@ function formatPnL(value: number): string {
 
 function PnlValue({ value, className }: { value: number; className?: string }) {
   return (
-    <span
-      className={cn(
-        "font-bold",
-        value >= 0 ? "text-gain" : "text-loss",
-        className
-      )}
-    >
+    <span className={cn("font-bold", value >= 0 ? "text-gain" : "text-loss", className)}>
       {formatPnL(value)}
     </span>
   );
 }
 
-/** Neutral background with subtle opacity based on magnitude */
-function pnlBgClass(pnl: number): string {
-  if (pnl >= 0) return "bg-foreground/[0.04]";
-  return "bg-foreground/[0.04]";
+function computeMonthStats(days: DayPnL[]): MonthStats {
+  const trading = days.filter((d) => d.isTrading);
+  const pnl = trading.reduce((s, d) => s + d.pnl, 0);
+  const trades = trading.reduce((s, d) => s + d.trades, 0);
+  const greenDays = trading.filter((d) => d.pnl >= 0).length;
+  const redDays = trading.filter((d) => d.pnl < 0).length;
+  const winRate = trading.length > 0 ? Math.round((greenDays / trading.length) * 100) : 0;
+  return { pnl, trades, greenDays, redDays, winRate, days };
 }
 
 /* ------------------------------------------------------------------ */
-/*  P&L Stats row (P&L, Total Trades, Win Rate)                        */
+/*  Stat row (reused in sheet header area)                             */
+/* ------------------------------------------------------------------ */
+
+function StatGrid({ items }: { items: { label: string; value: string; colored?: boolean; isGain?: boolean }[] }) {
+  return (
+    <div className={cn("grid gap-3 mb-4", items.length <= 3 ? "grid-cols-3" : "grid-cols-2")}>
+      {items.map((s) => (
+        <div key={s.label} className="rounded-xl bg-muted/30 px-3 py-2.5">
+          <p className="text-[11px] text-muted-foreground mb-0.5">{s.label}</p>
+          <p className={cn(
+            "text-[15px] font-bold",
+            s.colored ? (s.isGain ? "text-gain" : "text-loss") : "text-foreground"
+          )}>
+            {s.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  P&L breakdown card (shared across sheet types)                     */
+/* ------------------------------------------------------------------ */
+
+function PnlBreakdownCard({ realisedPnl, dateLabel }: { realisedPnl: number; dateLabel: string }) {
+  const [realisedExpanded, setRealisedExpanded] = useState(false);
+  const [regulatoryExpanded, setRegulatoryExpanded] = useState(false);
+
+  const regulatoryTotal = MOCK_CHARGES.regulatory.reduce((s, r) => s + r.amount, 0);
+  const chargesTotal = MOCK_CHARGES.brokerage + regulatoryTotal;
+  const netPnl = realisedPnl - chargesTotal;
+  const isGain = realisedPnl >= 0;
+
+  return (
+    <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+      {/* Realised P&L — collapsed by default */}
+      <button
+        onClick={() => setRealisedExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-semibold text-foreground">Realised P&L</span>
+          <span className="text-[11px] text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5">{dateLabel}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className={cn("text-[15px] font-bold", isGain ? "text-gain" : "text-loss")}>{formatPnL(realisedPnl)}</span>
+          <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200", realisedExpanded && "rotate-180")} />
+        </div>
+      </button>
+
+      {realisedExpanded && (
+        <div className="border-t border-border/30">
+          {/* Gross P&L + Total Charges summary */}
+          <div className="px-4 pt-3 pb-2 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-[13px] text-muted-foreground">Gross P&L</span>
+              <span className={cn("text-[13px] font-medium", isGain ? "text-gain" : "text-loss")}>{formatPnL(realisedPnl + chargesTotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[13px] text-muted-foreground">Total Charges</span>
+              <span className="text-[13px] font-medium text-foreground">-${chargesTotal.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div className="h-px bg-border/30 mx-4" />
+
+          {/* Charges & Fees */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-[13px] text-muted-foreground">Charges & Fees</span>
+            <span className="text-[13px] font-medium text-foreground">${chargesTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between px-4 pb-2.5">
+            <span className="text-[13px] text-muted-foreground pl-3">Aspora Brokerage</span>
+            <span className="text-[13px] text-muted-foreground">${MOCK_CHARGES.brokerage.toFixed(2)}</span>
+          </div>
+
+          {/* Regulatory Fees */}
+          <button
+            onClick={() => setRegulatoryExpanded((v) => !v)}
+            className="w-full flex items-center justify-between px-4 pb-3 active:opacity-70 transition-opacity"
+          >
+            <div className="flex items-center gap-1 pl-3">
+              <span className="text-[13px] text-muted-foreground">Regulatory Fees</span>
+              <ChevronDown size={14} className={cn("text-muted-foreground transition-transform duration-200", regulatoryExpanded && "rotate-180")} />
+            </div>
+            <span className="text-[13px] text-muted-foreground">${regulatoryTotal.toFixed(2)}</span>
+          </button>
+
+          {regulatoryExpanded && (
+            <div className="mx-4 mb-3 rounded-lg bg-muted/30 overflow-hidden divide-y divide-border/30">
+              {MOCK_CHARGES.regulatory.map((r) => (
+                <div key={r.label} className="flex items-center justify-between px-3 py-2.5">
+                  <span className="text-[12px] text-muted-foreground">{r.label}</span>
+                  <span className="text-[12px] text-muted-foreground">${r.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="h-px bg-border/40 mx-4" />
+
+          {/* Net Realised P&L */}
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <span className="text-[14px] font-semibold text-foreground">Net Realised P&L</span>
+            <span className={cn("text-[15px] font-bold", netPnl >= 0 ? "text-gain" : "text-loss")}>{formatPnL(netPnl)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Order cards (shared)                                               */
+/* ------------------------------------------------------------------ */
+
+function OrderCards({ orders }: { orders: DayOrder[] }) {
+  return (
+    <div className="space-y-2 mb-4">
+      {orders.map((o) => {
+        const isGain = o.pnl >= 0;
+        return (
+          <div key={o.symbol} className="flex items-center justify-between rounded-xl border border-border/50 bg-card px-4 py-3">
+            <div>
+              <p className="text-[14px] font-bold text-foreground mb-1">{o.symbol}</p>
+              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <Briefcase size={11} />
+                <span>{o.qty}</span>
+                <span className="text-border">|</span>
+                <span>${o.avgPrice}</span>
+                <ArrowRight size={11} />
+                <span>${o.exitPrice}</span>
+              </div>
+            </div>
+            <p className={cn("text-[17px] font-bold", isGain ? "text-gain" : "text-loss")}>
+              {isGain ? "+" : ""}{o.pnl}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Unified period detail sheet                                        */
+/* ------------------------------------------------------------------ */
+
+function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection; onClose: () => void }) {
+  const isGain = selection.pnl >= 0;
+
+  return (
+    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-0 pb-8 max-h-[88dvh] overflow-y-auto no-scrollbar">
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-9 h-1 rounded-full bg-muted-foreground/20" />
+        </div>
+
+        <div className="px-5">
+          {/* ── DAY view ── */}
+          {selection.type === "day" && (() => {
+            const { dayData } = selection;
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
+                    <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
+                      {formatPnL(selection.pnl)} · {selection.trades} order{selection.trades !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <span className="text-[13px] text-muted-foreground border border-border/60 rounded-full px-3 py-1.5">Value ↕</span>
+                </div>
+
+
+
+                <OrderCards orders={MOCK_ORDERS} />
+                <PnlBreakdownCard key={selection.label} realisedPnl={selection.pnl} dateLabel={selection.label} />
+              </>
+            );
+          })()}
+
+          {/* ── MONTH view ── */}
+          {selection.type === "month" && (() => {
+            const { stats } = selection;
+            return (
+              <>
+                <div className="mb-4">
+                  <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
+                  <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
+                    {formatPnL(selection.pnl)} · {stats.trades} trades
+                  </p>
+                </div>
+
+                <StatGrid items={[
+                  { label: "Win Rate",   value: `${stats.winRate}%` },
+                  { label: "Green Days", value: `${stats.greenDays}`, colored: true, isGain: true },
+                  { label: "Red Days",   value: `${stats.redDays}`,  colored: true, isGain: false },
+                  { label: "Avg / Day",  value: formatPnL(stats.pnl / (stats.greenDays + stats.redDays || 1)), colored: true, isGain },
+                ]} />
+
+                <p className="text-[13px] font-semibold text-foreground mb-2">Top Orders</p>
+                <OrderCards orders={MOCK_ORDERS} />
+                <PnlBreakdownCard key={selection.label} realisedPnl={selection.pnl} dateLabel={selection.label} />
+              </>
+            );
+          })()}
+
+          {/* ── ALL TIME view ── */}
+          {selection.type === "alltime" && (() => {
+            const { stats } = selection;
+            return (
+              <>
+                <div className="mb-4">
+                  <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
+                  <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
+                    {formatPnL(selection.pnl)} lifetime P&L
+                  </p>
+                </div>
+
+                <StatGrid items={[
+                  { label: "Total P&L",   value: formatPnL(stats.pnl),       colored: true, isGain },
+                  { label: "Total Trades",value: `${stats.trades}` },
+                  { label: "Win Rate",    value: `${stats.winRate}%` },
+                  { label: "Green Days",  value: `${stats.greenDays}`,  colored: true, isGain: true },
+                  { label: "Red Days",    value: `${stats.redDays}`,    colored: true, isGain: false },
+                  { label: "Avg / Day",   value: formatPnL(stats.avgPerDay), colored: true, isGain },
+                  { label: "Best Day",    value: formatPnL(stats.bestDay),   colored: true, isGain: true },
+                  { label: "Worst Day",   value: formatPnL(stats.worstDay),  colored: true, isGain: false },
+                ]} />
+
+                <p className="text-[13px] font-semibold text-foreground mb-2">Recent Orders</p>
+                <OrderCards orders={MOCK_ORDERS} />
+                <PnlBreakdownCard key="alltime" realisedPnl={stats.pnl} dateLabel="All Time" />
+              </>
+            );
+          })()}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  P&L Stats bar                                                      */
 /* ------------------------------------------------------------------ */
 
 function PnlStats({ days }: { days: DayPnL[] }) {
@@ -85,25 +369,22 @@ function PnlStats({ days }: { days: DayPnL[] }) {
 /*  Day cell                                                           */
 /* ------------------------------------------------------------------ */
 
-function DayCell({ day, isToday }: { day: DayPnL; isToday: boolean }) {
+function DayCell({ day, isToday, onTap }: { day: DayPnL; isToday: boolean; onTap?: (day: DayPnL) => void }) {
   return (
     <div
+      onClick={() => day.isTrading && onTap?.(day)}
       className={cn(
         "rounded-lg p-1.5 flex flex-col items-center justify-center min-h-[68px]",
-        day.isTrading ? pnlBgClass(day.pnl) : "bg-muted/10",
+        day.isTrading ? "bg-foreground/[0.04]" : "bg-muted/10",
+        day.isTrading && "cursor-pointer active:scale-95 transition-transform",
         isToday && "ring-1.5 ring-foreground/50"
       )}
     >
-      <span className="text-[14px] font-semibold text-foreground/80 mb-0.5">
-        {day.date}
-      </span>
-
+      <span className="text-[14px] font-semibold text-foreground/80 mb-0.5">{day.date}</span>
       {day.isTrading ? (
         <>
           <PnlValue value={day.pnl} className="text-[13px] leading-tight" />
-          <span className="text-[10px] text-muted-foreground mt-0.5">
-            {day.trades} trade{day.trades !== 1 ? "s" : ""}
-          </span>
+          <span className="text-[10px] text-muted-foreground mt-0.5">{day.trades} trade{day.trades !== 1 ? "s" : ""}</span>
         </>
       ) : (
         <span className="text-[13px] text-muted-foreground">—</span>
@@ -113,61 +394,25 @@ function DayCell({ day, isToday }: { day: DayPnL; isToday: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Navigation header (reusable)                                       */
+/*  NavHeader                                                          */
 /* ------------------------------------------------------------------ */
 
-function NavHeader({
-  label,
-  onPrev,
-  onNext,
-  canPrev,
-  canNext,
-}: {
-  label: string;
-  onPrev: () => void;
-  onNext: () => void;
-  canPrev: boolean;
-  canNext: boolean;
-}) {
+function NavHeader({ label, onPrev, onNext, canPrev, canNext }: { label: string; onPrev: () => void; onNext: () => void; canPrev: boolean; canNext: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onPrev}
-        disabled={!canPrev}
-        className="h-8 w-8"
-      >
-        <ChevronLeft size={18} />
-      </Button>
+      <Button variant="ghost" size="icon" onClick={onPrev} disabled={!canPrev} className="h-8 w-8"><ChevronLeft size={18} /></Button>
       <span className="text-[15px] font-semibold text-foreground">{label}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onNext}
-        disabled={!canNext}
-        className="h-8 w-8"
-      >
-        <ChevronRight size={18} />
-      </Button>
+      <Button variant="ghost" size="icon" onClick={onNext} disabled={!canNext} className="h-8 w-8"><ChevronRight size={18} /></Button>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Month grid view                                                    */
+/*  Month grid                                                         */
 /* ------------------------------------------------------------------ */
 
-function MonthGrid({
-  monthKey,
-  year,
-  monthIndex,
-  isCurrentMonth,
-}: {
-  monthKey: string;
-  year: number;
-  monthIndex: number;
-  isCurrentMonth: boolean;
+function MonthGrid({ monthKey, year, monthIndex, isCurrentMonth, onDayTap }: {
+  monthKey: string; year: number; monthIndex: number; isCurrentMonth: boolean; onDayTap: (day: DayPnL) => void;
 }) {
   const monthData = PNL_CALENDAR[monthKey];
   if (!monthData) return null;
@@ -175,32 +420,24 @@ function MonthGrid({
   const gridCells: (DayPnL | null)[] = [];
   const leadingBlanks = monthData.firstWeekday >= 5 ? 0 : monthData.firstWeekday;
   for (let i = 0; i < leadingBlanks; i++) gridCells.push(null);
-
   for (const day of monthData.days) {
     const dow = new Date(year, monthIndex, day.date).getDay();
     if (dow >= 1 && dow <= 5) gridCells.push(day);
   }
 
-  const today = new Date();
-  const todayDate = isCurrentMonth ? today.getDate() : -1;
+  const todayDate = isCurrentMonth ? new Date().getDate() : -1;
 
   return (
     <>
       <div className="grid grid-cols-5 gap-1.5 mb-1">
         {WEEKDAYS.map((d) => (
-          <div
-            key={d}
-            className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1"
-          >
-            {d}
-          </div>
+          <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
         ))}
       </div>
-
       <div className="grid grid-cols-5 gap-1.5">
         {gridCells.map((cell, i) => {
           if (!cell) return <div key={`blank-${i}`} className="min-h-[68px]" />;
-          return <DayCell key={cell.date} day={cell} isToday={cell.date === todayDate} />;
+          return <DayCell key={cell.date} day={cell} isToday={cell.date === todayDate} onTap={onDayTap} />;
         })}
       </div>
     </>
@@ -208,22 +445,17 @@ function MonthGrid({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Week view (with navigation)                                        */
+/*  Week view                                                          */
 /* ------------------------------------------------------------------ */
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
   const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
+  date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
   return date;
 }
 
-function formatShortDate(d: Date): string {
-  return `${MONTH_NAMES_SHORT[d.getMonth()]} ${d.getDate()}`;
-}
-
-function WeekView() {
+function WeekView({ onDayTap }: { onDayTap: (day: DayPnL, date: Date) => void }) {
   const [weekOffset, setWeekOffset] = useState(0);
 
   const currentMonday = useMemo(() => {
@@ -238,62 +470,36 @@ function WeekView() {
     return f;
   }, [currentMonday]);
 
-  const weekLabel = `${formatShortDate(currentMonday)} – ${formatShortDate(friday)}`;
+  const weekLabel = `${MONTH_NAMES_SHORT[currentMonday.getMonth()]} ${currentMonday.getDate()} – ${MONTH_NAMES_SHORT[friday.getMonth()]} ${friday.getDate()}`;
 
-  // Get the days for this week
   const weekDays = useMemo(() => {
-    const days: DayPnL[] = [];
-    for (let i = 0; i < 5; i++) {
+    return Array.from({ length: 5 }, (_, i) => {
       const d = new Date(currentMonday);
       d.setDate(d.getDate() + i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const monthData = PNL_CALENDAR[key];
-      if (monthData) {
-        const dayData = monthData.days.find((dd) => dd.date === d.getDate());
-        if (dayData) {
-          days.push(dayData);
-          continue;
-        }
-      }
-      days.push({ date: d.getDate(), pnl: 0, trades: 0, isTrading: false });
-    }
-    return days;
+      const dayData = monthData?.days.find((dd) => dd.date === d.getDate());
+      return { dayPnl: dayData ?? { date: d.getDate(), pnl: 0, trades: 0, isTrading: false }, date: d };
+    });
   }, [currentMonday]);
 
   const todayDate = new Date().getDate();
   const isCurrentWeek = weekOffset === 0;
-
-  // Limit how far back (oldest data is Jan 2024)
-  const earliestMonday = getMonday(new Date(2024, 0, 1));
-  const canPrev = currentMonday > earliestMonday;
+  const canPrev = currentMonday > getMonday(new Date(2024, 0, 1));
   const canNext = weekOffset < 0;
 
   return (
     <div className="space-y-3">
-      <NavHeader
-        label={weekLabel}
-        onPrev={() => setWeekOffset((p) => p - 1)}
-        onNext={() => setWeekOffset((p) => p + 1)}
-        canPrev={canPrev}
-        canNext={canNext}
-      />
-
-      <PnlStats days={weekDays} />
-
+      <NavHeader label={weekLabel} onPrev={() => setWeekOffset((p) => p - 1)} onNext={() => setWeekOffset((p) => p + 1)} canPrev={canPrev} canNext={canNext} />
+      <PnlStats days={weekDays.map((w) => w.dayPnl)} />
       <div className="grid grid-cols-5 gap-1.5 mb-1">
         {WEEKDAYS.map((d) => (
-          <div
-            key={d}
-            className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1"
-          >
-            {d}
-          </div>
+          <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
         ))}
       </div>
-
       <div className="grid grid-cols-5 gap-1.5">
-        {weekDays.map((day, i) => (
-          <DayCell key={i} day={day} isToday={isCurrentWeek && day.date === todayDate} />
+        {weekDays.map(({ dayPnl, date }, i) => (
+          <DayCell key={i} day={dayPnl} isToday={isCurrentWeek && dayPnl.date === todayDate} onTap={() => onDayTap(dayPnl, date)} />
         ))}
       </div>
     </div>
@@ -301,83 +507,48 @@ function WeekView() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Year view (with navigation)                                        */
+/*  Year view                                                          */
 /* ------------------------------------------------------------------ */
 
-function YearView() {
+function YearView({ onMonthTap }: { onMonthTap: (monthIndex: number, year: number, stats: MonthStats) => void }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
-
   const isCurrentYear = year === currentYear;
   const currentMonth = isCurrentYear ? new Date().getMonth() : 11;
 
   const monthlyData = useMemo(() => {
-    const data = [];
-    const monthCount = isCurrentYear ? currentMonth + 1 : 12;
-    for (let m = 0; m < monthCount; m++) {
+    const count = isCurrentYear ? currentMonth + 1 : 12;
+    return Array.from({ length: count }, (_, m) => {
       const key = `${year}-${String(m + 1).padStart(2, "0")}`;
       const monthData = PNL_CALENDAR[key];
-      if (monthData) {
-        const trading = monthData.days.filter((d) => d.isTrading);
-        data.push({
-          month: m,
-          pnl: trading.reduce((s, d) => s + d.pnl, 0),
-          trades: trading.reduce((s, d) => s + d.trades, 0),
-        });
-      } else {
-        data.push({ month: m, pnl: 0, trades: 0 });
-      }
-    }
-    return data;
+      const days = monthData?.days ?? [];
+      return { month: m, stats: computeMonthStats(days) };
+    });
   }, [year, isCurrentYear, currentMonth]);
 
-  // Collect all days for PnlStats
-  const yearDays = useMemo(() => {
-    const days: DayPnL[] = [];
-    const monthCount = isCurrentYear ? currentMonth + 1 : 12;
-    for (let m = 0; m < monthCount; m++) {
-      const key = `${year}-${String(m + 1).padStart(2, "0")}`;
-      const monthData = PNL_CALENDAR[key];
-      if (monthData) days.push(...monthData.days);
-    }
-    return days;
-  }, [year, isCurrentYear, currentMonth]);
-
-  const canPrev = year > 2024;
-  const canNext = year < currentYear;
+  const yearDays = useMemo(() => monthlyData.flatMap((m) => m.stats.days), [monthlyData]);
 
   return (
     <div className="space-y-3">
-      <NavHeader
-        label={isCurrentYear ? `${year} YTD` : `${year}`}
-        onPrev={() => setYear((y) => y - 1)}
-        onNext={() => setYear((y) => y + 1)}
-        canPrev={canPrev}
-        canNext={canNext}
-      />
-
+      <NavHeader label={isCurrentYear ? `${year} YTD` : `${year}`} onPrev={() => setYear((y) => y - 1)} onNext={() => setYear((y) => y + 1)} canPrev={year > 2024} canNext={year < currentYear} />
       <PnlStats days={yearDays} />
-
       <div className="grid grid-cols-3 gap-2">
-        {monthlyData.map((m) => {
-          const hasData = m.trades > 0;
+        {monthlyData.map(({ month, stats }) => {
+          const hasData = stats.trades > 0;
           return (
             <div
-              key={m.month}
+              key={month}
+              onClick={() => hasData && onMonthTap(month, year, stats)}
               className={cn(
                 "rounded-lg p-3 flex flex-col items-center justify-center min-h-[72px]",
-                hasData ? "bg-foreground/[0.04]" : "bg-muted/10"
+                hasData ? "bg-foreground/[0.04] cursor-pointer active:scale-95 transition-transform" : "bg-muted/10"
               )}
             >
-              <span className="text-[13px] font-semibold text-foreground/80 mb-0.5">
-                {MONTH_NAMES_SHORT[m.month]}
-              </span>
+              <span className="text-[13px] font-semibold text-foreground/80 mb-0.5">{MONTH_NAMES_SHORT[month]}</span>
               {hasData ? (
                 <>
-                  <PnlValue value={m.pnl} className="text-[14px] leading-tight" />
-                  <span className="text-[10px] text-muted-foreground mt-0.5">
-                    {m.trades} trades
-                  </span>
+                  <PnlValue value={stats.pnl} className="text-[14px] leading-tight" />
+                  <span className="text-[10px] text-muted-foreground mt-0.5">{stats.trades} trades</span>
                 </>
               ) : (
                 <span className="text-[12px] text-muted-foreground">—</span>
@@ -391,58 +562,54 @@ function YearView() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  All Time view                                                      */
+/*  All time view                                                      */
 /* ------------------------------------------------------------------ */
 
-function AllTimeView() {
-  let totalPnl = 0;
-  let totalTrades = 0;
-  let greenDays = 0;
-  let redDays = 0;
-  let bestDay = 0;
-  let worstDay = 0;
+function AllTimeView({ onTap }: { onTap: (stats: AllTimeStats) => void }) {
+  let totalPnl = 0, totalTrades = 0, greenDays = 0, redDays = 0, bestDay = 0, worstDay = 0;
 
   for (const data of Object.values(PNL_CALENDAR)) {
     for (const d of data.days) {
       if (!d.isTrading) continue;
       totalPnl += d.pnl;
       totalTrades += d.trades;
-      if (d.pnl >= 0) greenDays++;
-      else redDays++;
+      if (d.pnl >= 0) greenDays++; else redDays++;
       if (d.pnl > bestDay) bestDay = d.pnl;
       if (d.pnl < worstDay) worstDay = d.pnl;
     }
   }
 
-  const winRate = greenDays + redDays > 0
-    ? Math.round((greenDays / (greenDays + redDays)) * 100)
-    : 0;
+  const winRate = greenDays + redDays > 0 ? Math.round((greenDays / (greenDays + redDays)) * 100) : 0;
+  const avgPerDay = totalPnl / (greenDays + redDays || 1);
 
-  const stats = [
-    { label: "Total P&L", value: totalPnl, isPnl: true },
+  const stats: AllTimeStats = { pnl: totalPnl, trades: totalTrades, greenDays, redDays, winRate, bestDay, worstDay, avgPerDay };
+
+  const cards = [
+    { label: "Total P&L",    value: totalPnl,  isPnl: true },
     { label: "Total Trades", value: totalTrades, isPnl: false },
-    { label: "Green Days", value: greenDays, isPnl: false },
-    { label: "Red Days", value: redDays, isPnl: false },
-    { label: "Win Rate", value: winRate, isPnl: false, suffix: "%" },
-    { label: "Best Day", value: bestDay, isPnl: true },
-    { label: "Worst Day", value: worstDay, isPnl: true },
-    { label: "Avg / Day", value: totalPnl / (greenDays + redDays || 1), isPnl: true },
+    { label: "Green Days",   value: greenDays,  isPnl: false },
+    { label: "Red Days",     value: redDays,    isPnl: false },
+    { label: "Win Rate",     value: winRate,    isPnl: false, suffix: "%" },
+    { label: "Best Day",     value: bestDay,    isPnl: true },
+    { label: "Worst Day",    value: worstDay,   isPnl: true },
+    { label: "Avg / Day",    value: avgPerDay,  isPnl: true },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {stats.map((s) => (
-        <Card key={s.label} className="shadow-none border-border/30">
+      {cards.map((s) => (
+        <Card
+          key={s.label}
+          className="shadow-none border-border/30 cursor-pointer active:scale-95 transition-transform"
+          onClick={() => onTap(stats)}
+        >
           <CardContent className="p-3">
-            <p className="text-[12px] text-muted-foreground mb-0.5">
-              {s.label}
-            </p>
+            <p className="text-[12px] text-muted-foreground mb-0.5">{s.label}</p>
             {s.isPnl ? (
               <PnlValue value={s.value} className="text-[17px]" />
             ) : (
               <span className="text-[17px] font-bold text-foreground">
-                {Math.round(s.value).toLocaleString("en-US")}
-                {s.suffix || ""}
+                {Math.round(s.value).toLocaleString("en-US")}{s.suffix ?? ""}
               </span>
             )}
           </CardContent>
@@ -458,10 +625,10 @@ function AllTimeView() {
 
 export function PnlCalendar() {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [selection, setSelection] = useState<PeriodSelection | null>(null);
 
-  // monthOffset: 0 = current month (Mar 2026), -1 = Feb 2026, etc.
   const targetDate = useMemo(() => {
-    const d = new Date(2026, 2, 1); // March 2026
+    const d = new Date(2026, 2, 1);
     d.setMonth(d.getMonth() + monthOffset);
     return d;
   }, [monthOffset]);
@@ -470,17 +637,33 @@ export function PnlCalendar() {
   const monthIndex = targetDate.getMonth();
   const monthKey = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
   const monthLabel = `${MONTH_NAMES_FULL[monthIndex]} ${year}`;
-
   const isCurrentMonth = monthOffset === 0;
 
-  const monthDays = useMemo(() => {
-    const monthData = PNL_CALENDAR[monthKey];
-    return monthData?.days ?? [];
-  }, [monthKey]);
+  const monthDays = useMemo(() => PNL_CALENDAR[monthKey]?.days ?? [], [monthKey]);
 
-  // Can go back to Jan 2024, can't go forward past current month
   const canPrev = !(year === 2024 && monthIndex === 0);
   const canNext = monthOffset < 0;
+
+  // Month-view day tap
+  const handleMonthDayTap = (day: DayPnL) => {
+    setSelection({ type: "day", label: `${MONTH_NAMES_SHORT[monthIndex]} ${day.date}, ${year}`, pnl: day.pnl, trades: day.trades, dayData: day });
+  };
+
+  // Week-view day tap
+  const handleWeekDayTap = (day: DayPnL, date: Date) => {
+    const label = `${MONTH_NAMES_SHORT[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    setSelection({ type: "day", label, pnl: day.pnl, trades: day.trades, dayData: day });
+  };
+
+  // Year-view month tap
+  const handleMonthTap = (mIndex: number, yr: number, stats: MonthStats) => {
+    setSelection({ type: "month", label: `${MONTH_NAMES_FULL[mIndex]} ${yr}`, pnl: stats.pnl, trades: stats.trades, stats });
+  };
+
+  // All-time stat tap
+  const handleAllTimeTap = (stats: AllTimeStats) => {
+    setSelection({ type: "alltime", label: "All Time", pnl: stats.pnl, stats });
+  };
 
   return (
     <Card className="border-border/50 shadow-none">
@@ -494,48 +677,35 @@ export function PnlCalendar() {
       <CardContent className="px-5 pb-5 pt-0">
         <Tabs defaultValue="month" className="space-y-4">
           <TabsList className="w-full">
-            <TabsTrigger value="week" className="flex-1">Week</TabsTrigger>
+            <TabsTrigger value="week"  className="flex-1">Week</TabsTrigger>
             <TabsTrigger value="month" className="flex-1">Month</TabsTrigger>
-            <TabsTrigger value="year" className="flex-1">Year</TabsTrigger>
-            <TabsTrigger value="all" className="flex-1">All time</TabsTrigger>
+            <TabsTrigger value="year"  className="flex-1">Year</TabsTrigger>
+            <TabsTrigger value="all"   className="flex-1">All time</TabsTrigger>
           </TabsList>
 
-          {/* ── Week ── */}
           <TabsContent value="week" className="space-y-4 mt-0">
-            <WeekView />
+            <WeekView onDayTap={handleWeekDayTap} />
           </TabsContent>
 
-          {/* ── Month ── */}
           <TabsContent value="month" className="space-y-4 mt-0">
-            <NavHeader
-              label={monthLabel}
-              onPrev={() => setMonthOffset((p) => p - 1)}
-              onNext={() => setMonthOffset((p) => p + 1)}
-              canPrev={canPrev}
-              canNext={canNext}
-            />
-
+            <NavHeader label={monthLabel} onPrev={() => setMonthOffset((p) => p - 1)} onNext={() => setMonthOffset((p) => p + 1)} canPrev={canPrev} canNext={canNext} />
             <PnlStats days={monthDays} />
-
-            <MonthGrid
-              monthKey={monthKey}
-              year={year}
-              monthIndex={monthIndex}
-              isCurrentMonth={isCurrentMonth}
-            />
+            <MonthGrid monthKey={monthKey} year={year} monthIndex={monthIndex} isCurrentMonth={isCurrentMonth} onDayTap={handleMonthDayTap} />
           </TabsContent>
 
-          {/* ── Year ── */}
           <TabsContent value="year" className="space-y-4 mt-0">
-            <YearView />
+            <YearView onMonthTap={handleMonthTap} />
           </TabsContent>
 
-          {/* ── All time ── */}
           <TabsContent value="all" className="space-y-4 mt-0">
-            <AllTimeView />
+            <AllTimeView onTap={handleAllTimeTap} />
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {selection && (
+        <PeriodDetailSheet selection={selection} onClose={() => setSelection(null)} />
+      )}
     </Card>
   );
 }

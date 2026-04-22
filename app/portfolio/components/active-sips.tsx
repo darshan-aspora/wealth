@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 
@@ -50,7 +49,6 @@ export function ActiveSips() {
                   )}
                 </div>
               </div>
-              <ChevronDown size={18} strokeWidth={1.8} className="shrink-0 text-muted-foreground" />
             </div>
           ))}
         </div>

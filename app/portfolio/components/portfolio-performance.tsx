@@ -21,7 +21,7 @@ export function PortfolioPerformance() {
                     "w-full rounded-md",
                     isGain ? "bg-gain/80" : "bg-loss/80"
                   )}
-                  style={{ height: `${heightPct}%` }}
+                  style={{ height: `${heightPct}%`, minHeight: 8 }}
                 />
               </div>
               <span className="text-[12px] text-muted-foreground">{r.shortPeriod.replace(/(\d)([A-Z])/, "$1 $2")}</span>

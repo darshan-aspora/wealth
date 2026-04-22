@@ -81,25 +81,23 @@ export function AllocationTable({
 
         {/* Scrollable table */}
         <div className="overflow-x-auto no-scrollbar -mx-5">
-          <table className="w-full text-sm border-collapse" style={{ minWidth: 620 }}>
+          <table className="w-full text-sm border-collapse" style={{ minWidth: 560 }}>
             <colgroup>
-              <col style={{ width: 110 }} />
+              <col style={{ width: 140 }} />
               <col style={{ width: 90 }} />
               <col style={{ width: 90 }} />
-              <col style={{ width: 90 }} />
+              <col style={{ width: 130 }} />
               <col style={{ width: 72 }} />
-              <col style={{ width: 76 }} />
-              <col style={{ width: 76 }} />
+              <col style={{ width: 90 }} />
             </colgroup>
             <thead>
               <tr className="text-muted-foreground text-[11px] uppercase tracking-wider">
-                <th className="text-left py-2.5 pl-5 pr-2 font-medium sticky left-0 bg-card z-10">{firstColumnLabel}</th>
-                <th className="text-right py-2.5 px-2 font-medium">Current</th>
-                <th className="text-right py-2.5 px-2 font-medium">Invested</th>
-                <th className="text-right py-2.5 px-2 font-medium">P&L</th>
-                <th className="text-right py-2.5 px-2 font-medium">P&L %</th>
-                <th className="text-right py-2.5 px-2 font-medium">Alloc.</th>
-                <th className="text-right py-2.5 pr-5 pl-2 font-medium">Est. XIRR</th>
+                <th className="text-left py-2.5 pl-5 pr-2 font-medium sticky left-0 bg-card z-10 whitespace-nowrap">{firstColumnLabel}</th>
+                <th className="text-right py-2.5 px-2 font-medium whitespace-nowrap">Current</th>
+                <th className="text-right py-2.5 px-2 font-medium whitespace-nowrap">Invested</th>
+                <th className="text-right py-2.5 px-2 font-medium whitespace-nowrap">P&L</th>
+                <th className="text-right py-2.5 px-2 font-medium whitespace-nowrap">Alloc.</th>
+                <th className="text-right py-2.5 pr-5 pl-2 font-medium whitespace-nowrap">Est. XIRR</th>
               </tr>
             </thead>
             <tbody>
@@ -109,7 +107,7 @@ export function AllocationTable({
                     <div className="flex items-center gap-2.5">
                       <div className={cn("w-[3px] h-8 rounded-full shrink-0", r.color)} />
                       <div>
-                        <p className="text-[13px] font-semibold text-foreground leading-tight">{r.name}</p>
+                        <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">{r.name}</p>
                         {r.subtitle && (
                           <p className="text-[11px] text-muted-foreground leading-tight">{r.subtitle}</p>
                         )}
@@ -123,16 +121,10 @@ export function AllocationTable({
                     {fmt(r.invested)}
                   </td>
                   <td className={cn(
-                    "py-3.5 px-2 text-right text-[13px] tabular-nums font-medium",
+                    "py-3.5 px-2 text-right text-[13px] tabular-nums font-medium whitespace-nowrap",
                     r.pnl >= 0 ? "text-gain" : "text-loss"
                   )}>
-                    {r.pnl >= 0 ? "+" : ""}{fmt(r.pnl)}
-                  </td>
-                  <td className={cn(
-                    "py-3.5 px-2 text-right text-[13px] tabular-nums font-medium",
-                    r.pnlPct >= 0 ? "text-gain" : "text-loss"
-                  )}>
-                    {r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%
+                    {r.pnl >= 0 ? "+" : ""}{fmt(r.pnl)} ({r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%)
                   </td>
                   <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
                     {r.allocation.toFixed(1)}%
@@ -152,10 +144,9 @@ export function AllocationTable({
                 </td>
                 <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.current)}</td>
                 <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.invested)}</td>
-                <td className={cn("py-3.5 px-2 text-right text-[13px] tabular-nums font-bold", total.pnl >= 0 ? "text-gain" : "text-loss")}>
+                <td className={cn("py-3.5 px-2 text-right text-[13px] tabular-nums font-bold whitespace-nowrap", total.pnl >= 0 ? "text-gain" : "text-loss")}>
                   {total.pnl >= 0 ? "+" : ""}{fmt(total.pnl)} ({total.pnl >= 0 ? "+" : ""}{total.pnlPct.toFixed(1)}%)
                 </td>
-                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">—</td>
                 <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">100%</td>
                 <td className="py-3.5 pr-5 pl-2 text-right text-[13px] tabular-nums text-foreground">—</td>
               </tr>

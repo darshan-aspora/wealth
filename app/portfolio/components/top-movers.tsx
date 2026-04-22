@@ -4,7 +4,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { TOP_GAINERS, TOP_LOSERS, NEUTRAL_HOLDINGS, type PortfolioMover } from "./portfolio-mock-data";
+import { ALL_HOLDINGS, type MoverCategory, type PortfolioMover } from "./portfolio-mock-data";
+
+type FilterTab = MoverCategory;
+const FILTER_TABS: FilterTab[] = ["Stocks", "ETF", "Global ETF", "Collections"];
 
 type Tab = "gainers" | "losers" | "neutral";
 const tabs: { id: Tab; label: string }[] = [
@@ -17,10 +20,11 @@ const INITIAL_COUNT = 6;
 const fmt = (n: number) => (n >= 0 ? "+" : "") + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0 });
 const fmtPct = (n: number) => `${n >= 0 ? "+" : ""}${Math.abs(n).toFixed(1)}%`;
 
-function getRows(tab: Tab): PortfolioMover[] {
-  if (tab === "gainers") return TOP_GAINERS;
-  if (tab === "losers")  return TOP_LOSERS;
-  return NEUTRAL_HOLDINGS;
+function getRows(tab: Tab, category: FilterTab): PortfolioMover[] {
+  const byCategory = ALL_HOLDINGS.filter((h) => h.category === category);
+  if (tab === "gainers") return byCategory.filter((h) => h.pnlPct > 5).sort((a, b) => b.pnlPct - a.pnlPct);
+  if (tab === "losers")  return byCategory.filter((h) => h.pnlPct < -5).sort((a, b) => a.pnlPct - b.pnlPct);
+  return byCategory.filter((h) => h.pnlPct >= -5 && h.pnlPct <= 5).sort((a, b) => Math.abs(a.pnlPct) - Math.abs(b.pnlPct));
 }
 
 interface ColDef {
@@ -45,9 +49,10 @@ const TABLE_MIN_WIDTH = 160 + COLS.reduce((s, c) => s + c.width, 0);
 
 export function TopMovers() {
   const [activeTab, setActiveTab] = useState<Tab>("gainers");
+  const [filterTab, setFilterTab] = useState<FilterTab>("Stocks");
   const [expanded, setExpanded] = useState(false);
 
-  const allRows = getRows(activeTab);
+  const allRows = getRows(activeTab, filterTab);
   const rows = expanded ? allRows : allRows.slice(0, INITIAL_COUNT);
   const hasMore = allRows.length > INITIAL_COUNT;
 
@@ -57,8 +62,17 @@ export function TopMovers() {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-[15px] font-semibold text-foreground">Top Movers</p>
-          <button className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[12px] font-semibold text-foreground active:opacity-70">
-            Stocks <ArrowUpDown size={12} className="text-muted-foreground" />
+          <button
+            onClick={() => {
+              setFilterTab((prev) => {
+                const idx = FILTER_TABS.indexOf(prev);
+                return FILTER_TABS[(idx + 1) % FILTER_TABS.length];
+              });
+              setExpanded(false);
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[12px] font-semibold text-foreground active:opacity-70"
+          >
+            {filterTab} <ArrowUpDown size={12} className="text-muted-foreground" />
           </button>
         </div>
 
@@ -105,7 +119,7 @@ export function TopMovers() {
                     <div className="flex items-center gap-2.5">
                       <div className="h-9 w-9 shrink-0 rounded-full bg-muted/60" />
                       <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-foreground leading-tight">{r.name}</p>
+                        <p className="text-[13px] font-bold text-foreground leading-tight whitespace-nowrap">{r.name}</p>
                         <p className="text-[12px] text-muted-foreground leading-tight">
                           ${r.ltp.toFixed(2)}{" "}
                           <span className={cn("font-medium", r.dayChangePct >= 0 ? "text-gain" : "text-loss")}>

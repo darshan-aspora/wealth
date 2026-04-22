@@ -258,7 +258,7 @@ export function PortfolioSummary() {
                         </div>
                         {/* Annualized return */}
                         <div>
-                          <p className="text-[11px] text-muted-foreground mb-0.5">XIRR</p>
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Est. XIRR</p>
                           {crosshairData ? (
                             <span className="text-[14px] font-semibold text-muted-foreground">—</span>
                           ) : (
