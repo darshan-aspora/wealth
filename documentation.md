@@ -206,6 +206,16 @@ Full-page advanced slicer for the What's Moving widget. Opened by tapping "View 
 
 Shared data module at [app/explore/_data/movers.ts](app/explore/_data/movers.ts) (types, mock data, helpers, sector tagging, sort keys) feeds both the widget and this page. Shared UI atoms (`RangeBar`, `ConsensusBadge`) live at [app/explore/components/movers-atoms.tsx](app/explore/components/movers-atoms.tsx).
 
+### 5e. Popular Stocks Detail (`app/explore/popular-stocks/page.tsx`) — Route: `/explore/popular-stocks`
+
+Full-page drilldown for the Popular Stocks widget. Two tabs — **Most Invested** / **Popular for SIP** — each with ~18 mocked stocks. Frozen Name column + horizontally scrollable data columns (matches the widget layout).
+
+- **Tab count badges**: each tab label shows a rounded pill with the stock count (active tab inverts to solid foreground, inactive is muted). `tabData[id].length` drives the number.
+- **Cap size flipper**: header-level toggle cycling Mega → Large → Mid → Small. Consensus column only appears at Mega.
+- **Sticky bottom bar**: two pill buttons — **Filter** (with active-count badge) and **Sort** (shows current sort label + arrow). Sits below the scrollable table, above `HomeIndicator`.
+- **Filter sheet** (inline in `page.tsx`): Analyst rating (Buy / Hold / Sell), Price min/max, PE min/max + Profitable-only toggle. Draft state; Apply commits with live match count on the CTA.
+- **Sort sheet** (inline in `page.tsx`): Default / Price / Change % / 1Y Change / PE / Revenue growth / Profit growth, each with asc/desc. Default row has no direction buttons.
+
 ### 6. Markets (`app/market/page.tsx`) — Route: `/market`
 
 Comprehensive markets page with 4 top-level tabs: US Markets, Global, News, India. Collapsible header on scroll, sticky tabs with Framer Motion animated indicator.

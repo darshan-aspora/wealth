@@ -2,8 +2,19 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpDown, ArrowDown, Bookmark } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
+  Bookmark,
+} from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,25 +39,44 @@ interface ETF {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sort modes                                                         */
+/*  Sort config                                                        */
 /* ------------------------------------------------------------------ */
 
-type SortMode = "1y-return" | "3y-return" | "5y-return" | "aum" | "low-expense" | "volume";
+type SortKey =
+  | "changePercent"
+  | "return1y"
+  | "return3y"
+  | "return5y"
+  | "aum"
+  | "expenseRatio"
+  | "volume";
+type SortDir = "asc" | "desc";
 
-const sortModes: { id: SortMode; label: string }[] = [
-  { id: "1y-return", label: "1Y Return" },
-  { id: "3y-return", label: "3Y Return" },
-  { id: "5y-return", label: "5Y Return" },
-  { id: "aum", label: "AUM" },
-  { id: "low-expense", label: "Low Expense" },
-  { id: "volume", label: "Volume" },
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "return1y", label: "1Y Return" },
+  { key: "return3y", label: "3Y Return" },
+  { key: "return5y", label: "5Y Return" },
+  { key: "aum", label: "AUM" },
+  { key: "expenseRatio", label: "Expense Ratio" },
+  { key: "volume", label: "Volume" },
 ];
+
+const DEFAULT_SORT: { key: SortKey; dir: SortDir } = {
+  key: "return1y",
+  dir: "desc",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Region tabs                                                        */
 /* ------------------------------------------------------------------ */
 
-const REGIONS = ["Europe", "Asia Pacific", "Emerging", "Americas", "Middle East"] as const;
+const REGIONS = [
+  "Europe",
+  "Asia Pacific",
+  "Emerging",
+  "Americas",
+  "Middle East",
+] as const;
 type Region = (typeof REGIONS)[number];
 
 /* ------------------------------------------------------------------ */
@@ -68,31 +98,42 @@ function parseVol(v: string): number {
   return n;
 }
 
-function sortETFs(list: ETF[], mode: SortMode): ETF[] {
-  const sorted = [...list];
-  switch (mode) {
-    case "1y-return":
-      return sorted.sort((a, b) => b.return1y - a.return1y);
-    case "3y-return":
-      return sorted.sort((a, b) => b.return3y - a.return3y);
-    case "5y-return":
-      return sorted.sort((a, b) => b.return5y - a.return5y);
-    case "aum":
-      return sorted.sort((a, b) => parseAum(b.aum) - parseAum(a.aum));
-    case "low-expense":
-      return sorted.sort((a, b) => a.expenseRatio - b.expenseRatio);
-    case "volume":
-      return sorted.sort((a, b) => parseVol(b.volume) - parseVol(a.volume));
-    default:
-      return sorted;
-  }
+function applySort(list: ETF[], key: SortKey, dir: SortDir): ETF[] {
+  const mul = dir === "asc" ? 1 : -1;
+  const val = (e: ETF): number => {
+    switch (key) {
+      case "changePercent":
+        return e.changePercent;
+      case "return1y":
+        return e.return1y;
+      case "return3y":
+        return e.return3y;
+      case "return5y":
+        return e.return5y;
+      case "aum":
+        return parseAum(e.aum);
+      case "expenseRatio":
+        return e.expenseRatio;
+      case "volume":
+        return parseVol(e.volume);
+    }
+  };
+  return [...list].sort((a, b) => (val(a) - val(b)) * mul);
 }
 
 /* ------------------------------------------------------------------ */
 /*  RangeBar                                                           */
 /* ------------------------------------------------------------------ */
 
-function RangeBar({ low, high, current }: { low: number; high: number; current: number }) {
+function RangeBar({
+  low,
+  high,
+  current,
+}: {
+  low: number;
+  high: number;
+  current: number;
+}) {
   const range = high - low || 1;
   const pct = Math.max(0, Math.min(100, ((current - low) / range) * 100));
   return (
@@ -241,17 +282,53 @@ const DATA_BY_REGION: Record<Region, ETF[]> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Columns                                                            */
+/* ------------------------------------------------------------------ */
+
+interface Column {
+  header: string;
+  align: "left" | "center" | "right";
+  minWidth?: number;
+  sortKey?: SortKey;
+}
+
+const COLUMNS: Column[] = [
+  { header: "ETF", align: "left" },
+  { header: "Price", align: "right", sortKey: "changePercent" },
+  { header: "1Y", align: "right", minWidth: 68, sortKey: "return1y" },
+  { header: "3Y", align: "right", minWidth: 68, sortKey: "return3y" },
+  { header: "5Y", align: "right", minWidth: 68, sortKey: "return5y" },
+  { header: "AUM", align: "right", minWidth: 72, sortKey: "aum" },
+  { header: "Exp%", align: "right", minWidth: 58, sortKey: "expenseRatio" },
+  { header: "Yield", align: "right", minWidth: 58 },
+  { header: "1Y Range", align: "center", minWidth: 110 },
+  { header: "Volume", align: "right", minWidth: 72, sortKey: "volume" },
+  { header: "Watchlist", align: "center", minWidth: 80 },
+];
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
 export default function AllEtfsPage() {
   const router = useRouter();
   const [activeRegion, setActiveRegion] = useState<Region>("Europe");
-  const [sortMode, setSortMode] = useState<SortMode>("1y-return");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
-  const cycleSortMode = () =>
-    setSortMode((p) => sortModes[(sortModes.findIndex((s) => s.id === p) + 1) % sortModes.length].id);
+  /* Sort state */
+  const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_SORT.key);
+  const [sortDir, setSortDir] = useState<SortDir>(DEFAULT_SORT.dir);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  /* Header click: switch sort key (default desc), or flip direction if already active */
+  const handleHeaderSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir("desc");
+    } else {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    }
+  };
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
@@ -262,9 +339,19 @@ export default function AllEtfsPage() {
     });
 
   const sorted = useMemo(
-    () => sortETFs(DATA_BY_REGION[activeRegion], sortMode),
-    [activeRegion, sortMode],
+    () => applySort(DATA_BY_REGION[activeRegion], sortKey, sortDir),
+    [activeRegion, sortKey, sortDir],
   );
+
+  const frozenCol = COLUMNS[0];
+  const scrollCols = COLUMNS.slice(1);
+
+  const alignCls = (align?: "left" | "center" | "right") =>
+    align === "left"
+      ? "text-left"
+      : align === "center"
+        ? "text-center"
+        : "text-right";
 
   /* ── Frozen column width measurement ── */
   const containerRef = useRef<HTMLDivElement>(null);
@@ -273,9 +360,15 @@ export default function AllEtfsPage() {
   const [frozenW, setFrozenW] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  /* Collapsing header on vertical scroll */
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const handleMainScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setHeaderCollapsed(e.currentTarget.scrollTop > 40);
+  }, []);
+
   const VISIBLE_DATA_COLS = 2;
   const MIN_FROZEN_W = 120;
-  const SCROLLABLE_MIN_W = 400;
+  const SCROLLABLE_MIN_W = 500;
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -310,74 +403,81 @@ export default function AllEtfsPage() {
     return () => window.removeEventListener("resize", onResize);
   }, [measure]);
 
-  /* ── Column definitions ── */
-  const scrollCols = [
-    { header: "Price ($)", align: "right" as const, minWidth: 72 },
-    {
-      header: (
-        <span className="inline-flex items-center justify-end gap-1">
-          <ArrowDown size={10} className="text-foreground" />
-          Chg%
-        </span>
-      ),
-      align: "right" as const,
-      minWidth: 72,
-    },
-    { header: "AUM", align: "right" as const, minWidth: 72 },
-    { header: "Exp%", align: "right" as const, minWidth: 58 },
-    { header: "Yield", align: "right" as const, minWidth: 58 },
-    { header: "1Y Range", align: "center" as const, minWidth: 110 },
-    { header: "Volume", align: "right" as const, minWidth: 72 },
-    { header: "Watchlist", align: "center" as const, minWidth: 80 },
-  ];
-
-  const alignCls = (align?: "left" | "center" | "right") =>
-    align === "left" ? "text-left" : align === "center" ? "text-center" : "text-right";
-
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-3 py-2">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
-        >
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
-        <h1 className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1">
-          All Global ETFs
-        </h1>
-        <button
-          onClick={cycleSortMode}
-          className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:scale-[0.97] transition-transform"
-        >
-          <span className="leading-none">
-            {sortModes.find((s) => s.id === sortMode)!.label}
-          </span>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </header>
+      {/* Grey header section — expands on top, collapses on scroll */}
+      <div className="shrink-0 bg-muted/50 border-b border-border/50">
+        {/* Top bar */}
+        <header className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
+          >
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <motion.h1
+            initial={false}
+            animate={{ opacity: headerCollapsed ? 1 : 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1"
+          >
+            Global ETFs
+          </motion.h1>
+          <div className="h-10 w-10" />
+        </header>
 
-      {/* Region tabs — sticky */}
-      <div className="shrink-0 border-b border-border/40 bg-background">
+        {/* Expanded title + description — collapses on scroll */}
+        <motion.div
+          initial={false}
+          animate={{
+            maxHeight: headerCollapsed ? 0 : 160,
+            opacity: headerCollapsed ? 0 : 1,
+          }}
+          transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+          className="overflow-hidden"
+        >
+          <div className="px-5 pt-1 pb-4">
+            <h1 className="text-[28px] font-bold tracking-tight text-foreground leading-tight">
+              Global ETFs
+            </h1>
+            <p className="mt-1.5 text-[14px] leading-snug text-muted-foreground">
+              ETFs across every major region — one list.
+              <br />
+              Find where the world is putting money.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Sticky region tabs */}
         <div className="overflow-x-auto no-scrollbar">
           <div className="flex gap-2 px-5">
             {REGIONS.map((region, i) => {
               const active = region === activeRegion;
+              const count = DATA_BY_REGION[region].length;
               return (
                 <button
                   key={region}
                   onClick={() => setActiveRegion(region)}
                   className={cn(
-                    "relative whitespace-nowrap py-1.5 text-[14px] font-semibold transition-colors",
+                    "relative whitespace-nowrap pt-2 pb-3 text-[14px] font-semibold transition-colors flex items-center gap-1.5",
                     i === 0 ? "pr-3" : "px-3",
                     active ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {region}
+                  <span>{region}</span>
+                  <span
+                    className={cn(
+                      "inline-flex min-w-[20px] justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors",
+                      active
+                        ? "bg-foreground text-background"
+                        : "bg-muted-foreground/15 text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
                   {active && (
                     <motion.span
                       layoutId="all-etf-tab-underline"
@@ -395,12 +495,15 @@ export default function AllEtfsPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <main className="no-scrollbar flex-1 overflow-y-auto">
-        <div ref={containerRef}>
+      {/* Scrollable table */}
+      <main
+        className="no-scrollbar flex-1 overflow-y-auto"
+        onScroll={handleMainScroll}
+      >
+        <div ref={containerRef} className="pt-2 pb-4">
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${activeRegion}-${sortMode}`}
+              key={activeRegion}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -415,13 +518,19 @@ export default function AllEtfsPage() {
                 )}
                 style={{ width: frozenW ?? MIN_FROZEN_W }}
               >
-                {/* Header */}
-                <div className="flex items-center h-[40px] pl-5 pr-3 text-[14px] font-medium text-muted-foreground text-left">
-                  ETF
+                <div
+                  className={cn(
+                    "h-[40px] flex items-center pl-5 pr-3 text-[14px] font-medium text-muted-foreground",
+                    alignCls(frozenCol.align),
+                  )}
+                >
+                  {frozenCol.header}
                 </div>
-                {/* Rows */}
                 {sorted.map((etf) => (
-                  <div key={etf.symbol} className="flex items-center h-[80px] pl-5 pr-3">
+                  <div
+                    key={etf.symbol}
+                    className="h-[80px] flex items-center pl-5 pr-3"
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
                       <p className="min-w-0 text-[14px] font-semibold leading-tight text-foreground line-clamp-2">
@@ -441,18 +550,46 @@ export default function AllEtfsPage() {
                 <table ref={tableRef} style={{ minWidth: SCROLLABLE_MIN_W }}>
                   <thead>
                     <tr className="h-[40px]">
-                      {scrollCols.map((col, i) => (
-                        <th
-                          key={i}
-                          className={cn(
-                            "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
-                            alignCls(col.align),
-                          )}
-                          style={col.minWidth ? { minWidth: col.minWidth } : undefined}
-                        >
-                          {col.header}
-                        </th>
-                      ))}
+                      {scrollCols.map((col, i) => {
+                        const sortable = !!col.sortKey;
+                        const active = sortable && sortKey === col.sortKey;
+                        return (
+                          <th
+                            key={i}
+                            className={cn(
+                              "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
+                              alignCls(col.align),
+                            )}
+                            style={
+                              col.minWidth ? { minWidth: col.minWidth } : undefined
+                            }
+                          >
+                            {sortable ? (
+                              <button
+                                onClick={() =>
+                                  handleHeaderSort(col.sortKey as SortKey)
+                                }
+                                className={cn(
+                                  "inline-flex items-center gap-1 transition-colors",
+                                  active
+                                    ? "text-foreground"
+                                    : "hover:text-foreground",
+                                )}
+                              >
+                                {active &&
+                                  (sortDir === "desc" ? (
+                                    <ArrowDown size={12} strokeWidth={2.5} />
+                                  ) : (
+                                    <ArrowUp size={12} strokeWidth={2.5} />
+                                  ))}
+                                <span>{col.header}</span>
+                              </button>
+                            ) : (
+                              col.header
+                            )}
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
@@ -461,22 +598,57 @@ export default function AllEtfsPage() {
                         etf.changePercent >= 0 ? "text-gain" : "text-loss";
                       return (
                         <tr key={etf.symbol} className="h-[80px]">
-                          {/* Price */}
+                          {/* Price + Chg% stacked */}
                           <td className="px-3 whitespace-nowrap text-right">
-                            <span className="tabular-nums text-[14px] text-foreground">
-                              {etf.price.toFixed(2)}
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">
+                                {etf.price.toFixed(1)}
+                              </span>
+                              <span
+                                className={cn(
+                                  "whitespace-nowrap tabular-nums text-[12px] font-semibold",
+                                  chgColor,
+                                )}
+                              >
+                                {etf.changePercent >= 0 ? "+" : ""}
+                                {etf.changePercent.toFixed(1)}%
+                              </span>
+                            </div>
                           </td>
-                          {/* Chg% */}
+                          {/* 1Y Return */}
                           <td className="px-3 whitespace-nowrap text-right">
                             <span
                               className={cn(
                                 "tabular-nums text-[14px] font-semibold",
-                                chgColor,
+                                etf.return1y >= 0 ? "text-gain" : "text-loss",
                               )}
                             >
-                              {etf.changePercent >= 0 ? "+" : ""}
-                              {etf.changePercent.toFixed(2)}%
+                              {etf.return1y >= 0 ? "+" : ""}
+                              {etf.return1y.toFixed(1)}%
+                            </span>
+                          </td>
+                          {/* 3Y Return */}
+                          <td className="px-3 whitespace-nowrap text-right">
+                            <span
+                              className={cn(
+                                "tabular-nums text-[14px] font-medium",
+                                etf.return3y >= 0 ? "text-gain" : "text-loss",
+                              )}
+                            >
+                              {etf.return3y >= 0 ? "+" : ""}
+                              {etf.return3y.toFixed(1)}%
+                            </span>
+                          </td>
+                          {/* 5Y Return */}
+                          <td className="px-3 whitespace-nowrap text-right">
+                            <span
+                              className={cn(
+                                "tabular-nums text-[14px] font-medium",
+                                etf.return5y >= 0 ? "text-gain" : "text-loss",
+                              )}
+                            >
+                              {etf.return5y >= 0 ? "+" : ""}
+                              {etf.return5y.toFixed(1)}%
                             </span>
                           </td>
                           {/* AUM */}
@@ -542,9 +714,171 @@ export default function AllEtfsPage() {
             </motion.div>
           </AnimatePresence>
         </div>
-
-        <HomeIndicator />
       </main>
+
+      {/* Floating Sort FAB */}
+      <button
+        onClick={() => setSortOpen(true)}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 h-11 pl-4 pr-5 rounded-full flex items-center gap-2 text-[14px] font-semibold bg-foreground text-background shadow-lg shadow-foreground/20 active:scale-[0.97] transition-transform"
+      >
+        <ArrowUpDown size={15} strokeWidth={2.5} />
+        <span>Sort</span>
+      </button>
+
+      <HomeIndicator />
+
+      {/* Sort sheet */}
+      <SortSheet
+        open={sortOpen}
+        onOpenChange={setSortOpen}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onChange={(k, d) => {
+          setSortKey(k);
+          setSortDir(d);
+        }}
+      />
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sort sheet                                                         */
+/* ------------------------------------------------------------------ */
+
+function SortSheet({
+  open,
+  onOpenChange,
+  sortKey,
+  sortDir,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onChange: (k: SortKey, d: SortDir) => void;
+}) {
+  const [draftKey, setDraftKey] = useState<SortKey>(sortKey);
+  const [draftDir, setDraftDir] = useState<SortDir>(sortDir);
+
+  const selectKey = (k: SortKey) => {
+    if (k !== draftKey) {
+      setDraftKey(k);
+      setDraftDir("desc");
+    }
+  };
+
+  const toggleDir = () =>
+    setDraftDir((d) => (d === "desc" ? "asc" : "desc"));
+
+  const reset = () => {
+    setDraftKey(DEFAULT_SORT.key);
+    setDraftDir(DEFAULT_SORT.dir);
+  };
+
+  const apply = () => {
+    onChange(draftKey, draftDir);
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (o) {
+          setDraftKey(sortKey);
+          setDraftDir(sortDir);
+        }
+      }}
+    >
+      <SheetContent
+        hideClose
+        side="bottom"
+        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[85vh] flex flex-col"
+      >
+        {/* Header row: title + Reset */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+          <SheetTitle className="text-[20px] font-bold tracking-tight">
+            Sort By
+          </SheetTitle>
+          <button
+            onClick={reset}
+            className="text-[15px] font-semibold text-foreground active:opacity-60 transition-opacity"
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Options list with row separators */}
+        <div className="flex-1 overflow-y-auto px-5">
+          {SORT_OPTIONS.map(({ key, label }, idx) => {
+            const selected = draftKey === key;
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between py-4 min-h-[56px]">
+                  <button
+                    onClick={() => selectKey(key)}
+                    className="flex-1 flex items-center gap-3 text-left"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-colors",
+                        selected
+                          ? "border-foreground"
+                          : "border-muted-foreground/40",
+                      )}
+                    >
+                      {selected && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-foreground" />
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[16px] transition-colors",
+                        selected
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-muted-foreground",
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </button>
+                  {selected && (
+                    <button
+                      onClick={toggleDir}
+                      className="flex items-center gap-1.5 text-foreground text-[15px] font-semibold active:opacity-60 transition-opacity"
+                    >
+                      <span>
+                        {draftDir === "asc" ? "Low to High" : "High to Low"}
+                      </span>
+                      {draftDir === "asc" ? (
+                        <ArrowUp size={16} strokeWidth={2.5} />
+                      ) : (
+                        <ArrowDown size={16} strokeWidth={2.5} />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {idx < SORT_OPTIONS.length - 1 && (
+                  <div className="h-px bg-border/60" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Apply button */}
+        <div className="shrink-0 px-5 pt-3 pb-5">
+          <button
+            onClick={apply}
+            className="w-full h-14 rounded-2xl bg-foreground text-background text-[16px] font-semibold active:scale-[0.98] transition-transform"
+          >
+            Apply
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

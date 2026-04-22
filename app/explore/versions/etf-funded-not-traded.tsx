@@ -459,7 +459,7 @@ export function TopMoversWidget({
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={`${moverType}-${category}`}
-      footer={{ label: "View More", href: "/explore/etf-top-movers" }}
+      footer={{ label: "View More", href: `/explore/etf-top-movers?tab=${moverType}` }}
     />
   );
 }
@@ -2170,7 +2170,7 @@ function ExploreByAssetClassWidget() {
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeClass}
-      footer={{ label: "View All", href: "/explore/etf-asset-class" }}
+      footer={{ label: "View All", href: `/explore/etf-asset-class?tab=${activeClass}` }}
     />
   );
 }
@@ -2273,7 +2273,7 @@ function MostEfficientETFsWidget() {
       rowHeight="h-[80px]"
       scrollableMinWidth={480}
       animationKey={activeTab}
-      footer={{ label: "View All", href: "/explore/efficient-etfs" }}
+      footer={{ label: "View All", href: `/explore/efficient-etfs?tab=${activeTab}` }}
     />
   );
 }

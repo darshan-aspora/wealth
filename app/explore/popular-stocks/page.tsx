@@ -1,10 +1,24 @@
 "use client";
 
-import { Suspense, useState, useRef, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowUpDown, Bookmark } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  ArrowUpDown,
+  Bookmark,
+  Check,
+  ChevronDown,
+} from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import {
   type Stock,
@@ -82,6 +96,40 @@ const tabData: Record<PopularTab, Stock[]> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Sort config                                                        */
+/* ------------------------------------------------------------------ */
+
+type SortKey =
+  | "changePercent"
+  | "oneYear"
+  | "pe"
+  | "revGrowth"
+  | "profitGrowth";
+type SortDir = "asc" | "desc";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "changePercent", label: "Change %" },
+  { key: "oneYear", label: "1Y Change" },
+  { key: "pe", label: "PE" },
+  { key: "revGrowth", label: "Revenue growth" },
+  { key: "profitGrowth", label: "Profit growth" },
+];
+
+const applySort = (stocks: Stock[], key: SortKey, dir: SortDir) => {
+  const mul = dir === "asc" ? 1 : -1;
+  const val = (s: Stock): number => {
+    switch (key) {
+      case "changePercent": return s.changePercent;
+      case "oneYear": return oneYearChange(s.symbol);
+      case "pe": return s.pe ?? Number.POSITIVE_INFINITY;
+      case "revGrowth": return s.revGrowth;
+      case "profitGrowth": return s.profitGrowth;
+    }
+  };
+  return [...stocks].sort((a, b) => (val(a) - val(b)) * mul);
+};
+
+/* ------------------------------------------------------------------ */
 /*  Column config (same as home widget)                                */
 /* ------------------------------------------------------------------ */
 
@@ -89,19 +137,19 @@ interface Column {
   header: string;
   align: "left" | "center" | "right";
   minWidth?: number;
+  sortKey?: SortKey;
 }
 
 function getColumns(showConsensus: boolean): Column[] {
   return [
     { header: "Stock", align: "left" },
-    { header: "Price ($)", align: "right" },
-    { header: "Chg%", align: "right" },
-    { header: "1Y Change", align: "right", minWidth: 80 },
+    { header: "Price", align: "right", sortKey: "changePercent" },
+    { header: "1Y", align: "right", minWidth: 80, sortKey: "oneYear" },
     ...(showConsensus ? [{ header: "Consensus", align: "center" as const, minWidth: 120 }] : []),
-    { header: "PE", align: "right", minWidth: 48 },
+    { header: "PE", align: "right", minWidth: 48, sortKey: "pe" },
     { header: "M.Cap", align: "right", minWidth: 68 },
-    { header: "Rev Gr.", align: "right", minWidth: 74 },
-    { header: "Profit Gr.", align: "right", minWidth: 80 },
+    { header: "Rev Gr.", align: "right", minWidth: 74, sortKey: "revGrowth" },
+    { header: "Profit Gr.", align: "right", minWidth: 80, sortKey: "profitGrowth" },
     { header: "1M Volume", align: "right", minWidth: 80 },
     { header: "Monthly Avg Vol", align: "right", minWidth: 110 },
     { header: "1Y Range", align: "center", minWidth: 136 },
@@ -123,12 +171,29 @@ export default function PopularStocksPage() {
 
 function PopularStocksContent() {
   const router = useRouter();
-  const [tab, setTab] = useState<PopularTab>("most-invested");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<PopularTab>(() => {
+    const p = searchParams.get("tab");
+    return p === "most-invested" || p === "popular-sip" ? p : "most-invested";
+  });
   const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
-  const cycleCapSize = () =>
-    setCapSize((p) => capOrder[(capOrder.indexOf(p) + 1) % capOrder.length]);
+  /* Sort + Cap sheet state */
+  const [sortKey, setSortKey] = useState<SortKey>("changePercent");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [capOpen, setCapOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  /* Header click: switch sort key (default desc), or flip direction if already active */
+  const handleHeaderSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir("desc");
+    } else {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    }
+  };
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((p) => {
@@ -138,7 +203,11 @@ function PopularStocksContent() {
       return n;
     });
 
-  const stocks = tabData[tab];
+  const allStocks = tabData[tab];
+  const stocks = useMemo(
+    () => applySort(allStocks, sortKey, sortDir),
+    [allStocks, sortKey, sortDir],
+  );
   const showConsensus = capSize === "mega";
   const columns = getColumns(showConsensus);
   const frozenCol = columns[0];
@@ -153,6 +222,12 @@ function PopularStocksContent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [frozenW, setFrozenW] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  /* Collapsing header on vertical scroll */
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const handleMainScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setHeaderCollapsed(e.currentTarget.scrollTop > 40);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -196,14 +271,15 @@ function PopularStocksContent() {
           {stock.name}
         </p>
       </div>,
-      /* Price */
-      <span key="price" className="whitespace-nowrap tabular-nums text-[14px] text-foreground">
-        {stock.price.toFixed(1)}
-      </span>,
-      /* Chg% */
-      <span key="chg" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", chgColor)}>
-        {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
-      </span>,
+      /* Price + Chg% stacked */
+      <div key="price" className="flex flex-col items-end">
+        <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">
+          {stock.price.toFixed(1)}
+        </span>
+        <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
+          {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%
+        </span>
+      </div>,
       /* 1Y Change */
       <span key="1y" className={cn("whitespace-nowrap tabular-nums text-[14px] font-semibold", oneY >= 0 ? "text-emerald-500" : "text-red-500")}>
         {fmtPct1Y(stock.symbol)}
@@ -262,45 +338,84 @@ function PopularStocksContent() {
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-3 py-2">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
-        >
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
-        <h1 className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1">
-          Popular Stocks
-        </h1>
-        {/* Cap size flipper */}
-        <button
-          onClick={cycleCapSize}
-          className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:scale-[0.97] transition-transform"
-        >
-          <span className="leading-none">{capLabels[capSize]}</span>
-          <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />
-        </button>
-      </header>
+      {/* Grey header section — expands on top, collapses on scroll */}
+      <div className="shrink-0 bg-muted/50 border-b border-border/50">
+        {/* Top bar */}
+        <header className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
+          >
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <motion.h1
+            initial={false}
+            animate={{ opacity: headerCollapsed ? 1 : 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1"
+          >
+            Popular Stocks
+          </motion.h1>
+          {/* Cap size selector */}
+          <button
+            onClick={() => setCapOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-4 py-2 text-[14px] font-semibold text-foreground active:scale-[0.97] transition-transform"
+          >
+            <span className="leading-none">{capLabels[capSize]}</span>
+            <ChevronDown size={15} className="flex-shrink-0 text-muted-foreground" />
+          </button>
+        </header>
 
-      {/* Sticky tabs */}
-      <div className="shrink-0 border-b border-border/40 bg-background">
+        {/* Expanded title + description — collapses on scroll */}
+        <motion.div
+          initial={false}
+          animate={{
+            maxHeight: headerCollapsed ? 0 : 160,
+            opacity: headerCollapsed ? 0 : 1,
+          }}
+          transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+          className="overflow-hidden"
+        >
+          <div className="px-5 pt-1 pb-4">
+            <h1 className="text-[28px] font-bold tracking-tight text-foreground leading-tight">
+              Popular Stocks
+            </h1>
+            <p className="mt-1.5 text-[14px] leading-snug text-muted-foreground">
+              What other Aspora members are buying and holding.
+              <br />
+              A pulse check on the crowd, not a green light.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Sticky tabs */}
         <div className="overflow-x-auto no-scrollbar">
           <div className="flex gap-2 px-5">
             {TABS.map((t, i) => {
               const active = tab === t.id;
+              const count = tabData[t.id].length;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "relative whitespace-nowrap py-1.5 text-[14px] font-semibold transition-colors",
+                    "relative whitespace-nowrap pt-2 pb-3 text-[14px] font-semibold transition-colors flex items-center gap-1.5",
                     i === 0 ? "pr-3" : "px-3",
                     active ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {t.label}
+                  <span>{t.label}</span>
+                  <span
+                    className={cn(
+                      "inline-flex min-w-[20px] justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors",
+                      active
+                        ? "bg-foreground text-background"
+                        : "bg-muted-foreground/15 text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
                   {active && (
                     <motion.span
                       layoutId="popular-stocks-tab-underline"
@@ -319,8 +434,11 @@ function PopularStocksContent() {
       </div>
 
       {/* Scrollable table */}
-      <main className="no-scrollbar flex-1 overflow-y-auto">
-        <div ref={containerRef} className="pt-2 pb-8">
+      <main
+        className="no-scrollbar flex-1 overflow-y-auto"
+        onScroll={handleMainScroll}
+      >
+        <div ref={containerRef} className="pt-2 pb-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${tab}-${capSize}`}
@@ -353,18 +471,39 @@ function PopularStocksContent() {
                 <table ref={tableRef} style={{ minWidth: 500 }}>
                   <thead>
                     <tr className="h-[40px]">
-                      {scrollCols.map((col, i) => (
-                        <th
-                          key={i}
-                          className={cn(
-                            "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
-                            alignCls(col.align),
-                          )}
-                          style={col.minWidth ? { minWidth: col.minWidth } : undefined}
-                        >
-                          {col.header}
-                        </th>
-                      ))}
+                      {scrollCols.map((col, i) => {
+                        const sortable = !!col.sortKey;
+                        const active = sortable && sortKey === col.sortKey;
+                        return (
+                          <th
+                            key={i}
+                            className={cn(
+                              "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
+                              alignCls(col.align),
+                            )}
+                            style={col.minWidth ? { minWidth: col.minWidth } : undefined}
+                          >
+                            {sortable ? (
+                              <button
+                                onClick={() => handleHeaderSort(col.sortKey as SortKey)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 transition-colors",
+                                  active ? "text-foreground" : "hover:text-foreground",
+                                )}
+                              >
+                                {active && (
+                                  sortDir === "desc"
+                                    ? <ArrowDown size={12} strokeWidth={2.5} />
+                                    : <ArrowUp size={12} strokeWidth={2.5} />
+                                )}
+                                <span>{col.header}</span>
+                              </button>
+                            ) : (
+                              col.header
+                            )}
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
@@ -389,9 +528,243 @@ function PopularStocksContent() {
             </motion.div>
           </AnimatePresence>
         </div>
-
-        <HomeIndicator />
       </main>
+
+      {/* Floating Sort FAB */}
+      <button
+        onClick={() => setSortOpen(true)}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 h-11 pl-4 pr-5 rounded-full flex items-center gap-2 text-[14px] font-semibold bg-foreground text-background shadow-lg shadow-foreground/20 active:scale-[0.97] transition-transform"
+      >
+        <ArrowUpDown size={15} strokeWidth={2.5} />
+        <span>Sort</span>
+      </button>
+
+      <HomeIndicator />
+
+      {/* Cap size sheet */}
+      <CapSheet
+        open={capOpen}
+        onOpenChange={setCapOpen}
+        capSize={capSize}
+        onChange={(c) => {
+          setCapSize(c);
+          setCapOpen(false);
+        }}
+      />
+
+      {/* Sort sheet */}
+      <SortSheet
+        open={sortOpen}
+        onOpenChange={setSortOpen}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onChange={(k, d) => {
+          setSortKey(k);
+          setSortDir(d);
+        }}
+      />
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Cap size sheet                                                     */
+/* ------------------------------------------------------------------ */
+
+function CapSheet({
+  open,
+  onOpenChange,
+  capSize,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  capSize: CapSize;
+  onChange: (c: CapSize) => void;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[80vh] overflow-y-auto"
+      >
+        <SheetHeader className="px-5 pt-5 pb-3 text-center sm:text-center">
+          <SheetTitle className="text-[20px] font-bold tracking-tight">
+            Market cap
+          </SheetTitle>
+        </SheetHeader>
+        <div className="px-2 pb-6">
+          {capOrder.map((c) => {
+            const selected = c === capSize;
+            return (
+              <button
+                key={c}
+                onClick={() => onChange(c)}
+                className={cn(
+                  "w-full flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors",
+                  selected ? "bg-foreground/[0.05]" : "active:bg-muted/40",
+                )}
+              >
+                <span className="text-[16px] font-semibold text-foreground">
+                  {capLabels[c]}
+                </span>
+                <div
+                  className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded-full border",
+                    selected ? "bg-foreground border-foreground" : "border-border/60",
+                  )}
+                >
+                  {selected && (
+                    <Check size={12} strokeWidth={3} className="text-background" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sort sheet                                                         */
+/* ------------------------------------------------------------------ */
+
+const DEFAULT_SORT: { key: SortKey; dir: SortDir } = { key: "changePercent", dir: "desc" };
+
+function SortSheet({
+  open,
+  onOpenChange,
+  sortKey,
+  sortDir,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onChange: (k: SortKey, d: SortDir) => void;
+}) {
+  const [draftKey, setDraftKey] = useState<SortKey>(sortKey);
+  const [draftDir, setDraftDir] = useState<SortDir>(sortDir);
+
+  const selectKey = (k: SortKey) => {
+    if (k !== draftKey) {
+      setDraftKey(k);
+      setDraftDir("desc");
+    }
+  };
+
+  const toggleDir = () =>
+    setDraftDir((d) => (d === "desc" ? "asc" : "desc"));
+
+  const reset = () => {
+    setDraftKey(DEFAULT_SORT.key);
+    setDraftDir(DEFAULT_SORT.dir);
+  };
+
+  const apply = () => {
+    onChange(draftKey, draftDir);
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (o) {
+          setDraftKey(sortKey);
+          setDraftDir(sortDir);
+        }
+      }}
+    >
+      <SheetContent
+        hideClose
+        side="bottom"
+        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[85vh] flex flex-col"
+      >
+        {/* Header row: title + Reset */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+          <SheetTitle className="text-[20px] font-bold tracking-tight">
+            Sort By
+          </SheetTitle>
+          <button
+            onClick={reset}
+            className="text-[15px] font-semibold text-foreground active:opacity-60 transition-opacity"
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Options list with row separators */}
+        <div className="flex-1 overflow-y-auto px-5">
+          {SORT_OPTIONS.map(({ key, label }, idx) => {
+            const selected = draftKey === key;
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between py-4 min-h-[56px]">
+                  <button
+                    onClick={() => selectKey(key)}
+                    className="flex-1 flex items-center gap-3 text-left"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-colors",
+                        selected ? "border-foreground" : "border-muted-foreground/40",
+                      )}
+                    >
+                      {selected && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-foreground" />
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[16px] transition-colors",
+                        selected
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-muted-foreground",
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </button>
+                  {selected && (
+                    <button
+                      onClick={toggleDir}
+                      className="flex items-center gap-1.5 text-foreground text-[15px] font-semibold active:opacity-60 transition-opacity"
+                    >
+                      <span>
+                        {draftDir === "asc" ? "Low to High" : "High to Low"}
+                      </span>
+                      {draftDir === "asc" ? (
+                        <ArrowUp size={16} strokeWidth={2.5} />
+                      ) : (
+                        <ArrowDown size={16} strokeWidth={2.5} />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {idx < SORT_OPTIONS.length - 1 && (
+                  <div className="h-px bg-border/60" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Apply button */}
+        <div className="shrink-0 px-5 pt-3 pb-5">
+          <button
+            onClick={apply}
+            className="w-full h-14 rounded-2xl bg-foreground text-background text-[16px] font-semibold active:scale-[0.98] transition-transform"
+          >
+            Apply
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+

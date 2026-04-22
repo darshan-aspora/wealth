@@ -1,10 +1,21 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowDown, Bookmark } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  ArrowUpDown,
+  Bookmark,
+} from "lucide-react";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -82,7 +93,7 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 /* ------------------------------------------------------------------ */
-/*  RangeBar component (matches widget's RangeBarInline)               */
+/*  RangeBar component                                                 */
 /* ------------------------------------------------------------------ */
 
 function RangeBar({ low, high, current }: { low: number; high: number; current: number }) {
@@ -108,21 +119,78 @@ function RangeBar({ low, high, current }: { low: number; high: number; current: 
 }
 
 /* ------------------------------------------------------------------ */
-/*  Column config (matches widget exactly)                             */
+/*  Sort config                                                        */
 /* ------------------------------------------------------------------ */
 
-const columnDefs = [
-  { header: "ETF", align: "left" as const },
-  { header: "Price", align: "right" as const, minWidth: 72 },
-  { header: "chg-icon" as const, align: "right" as const, minWidth: 72 },
-  { header: "AUM", align: "right" as const, minWidth: 72 },
-  { header: "Exp%", align: "right" as const, minWidth: 58 },
-  { header: "1Y", align: "right" as const, minWidth: 72 },
-  { header: "3Y", align: "right" as const, minWidth: 72 },
-  { header: "5Y", align: "right" as const, minWidth: 72 },
-  { header: "Track Err", align: "right" as const, minWidth: 72 },
-  { header: "1Y Range", align: "center" as const, minWidth: 110 },
-  { header: "Watchlist", align: "center" as const, minWidth: 80 },
+type SortKey =
+  | "changePercent"
+  | "return1y"
+  | "return3y"
+  | "return5y"
+  | "expenseRatio"
+  | "trackingError"
+  | "aum";
+type SortDir = "asc" | "desc";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "changePercent", label: "Change %" },
+  { key: "return1y", label: "1Y Return" },
+  { key: "return3y", label: "3Y Return" },
+  { key: "return5y", label: "5Y Return" },
+  { key: "expenseRatio", label: "Expense Ratio" },
+  { key: "trackingError", label: "Tracking Error" },
+  { key: "aum", label: "AUM" },
+];
+
+/* AUM is a string like "412.8B", "8.2B", "502.3B". Parse into numeric billions. */
+const parseAum = (s: string): number => {
+  const m = s.match(/([\d.]+)\s*([BMT])?/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  const unit = (m[2] ?? "B").toUpperCase();
+  if (unit === "T") return n * 1000;
+  if (unit === "M") return n / 1000;
+  return n;
+};
+
+const applySort = (etfs: ETF[], key: SortKey, dir: SortDir) => {
+  const mul = dir === "asc" ? 1 : -1;
+  const val = (e: ETF): number => {
+    switch (key) {
+      case "changePercent": return e.changePercent;
+      case "return1y": return e.return1y;
+      case "return3y": return e.return3y;
+      case "return5y": return e.return5y;
+      case "expenseRatio": return e.expenseRatio;
+      case "trackingError": return e.trackingError;
+      case "aum": return parseAum(e.aum);
+    }
+  };
+  return [...etfs].sort((a, b) => (val(a) - val(b)) * mul);
+};
+
+/* ------------------------------------------------------------------ */
+/*  Column config                                                      */
+/* ------------------------------------------------------------------ */
+
+interface Column {
+  header: string;
+  align: "left" | "center" | "right";
+  minWidth?: number;
+  sortKey?: SortKey;
+}
+
+const columnDefs: Column[] = [
+  { header: "ETF", align: "left" },
+  { header: "Price", align: "right", minWidth: 72, sortKey: "changePercent" },
+  { header: "AUM", align: "right", minWidth: 72, sortKey: "aum" },
+  { header: "Exp%", align: "right", minWidth: 58, sortKey: "expenseRatio" },
+  { header: "1Y", align: "right", minWidth: 72, sortKey: "return1y" },
+  { header: "3Y", align: "right", minWidth: 72, sortKey: "return3y" },
+  { header: "5Y", align: "right", minWidth: 72, sortKey: "return5y" },
+  { header: "Track Err", align: "right", minWidth: 72, sortKey: "trackingError" },
+  { header: "1Y Range", align: "center", minWidth: 110 },
+  { header: "Watchlist", align: "center", minWidth: 80 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -130,9 +198,35 @@ const columnDefs = [
 /* ------------------------------------------------------------------ */
 
 export default function EfficientETFsPage() {
+  return (
+    <Suspense>
+      <EfficientETFsContent />
+    </Suspense>
+  );
+}
+
+function EfficientETFsContent() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>("ultra-low-cost");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const p = searchParams.get("tab");
+    return tabs.some((t) => t.id === p) ? (p as TabId) : "ultra-low-cost";
+  });
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+
+  /* Sort state */
+  const [sortKey, setSortKey] = useState<SortKey>("changePercent");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const handleHeaderSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir("desc");
+    } else {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    }
+  };
 
   const toggleBookmark = (sym: string) =>
     setBookmarks((prev) => {
@@ -143,17 +237,33 @@ export default function EfficientETFsPage() {
     });
 
   const activeData = tabs.find((t) => t.id === activeTab)!.data;
+  const etfs = useMemo(
+    () => applySort(activeData, sortKey, sortDir),
+    [activeData, sortKey, sortDir],
+  );
 
-  /* ── Frozen-col width calculation (mirrors ScrollableTableWidget) ── */
+  const frozenCol = columnDefs[0];
+  const scrollCols = columnDefs.slice(1);
+
+  const alignCls = (align?: "left" | "center" | "right") =>
+    align === "left" ? "text-left" : align === "center" ? "text-center" : "text-right";
+
+  /* ── Frozen-col width calculation ── */
   const containerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [frozenW, setFrozenW] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const VISIBLE_DATA_COLS = 2;
+  const VISIBLE_DATA_COLS = 1;
   const MIN_FROZEN = 120;
   const SCROLLABLE_MIN_WIDTH = 480;
+
+  /* Collapsing header on vertical scroll */
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const handleMainScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setHeaderCollapsed(e.currentTarget.scrollTop > 40);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -175,68 +285,112 @@ export default function EfficientETFsPage() {
     setFrozenW(Math.max(MIN_FROZEN, containerW - visibleSum));
   }, []);
 
-  useEffect(() => { measure(); }, [measure, activeTab]);
+  useEffect(() => { measure(); }, [measure, activeTab, etfs]);
   useEffect(() => {
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [measure]);
 
-  const alignCls = (align?: "left" | "center" | "right") =>
-    align === "left" ? "text-left" : align === "center" ? "text-center" : "text-right";
-
-  const frozenCol = columnDefs[0];
-  const scrollCols = columnDefs.slice(1);
-
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <StatusBar />
 
-      {/* Header */}
-      <header className="flex items-center px-3 py-2">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
-        >
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
-        <h1 className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1">
-          Most Efficient ETFs
-        </h1>
-      </header>
+      {/* Grey header section — expands on top, collapses on scroll */}
+      <div className="shrink-0 bg-muted/50 border-b border-border/50">
+        {/* Top bar */}
+        <header className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted transition-colors"
+          >
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <motion.h1
+            initial={false}
+            animate={{ opacity: headerCollapsed ? 1 : 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex-1 text-[17px] font-bold tracking-tight text-foreground ml-1"
+          >
+            Most Efficient ETFs
+          </motion.h1>
+          {/* Right side intentionally empty */}
+          <div className="w-10" />
+        </header>
 
-      {/* Sticky tabs with animated underline */}
-      <div className="shrink-0 border-b border-border/60 bg-background">
-        <div className="flex px-5">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "relative py-1.5 px-1 mr-6 text-[14px] font-semibold transition-colors",
-                  isActive ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {tab.label}
-                {isActive && (
-                  <motion.span
-                    layoutId="efficient-etf-tab-underline"
-                    className="absolute inset-x-0 -bottom-[1px] h-[2px] rounded-full bg-foreground"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-            );
-          })}
+        {/* Expanded title + description — collapses on scroll */}
+        <motion.div
+          initial={false}
+          animate={{
+            maxHeight: headerCollapsed ? 0 : 160,
+            opacity: headerCollapsed ? 0 : 1,
+          }}
+          transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+          className="overflow-hidden"
+        >
+          <div className="px-5 pt-1 pb-4">
+            <h1 className="text-[28px] font-bold tracking-tight text-foreground leading-tight">
+              Most Efficient ETFs
+            </h1>
+            <p className="mt-1.5 text-[14px] leading-snug text-muted-foreground">
+              ETFs built to hug their index, cheaply.
+              <br />
+              Low cost and low drift — the index-fund sweet spot.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Sticky tabs */}
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 px-5">
+            {tabs.map((t, i) => {
+              const active = activeTab === t.id;
+              const count = t.data.length;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={cn(
+                    "relative whitespace-nowrap pt-2 pb-3 text-[14px] font-semibold transition-colors flex items-center gap-1.5",
+                    i === 0 ? "pr-3" : "px-3",
+                    active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  <span>{t.label}</span>
+                  <span
+                    className={cn(
+                      "inline-flex min-w-[20px] justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors",
+                      active
+                        ? "bg-foreground text-background"
+                        : "bg-muted-foreground/15 text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
+                  {active && (
+                    <motion.span
+                      layoutId="efficient-etf-tab-underline"
+                      className={cn(
+                        "absolute bottom-0 right-3 h-[2px] rounded-full bg-foreground",
+                        i === 0 ? "left-0" : "left-3",
+                      )}
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Scrollable table area */}
-      <main className="no-scrollbar flex-1 overflow-y-auto">
-        <div ref={containerRef} className="pt-0">
+      <main
+        className="no-scrollbar flex-1 overflow-y-auto"
+        onScroll={handleMainScroll}
+      >
+        <div ref={containerRef} className="pt-2 pb-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -259,7 +413,7 @@ export default function EfficientETFsPage() {
                   {frozenCol.header}
                 </div>
                 {/* Frozen rows */}
-                {activeData.map((etf) => (
+                {etfs.map((etf) => (
                   <div key={etf.symbol} className="h-[80px] flex items-center pl-5 pr-3">
                     <div className="flex items-center gap-2.5">
                       <div className="h-8 w-8 flex-shrink-0 rounded-full bg-muted-foreground/25" />
@@ -280,43 +434,56 @@ export default function EfficientETFsPage() {
                 <table ref={tableRef} style={{ minWidth: SCROLLABLE_MIN_WIDTH }}>
                   <thead>
                     <tr className="h-[40px]">
-                      {scrollCols.map((col, i) => (
-                        <th
-                          key={i}
-                          className={cn(
-                            "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
-                            alignCls(col.align)
-                          )}
-                          style={col.minWidth ? { minWidth: col.minWidth } : undefined}
-                        >
-                          {col.header === "chg-icon" ? (
-                            <span className="inline-flex items-center justify-end gap-1">
-                              <ArrowDown size={10} className="text-foreground" />
-                              Chg%
-                            </span>
-                          ) : (
-                            col.header
-                          )}
-                        </th>
-                      ))}
+                      {scrollCols.map((col, i) => {
+                        const sortable = !!col.sortKey;
+                        const active = sortable && sortKey === col.sortKey;
+                        return (
+                          <th
+                            key={i}
+                            className={cn(
+                              "text-[14px] font-medium text-muted-foreground whitespace-nowrap px-3",
+                              alignCls(col.align),
+                            )}
+                            style={col.minWidth ? { minWidth: col.minWidth } : undefined}
+                          >
+                            {sortable ? (
+                              <button
+                                onClick={() => handleHeaderSort(col.sortKey as SortKey)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 transition-colors",
+                                  active ? "text-foreground" : "hover:text-foreground",
+                                )}
+                              >
+                                {active && (
+                                  sortDir === "desc"
+                                    ? <ArrowDown size={12} strokeWidth={2.5} />
+                                    : <ArrowUp size={12} strokeWidth={2.5} />
+                                )}
+                                <span>{col.header}</span>
+                              </button>
+                            ) : (
+                              col.header
+                            )}
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
-                    {activeData.map((etf) => {
+                    {etfs.map((etf) => {
                       const chgColor = etf.changePercent >= 0 ? "text-gain" : "text-loss";
                       return (
                         <tr key={etf.symbol} className="h-[80px]">
-                          {/* Price */}
+                          {/* Price + Chg% stacked */}
                           <td className="px-3 whitespace-nowrap text-right">
-                            <span className="tabular-nums text-[14px] text-foreground">
-                              {etf.price.toFixed(2)}
-                            </span>
-                          </td>
-                          {/* Chg% */}
-                          <td className="px-3 whitespace-nowrap text-right">
-                            <span className={cn("tabular-nums text-[14px] font-semibold", chgColor)}>
-                              {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(2)}%
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">
+                                {etf.price.toFixed(1)}
+                              </span>
+                              <span className={cn("whitespace-nowrap tabular-nums text-[12px] font-semibold", chgColor)}>
+                                {etf.changePercent >= 0 ? "+" : ""}{etf.changePercent.toFixed(1)}%
+                              </span>
+                            </div>
                           </td>
                           {/* AUM */}
                           <td className="px-3 whitespace-nowrap text-right">
@@ -387,11 +554,171 @@ export default function EfficientETFsPage() {
             </motion.div>
           </AnimatePresence>
         </div>
-
-        {/* Bottom spacing */}
-        <div className="h-8" />
-        <HomeIndicator />
       </main>
+
+      {/* Floating Sort FAB */}
+      <button
+        onClick={() => setSortOpen(true)}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 h-11 pl-4 pr-5 rounded-full flex items-center gap-2 text-[14px] font-semibold bg-foreground text-background shadow-lg shadow-foreground/20 active:scale-[0.97] transition-transform"
+      >
+        <ArrowUpDown size={15} strokeWidth={2.5} />
+        <span>Sort</span>
+      </button>
+
+      <HomeIndicator />
+
+      {/* Sort sheet */}
+      <SortSheet
+        open={sortOpen}
+        onOpenChange={setSortOpen}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onChange={(k, d) => {
+          setSortKey(k);
+          setSortDir(d);
+        }}
+      />
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sort sheet                                                         */
+/* ------------------------------------------------------------------ */
+
+const DEFAULT_SORT: { key: SortKey; dir: SortDir } = { key: "changePercent", dir: "desc" };
+
+function SortSheet({
+  open,
+  onOpenChange,
+  sortKey,
+  sortDir,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onChange: (k: SortKey, d: SortDir) => void;
+}) {
+  const [draftKey, setDraftKey] = useState<SortKey>(sortKey);
+  const [draftDir, setDraftDir] = useState<SortDir>(sortDir);
+
+  const selectKey = (k: SortKey) => {
+    if (k !== draftKey) {
+      setDraftKey(k);
+      setDraftDir("desc");
+    }
+  };
+
+  const toggleDir = () =>
+    setDraftDir((d) => (d === "desc" ? "asc" : "desc"));
+
+  const reset = () => {
+    setDraftKey(DEFAULT_SORT.key);
+    setDraftDir(DEFAULT_SORT.dir);
+  };
+
+  const apply = () => {
+    onChange(draftKey, draftDir);
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (o) {
+          setDraftKey(sortKey);
+          setDraftDir(sortDir);
+        }
+      }}
+    >
+      <SheetContent
+        hideClose
+        side="bottom"
+        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[85vh] flex flex-col"
+      >
+        {/* Header row: title + Reset */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+          <SheetTitle className="text-[20px] font-bold tracking-tight">
+            Sort By
+          </SheetTitle>
+          <button
+            onClick={reset}
+            className="text-[15px] font-semibold text-foreground active:opacity-60 transition-opacity"
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Options list with row separators */}
+        <div className="flex-1 overflow-y-auto px-5">
+          {SORT_OPTIONS.map(({ key, label }, idx) => {
+            const selected = draftKey === key;
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between py-4 min-h-[56px]">
+                  <button
+                    onClick={() => selectKey(key)}
+                    className="flex-1 flex items-center gap-3 text-left"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-colors",
+                        selected ? "border-foreground" : "border-muted-foreground/40",
+                      )}
+                    >
+                      {selected && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-foreground" />
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[16px] transition-colors",
+                        selected
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-muted-foreground",
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </button>
+                  {selected && (
+                    <button
+                      onClick={toggleDir}
+                      className="flex items-center gap-1.5 text-foreground text-[15px] font-semibold active:opacity-60 transition-opacity"
+                    >
+                      <span>
+                        {draftDir === "asc" ? "Low to High" : "High to Low"}
+                      </span>
+                      {draftDir === "asc" ? (
+                        <ArrowUp size={16} strokeWidth={2.5} />
+                      ) : (
+                        <ArrowDown size={16} strokeWidth={2.5} />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {idx < SORT_OPTIONS.length - 1 && (
+                  <div className="h-px bg-border/60" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Apply button */}
+        <div className="shrink-0 px-5 pt-3 pb-5">
+          <button
+            onClick={apply}
+            className="w-full h-14 rounded-2xl bg-foreground text-background text-[16px] font-semibold active:scale-[0.98] transition-transform"
+          >
+            Apply
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

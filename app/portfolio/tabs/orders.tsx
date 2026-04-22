@@ -119,7 +119,7 @@ function sideLabel(side: OrderSide) {
 
 function SideBadge({ side }: { side: OrderSide }) {
   return (
-    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[11px] font-bold shrink-0 bg-muted text-foreground">
+    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[12px] font-bold shrink-0 bg-muted text-foreground">
       {side}
     </span>
   );
@@ -133,7 +133,7 @@ function QtyRight({ order }: { order: Order }) {
   const complete = order.filledQty === order.totalQty || order.kind === "completed";
 
   return (
-    <span className="text-[15px] font-bold text-foreground tabular-nums whitespace-nowrap">
+    <span className="text-[14px] font-bold text-foreground tabular-nums whitespace-nowrap">
       {complete ? `${total}${suffix}` : `${filled} / ${total}${suffix}`}
     </span>
   );
@@ -170,13 +170,13 @@ function Divider() {
 
 function StatusBadge({ kind }: { kind: Order["kind"] }) {
   if (kind === "completed") return (
-    <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-600 uppercase tracking-wide">Completed</span>
+    <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[12px] font-bold text-emerald-600 uppercase tracking-wide">Completed</span>
   );
   if (kind === "failed") return (
-    <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-500 uppercase tracking-wide">Failed</span>
+    <span className="rounded-md bg-red-50 px-2 py-0.5 text-[12px] font-bold text-red-500 uppercase tracking-wide">Failed</span>
   );
   return (
-    <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-600 uppercase tracking-wide">Open</span>
+    <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[12px] font-bold text-amber-600 uppercase tracking-wide">Open</span>
   );
 }
 
@@ -200,10 +200,10 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
         <div className="px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-extrabold text-foreground mb-5">{order.companyName}</p>
+              <p className="text-[16px] font-extrabold text-foreground mb-5">{order.companyName}</p>
               <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
                 {order.category && (
-                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[11px]">{order.category}</span>
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[12px]">{order.category}</span>
                 )}
                 <span>{priceTypeLabel(order.priceType)} · {sideLabel(order.side)} · {order.time}</span>
               </div>
@@ -374,19 +374,19 @@ function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) 
         <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
           {isOpen ? (
             <div className="flex gap-3">
-              <button className="flex-1 rounded-2xl border border-border/60 py-4 text-[15px] font-bold text-foreground active:opacity-70">
+              <button className="flex-1 rounded-2xl border border-border/60 py-4 text-[14px] font-bold text-foreground active:opacity-70">
                 Cancel Order
               </button>
-              <button className="flex-1 rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75">
+              <button className="flex-1 rounded-2xl bg-foreground py-4 text-[14px] font-bold text-background active:opacity-75">
                 Modify
               </button>
             </div>
           ) : isFailed ? (
-            <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75">
+            <button className="w-full rounded-2xl bg-foreground py-4 text-[14px] font-bold text-background active:opacity-75">
               Retry
             </button>
           ) : (
-            <button className="w-full rounded-2xl border border-border/60 py-4 text-[15px] font-bold text-foreground active:opacity-70">
+            <button className="w-full rounded-2xl border border-border/60 py-4 text-[14px] font-bold text-foreground active:opacity-70">
               Repeat Order
             </button>
           )}
@@ -408,7 +408,7 @@ function OpenOrderCard({ order, onTap }: { order: OpenOrder; onTap: () => void }
         <div className="flex items-center gap-2 min-w-0">
           <SideBadge side={order.side} />
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <p className="text-[14px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
+            <p className="text-[13px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
             {order.tag && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{order.tag}</span>}
           </div>
         </div>
@@ -430,7 +430,7 @@ function CompletedOrderCard({ order, onTap }: { order: CompletedOrder; onTap: ()
         <div className="flex items-center gap-2 min-w-0">
           <SideBadge side={order.side} />
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <p className="text-[14px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
+            <p className="text-[13px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
             {order.tag && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{order.tag}</span>}
           </div>
         </div>
@@ -453,7 +453,7 @@ function FailedOrderCard({ order, onTap }: { order: FailedOrder; onTap: () => vo
         <div className="flex items-center gap-2 min-w-0">
           <SideBadge side={order.side} />
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <p className="text-[14px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
+            <p className="text-[13px] font-extrabold text-foreground tracking-wide whitespace-nowrap">{label}</p>
             {order.tag && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{order.tag}</span>}
           </div>
         </div>
@@ -494,7 +494,7 @@ export function OrdersTab() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 rounded-xl py-2.5 text-[14px] font-semibold transition-colors",
+                "flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition-colors",
                 activeTab === tab.id ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
               )}
             >

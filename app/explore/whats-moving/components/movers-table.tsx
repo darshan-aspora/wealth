@@ -125,6 +125,14 @@ export function MoversTable({
     if (scrollRef.current) setIsScrolled(scrollRef.current.scrollLeft > 0);
   }, [columns]);
 
+  // When both Price and Change% are selected, merge them into a stacked cell
+  // rendered in the Price column. The separate Change% column is hidden.
+  const mergePriceAndChg =
+    columns.includes("price") && columns.includes("changePercent");
+  const visibleColumns = mergePriceAndChg
+    ? columns.filter((c) => c !== "changePercent")
+    : columns;
+
   return (
     <div ref={containerRef} className="flex">
       {/* Frozen Name column — matches widget's frozen col exactly */}
@@ -159,9 +167,11 @@ export function MoversTable({
         <table ref={tableRef} style={{ minWidth: SCROLLABLE_MIN_WIDTH }}>
           <thead>
             <tr className="h-[40px]">
-              {columns.map((id) => {
+              {visibleColumns.map((id) => {
                 const def = COL_DEFS[id];
                 const sortActive = def.sortKey === sortKey;
+                const label =
+                  mergePriceAndChg && id === "price" ? "Price" : def.label;
                 return (
                   <th
                     key={id}
@@ -176,20 +186,19 @@ export function MoversTable({
                         onClick={() => handleHeaderClick(def)}
                         className={cn(
                           "inline-flex items-center gap-1 transition-colors",
-                          sortActive ? "text-foreground" : "hover:text-foreground",
-                          def.align === "right" && "flex-row-reverse"
+                          sortActive ? "text-foreground" : "hover:text-foreground"
                         )}
                       >
-                        <span>{def.label}</span>
                         {sortActive &&
                           (sortDir === "desc" ? (
-                            <ArrowDown size={10} className="text-foreground" />
+                            <ArrowDown size={12} strokeWidth={2.5} className="text-foreground" />
                           ) : (
-                            <ArrowUp size={10} className="text-foreground" />
+                            <ArrowUp size={12} strokeWidth={2.5} className="text-foreground" />
                           ))}
+                        <span>{label}</span>
                       </button>
                     ) : (
-                      <span>{def.label}</span>
+                      <span>{label}</span>
                     )}
                   </th>
                 );
@@ -202,14 +211,24 @@ export function MoversTable({
               const oneY = oneYearChange(s.symbol);
               return (
                 <tr key={s.symbol} className="h-[64px]">
-                  {columns.map((id) => {
+                  {visibleColumns.map((id) => {
                     const def = COL_DEFS[id];
+                    const renderMerged = mergePriceAndChg && id === "price";
                     return (
                       <td
                         key={id}
                         className={cn("px-3 whitespace-nowrap", alignCls(def.align))}
                       >
-                        {renderCell(id, s, chgColor, oneY, bookmarkedSymbols, onToggleBookmark)}
+                        {renderMerged
+                          ? renderPriceWithChange(s, chgColor)
+                          : renderCell(
+                              id,
+                              s,
+                              chgColor,
+                              oneY,
+                              bookmarkedSymbols,
+                              onToggleBookmark
+                            )}
                       </td>
                     );
                   })}
@@ -219,6 +238,25 @@ export function MoversTable({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function renderPriceWithChange(s: Stock, chgColor: string) {
+  return (
+    <div className="flex flex-col items-end">
+      <span className="whitespace-nowrap tabular-nums text-[14px] text-foreground">
+        {s.price.toFixed(1)}
+      </span>
+      <span
+        className={cn(
+          "whitespace-nowrap tabular-nums text-[12px] font-semibold",
+          chgColor
+        )}
+      >
+        {s.changePercent >= 0 ? "+" : ""}
+        {s.changePercent.toFixed(1)}%
+      </span>
     </div>
   );
 }

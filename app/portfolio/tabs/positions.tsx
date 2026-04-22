@@ -132,7 +132,7 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
   };
   const { label } = configs[reason];
   return (
-    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
+    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground whitespace-nowrap">
       {label}
     </span>
   );
@@ -144,7 +144,7 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
 
 function SideBadge({ side }: { side: "B" | "S" }) {
   return (
-    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[11px] font-bold shrink-0 bg-muted text-foreground">
+    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[12px] font-bold shrink-0 bg-muted text-foreground">
       {side}
     </span>
   );
@@ -218,7 +218,7 @@ function OpenCard({ p, expanded, onToggle }: {
         <div className="flex items-center gap-2 mb-2.5">
           <SideBadge side={p.side} />
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[14px] font-extrabold text-foreground tracking-wide">{label}</p>
+            <p className="text-[13px] font-extrabold text-foreground tracking-wide">{label}</p>
             {p.tag && (
               <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{p.tag}</span>
             )}
@@ -258,7 +258,7 @@ function OpenCard({ p, expanded, onToggle }: {
           {isPending ? (
             <span className="text-[12px] text-muted-foreground font-medium">Awaiting fill</span>
           ) : (
-            <p className="text-[15px] font-extrabold tabular-nums shrink-0 text-foreground">
+            <p className="text-[14px] font-extrabold tabular-nums shrink-0 text-foreground">
               {fmtPnl(p.pnl)}
             </p>
           )}
@@ -326,7 +326,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           </button>
         </div>
         <div className="px-5 pb-4 shrink-0">
-          <p className="text-[22px] font-extrabold text-foreground">Exit all positions</p>
+          <p className="text-[20px] font-extrabold text-foreground">Exit all positions</p>
           <p className="text-[13px] text-muted-foreground mt-1">All selected positions will be closed at market price</p>
         </div>
 
@@ -359,7 +359,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
                   <div className="flex items-center gap-2 mb-2.5">
                     <SideBadge side={p.side} />
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-[14px] font-extrabold text-foreground tracking-wide">{label}</p>
+                      <p className="text-[13px] font-extrabold text-foreground tracking-wide">{label}</p>
                       {p.tag && (
                         <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{p.tag}</span>
                       )}
@@ -383,7 +383,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
                         <span className="font-semibold text-foreground">${p.ltp}</span>
                       </div>
                     </div>
-                    <p className="text-[15px] font-extrabold tabular-nums shrink-0 text-foreground">
+                    <p className="text-[14px] font-extrabold tabular-nums shrink-0 text-foreground">
                       {fmtPnl(p.pnl)}
                     </p>
                   </div>
@@ -402,7 +402,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
             <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
               <ChevronRight size={18} className="text-background" />
             </div>
-            <span className="text-[16px] font-bold">
+            <span className="text-[14px] font-bold">
               {selected.size === 0 ? "Select positions to exit" : `Swipe to Exit ${selected.size > 0 ? `${selected.size} ` : ""}All`}
             </span>
             <div className="w-9" />
@@ -432,10 +432,10 @@ export function PositionsTab() {
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Today&apos;s P&L</p>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className={cn("text-[30px] font-extrabold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
+              <span className={cn("text-[26px] font-extrabold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
                 {fmtPnl(todayPnl)}
               </span>
-              <span className="flex items-center gap-0.5 text-[14px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
+              <span className="flex items-center gap-0.5 text-[13px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
                 {isGain ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                 {isGain ? "+" : ""}{todayPnlPct}%
               </span>
@@ -457,7 +457,7 @@ export function PositionsTab() {
       {/* ── Open positions ── */}
       <div className="px-5 mt-6 mb-3 flex items-center gap-2">
         <p className="text-[13px] font-semibold text-foreground">Open</p>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] font-bold text-foreground">{OPEN.length}</span>
+        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[12px] font-bold text-foreground">{OPEN.length}</span>
       </div>
 
       <div className="px-5 space-y-2.5">
@@ -474,7 +474,7 @@ export function PositionsTab() {
       {/* ── Closed today ── */}
       <div className="px-5 mt-8 mb-3 flex items-center gap-2">
         <p className="text-[13px] font-semibold text-foreground">Closed today</p>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] font-bold text-foreground">{CLOSED.length}</span>
+        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[12px] font-bold text-foreground">{CLOSED.length}</span>
       </div>
 
       <div className="px-5 space-y-2.5">
@@ -487,7 +487,7 @@ export function PositionsTab() {
               {/* Row 1: label + reason badge */}
               <div className="flex items-start justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <p className="text-[14px] font-bold text-muted-foreground tracking-wide">{label}</p>
+                  <p className="text-[13px] font-bold text-muted-foreground tracking-wide">{label}</p>
                   {isPartial && (
                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
                       {p.closedQty}/{p.totalQty} qty
@@ -517,7 +517,7 @@ export function PositionsTab() {
                     </span>
                   </div>
                 </div>
-                <p className="text-[15px] font-bold tabular-nums shrink-0 text-foreground">
+                <p className="text-[14px] font-bold tabular-nums shrink-0 text-foreground">
                   {fmtPnl(p.pnl)}
                 </p>
               </div>

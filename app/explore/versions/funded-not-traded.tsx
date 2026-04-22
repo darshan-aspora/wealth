@@ -793,7 +793,7 @@ function AnalystRatingsWidget() {
       rows={rows}
       scrollableMinWidth={620}
       animationKey={`${ratingTab}-${capSize}`}
-      footer={{ label: "View All", href: "/explore/analyst-ratings" }}
+      footer={{ label: "View All", href: `/explore/analyst-ratings?tab=${ratingTab}` }}
     />
   );
 }
@@ -1380,7 +1380,7 @@ function PopularStocksWidget() {
       rows={rows}
       scrollableMinWidth={500}
       animationKey={`${tab}-${capSize}`}
-      footer={{ label: "View All", href: "/explore/popular-stocks" }}
+      footer={{ label: "View All", href: `/explore/popular-stocks?tab=${tab}` }}
     />
   );
 }

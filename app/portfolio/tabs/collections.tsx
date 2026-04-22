@@ -23,7 +23,7 @@ export function CollectionsTab() {
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-[13px] text-muted-foreground">Total Value</p>
-            <p className="text-[20px] font-bold tabular-nums text-foreground">
+            <p className="text-[18px] font-bold tabular-nums text-foreground">
               {totalCurrent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </p>
           </div>
@@ -31,7 +31,7 @@ export function CollectionsTab() {
             <p className="text-[13px] text-muted-foreground">{collectionsData.length} Collections · {collectionsData.reduce((s, c) => s + c.count, 0)} Stocks</p>
             <div className={cn("flex items-center justify-end gap-0.5", totalPnl >= 0 ? "text-gain" : "text-loss")}>
               {totalPnl >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-              <span className="text-[15px] font-semibold tabular-nums">
+              <span className="text-[14px] font-semibold tabular-nums">
                 {totalPnl >= 0 ? "+" : ""}{totalPnl.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </span>
               <span className="text-[13px] font-medium tabular-nums">
@@ -53,13 +53,13 @@ export function CollectionsTab() {
               <FolderOpen size={20} className={`${c.color.replace("bg-", "text-")}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-semibold text-foreground">{c.name}</p>
+              <p className="text-[14px] font-semibold text-foreground">{c.name}</p>
               <p className="text-[12px] text-muted-foreground/60">
                 {c.count} stocks · Est. XIRR <span className={cn(c.xirr >= 0 ? "text-gain/70" : "text-loss/70")}>{c.xirr > 0 ? "+" : ""}{c.xirr}%</span>
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[15px] font-semibold tabular-nums text-foreground">
+              <p className="text-[14px] font-semibold tabular-nums text-foreground">
                 {c.current.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
               <div className={cn("flex items-center justify-end gap-0.5", c.pnl >= 0 ? "text-gain" : "text-loss")}>
@@ -68,7 +68,7 @@ export function CollectionsTab() {
                   {c.pnl >= 0 ? "+" : ""}{c.pnl.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <p className={cn("text-[11px] tabular-nums", c.pnlPct >= 0 ? "text-gain/70" : "text-loss/70")}>
+              <p className={cn("text-[12px] tabular-nums", c.pnlPct >= 0 ? "text-gain/70" : "text-loss/70")}>
                 {c.pnlPct >= 0 ? "+" : ""}{c.pnlPct.toFixed(2)}%
               </p>
             </div>
@@ -77,7 +77,7 @@ export function CollectionsTab() {
       </div>
 
       {/* Add new collection */}
-      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3.5 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
+      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
         <Plus size={16} />
         Create Collection
       </button>

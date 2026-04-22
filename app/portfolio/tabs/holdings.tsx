@@ -135,11 +135,11 @@ export function HoldingsTab() {
           <div className="flex gap-10 mb-3.5">
             <div>
               <p className="text-[13px] text-muted-foreground mb-1">Invested</p>
-              <p className="text-[20px] font-bold text-foreground">${fmtMoney(heroInvested)}</p>
+              <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroInvested)}</p>
             </div>
             <div>
               <p className="text-[13px] text-muted-foreground mb-1">Current value</p>
-              <p className="text-[20px] font-bold text-foreground">${fmtMoney(heroCurrentValue)}</p>
+              <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroCurrentValue)}</p>
             </div>
           </div>
 
@@ -150,9 +150,9 @@ export function HoldingsTab() {
             className="w-full flex items-center justify-between mb-2.5 active:opacity-70 transition-opacity"
             onClick={() => setPnlExpanded((v) => !v)}
           >
-            <span className="text-[14px] text-muted-foreground">P&L</span>
+            <span className="text-[13px] text-muted-foreground">P&L</span>
             <div className="flex items-center gap-1.5">
-              <span className={cn("text-[15px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              <span className={cn("text-[14px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                 {heroPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroPnl))} ({heroPnlPct >= 0 ? "+" : ""}{heroPnlPct.toFixed(1)}%)
               </span>
               <ChevronDown
@@ -166,14 +166,14 @@ export function HoldingsTab() {
           {pnlExpanded && (
             <>
               <div className="flex items-center justify-between mb-2.5 pl-2">
-                <span className="text-[14px] text-muted-foreground">Unrealised P&L</span>
-                <span className={cn("text-[15px] font-semibold", heroUnrealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                <span className="text-[13px] text-muted-foreground">Unrealised P&L</span>
+                <span className={cn("text-[14px] font-semibold", heroUnrealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                   {heroUnrealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroUnrealisedPnl))} ({heroUnrealisedPct >= 0 ? "+" : ""}{heroUnrealisedPct.toFixed(1)}%)
                 </span>
               </div>
               <div className="flex items-center justify-between mb-2.5 pl-2">
-                <span className="text-[14px] text-muted-foreground">Realised P&L</span>
-                <span className={cn("text-[15px] font-semibold", heroRealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                <span className="text-[13px] text-muted-foreground">Realised P&L</span>
+                <span className={cn("text-[14px] font-semibold", heroRealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                   {heroRealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroRealisedPnl))} ({heroRealisedPct >= 0 ? "+" : ""}{heroRealisedPct.toFixed(1)}%)
                 </span>
               </div>
@@ -182,8 +182,8 @@ export function HoldingsTab() {
 
           {/* Estimated XIRR row */}
           <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Estimated XIRR</span>
-            <span className={cn("text-[15px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
+            <span className="text-[13px] text-muted-foreground">Estimated XIRR</span>
+            <span className={cn("text-[14px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
               {heroXirr >= 0 ? "+" : ""}{heroXirr.toFixed(1)}%
             </span>
           </div>
@@ -192,8 +192,8 @@ export function HoldingsTab() {
         {/* Gray strip — Today's P&L, peeks below the white card */}
         <div className="bg-[#F2F3F7] rounded-b-2xl px-4 pt-3 pb-3.5 -mt-3 pt-[calc(0.75rem+12px)]">
           <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Today&apos;s P&L</span>
-            <span className={cn("text-[15px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+            <span className="text-[13px] text-muted-foreground">Today&apos;s P&L</span>
+            <span className={cn("text-[14px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                 {heroTodayPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroTodayPnl))} ({heroTodayPnlPct >= 0 ? "+" : ""}{heroTodayPnlPct.toFixed(1)}%)
               </span>
           </div>
@@ -202,7 +202,7 @@ export function HoldingsTab() {
 
       {/* Holdings count + Change/Value toggle */}
       <div className="mx-5 mb-3 flex items-center justify-between">
-        <p className="text-[14px] font-semibold text-foreground">{filtered.length} Holdings</p>
+        <p className="text-[13px] font-semibold text-foreground">{filtered.length} Holdings</p>
         <div className="flex items-center gap-2">
           {/* Settings button — only shown when "Change" is active */}
           {valueMode === "Change" && (
@@ -234,12 +234,12 @@ export function HoldingsTab() {
       <Sheet open={changeSheetOpen} onOpenChange={setChangeSheetOpen}>
         <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-5 pb-10">
           <SheetHeader className="pb-4">
-            <SheetTitle className="text-[20px] font-bold text-foreground text-left pl-8">Change data</SheetTitle>
+            <SheetTitle className="text-[18px] font-bold text-foreground text-left pl-8">Change data</SheetTitle>
           </SheetHeader>
 
           {/* Range row */}
           <div className="flex items-center justify-between mb-6">
-            <span className="text-[15px] text-muted-foreground">Range</span>
+            <span className="text-[14px] text-muted-foreground">Range</span>
             <div className="flex items-center gap-1.5">
               {CHANGE_RANGES.map((r) => (
                 <button
@@ -260,7 +260,7 @@ export function HoldingsTab() {
 
           {/* Change type row */}
           <div className="flex items-center justify-between">
-            <span className="text-[15px] text-muted-foreground">Change</span>
+            <span className="text-[14px] text-muted-foreground">Change</span>
             <div className="flex rounded-xl border border-border/50 overflow-hidden">
               {(["Percentage", "Absolute"] as ChangeType[]).map((t) => (
                 <button
@@ -306,14 +306,14 @@ export function HoldingsTab() {
               {/* Top row: name + current value */}
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">{h.name}</p>
+                  <p className="text-[13px] font-bold text-foreground leading-snug truncate">{h.name}</p>
                   {h.tag && (
                     <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[10px] font-bold text-foreground">
                       {h.tag}
                     </span>
                   )}
                 </div>
-                <p className="text-[17px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
+                <p className="text-[16px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
               </div>
 
               {/* Bottom row: labeled columns + P&L */}
@@ -333,13 +333,13 @@ export function HoldingsTab() {
                     <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
                     <span className="font-semibold text-foreground">
                       ${h.currentPrice}
-                      <span className="ml-1 text-[11px] font-medium text-muted-foreground">
+                      <span className="ml-1 text-[12px] font-medium text-muted-foreground">
                         ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
                       </span>
                     </span>
                   </div>
                 </div>
-                <p className="text-[14px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
+                <p className="text-[13px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
               </div>
             </div>
           );

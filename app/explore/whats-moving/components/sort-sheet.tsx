@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check } from "lucide-react";
+import { useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
@@ -23,81 +23,136 @@ interface Props {
   onChange: (key: SortKey, dir: SortDir) => void;
 }
 
-export function SortSheet({ open, onOpenChange, sortKey, sortDir, onChange }: Props) {
+const DEFAULT_SORT: { key: SortKey; dir: SortDir } = {
+  key: "changePercent",
+  dir: "desc",
+};
+
+export function SortSheet({
+  open,
+  onOpenChange,
+  sortKey,
+  sortDir,
+  onChange,
+}: Props) {
+  const [draftKey, setDraftKey] = useState<SortKey>(sortKey);
+  const [draftDir, setDraftDir] = useState<SortDir>(sortDir);
+
+  const selectKey = (k: SortKey) => {
+    if (k !== draftKey) {
+      setDraftKey(k);
+      setDraftDir("desc");
+    }
+  };
+
+  const toggleDir = () =>
+    setDraftDir((d) => (d === "desc" ? "asc" : "desc"));
+
+  const reset = () => {
+    setDraftKey(DEFAULT_SORT.key);
+    setDraftDir(DEFAULT_SORT.dir);
+  };
+
+  const apply = () => {
+    onChange(draftKey, draftDir);
+    onOpenChange(false);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (o) {
+          setDraftKey(sortKey);
+          setDraftDir(sortDir);
+        }
+      }}
+    >
       <SheetContent
+        hideClose
         side="bottom"
-        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[80vh] overflow-y-auto"
+        className="mx-auto max-w-[430px] rounded-t-[28px] p-0 border-0 max-h-[85vh] flex flex-col"
       >
-        <SheetHeader className="px-5 pt-5 pb-3 text-left">
+        {/* Header row: title + Reset */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
           <SheetTitle className="text-[20px] font-bold tracking-tight">
-            Sort
+            Sort By
           </SheetTitle>
-          <p className="text-[13px] text-muted-foreground">
-            Pick a column and direction.
-          </p>
-        </SheetHeader>
+          <button
+            onClick={reset}
+            className="text-[15px] font-semibold text-foreground active:opacity-60 transition-opacity"
+          >
+            Reset
+          </button>
+        </div>
 
-        <div className="px-2 pb-6">
-          {sortSheetKeys.map((key) => {
-            const selected = sortKey === key;
+        {/* Options list with row separators */}
+        <div className="flex-1 overflow-y-auto px-5">
+          {sortSheetKeys.map((key, idx) => {
+            const selected = draftKey === key;
             return (
-              <div
-                key={key}
-                className={cn(
-                  "flex items-center justify-between rounded-2xl px-3 py-3",
-                  selected ? "bg-foreground/[0.04]" : ""
-                )}
-              >
-                <button
-                  onClick={() => onChange(key, selected ? sortDir : "desc")}
-                  className="flex-1 flex items-center gap-3 text-left"
-                >
-                  <div
-                    className={cn(
-                      "flex h-5 w-5 items-center justify-center rounded-full border",
-                      selected
-                        ? "bg-foreground border-foreground"
-                        : "border-border/60"
-                    )}
-                  >
-                    {selected && <Check size={12} strokeWidth={3} className="text-background" />}
-                  </div>
-                  <span className="text-[15px] font-semibold text-foreground">
-                    {sortLabels[key]}
-                  </span>
-                </button>
-
-                <div className="flex items-center gap-1">
+              <div key={key}>
+                <div className="flex items-center justify-between py-4 min-h-[56px]">
                   <button
-                    onClick={() => onChange(key, "desc")}
-                    aria-label="Descending"
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                      selected && sortDir === "desc"
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
+                    onClick={() => selectKey(key)}
+                    className="flex-1 flex items-center gap-3 text-left"
                   >
-                    <ArrowDown size={14} strokeWidth={2.5} />
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-colors",
+                        selected
+                          ? "border-foreground"
+                          : "border-muted-foreground/40",
+                      )}
+                    >
+                      {selected && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-foreground" />
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[16px] transition-colors",
+                        selected
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-muted-foreground",
+                      )}
+                    >
+                      {sortLabels[key]}
+                    </span>
                   </button>
-                  <button
-                    onClick={() => onChange(key, "asc")}
-                    aria-label="Ascending"
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                      selected && sortDir === "asc"
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <ArrowUp size={14} strokeWidth={2.5} />
-                  </button>
+                  {selected && (
+                    <button
+                      onClick={toggleDir}
+                      className="flex items-center gap-1.5 text-foreground text-[15px] font-semibold active:opacity-60 transition-opacity"
+                    >
+                      <span>
+                        {draftDir === "asc" ? "Low to High" : "High to Low"}
+                      </span>
+                      {draftDir === "asc" ? (
+                        <ArrowUp size={16} strokeWidth={2.5} />
+                      ) : (
+                        <ArrowDown size={16} strokeWidth={2.5} />
+                      )}
+                    </button>
+                  )}
                 </div>
+                {idx < sortSheetKeys.length - 1 && (
+                  <div className="h-px bg-border/60" />
+                )}
               </div>
             );
           })}
+        </div>
+
+        {/* Apply button */}
+        <div className="shrink-0 px-5 pt-3 pb-5">
+          <button
+            onClick={apply}
+            className="w-full h-14 rounded-2xl bg-foreground text-background text-[16px] font-semibold active:scale-[0.98] transition-transform"
+          >
+            Apply
+          </button>
         </div>
       </SheetContent>
     </Sheet>

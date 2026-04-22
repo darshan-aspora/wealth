@@ -230,7 +230,7 @@ function StatusBadge({ status }: { status: TxStatus }) {
   };
   const { label, cls } = configs[status];
   return (
-    <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide", cls)}>{label}</span>
+    <span className={cn("rounded-md px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide", cls)}>{label}</span>
   );
 }
 
@@ -364,7 +364,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <ChargesAccordion d={d} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-muted-foreground">{d.side === "Buy" ? "Cash Used" : "Cash Added"}</p>
-          <p className={cn("text-[15px] font-extrabold tabular-nums", d.side === "Buy" ? "text-red-500" : "text-[#10B981]")}>
+          <p className={cn("text-[14px] font-extrabold tabular-nums", d.side === "Buy" ? "text-red-500" : "text-[#10B981]")}>
             {d.side === "Buy" ? `- $${Math.abs(d.cashImpact).toLocaleString()}` : `+ $${Math.abs(d.cashImpact).toLocaleString()}`}
           </p>
         </div>
@@ -392,7 +392,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
             <p className="text-[13px] font-semibold text-muted-foreground">Cash Added</p>
-            <p className="text-[15px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
+            <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
           </div>
         )}
       </>
@@ -415,7 +415,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
             <p className="text-[13px] font-semibold text-muted-foreground">Cash Deducted</p>
-            <p className="text-[15px] font-extrabold tabular-nums text-red-500">- ${Math.abs(d.cashImpact).toLocaleString()}</p>
+            <p className="text-[14px] font-extrabold tabular-nums text-red-500">- ${Math.abs(d.cashImpact).toLocaleString()}</p>
           </div>
         )}
       </>
@@ -426,8 +426,8 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     return (
       <>
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center text-[11px] font-bold text-muted-foreground">{d.ticker[0]}</div>
-          <p className="text-[14px] font-semibold text-foreground">{d.company}</p>
+          <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center text-[12px] font-bold text-muted-foreground">{d.ticker[0]}</div>
+          <p className="text-[13px] font-semibold text-foreground">{d.company}</p>
         </div>
         <DRow label="Amount"           value={`$${d.amount}`} />
         <DRow label="Dividend per share" value={`$${d.perShare}`} />
@@ -435,7 +435,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <DRow label="Tax Withheld"     value={`$${d.taxWithheld}`} valueClass="text-red-500" />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-muted-foreground">Net Credited Cash</p>
-          <p className="text-[15px] font-extrabold tabular-nums text-[#10B981]">+ ${d.netCredited}</p>
+          <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.netCredited}</p>
         </div>
       </>
     );
@@ -461,7 +461,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
             <p className="text-[13px] font-semibold text-muted-foreground">Cash Added</p>
-            <p className="text-[15px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
+            <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
           </div>
         )}
       </>
@@ -477,7 +477,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <DRow label="Amount Credited" value={`$${Math.abs(d.amountCredited).toFixed(2)}`} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-muted-foreground">{d.subKind === "credited" ? "Cash Added" : "Cash Deducted"}</p>
-          <p className={cn("text-[15px] font-extrabold tabular-nums", d.subKind === "credited" ? "text-[#10B981]" : "text-red-500")}>
+          <p className={cn("text-[14px] font-extrabold tabular-nums", d.subKind === "credited" ? "text-[#10B981]" : "text-red-500")}>
             {d.subKind === "credited" ? "+ " : "- "}${Math.abs(d.cashImpact).toFixed(2)}
           </p>
         </div>
@@ -514,7 +514,7 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
         <div className="px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-extrabold text-foreground leading-snug">{title}</p>
+              <p className="text-[16px] font-extrabold text-foreground leading-snug">{title}</p>
               <div className="flex items-center gap-2 mt-1">
                 <StatusBadge status={tx.status} />
                 <p className="text-[12px] text-muted-foreground">{dateShort}</p>
@@ -552,7 +552,7 @@ function BRow({ label, value, bold }: { label: string; value: string; bold?: boo
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[15px] font-bold text-foreground mb-3">{title}</p>
+      <p className="text-[14px] font-bold text-foreground mb-3">{title}</p>
       <div className="rounded-2xl bg-white border border-border/50 px-4">{children}</div>
     </div>
   );
@@ -564,7 +564,7 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
       <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
         {/* Header */}
         <div className="px-5 pt-5 pb-4 shrink-0 flex items-center justify-between">
-          <p className="text-[18px] font-extrabold text-foreground">Detailed Breakup</p>
+          <p className="text-[16px] font-extrabold text-foreground">Detailed Breakup</p>
           <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50">
             <X size={20} className="text-foreground" />
           </button>
@@ -677,42 +677,21 @@ export function BuyingPowerTab() {
   return (
     <div className="pb-24">
 
-      {/* ── Performance Graph Card ── */}
+      {/* ── Hero card ── */}
       <div className="px-5 pt-6 pb-2">
         <div className="rounded-3xl bg-white border border-border/50 px-5 pt-5 pb-0 overflow-hidden">
-          {/* Header row */}
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <p className="text-[12px] text-muted-foreground font-medium mb-0.5">Available to Trade</p>
-              <p className="text-[32px] font-extrabold text-foreground leading-none tabular-nums">
-                {fmtUSD(FUNDS.availableBalance)}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  ↑ +$4,151 this month
-                </span>
-              </div>
+          <div className="flex flex-col items-center text-center mb-5">
+            <p className="text-[12px] text-muted-foreground font-medium mb-1">Available to Trade</p>
+            <p className="text-[38px] font-extrabold text-foreground leading-none tabular-nums">
+              {fmtUSD(FUNDS.availableBalance)}
+            </p>
+            <div className="mt-2">
+              <span className="text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                ↑ +$4,151 this month
+              </span>
             </div>
-            <button className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center active:opacity-60 shrink-0 mt-1">
-              <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
-                <path d="M1 1l6 5.5L1 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
           </div>
 
-          {/* Chart */}
-          <div className="mt-4 -mx-1">
-            <BuyingPowerChart />
-          </div>
-
-          {/* Tick marks row */}
-          <div className="flex justify-between px-1 pb-3 -mt-1">
-            {["Apr 1", "Apr 8", "Apr 15", "Apr 22"].map((l) => (
-              <span key={l} className="text-[10px] text-muted-foreground/50">{l}</span>
-            ))}
-          </div>
-
-          {/* Divider + Deposit / Withdraw */}
           <div className="h-px bg-border/40 -mx-5" />
           <div className="flex gap-3 py-4">
             <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-muted/40 py-3 text-[13px] font-bold text-foreground active:opacity-70 transition-opacity">
@@ -728,40 +707,37 @@ export function BuyingPowerTab() {
 
       {/* ── Funds Breakup card ── */}
       <div className="px-5 pt-5 pb-2">
-        <p className="text-[17px] font-bold text-foreground mb-3">Funds Breakup</p>
-        <div className="rounded-2xl bg-white border border-border/50 px-4">
-          <div className="flex items-center justify-between py-2.5">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[13px] text-muted-foreground">Opening Balance</p>
-              <div className="w-4 h-4 rounded-full border border-muted-foreground/40 flex items-center justify-center shrink-0">
-                <span className="text-[9px] font-bold text-muted-foreground/60">i</span>
-              </div>
+        <p className="text-[16px] font-bold text-foreground mb-3">Funds Breakup</p>
+        <div className="rounded-2xl bg-white border border-border/50 px-4 pt-4 pb-0">
+          <div className="flex items-start gap-6 mb-4">
+            <div>
+              <p className="text-[12px] text-muted-foreground mb-0.5">Opening Balance</p>
+              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.openingBalance)}</p>
             </div>
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">{fmtUSD(FUNDS.openingBalance)}</p>
+            <div>
+              <p className="text-[12px] text-muted-foreground mb-0.5">Funds added Today</p>
+              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.fundsAddedToday)}</p>
+            </div>
+            <div>
+              <p className="text-[12px] text-muted-foreground mb-0.5">Margin Utilised</p>
+              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.marginUtilised)}</p>
+            </div>
           </div>
-          <BRow label="Funds added Today"      value={fmtUSD(FUNDS.fundsAddedToday)} />
-          <BRow label="Margin from Collateral" value={fmtUSD(FUNDS.marginFromCollateral)} />
-          <BRow label="Margin Utilised"        value={fmtUSD(FUNDS.marginUtilised)} />
-          <div className="h-px bg-border/40 my-1" />
-          <BRow label="Available Balance" value={fmtUSD(FUNDS.availableBalance)} bold />
-          <div className="h-px bg-border/40 my-1" />
-          <div className="flex items-center justify-between py-3">
+          <div className="h-px bg-border/40 -mx-4" />
+          <div className="flex items-center justify-center py-3.5">
             <button
               onClick={() => setShowBreakup(true)}
-              className="text-[13px] font-semibold text-blue-500 active:opacity-60"
+              className="text-[13px] font-semibold text-foreground active:opacity-60"
             >
               View Details
-            </button>
-            <button className="text-[13px] font-semibold text-blue-500 active:opacity-60">
-              All Transactions
             </button>
           </div>
         </div>
       </div>
 
       {/* ── History ── */}
-      <div className="px-5">
-        <p className="text-[17px] font-bold text-foreground mb-4">History</p>
+      <div className="px-5 pt-5">
+        <p className="text-[16px] font-bold text-foreground mb-4">History</p>
 
         {/* Filter tabs — scrollable */}
         <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar">
@@ -787,11 +763,11 @@ export function BuyingPowerTab() {
               onClick={() => setSelectedTx(tx)}
               className="w-full text-left rounded-2xl border border-border/50 bg-white px-4 py-3.5 active:opacity-75 transition-opacity"
             >
-              <p className="text-[11px] text-muted-foreground mb-1">{tx.date}</p>
+              <p className="text-[12px] text-muted-foreground mb-1">{tx.date}</p>
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[14px] font-semibold text-foreground">{tx.description}</p>
+                <p className="text-[13px] font-semibold text-foreground">{tx.description}</p>
                 <p className={cn(
-                  "text-[14px] font-bold tabular-nums whitespace-nowrap shrink-0",
+                  "text-[13px] font-bold tabular-nums whitespace-nowrap shrink-0",
                   tx.amount >= 0 ? "text-[#10B981]" : "text-red-500"
                 )}>
                   {fmtAmt(tx.amount)}

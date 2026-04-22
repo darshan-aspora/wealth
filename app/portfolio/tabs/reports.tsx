@@ -252,7 +252,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
         <div className="px-5 pt-6 pb-4 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-extrabold text-foreground leading-snug">{item.title}</p>
+              <p className="text-[16px] font-extrabold text-foreground leading-snug">{item.title}</p>
               <p className="text-[13px] text-muted-foreground mt-1">{item.description}</p>
             </div>
             <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50 shrink-0 mt-0.5">
@@ -289,7 +289,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
             {range === "Custom" && (
               <div className="flex gap-3 mt-3">
                 <div className="flex-1">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">From</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">From</p>
                   <input
                     type="date"
                     value={customFrom}
@@ -298,7 +298,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">To</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">To</p>
                   <input
                     type="date"
                     value={customTo}
@@ -331,7 +331,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                 </div>
                 <div className="text-center">
                   <p className="text-[13px] font-bold text-foreground">Email</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Sent to your inbox</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">Sent to your inbox</p>
                 </div>
               </button>
 
@@ -352,7 +352,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                 </div>
                 <div className="text-center">
                   <p className="text-[13px] font-bold text-foreground">Download PDF</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Save to device</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">Save to device</p>
                 </div>
               </button>
             </div>
@@ -364,7 +364,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
         <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
           <button
             disabled={!canSubmit}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[14px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
           >
             {delivery === "email" ? <Mail size={17} /> : <Download size={17} />}
             {delivery === "email"
@@ -383,7 +383,7 @@ function ReportRow({ item, onTap }: { item: ReportItem; onTap: () => void }) {
   return (
     <button onClick={onTap} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-foreground leading-snug">{item.title}</p>
+        <p className="text-[13px] font-semibold text-foreground leading-snug">{item.title}</p>
         <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
       </div>
       <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
@@ -400,8 +400,8 @@ function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelec
         className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/20 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[14px] font-bold text-foreground">{sub.label}</p>
-          <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
+          <p className="text-[13px] font-bold text-foreground">{sub.label}</p>
+          <span className="text-[12px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
             {sub.items.length}
           </span>
         </div>
@@ -437,7 +437,7 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
   }, [query]);
 
   if (results.length === 0) {
-    return <p className="text-center text-[14px] text-muted-foreground py-10">No reports match &ldquo;{query}&rdquo;</p>;
+    return <p className="text-center text-[13px] text-muted-foreground py-10">No reports match &ldquo;{query}&rdquo;</p>;
   }
 
   return (
@@ -445,8 +445,8 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
       {results.map(({ item, category, subSection }, i) => (
         <button key={i} onClick={() => onSelectReport(item)} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-foreground leading-snug">{item.title}</p>
-            <p className="text-[11px] text-muted-foreground/60 mt-0.5">{category} · {subSection}</p>
+            <p className="text-[13px] font-semibold text-foreground leading-snug">{item.title}</p>
+            <p className="text-[12px] text-muted-foreground/60 mt-0.5">{category} · {subSection}</p>
           </div>
           <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
         </button>
@@ -479,7 +479,7 @@ export function ReportsTab() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search reports…"
-            className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground outline-none"
+            className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none"
           />
           {query.length > 0 && (
             <button onClick={() => setQuery("")} className="shrink-0 active:opacity-60">
@@ -495,7 +495,7 @@ export function ReportsTab() {
 
             {/* Quick Access — 2-column grid */}
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Access</p>
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Access</p>
               <div className="grid grid-cols-2 gap-2.5">
                 {QUICK_ACCESS.map(({ title, categoryId }, i) => {
                   const cat = CATEGORIES.find((c) => c.id === categoryId)!;
@@ -511,7 +511,7 @@ export function ReportsTab() {
                       </span>
                       <div className="min-w-0 w-full">
                         <p className="text-[13px] font-bold text-foreground leading-snug">{item.title}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{cat.label}</p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">{cat.label}</p>
                       </div>
                     </button>
                   );
@@ -521,7 +521,7 @@ export function ReportsTab() {
 
             {/* Category chips + reports below */}
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
 
               {/* Chips */}
               <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4">
