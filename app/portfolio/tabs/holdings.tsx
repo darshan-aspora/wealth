@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Briefcase, X, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { X, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -13,12 +13,12 @@ const CHANGE_RANGES: ChangeRange[] = ["1M", "3M", "6M", "1Y", "Max"];
 /*  Types & data                                                       */
 /* ------------------------------------------------------------------ */
 
-type Category = "All" | "Stocks" | "ETFs" | "G. ETFs";
+type Category = "All" | "Stocks" | "ETF" | "Global ETF";
 type ValueMode = "Change" | "Value";
 
 interface Holding {
   name: string;
-  tag?: "ETF" | "G.ETF";
+  tag?: "ETF" | "Global ETF";
   qty: number;
   avgPrice: number;
   currentPrice: number;
@@ -27,7 +27,7 @@ interface Holding {
   pnlPct: number;
   dayChangePct: number;
   xirr: number;
-  category: "Stocks" | "ETFs" | "G. ETFs";
+  category: "Stocks" | "ETF" | "Global ETF";
 }
 
 const HOLDINGS: Holding[] = [
@@ -42,19 +42,19 @@ const HOLDINGS: Holding[] = [
   { name: "Netflix, Inc.",               category: "Stocks",  xirr: 11.2, qty: 4,        avgPrice: 580.00, currentPrice: 628.40, currentValue: 2_513, pnl:   193, pnlPct:   8.3, dayChangePct:  1.5  },
   { name: "Super Micro Computer, Inc.",  category: "Stocks",  xirr:-18.6, qty: 20,       avgPrice:  42.10, currentPrice:  35.60, currentValue:   712, pnl:  -130, pnlPct: -15.4, dayChangePct: -2.8  },
   // ETFs (5)
-  { name: "SPDR S&P 500 ETF Trust",      category: "ETFs",    xirr: 20.1, qty: 20,       avgPrice: 445.30, currentPrice: 528.40, currentValue: 10_568, pnl: 1_662, pnlPct:  18.7, dayChangePct:  0.5,  tag: "ETF" },
-  { name: "Invesco QQQ Trust",           category: "ETFs",    xirr: 14.2, qty: 10,       avgPrice: 425.60, currentPrice: 471.20, currentValue:  4_712, pnl:   456, pnlPct:  10.7, dayChangePct:  0.8,  tag: "ETF" },
-  { name: "SPDR Gold Shares",            category: "ETFs",    xirr: 12.8, qty: 8,        avgPrice: 184.20, currentPrice: 218.60, currentValue:  1_748, pnl:   275, pnlPct:  18.7, dayChangePct:  0.3,  tag: "ETF" },
-  { name: "iShares Core S&P 500 ETF",   category: "ETFs",    xirr: 19.4, qty: 15,       avgPrice: 448.10, currentPrice: 527.80, currentValue:  7_917, pnl: 1_195, pnlPct:  17.8, dayChangePct:  0.5,  tag: "ETF" },
-  { name: "Vanguard Total Stock Market", category: "ETFs",    xirr: 15.6, qty: 12,       avgPrice: 220.40, currentPrice: 248.30, currentValue:  2_979, pnl:   334, pnlPct:  12.7, dayChangePct:  0.4,  tag: "ETF" },
+  { name: "SPDR S&P 500 ETF Trust",      category: "ETF",    xirr: 20.1, qty: 20,       avgPrice: 445.30, currentPrice: 528.40, currentValue: 10_568, pnl: 1_662, pnlPct:  18.7, dayChangePct:  0.5,  tag: "ETF" },
+  { name: "Invesco QQQ Trust",           category: "ETF",    xirr: 14.2, qty: 10,       avgPrice: 425.60, currentPrice: 471.20, currentValue:  4_712, pnl:   456, pnlPct:  10.7, dayChangePct:  0.8,  tag: "ETF" },
+  { name: "SPDR Gold Shares",            category: "ETF",    xirr: 12.8, qty: 8,        avgPrice: 184.20, currentPrice: 218.60, currentValue:  1_748, pnl:   275, pnlPct:  18.7, dayChangePct:  0.3,  tag: "ETF" },
+  { name: "iShares Core S&P 500 ETF",   category: "ETF",    xirr: 19.4, qty: 15,       avgPrice: 448.10, currentPrice: 527.80, currentValue:  7_917, pnl: 1_195, pnlPct:  17.8, dayChangePct:  0.5,  tag: "ETF" },
+  { name: "Vanguard Total Stock Market", category: "ETF",    xirr: 15.6, qty: 12,       avgPrice: 220.40, currentPrice: 248.30, currentValue:  2_979, pnl:   334, pnlPct:  12.7, dayChangePct:  0.4,  tag: "ETF" },
   // Global ETFs (4)
-  { name: "iShares MSCI World ETF",              category: "G. ETFs", xirr: 11.0, qty: 25, avgPrice:  88.20, currentPrice:  96.40, currentValue: 2_410, pnl:  205, pnlPct:   9.3, dayChangePct:  0.3, tag: "G.ETF" },
-  { name: "Vanguard FTSE All-World ETF",         category: "G. ETFs", xirr: 10.2, qty: 18, avgPrice:  98.50, currentPrice: 106.80, currentValue: 1_922, pnl:  149, pnlPct:   8.4, dayChangePct:  0.2, tag: "G.ETF" },
-  { name: "iShares MSCI Emerging Markets ETF",   category: "G. ETFs", xirr: -4.1, qty: 30, avgPrice:  40.10, currentPrice:  38.60, currentValue: 1_158, pnl:  -45, pnlPct:  -3.7, dayChangePct: -0.6, tag: "G.ETF" },
-  { name: "SPDR MSCI ACWI ex-US ETF",            category: "G. ETFs", xirr:  9.8, qty: 22, avgPrice:  82.30, currentPrice:  89.10, currentValue: 1_960, pnl:  149, pnlPct:   8.3, dayChangePct:  0.4, tag: "G.ETF" },
+  { name: "iShares MSCI World ETF",              category: "Global ETF", xirr: 11.0, qty: 25, avgPrice:  88.20, currentPrice:  96.40, currentValue: 2_410, pnl:  205, pnlPct:   9.3, dayChangePct:  0.3, tag: "Global ETF" },
+  { name: "Vanguard FTSE All-World ETF",         category: "Global ETF", xirr: 10.2, qty: 18, avgPrice:  98.50, currentPrice: 106.80, currentValue: 1_922, pnl:  149, pnlPct:   8.4, dayChangePct:  0.2, tag: "Global ETF" },
+  { name: "iShares MSCI Emerging Markets ETF",   category: "Global ETF", xirr: -4.1, qty: 30, avgPrice:  40.10, currentPrice:  38.60, currentValue: 1_158, pnl:  -45, pnlPct:  -3.7, dayChangePct: -0.6, tag: "Global ETF" },
+  { name: "SPDR MSCI ACWI ex-US ETF",            category: "Global ETF", xirr:  9.8, qty: 22, avgPrice:  82.30, currentPrice:  89.10, currentValue: 1_960, pnl:  149, pnlPct:   8.3, dayChangePct:  0.4, tag: "Global ETF" },
 ];
 
-const CATEGORIES: Category[] = ["All", "Stocks", "ETFs", "G. ETFs"];
+const CATEGORIES: Category[] = ["All", "Stocks", "ETF", "Global ETF"];
 
 
 const fmtMoney = (n: number) =>
@@ -285,14 +285,10 @@ export function HoldingsTab() {
       <div className="px-5 space-y-2.5">
         {filtered.map((h) => {
           const isGain = h.pnl >= 0;
-          const gainColor = isGain ? "text-[#2FC15A]" : "text-[#C12F2F]";
-
           const sign = isGain ? "+" : "-";
           const absPnl = `${sign}$${fmtInt(Math.abs(h.pnl))}`;
           const pctPnl = `${sign}${Math.abs(h.pnlPct).toFixed(1)}%`;
 
-          // In "Value" mode always show current value + absolute P&L sub
-          // In "Change" mode, show only what the user selected in the sheet
           const rightTop =
             valueMode === "Value"
               ? `$${fmtInt(h.currentValue)}`
@@ -300,59 +296,50 @@ export function HoldingsTab() {
               ? pctPnl
               : absPnl;
 
-          // Only used in Value mode (sub-line below current value)
           const rightSub = absPnl;
-
-          const dayIsGain = h.dayChangePct >= 0;
 
           return (
             <div
               key={h.name}
-              className="flex items-center justify-between rounded-2xl border border-[#E9E9E9] bg-white px-4 py-3 active:opacity-75 transition-opacity"
+              className="rounded-2xl border border-[#E9E9E9] bg-white px-4 py-3.5 active:opacity-75 transition-opacity"
             >
-              {/* Left */}
-              <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
-                {/* Square logo */}
-                <div className="w-[42px] h-[42px] shrink-0 rounded-xl bg-[#D9D9D9]" />
-
-                <div className="min-w-0">
-                  {/* Name + tag badge */}
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[14px] font-bold text-foreground leading-snug truncate">{h.name}</p>
-                    {h.tag && (
-                      <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[10px] font-bold text-foreground">
-                        {h.tag}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Qty | avg → current (chg%) */}
-                  <div className="mt-1 flex items-center gap-1 text-[12px]">
-                    <Briefcase size={11} className="text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground">
-                      {h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5)}
+              {/* Top row: name + current value */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <p className="text-[14px] font-bold text-foreground leading-snug truncate">{h.name}</p>
+                  {h.tag && (
+                    <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+                      {h.tag}
                     </span>
-                    <span className="text-border mx-0.5">|</span>
-                    <span className="text-[#484848]">${h.avgPrice}</span>
-                    <span className="text-muted-foreground mx-0.5">→</span>
-                    <span className={dayIsGain ? "text-[#2FC15A]" : "text-[#C12F2F]"}>
-                      ${h.currentPrice} ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
+                  )}
+                </div>
+                <p className="text-[17px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
+              </div>
+
+              {/* Bottom row: labeled columns + P&L */}
+              <div className="flex items-center justify-between gap-2 text-[12px]">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                    <span className="font-semibold text-foreground">{h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5).replace(/\.?0+$/, "")}</span>
+                  </div>
+                  <div className="w-px h-6 bg-border/50" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                    <span className="font-semibold text-foreground">${h.avgPrice}</span>
+                  </div>
+                  <div className="w-px h-6 bg-border/50" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+                    <span className="font-semibold text-foreground">
+                      ${h.currentPrice}
+                      <span className="ml-1 text-[11px] font-medium text-muted-foreground">
+                        ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
+                      </span>
                     </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Right: value + sub */}
-              <div className="text-right shrink-0">
-                <p className={cn("text-[18px] font-bold leading-tight", gainColor)}>
-                  {rightTop}
-                </p>
-                {/* In Change mode only one metric is shown — no sub-line needed */}
-                {valueMode === "Value" && (
-                  <p className={cn("text-[12px] mt-0.5", gainColor)}>
-                    {rightSub}
-                  </p>
-                )}
+                <p className="text-[14px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
               </div>
             </div>
           );
