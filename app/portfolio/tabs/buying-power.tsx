@@ -609,12 +609,67 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
 }
 
 /* ------------------------------------------------------------------ */
+/*  Buying Power Chart                                                 */
+/* ------------------------------------------------------------------ */
+
+const CHART_POINTS = [
+  18_400, 21_200, 19_800, 23_500, 22_100, 25_300, 24_000,
+  27_600, 26_100, 28_900, 27_400, 30_200, 28_600, 31_800,
+  30_500, 29_200, 32_400, 31_000, 33_600, 32_100, 34_800,
+  33_200, 35_900, 34_400, 36_700, 35_100, 37_500, 36_200,
+  38_400, 22_623,
+];
+
+function BuyingPowerChart() {
+  const W = 340; const H = 110;
+  const pad = { l: 0, r: 72, t: 8, b: 8 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+
+  const min = Math.min(...CHART_POINTS);
+  const max = Math.max(...CHART_POINTS);
+  const range = max - min || 1;
+
+  const pts = CHART_POINTS.map((v, i) => ({
+    x: pad.l + (i / (CHART_POINTS.length - 1)) * cw,
+    y: pad.t + ch - ((v - min) / range) * ch,
+  }));
+
+  const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPath = `${linePath} L${pts[pts.length - 1].x.toFixed(1)},${(pad.t + ch).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t + ch).toFixed(1)} Z`;
+
+  const last = pts[pts.length - 1];
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="overflow-visible">
+      <defs>
+        <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#F59E0B" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.03" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#bpGrad)" />
+      <path d={linePath} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Dot at current value */}
+      <circle cx={last.x} cy={last.y} r="4" fill="#F59E0B" />
+      <circle cx={last.x} cy={last.y} r="8" fill="#F59E0B" fillOpacity="0.2" />
+      {/* Vertical dashed line */}
+      <line x1={last.x} y1={last.y + 6} x2={last.x} y2={pad.t + ch} stroke="#F59E0B" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
+      {/* Annotation */}
+      <text x={last.x + 10} y={last.y - 2} fontSize="9" fill="#6B7280" fontFamily="system-ui">added $10K</text>
+      <text x={last.x + 10} y={last.y + 10} fontSize="9" fill="#6B7280" fontFamily="system-ui">this month</text>
+      <text x={last.x + 10} y={last.y + 22} fontSize="10" fill="#F59E0B" fontWeight="700" fontFamily="system-ui">$22,623</text>
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
 export function BuyingPowerTab() {
-  const [filter, setFilter]         = useState<FilterTab>("All");
-  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [filter, setFilter]           = useState<FilterTab>("All");
+  const [selectedTx, setSelectedTx]   = useState<Transaction | null>(null);
   const [showBreakup, setShowBreakup] = useState(false);
 
   const filtered = filter === "All" ? HISTORY : HISTORY.filter((h) => h.filter === filter);
@@ -622,8 +677,57 @@ export function BuyingPowerTab() {
   return (
     <div className="pb-24">
 
-      {/* ── Funds Breakup card ── */}
+      {/* ── Performance Graph Card ── */}
       <div className="px-5 pt-6 pb-2">
+        <div className="rounded-3xl bg-white border border-border/50 px-5 pt-5 pb-0 overflow-hidden">
+          {/* Header row */}
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <p className="text-[12px] text-muted-foreground font-medium mb-0.5">Available to Trade</p>
+              <p className="text-[32px] font-extrabold text-foreground leading-none tabular-nums">
+                {fmtUSD(FUNDS.availableBalance)}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  ↑ +$4,151 this month
+                </span>
+              </div>
+            </div>
+            <button className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center active:opacity-60 shrink-0 mt-1">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
+                <path d="M1 1l6 5.5L1 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Chart */}
+          <div className="mt-4 -mx-1">
+            <BuyingPowerChart />
+          </div>
+
+          {/* Tick marks row */}
+          <div className="flex justify-between px-1 pb-3 -mt-1">
+            {["Apr 1", "Apr 8", "Apr 15", "Apr 22"].map((l) => (
+              <span key={l} className="text-[10px] text-muted-foreground/50">{l}</span>
+            ))}
+          </div>
+
+          {/* Divider + Deposit / Withdraw */}
+          <div className="h-px bg-border/40 -mx-5" />
+          <div className="flex gap-3 py-4">
+            <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-muted/40 py-3 text-[13px] font-bold text-foreground active:opacity-70 transition-opacity">
+              <Landmark size={14} />
+              Withdraw
+            </button>
+            <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-3 text-[13px] font-bold text-background active:opacity-75 transition-opacity">
+              + Deposit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Funds Breakup card ── */}
+      <div className="px-5 pt-5 pb-2">
         <p className="text-[17px] font-bold text-foreground mb-3">Funds Breakup</p>
         <div className="rounded-2xl bg-white border border-border/50 px-4">
           <div className="flex items-center justify-between py-2.5">
@@ -639,7 +743,7 @@ export function BuyingPowerTab() {
           <BRow label="Margin from Collateral" value={fmtUSD(FUNDS.marginFromCollateral)} />
           <BRow label="Margin Utilised"        value={fmtUSD(FUNDS.marginUtilised)} />
           <div className="h-px bg-border/40 my-1" />
-          <BRow label="Available Balance"      value={fmtUSD(FUNDS.availableBalance)} bold />
+          <BRow label="Available Balance" value={fmtUSD(FUNDS.availableBalance)} bold />
           <div className="h-px bg-border/40 my-1" />
           <div className="flex items-center justify-between py-3">
             <button
@@ -653,17 +757,6 @@ export function BuyingPowerTab() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* ── Deposit / Withdraw ── */}
-      <div className="px-5 pt-4 pb-6 flex gap-3">
-        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white py-3.5 text-[14px] font-bold text-foreground active:opacity-70 transition-opacity">
-          <Landmark size={16} />
-          Withdraw
-        </button>
-        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-3.5 text-[14px] font-bold text-background active:opacity-75 transition-opacity">
-          + Deposit
-        </button>
       </div>
 
       {/* ── History ── */}
