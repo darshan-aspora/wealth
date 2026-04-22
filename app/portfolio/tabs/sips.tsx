@@ -41,7 +41,7 @@ const ACTIVE_SIPS: Sip[] = [
   { id: 9,  name: "Apple Inc.",                     amount: 100, frequency: "Daily Monday to Friday",  dueDate: new Date("2026-05-05"), filter: "Stocks"      },
   { id: 2,  name: "Invesco QQQ Trust Series 1",    amount: 80,  frequency: "Monthly on 12th",         badge: "ETF",        dueDate: new Date("2026-05-12"), filter: "ETFs"        },
   { id: 5,  name: "JP Morgan Chase & Co.",          amount: 80,  frequency: "Monthly on 12th",         dueDate: new Date("2026-05-12"), filter: "Stocks"      },
-].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()) as Sip[];
 
 const PAUSED_SIPS: Sip[] = [
   { id: 11, name: "Amazon.com, Inc.",  amount: 80, frequency: "Fortnightly on Friday", dueDate: new Date("2026-04-30"), filter: "Stocks" },
