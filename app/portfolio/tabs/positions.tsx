@@ -105,7 +105,7 @@ const fmtQty = (n: number) =>
 /*  Status badge for open positions                                    */
 /* ------------------------------------------------------------------ */
 
-function OpenStatusBadge({ status, filledQty, orderedQty }: { status: OpenStatus; filledQty: number; orderedQty: number }) {
+function OpenStatusBadge({ status }: { status: OpenStatus; filledQty?: number; orderedQty?: number }) {
   if (status === "pending") {
     return (
       <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
@@ -312,7 +312,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
   const toggle = (i: number) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) { next.delete(i); } else { next.add(i); }
       return next;
     });
 
