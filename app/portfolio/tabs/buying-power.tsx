@@ -26,6 +26,10 @@ interface TradeDetail {
   charges: number;
   brokerage: number;
   regulatoryFee: number;
+  secFee: number;
+  finraFee: number;
+  exchangeFee: number;
+  opraFee: number;
   cashImpact: number;
 }
 
@@ -115,7 +119,7 @@ const HISTORY: Transaction[] = [
   {
     id: 1, date: "Apr 15, 2026 · 11:42 AM", description: "Bought NVDA (10 shares)", amount: -9_800,
     filter: "Trades", status: "executed",
-    detail: { kind: "trade", side: "Buy", instrument: "Nvidia Corporations", quantity: 10, limitPrice: 80, total: 9_725, executedAt: "10:02:34", orderId: "ORD123456", charges: 80, brokerage: 75, regulatoryFee: 5, cashImpact: -9_800 },
+    detail: { kind: "trade", side: "Buy", instrument: "Nvidia Corporations", quantity: 10, limitPrice: 80, total: 9_725, executedAt: "10:02:34", orderId: "ORD123456", charges: 80, brokerage: 75, regulatoryFee: 5, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50, cashImpact: -9_800 },
   },
   {
     id: 2, date: "Apr 15, 2026 · 11:30 AM", description: "Deposit Received", amount: 10_000,
@@ -125,7 +129,7 @@ const HISTORY: Transaction[] = [
   {
     id: 3, date: "Apr 15, 2026 · 10:55 AM", description: "Sold 2 SPY Call Contracts", amount: 1_200,
     filter: "Trades", status: "executed",
-    detail: { kind: "trade", side: "Sell", instrument: "SPY Apr 18 500 Call", isOption: true, quantity: 10, limitPrice: 80, total: 9_725, executedAt: "10:02:34", orderId: "ORD123456", charges: 3.2, brokerage: 3.2, regulatoryFee: 12, cashImpact: 1_196.8 },
+    detail: { kind: "trade", side: "Sell", instrument: "SPY Apr 18 500 Call", isOption: true, quantity: 10, limitPrice: 80, total: 9_725, executedAt: "10:02:34", orderId: "ORD123456", charges: 3.2, brokerage: 3.2, regulatoryFee: 12, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50, cashImpact: 1_196.8 },
   },
   {
     id: 4, date: "Apr 15, 2026 · 10:10 AM", description: "Dividend Credited (AAPL)", amount: 120,
@@ -135,12 +139,12 @@ const HISTORY: Transaction[] = [
   {
     id: 5, date: "Apr 14, 2026 · 3:45 PM", description: "Sold TSLA (5 shares)", amount: 4_200,
     filter: "Trades", status: "executed",
-    detail: { kind: "trade", side: "Sell", instrument: "Tesla Inc.", quantity: 5, limitPrice: 860, total: 4_280, executedAt: "10:02:34", orderId: "ORD123457", charges: 80, brokerage: 75, regulatoryFee: 5, cashImpact: 4_200 },
+    detail: { kind: "trade", side: "Sell", instrument: "Tesla Inc.", quantity: 5, limitPrice: 860, total: 4_280, executedAt: "10:02:34", orderId: "ORD123457", charges: 80, brokerage: 75, regulatoryFee: 5, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50, cashImpact: 4_200 },
   },
   {
     id: 6, date: "Apr 14, 2026 · 2:20 PM", description: "Bought AAPL (15 shares)", amount: -2_700,
     filter: "Trades", status: "executed",
-    detail: { kind: "trade", side: "Buy", instrument: "Apple Inc.", quantity: 15, limitPrice: 178, total: 2_670, executedAt: "10:02:34", orderId: "ORD123458", charges: 80, brokerage: 75, regulatoryFee: 5, cashImpact: -2_750 },
+    detail: { kind: "trade", side: "Buy", instrument: "Apple Inc.", quantity: 15, limitPrice: 178, total: 2_670, executedAt: "10:02:34", orderId: "ORD123458", charges: 80, brokerage: 75, regulatoryFee: 5, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50, cashImpact: -2_750 },
   },
   {
     id: 7, date: "Apr 14, 2026 · 1:05 PM", description: "Options Requirement Adjusted", amount: -1_500,
@@ -235,6 +239,90 @@ function DRow({ label, value, valueClass }: { label: string; value: string; valu
 }
 
 /* ------------------------------------------------------------------ */
+/*  Chevron                                                            */
+/* ------------------------------------------------------------------ */
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="12" height="12" viewBox="0 0 12 12" fill="none"
+      className={cn("transition-transform duration-200 text-muted-foreground shrink-0", open ? "rotate-180" : "")}
+    >
+      <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Charges accordion (trade)                                          */
+/* ------------------------------------------------------------------ */
+
+function ChargesAccordion({ d }: { d: TradeDetail }) {
+  const [chargesOpen, setChargesOpen] = useState(false);
+  const [regOpen,     setRegOpen]     = useState(false);
+
+  return (
+    <div className="border-b border-border/40 last:border-0">
+      {/* Charges & Fees row */}
+      <button
+        onClick={() => setChargesOpen((v) => !v)}
+        className="flex items-center justify-between w-full py-2.5"
+      >
+        <div className="flex items-center gap-1.5">
+          <p className="text-[13px] text-muted-foreground">Charges &amp; Fees</p>
+          <Chevron open={chargesOpen} />
+        </div>
+        <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.charges}</p>
+      </button>
+
+      {chargesOpen && (
+        <div className="pb-1">
+          {/* Aspora Brokerage */}
+          <div className="flex items-center justify-between py-2 pl-3">
+            <p className="text-[13px] text-muted-foreground">Aspora Brokerage</p>
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.brokerage}</p>
+          </div>
+
+          {/* Regulatory Fees row */}
+          <button
+            onClick={() => setRegOpen((v) => !v)}
+            className="flex items-center justify-between w-full py-2 pl-3"
+          >
+            <div className="flex items-center gap-1.5">
+              <p className="text-[13px] text-muted-foreground">Regulatory Fees</p>
+              <Chevron open={regOpen} />
+            </div>
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.regulatoryFee}</p>
+          </button>
+
+          {regOpen && (
+            <>
+              <div className="h-px bg-border/30 mx-3 mb-2" />
+              <div className="flex items-center justify-between py-1.5 pl-6">
+                <p className="text-[13px] text-muted-foreground">SEC Fee</p>
+                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.secFee.toFixed(2)}</p>
+              </div>
+              <div className="flex items-center justify-between py-1.5 pl-6">
+                <p className="text-[13px] text-muted-foreground">FINRA Fee</p>
+                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.finraFee.toFixed(2)}</p>
+              </div>
+              <div className="flex items-center justify-between py-1.5 pl-6">
+                <p className="text-[13px] text-muted-foreground">Exchange Fees</p>
+                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.exchangeFee.toFixed(2)}</p>
+              </div>
+              <div className="flex items-center justify-between py-1.5 pl-6 mb-1">
+                <p className="text-[13px] text-muted-foreground">OPRA Fee</p>
+                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.opraFee.toFixed(2)}</p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Drawer content per type                                            */
 /* ------------------------------------------------------------------ */
 
@@ -244,14 +332,12 @@ function DrawerBody({ tx }: { tx: Transaction }) {
   if (d.kind === "trade") {
     return (
       <>
-        <DRow label="Quantity"        value={String(d.quantity)} />
-        <DRow label="Limit Price"     value={`$${d.limitPrice}`} />
-        <DRow label="Total"           value={`$${d.total.toLocaleString()}`} />
+        <DRow label="Quantity"          value={String(d.quantity)} />
+        <DRow label="Limit Price"       value={`$${d.limitPrice}`} />
+        <DRow label="Total"             value={`$${d.total.toLocaleString()}`} />
         <DRow label="Order Executed At" value={d.executedAt} />
-        <DRow label="Order ID"        value={`#${d.orderId}`} />
-        <DRow label="Charges & Fees"  value={`$${d.charges}`} />
-        <DRow label="Aspora Brokerage" value={`$${d.brokerage}`} />
-        <DRow label="Regulatory Fees" value={`$${d.regulatoryFee}`} />
+        <DRow label="Order ID"          value={`#${d.orderId}`} />
+        <ChargesAccordion d={d} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-muted-foreground">{d.side === "Buy" ? "Cash Used" : "Cash Added"}</p>
           <p className={cn("text-[15px] font-extrabold tabular-nums", d.side === "Buy" ? "text-red-500" : "text-[#10B981]")}>
