@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Copy, Landmark, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -111,9 +111,18 @@ interface Transaction {
 /*  Mock data                                                          */
 /* ------------------------------------------------------------------ */
 
-const cashAvailable = 8_200;
-const marginUsed    = 12_300;
-const totalBuying   = cashAvailable + marginUsed;
+const FUNDS = {
+  openingBalance:      46_472.26,
+  fundsAddedToday:         0.00,
+  marginFromCollateral:   94.34,
+  marginUtilised:      23_943.00,
+  availableBalance:    22_623.60,
+  availableCash:       22_529.26,
+  withdrawableBalance: 22_623.60,
+  realisedProfit:          0.00,
+  unrealisedProfit:        0.00,
+  tradeCharges:            0.00,
+};
 
 const HISTORY: Transaction[] = [
   {
@@ -204,8 +213,8 @@ function fmtAmt(n: number) {
   return (n >= 0 ? "+ $" : "- $") + abs;
 }
 
-function fmtPos(n: number) {
-  return "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0 });
+function fmtUSD(n: number, decimals = 2) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 /* ------------------------------------------------------------------ */
@@ -528,60 +537,133 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Funds Breakup Drawer                                               */
+/* ------------------------------------------------------------------ */
+
+function BRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-2.5">
+      <p className={cn("text-[13px]", bold ? "font-bold text-foreground" : "text-muted-foreground")}>{label}</p>
+      <p className={cn("text-[13px] tabular-nums", bold ? "font-bold text-foreground" : "font-semibold text-foreground")}>{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[15px] font-bold text-foreground mb-3">{title}</p>
+      <div className="rounded-2xl bg-white border border-border/50 px-4">{children}</div>
+    </div>
+  );
+}
+
+function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-4 shrink-0 flex items-center justify-between">
+          <p className="text-[18px] font-extrabold text-foreground">Detailed Breakup</p>
+          <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50">
+            <X size={20} className="text-foreground" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 pb-8 space-y-6">
+          {/* Summary card */}
+          <div className="rounded-2xl bg-white border border-border/50 px-4">
+            <BRow label="Opening Balance"       value={fmtUSD(FUNDS.openingBalance)} />
+            <BRow label="Funds added Today"     value={fmtUSD(FUNDS.fundsAddedToday)} />
+            <BRow label="Margin from Collateral" value={fmtUSD(FUNDS.marginFromCollateral)} />
+            <BRow label="Margin Utilised"       value={fmtUSD(FUNDS.marginUtilised)} />
+            <div className="h-px bg-border/40 my-1" />
+            <BRow label="Available Balance"     value={fmtUSD(FUNDS.availableBalance)} bold />
+          </div>
+
+          {/* Cash */}
+          <SectionCard title="Cash">
+            <BRow label="Available Cash"       value={fmtUSD(FUNDS.availableCash)} />
+            <BRow label="Withdrawable Balance" value={fmtUSD(FUNDS.withdrawableBalance)} />
+            <div className="h-px bg-border/40 my-1" />
+            <button className="py-3 text-[13px] font-semibold text-blue-500 active:opacity-60">Learn more</button>
+          </SectionCard>
+
+          {/* P&L */}
+          <SectionCard title="P&L">
+            <BRow label="Realised Profit"   value={fmtUSD(FUNDS.realisedProfit)} />
+            <BRow label="Unrealised Profit" value={fmtUSD(FUNDS.unrealisedProfit)} />
+            <div className="h-px bg-border/40 my-1" />
+            <button className="py-3 text-[13px] font-semibold text-blue-500 active:opacity-60">Learn more</button>
+          </SectionCard>
+
+          {/* Funds Used */}
+          <SectionCard title="Funds Used">
+            <BRow label="Margin Utilised" value={fmtUSD(FUNDS.marginUtilised)} />
+            <BRow label="Trade Charges"   value={fmtUSD(FUNDS.tradeCharges)} />
+          </SectionCard>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
 export function BuyingPowerTab() {
   const [filter, setFilter]         = useState<FilterTab>("All");
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [showBreakup, setShowBreakup] = useState(false);
 
   const filtered = filter === "All" ? HISTORY : HISTORY.filter((h) => h.filter === filter);
-
-  const cashPct   = (cashAvailable / totalBuying) * 100;
-  const marginPct = (marginUsed    / totalBuying) * 100;
 
   return (
     <div className="pb-24">
 
-      {/* ── Hero ── */}
-      <div className="px-5 pt-6 pb-6 flex flex-col items-center text-center">
-        <p className="text-[13px] text-muted-foreground font-medium mb-2">Available to trade</p>
-        <p className="text-[42px] font-extrabold text-foreground leading-none mb-4">
-          ${totalBuying.toLocaleString("en-US")}
-        </p>
-        <div className="rounded-full bg-emerald-50 px-4 py-1.5 mb-6">
-          <p className="text-[12px] font-semibold text-emerald-600">Earning 3.5% APY · 3x more than savings</p>
-        </div>
-
-        <div className="flex gap-3 w-full">
-          <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white py-3.5 text-[14px] font-bold text-foreground active:opacity-70 transition-opacity">
-            <Landmark size={16} />
-            Withdraw
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-3.5 text-[14px] font-bold text-background active:opacity-75 transition-opacity">
-            + Deposit
-          </button>
+      {/* ── Funds Breakup card ── */}
+      <div className="px-5 pt-6 pb-2">
+        <p className="text-[17px] font-bold text-foreground mb-3">Funds Breakup</p>
+        <div className="rounded-2xl bg-white border border-border/50 px-4">
+          <div className="flex items-center justify-between py-2.5">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[13px] text-muted-foreground">Opening Balance</p>
+              <div className="w-4 h-4 rounded-full border border-muted-foreground/40 flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-muted-foreground/60">i</span>
+              </div>
+            </div>
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">{fmtUSD(FUNDS.openingBalance)}</p>
+          </div>
+          <BRow label="Funds added Today"      value={fmtUSD(FUNDS.fundsAddedToday)} />
+          <BRow label="Margin from Collateral" value={fmtUSD(FUNDS.marginFromCollateral)} />
+          <BRow label="Margin Utilised"        value={fmtUSD(FUNDS.marginUtilised)} />
+          <div className="h-px bg-border/40 my-1" />
+          <BRow label="Available Balance"      value={fmtUSD(FUNDS.availableBalance)} bold />
+          <div className="h-px bg-border/40 my-1" />
+          <div className="flex items-center justify-between py-3">
+            <button
+              onClick={() => setShowBreakup(true)}
+              className="text-[13px] font-semibold text-blue-500 active:opacity-60"
+            >
+              View Details
+            </button>
+            <button className="text-[13px] font-semibold text-blue-500 active:opacity-60">
+              All Transactions
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── Cash / Margin card ── */}
-      <div className="mx-5 mb-8 rounded-2xl border border-border/50 bg-white px-4 py-4">
-        <div className="flex rounded-full overflow-hidden h-2 mb-4 gap-0.5">
-          <div className="rounded-l-full bg-foreground/80" style={{ width: `${cashPct}%` }} />
-          <div className="rounded-r-full bg-muted"         style={{ width: `${marginPct}%` }} />
-        </div>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[12px] text-muted-foreground font-medium mb-0.5">Cash Available</p>
-            <p className="text-[17px] font-extrabold text-foreground">{fmtPos(cashAvailable)}</p>
-            <p className="text-[11px] text-muted-foreground/60 mt-0.5">Settled funds</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[12px] text-muted-foreground font-medium mb-0.5">Margin Used</p>
-            <p className="text-[17px] font-extrabold text-foreground">{fmtPos(marginUsed)}</p>
-            <p className="text-[11px] text-muted-foreground/60 mt-0.5">Borrowed amount</p>
-          </div>
-        </div>
+      {/* ── Deposit / Withdraw ── */}
+      <div className="px-5 pt-4 pb-6 flex gap-3">
+        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white py-3.5 text-[14px] font-bold text-foreground active:opacity-70 transition-opacity">
+          <Landmark size={16} />
+          Withdraw
+        </button>
+        <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-3.5 text-[14px] font-bold text-background active:opacity-75 transition-opacity">
+          + Deposit
+        </button>
       </div>
 
       {/* ── History ── */}
@@ -629,6 +711,9 @@ export function BuyingPowerTab() {
 
       {/* Transaction detail drawer */}
       {selectedTx && <TxDrawer tx={selectedTx} onClose={() => setSelectedTx(null)} />}
+
+      {/* Funds breakup drawer */}
+      <FundsBreakupDrawer open={showBreakup} onClose={() => setShowBreakup(false)} />
 
     </div>
   );
