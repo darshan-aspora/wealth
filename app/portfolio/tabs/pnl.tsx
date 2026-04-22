@@ -15,9 +15,16 @@ interface DateVal { year: number; month: number; day: number }
 
 interface PnlOrder {
   symbol: string;
+  companyName: string;
+  side: "B" | "S";
   qty: number;
+  lots?: number;
+  expiry?: string;
+  optionType?: "CALL" | "PUT";
+  tag?: "ETF";
   buyPrice: number;
   sellPrice: number;
+  avgExecutedPrice: number;
   pnl: number;
 }
 
@@ -33,36 +40,36 @@ interface RangeData {
 const RANGE_DATA: Record<RangePreset, RangeData> = {
   "1M": {
     orders: [
-      { symbol: "TSLA", qty: 10, buyPrice: 244, sellPrice: 222, pnl: -220 },
-      { symbol: "SPY",  qty: 20, buyPrice: 100, sellPrice: 120, pnl: 400  },
+      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 10, brokerage: 7, regulatory: 3, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50 },
   },
   "3M": {
     orders: [
-      { symbol: "AAPL", qty: 15, buyPrice: 178, sellPrice: 195, pnl: 255   },
-      { symbol: "NVDA", qty: 5,  buyPrice: 820, sellPrice: 870, pnl: 250   },
-      { symbol: "TSLA", qty: 10, buyPrice: 244, sellPrice: 222, pnl: -220  },
-      { symbol: "SPY",  qty: 20, buyPrice: 100, sellPrice: 120, pnl: 400   },
+      { symbol: "AAPL", companyName: "Apple Inc",    side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
+      { symbol: "NVDA", companyName: "NVIDIA Corp",  side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
+      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 28, brokerage: 20, regulatory: 8, secFee: 2.20, finraFee: 1.80, exchangeFee: 2.80, opraFee: 1.20 },
   },
   "Current FY": {
     orders: [
-      { symbol: "AAPL", qty: 15, buyPrice: 178, sellPrice: 195, pnl: 255   },
-      { symbol: "NVDA", qty: 5,  buyPrice: 820, sellPrice: 870, pnl: 250   },
-      { symbol: "TSLA", qty: 10, buyPrice: 244, sellPrice: 222, pnl: -220  },
-      { symbol: "SPY",  qty: 20, buyPrice: 100, sellPrice: 120, pnl: 400   },
-      { symbol: "QQQ",  qty: 8,  buyPrice: 380, sellPrice: 412, pnl: 256   },
-      { symbol: "META", qty: 3,  buyPrice: 310, sellPrice: 290, pnl: -60   },
-      { symbol: "AMD",  qty: 12, buyPrice: 145, sellPrice: 162, pnl: 204   },
+      { symbol: "AAPL", companyName: "Apple Inc",      side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
+      { symbol: "NVDA", companyName: "NVIDIA Corp",    side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
+      { symbol: "TSLA", companyName: "Tesla Inc",      side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { symbol: "SPY",  companyName: "SPDR S&P 500",   side: "B", qty: 20, tag: "ETF",  buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
+      { symbol: "QQQ",  companyName: "Invesco QQQ",    side: "S", qty: 8,  tag: "ETF",  buyPrice: 380, sellPrice: 412, avgExecutedPrice: 412, pnl: 256 },
+      { symbol: "META", companyName: "Meta Platforms", side: "S", qty: 3,  expiry: "350 APR 12", optionType: "CALL", lots: 3, buyPrice: 310, sellPrice: 290, avgExecutedPrice: 290, pnl: -60 },
+      { symbol: "AMD",  companyName: "AMD Inc",        side: "B", qty: 12, buyPrice: 145, sellPrice: 162, avgExecutedPrice: 162, pnl: 204 },
     ],
     charges: { total: 62, brokerage: 44, regulatory: 18, secFee: 5.10, finraFee: 3.90, exchangeFee: 6.20, opraFee: 2.80 },
   },
   "Custom": {
     orders: [
-      { symbol: "TSLA", qty: 10, buyPrice: 244, sellPrice: 222, pnl: -220 },
-      { symbol: "SPY",  qty: 20, buyPrice: 100, sellPrice: 120, pnl: 400  },
+      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 10, brokerage: 7, regulatory: 3, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50 },
   },
@@ -156,7 +163,7 @@ function Calendar({
         <button onClick={onPrevMonth} className="p-1.5 rounded-full active:bg-muted/50">
           <ChevronLeft size={18} className="text-foreground" />
         </button>
-        <p className="text-[14px] font-bold text-foreground">{MONTH_NAMES[month]} {year}</p>
+        <p className="text-[16px] font-bold text-foreground">{MONTH_NAMES[month]} {year}</p>
         <button onClick={onNextMonth} className="p-1.5 rounded-full active:bg-muted/50">
           <ChevronRight size={18} className="text-foreground" />
         </button>
@@ -165,7 +172,7 @@ function Calendar({
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_LABELS.map((l) => (
-          <p key={l} className="text-[11px] text-muted-foreground text-center font-semibold py-1">{l}</p>
+          <p key={l} className="text-[12px] text-muted-foreground text-center font-normal py-1">{l}</p>
         ))}
       </div>
 
@@ -183,7 +190,7 @@ function Calendar({
                 key={ci}
                 onClick={() => onSelectDay({ year, month, day })}
                 className={cn(
-                  "relative h-10 flex items-center justify-center text-[13px] font-medium transition-colors",
+                  "relative h-10 flex items-center justify-center text-[16px] font-medium transition-colors",
                   range && "bg-muted/60",
                   start && "rounded-l-full",
                   end   && "rounded-r-full",
@@ -252,27 +259,33 @@ function DateRangeDrawer({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
         <div className="px-5 pt-5 pb-4 shrink-0">
-          <p className="text-[18px] font-extrabold text-foreground mb-4">Date Range</p>
+          <p className="text-[18px] font-bold text-foreground mb-4">Date Range</p>
 
           {/* From / To inputs */}
           <div className="flex gap-3 mb-5">
             <button
               onClick={() => setSelecting("from")}
               className={cn(
-                "flex-1 rounded-xl border px-4 py-3 text-[13px] font-semibold text-left transition-colors",
-                selecting === "from" ? "border-foreground text-foreground" : "border-border/50 text-muted-foreground"
+                "flex-1 rounded-xl border px-4 py-3 text-left transition-colors",
+                selecting === "from" ? "border-foreground" : "border-border/50"
               )}
             >
-              {localFrom ? fmtDate(localFrom) : "Start date"}
+              <p className="text-[12px] text-muted-foreground mb-0.5">From</p>
+              <p className={cn("text-[16px] font-semibold", selecting === "from" ? "text-foreground" : "text-muted-foreground")}>
+                {localFrom ? fmtDate(localFrom) : "—"}
+              </p>
             </button>
             <button
               onClick={() => setSelecting("to")}
               className={cn(
-                "flex-1 rounded-xl border px-4 py-3 text-[13px] font-semibold text-left transition-colors",
-                selecting === "to" ? "border-foreground text-foreground" : "border-border/50 text-muted-foreground"
+                "flex-1 rounded-xl border px-4 py-3 text-left transition-colors",
+                selecting === "to" ? "border-foreground" : "border-border/50"
               )}
             >
-              {localTo ? fmtDate(localTo) : "End date"}
+              <p className="text-[12px] text-muted-foreground mb-0.5">To</p>
+              <p className={cn("text-[16px] font-semibold", selecting === "to" ? "text-foreground" : "text-muted-foreground")}>
+                {localTo ? fmtDate(localTo) : "—"}
+              </p>
             </button>
           </div>
 
@@ -289,7 +302,7 @@ function DateRangeDrawer({
           <button
             disabled={!localFrom || !localTo}
             onClick={() => localFrom && localTo && onConfirm(localFrom, localTo)}
-            className="w-full rounded-2xl bg-foreground py-4 text-[14px] font-bold text-background disabled:opacity-40 active:opacity-75 transition-opacity"
+            className="w-full rounded-2xl bg-foreground py-4 text-[16px] font-bold text-background disabled:opacity-40 active:opacity-75 transition-opacity"
           >
             Confirm
           </button>
@@ -324,7 +337,7 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
     <div className="rounded-2xl bg-white border border-border/50 overflow-hidden mb-5">
       {/* Realised P&L */}
       <div className="px-4 pt-4 pb-3">
-        <p className="text-[13px] text-muted-foreground mb-2">Realised P&L</p>
+        <p className="text-[16px] text-muted-foreground mb-2">Realised P&L</p>
         <div className="flex items-center justify-between">
           <button
             onClick={onOpenPicker}
@@ -335,12 +348,12 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
               <path d="M1 6h14" stroke="currentColor" strokeWidth="1.4"/>
               <path d="M5 1v2M11 1v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
-            <span className="text-[12px] font-semibold text-muted-foreground">
+            <span className="text-[14px] font-normal text-muted-foreground">
               {fmtDate(from)} to {fmtDate(to)}
             </span>
           </button>
           <p className={cn(
-            "text-[20px] font-extrabold tabular-nums",
+            "text-[24px] font-bold tabular-nums",
             realisedPnl >= 0 ? "text-emerald-500" : "text-red-500"
           )}>
             {realisedPnl >= 0 ? "+" : ""}{realisedPnl}
@@ -353,12 +366,12 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
       {/* Charges */}
       <div className="px-4 py-3 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-[13px] text-muted-foreground">Charges &amp; Fees</p>
-          <p className="text-[13px] font-semibold text-foreground">${CHARGES.total}</p>
+          <p className="text-[16px] text-muted-foreground">Charges &amp; Fees</p>
+          <p className="text-[16px] font-semibold text-foreground">${CHARGES.total}</p>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-[12px] text-muted-foreground/70">Aspora Brokerage</p>
-          <p className="text-[12px] text-muted-foreground">${CHARGES.brokerage}</p>
+          <p className="text-[14px] text-muted-foreground/70">Aspora Brokerage</p>
+          <p className="text-[14px] text-muted-foreground">${CHARGES.brokerage}</p>
         </div>
         {/* Regulatory Fees accordion */}
         <div>
@@ -367,28 +380,28 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
             className="flex items-center justify-between w-full"
           >
             <div className="flex items-center gap-1.5">
-              <p className="text-[12px] text-muted-foreground/70">Regulatory Fees</p>
+              <p className="text-[14px] text-muted-foreground/70">Regulatory Fees</p>
               <Chevron open={regOpen} />
             </div>
-            <p className="text-[12px] text-muted-foreground">${CHARGES.regulatory}</p>
+            <p className="text-[14px] text-muted-foreground">${CHARGES.regulatory}</p>
           </button>
           {regOpen && (
             <div className="mt-2 pl-3 space-y-1.5 border-t border-border/30 pt-2">
               <div className="flex items-center justify-between">
-                <p className="text-[12px] text-muted-foreground/60">SEC Fee</p>
-                <p className="text-[12px] text-muted-foreground">${CHARGES.secFee.toFixed(2)}</p>
+                <p className="text-[14px] text-muted-foreground/60">SEC Fee</p>
+                <p className="text-[14px] text-muted-foreground">${CHARGES.secFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-[12px] text-muted-foreground/60">FINRA Fee</p>
-                <p className="text-[12px] text-muted-foreground">${CHARGES.finraFee.toFixed(2)}</p>
+                <p className="text-[14px] text-muted-foreground/60">FINRA Fee</p>
+                <p className="text-[14px] text-muted-foreground">${CHARGES.finraFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-[12px] text-muted-foreground/60">Exchange Fees</p>
-                <p className="text-[12px] text-muted-foreground">${CHARGES.exchangeFee.toFixed(2)}</p>
+                <p className="text-[14px] text-muted-foreground/60">Exchange Fees</p>
+                <p className="text-[14px] text-muted-foreground">${CHARGES.exchangeFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-[12px] text-muted-foreground/60">OPRA Fee</p>
-                <p className="text-[12px] text-muted-foreground">${CHARGES.opraFee.toFixed(2)}</p>
+                <p className="text-[14px] text-muted-foreground/60">OPRA Fee</p>
+                <p className="text-[14px] text-muted-foreground">${CHARGES.opraFee.toFixed(2)}</p>
               </div>
             </div>
           )}
@@ -399,38 +412,54 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
 
       {/* Net Realised P&L */}
       <div className="px-4 py-3 flex items-center justify-between">
-        <p className="text-[13px] text-muted-foreground">Net Realised P&L</p>
-        <p className="text-[13px] font-bold text-foreground">${netPnl}</p>
+        <p className="text-[16px] text-muted-foreground">Net Realised P&L</p>
+        <p className="text-[16px] font-bold text-foreground">${netPnl}</p>
       </div>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Order rows                                                         */
+/*  Order cards — matches orders tab card layout                       */
 /* ------------------------------------------------------------------ */
 
-function OrderRow({ order }: { order: PnlOrder }) {
+function PnlSideBadge({ side }: { side: "B" | "S" }) {
   return (
-    <div className="rounded-2xl bg-white border border-border/50 px-4 py-3.5 flex items-center justify-between">
-      <div>
-        <p className="text-[14px] font-bold text-foreground mb-1">{order.symbol}</p>
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/>
-            <path d="M4 8h8M4 5h5M4 11h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-          </svg>
-          <span>{order.qty}</span>
-          <span className="text-muted-foreground/40">|</span>
-          <span>${order.buyPrice} → ${order.sellPrice}</span>
+    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[12px] font-bold shrink-0 bg-muted text-foreground">
+      {side}
+    </span>
+  );
+}
+
+function OrderRow({ order }: { order: PnlOrder }) {
+  const label = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
+  const qtyLabel = order.lots !== undefined ? `${order.qty} Lot` : String(order.qty);
+
+  return (
+    <div className="rounded-2xl bg-white border border-border/50 px-5 py-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <PnlSideBadge side={order.side} />
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <p className="text-[16px] font-bold text-foreground tracking-wide whitespace-nowrap">{label}</p>
+            {order.tag && (
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{order.tag}</span>
+            )}
+          </div>
         </div>
+        <span className="text-[16px] font-bold text-foreground tabular-nums whitespace-nowrap">{qtyLabel}</span>
       </div>
-      <p className={cn(
-        "text-[14px] font-bold tabular-nums",
-        order.pnl >= 0 ? "text-emerald-500" : "text-red-500"
-      )}>
-        {order.pnl >= 0 ? "+" : ""}{order.pnl}
-      </p>
+      <div className="flex items-center justify-between mt-2 pl-[30px]">
+        <p className="text-[16px] text-muted-foreground font-medium">
+          Avg: ${order.avgExecutedPrice}
+        </p>
+        <p className={cn(
+          "text-[16px] font-bold tabular-nums",
+          order.pnl >= 0 ? "text-emerald-500" : "text-red-500"
+        )}>
+          {order.pnl >= 0 ? "+" : ""}{order.pnl}
+        </p>
+      </div>
     </div>
   );
 }
@@ -473,7 +502,7 @@ export function PnlTab() {
               key={p}
               onClick={() => applyPreset(p)}
               className={cn(
-                "flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors",
+                "flex-1 py-2.5 rounded-xl text-[14px] font-semibold transition-colors",
                 preset === p
                   ? "bg-foreground text-background"
                   : "border border-border/50 text-muted-foreground"
@@ -491,9 +520,9 @@ export function PnlTab() {
 
         {/* Orders list */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[14px] font-bold text-foreground">{RANGE_DATA[preset].orders.length} Orders</p>
+          <p className="text-[16px] font-bold text-foreground">{RANGE_DATA[preset].orders.length} Orders</p>
           <button className="flex items-center gap-1 rounded-lg border border-border/50 px-3 py-1.5">
-            <span className="text-[12px] font-semibold text-muted-foreground">Value</span>
+            <span className="text-[14px] font-semibold text-muted-foreground">Value</span>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground">
               <path d="M6 2v8M3 7l3 3 3-3M3 5l3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

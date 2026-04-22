@@ -108,7 +108,7 @@ const fmtQty = (n: number) =>
 function OpenStatusBadge({ status }: { status: OpenStatus; filledQty?: number; orderedQty?: number }) {
   if (status === "pending") {
     return (
-      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+      <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-semibold text-muted-foreground">
         Pending
       </span>
     );
@@ -132,7 +132,7 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
   };
   const { label } = configs[reason];
   return (
-    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground whitespace-nowrap">
+    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[14px] font-semibold text-muted-foreground whitespace-nowrap">
       {label}
     </span>
   );
@@ -144,7 +144,7 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
 
 function SideBadge({ side }: { side: "B" | "S" }) {
   return (
-    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[12px] font-bold shrink-0 bg-muted text-foreground">
+    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[14px] font-bold shrink-0 bg-muted text-foreground">
       {side}
     </span>
   );
@@ -159,7 +159,7 @@ function QtyDisplay({ p }: { p: OpenPosition }) {
     return (
       <span className="flex items-center gap-0.5">
         <span className="font-semibold text-foreground">{p.lots}</span>
-        <span className="text-muted-foreground/60 text-[10px] mx-0.5">lot ×</span>
+        <span className="text-muted-foreground/60 text-[12px] mx-0.5">lot ×</span>
         <span className="font-semibold text-foreground">{p.filledQty || p.orderedQty}</span>
       </span>
     );
@@ -184,7 +184,7 @@ function ExpiryBanner({ days }: { days: number }) {
         ? <AlertTriangle size={12} className="text-foreground shrink-0" />
         : <Clock size={12} className="text-muted-foreground shrink-0" />
       }
-      <p className={cn("text-[12px] font-semibold", isToday ? "text-foreground" : "text-muted-foreground")}>
+      <p className={cn("text-[14px] font-semibold", isToday ? "text-foreground" : "text-muted-foreground")}>
         {isToday ? "Expiring today" : `${days} day${days !== 1 ? "s" : ""} left for expiry`}
       </p>
     </div>
@@ -213,25 +213,25 @@ function OpenCard({ p, expanded, onToggle }: {
       {showExpiry && <ExpiryBanner days={p.daysToExpiry!} />}
 
       {/* Tappable card body */}
-      <button className="w-full text-left px-4 py-3.5 active:bg-muted/20 transition-colors" onClick={onToggle}>
+      <button className="w-full text-left px-5 py-5 active:bg-muted/20 transition-colors" onClick={onToggle}>
         {/* Row 1: S/B badge + label left-aligned */}
         <div className="flex items-center gap-2 mb-2.5">
           <SideBadge side={p.side} />
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[13px] font-extrabold text-foreground tracking-wide">{label}</p>
+            <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
             {p.tag && (
-              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{p.tag}</span>
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
             )}
             <OpenStatusBadge status={p.status} filledQty={p.filledQty} orderedQty={p.orderedQty} />
           </div>
         </div>
 
         {/* Row 2: labeled columns + P&L */}
-        <div className="flex items-center justify-between gap-2 text-[12px]">
+        <div className="flex items-center justify-between gap-2 text-[14px]">
           <div className="flex items-center gap-3">
             {/* Qty — show filled/ordered if partial */}
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
               {p.status === "partial_fill" ? (
                 <span className="font-semibold text-foreground">{fmtQty(p.filledQty)}
                   <span className="text-muted-foreground font-normal">/{fmtQty(p.orderedQty)}</span>
@@ -242,23 +242,23 @@ function OpenCard({ p, expanded, onToggle }: {
             </div>
             <div className="w-px h-6 bg-border/50" />
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
               <span className="font-semibold text-foreground">
                 {isPending ? <span className="text-muted-foreground">—</span> : `$${p.avgPrice}`}
               </span>
             </div>
             <div className="w-px h-6 bg-border/50" />
             <div className="flex flex-col">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
               <span className="font-semibold text-foreground">${p.ltp}</span>
             </div>
           </div>
 
           {/* P&L — hidden for pending */}
           {isPending ? (
-            <span className="text-[12px] text-muted-foreground font-medium">Awaiting fill</span>
+            <span className="text-[14px] text-muted-foreground font-medium">Awaiting fill</span>
           ) : (
-            <p className="text-[14px] font-extrabold tabular-nums shrink-0 text-foreground">
+            <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
               {fmtPnl(p.pnl)}
             </p>
           )}
@@ -268,15 +268,15 @@ function OpenCard({ p, expanded, onToggle }: {
       {/* Expanded actions */}
       {expanded && !isPending && (
         <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="w-[22%] flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
             <Plus size={14} />
             Add
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
             <LogOut size={14} />
             Exit position
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="w-[22%] flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
             Details
             <ArrowRight size={14} />
           </button>
@@ -284,10 +284,10 @@ function OpenCard({ p, expanded, onToggle }: {
       )}
       {expanded && isPending && (
         <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
             Cancel order
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
             Details
             <ArrowRight size={14} />
           </button>
@@ -326,8 +326,8 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           </button>
         </div>
         <div className="px-5 pb-4 shrink-0">
-          <p className="text-[20px] font-extrabold text-foreground">Exit all positions</p>
-          <p className="text-[13px] text-muted-foreground mt-1">All selected positions will be closed at market price</p>
+          <p className="text-[24px] font-bold text-foreground">Exit all positions</p>
+          <p className="text-[16px] text-muted-foreground mt-1">All selected positions will be closed at market price</p>
         </div>
 
         {/* List */}
@@ -354,36 +354,36 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
                 </div>
 
                 {/* Card — same layout as OpenCard */}
-                <div className="flex-1 rounded-2xl border border-border/50 bg-white px-4 py-3.5">
+                <div className="flex-1 rounded-2xl border border-border/50 bg-white px-5 py-5">
                   {/* Row 1: S/B badge + label */}
                   <div className="flex items-center gap-2 mb-2.5">
                     <SideBadge side={p.side} />
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-[13px] font-extrabold text-foreground tracking-wide">{label}</p>
+                      <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
                       {p.tag && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{p.tag}</span>
+                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
                       )}
                     </div>
                   </div>
                   {/* Row 2: Qty | Avg | LTP + P&L */}
-                  <div className="flex items-center justify-between gap-2 text-[12px]">
+                  <div className="flex items-center justify-between gap-2 text-[14px]">
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
                         <QtyDisplay p={p} />
                       </div>
                       <div className="w-px h-6 bg-border/50" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
                         <span className="font-semibold text-foreground">${p.avgPrice}</span>
                       </div>
                       <div className="w-px h-6 bg-border/50" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
                         <span className="font-semibold text-foreground">${p.ltp}</span>
                       </div>
                     </div>
-                    <p className="text-[14px] font-extrabold tabular-nums shrink-0 text-foreground">
+                    <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
                       {fmtPnl(p.pnl)}
                     </p>
                   </div>
@@ -402,7 +402,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
             <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
               <ChevronRight size={18} className="text-background" />
             </div>
-            <span className="text-[14px] font-bold">
+            <span className="text-[16px] font-bold">
               {selected.size === 0 ? "Select positions to exit" : `Swipe to Exit ${selected.size > 0 ? `${selected.size} ` : ""}All`}
             </span>
             <div className="w-9" />
@@ -430,12 +430,12 @@ export function PositionsTab() {
       <div className="bg-white border-b border-border/30 px-5 pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Today&apos;s P&L</p>
+            <p className="text-[14px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Today&apos;s P&L</p>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className={cn("text-[26px] font-extrabold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
+              <span className={cn("text-[26px] font-bold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
                 {fmtPnl(todayPnl)}
               </span>
-              <span className="flex items-center gap-0.5 text-[13px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
+              <span className="flex items-center gap-0.5 text-[16px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
                 {isGain ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                 {isGain ? "+" : ""}{todayPnlPct}%
               </span>
@@ -443,21 +443,21 @@ export function PositionsTab() {
           </div>
           <button
             onClick={() => setExitAllOpen(true)}
-            className="shrink-0 mt-1 rounded-2xl bg-foreground px-4 py-2.5 text-[13px] font-bold text-background active:opacity-75 transition-opacity"
+            className="shrink-0 mt-1 rounded-2xl bg-foreground px-4 py-2.5 text-[16px] font-bold text-background active:opacity-75 transition-opacity"
           >
             Exit all
           </button>
         </div>
         <div className="mt-4 flex items-center justify-between rounded-xl bg-[#F8F9FA] px-3.5 py-2.5">
-          <p className="text-[12px] text-muted-foreground font-medium">Realised P&L</p>
-          <p className="text-[13px] font-bold tabular-nums text-foreground">{fmtPnl(realisedPnl)}</p>
+          <p className="text-[14px] text-muted-foreground font-medium">Realised P&L</p>
+          <p className="text-[16px] font-bold tabular-nums text-foreground">{fmtPnl(realisedPnl)}</p>
         </div>
       </div>
 
       {/* ── Open positions ── */}
       <div className="px-5 mt-6 mb-3 flex items-center gap-2">
-        <p className="text-[13px] font-semibold text-foreground">Open</p>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[12px] font-bold text-foreground">{OPEN.length}</span>
+        <p className="text-[16px] font-semibold text-foreground">Open</p>
+        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{OPEN.length}</span>
       </div>
 
       <div className="px-5 space-y-2.5">
@@ -473,8 +473,8 @@ export function PositionsTab() {
 
       {/* ── Closed today ── */}
       <div className="px-5 mt-8 mb-3 flex items-center gap-2">
-        <p className="text-[13px] font-semibold text-foreground">Closed today</p>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[12px] font-bold text-foreground">{CLOSED.length}</span>
+        <p className="text-[16px] font-semibold text-foreground">Closed today</p>
+        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{CLOSED.length}</span>
       </div>
 
       <div className="px-5 space-y-2.5">
@@ -483,13 +483,13 @@ export function PositionsTab() {
           const isPartial = p.reason === "partial_close";
           const isWorthless = p.reason === "expired_worthless";
           return (
-            <div key={i} className="rounded-2xl border border-border/40 bg-[#FAFAFA] px-4 py-3.5">
+            <div key={i} className="rounded-2xl border border-border/40 bg-[#FAFAFA] px-5 py-5">
               {/* Row 1: label + reason badge */}
               <div className="flex items-start justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <p className="text-[13px] font-bold text-muted-foreground tracking-wide">{label}</p>
+                  <p className="text-[16px] font-bold text-muted-foreground tracking-wide">{label}</p>
                   {isPartial && (
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">
                       {p.closedQty}/{p.totalQty} qty
                     </span>
                   )}
@@ -498,26 +498,26 @@ export function PositionsTab() {
               </div>
 
               {/* Row 2: Qty | Avg | Exit + P&L */}
-              <div className="flex items-center justify-between gap-2 text-[12px]">
+              <div className="flex items-center justify-between gap-2 text-[14px]">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
                     <span className="font-semibold text-muted-foreground">{fmtQty(p.closedQty)}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
                     <span className="font-semibold text-muted-foreground">${p.entryPrice}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Exit</span>
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Exit</span>
                     <span className="font-semibold text-muted-foreground">
                       {isWorthless ? <span className="text-muted-foreground/50">Worthless</span> : `$${p.exitPrice}`}
                     </span>
                   </div>
                 </div>
-                <p className="text-[14px] font-bold tabular-nums shrink-0 text-foreground">
+                <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
                   {fmtPnl(p.pnl)}
                 </p>
               </div>

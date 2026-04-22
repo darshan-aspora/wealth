@@ -230,7 +230,7 @@ function StatusBadge({ status }: { status: TxStatus }) {
   };
   const { label, cls } = configs[status];
   return (
-    <span className={cn("rounded-md px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide", cls)}>{label}</span>
+    <span className={cn("rounded-md px-2 py-0.5 text-[14px] font-bold uppercase tracking-wide", cls)}>{label}</span>
   );
 }
 
@@ -241,8 +241,8 @@ function StatusBadge({ status }: { status: TxStatus }) {
 function DRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0">
-      <p className="text-[13px] text-muted-foreground">{label}</p>
-      <p className={cn("text-[13px] font-semibold text-foreground tabular-nums", valueClass)}>{value}</p>
+      <p className="text-[16px] text-muted-foreground">{label}</p>
+      <p className={cn("text-[16px] font-semibold text-foreground tabular-nums", valueClass)}>{value}</p>
     </div>
   );
 }
@@ -250,12 +250,12 @@ function DRow({ label, value, valueClass }: { label: string; value: string; valu
 function CopyRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0">
-      <p className="text-[13px] text-muted-foreground">{label}</p>
+      <p className="text-[16px] text-muted-foreground">{label}</p>
       <button
         className="flex items-center gap-1.5 active:opacity-60"
         onClick={() => navigator.clipboard?.writeText(value)}
       >
-        <p className="text-[13px] font-semibold text-foreground tabular-nums">#{value}</p>
+        <p className="text-[16px] font-semibold text-foreground tabular-nums">#{value}</p>
         <Copy size={12} className="text-muted-foreground shrink-0" />
       </button>
     </div>
@@ -293,18 +293,18 @@ function ChargesAccordion({ d }: { d: TradeDetail }) {
         className="flex items-center justify-between w-full py-2.5"
       >
         <div className="flex items-center gap-1.5">
-          <p className="text-[13px] text-muted-foreground">Charges &amp; Fees</p>
+          <p className="text-[16px] text-muted-foreground">Charges &amp; Fees</p>
           <Chevron open={chargesOpen} />
         </div>
-        <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.charges}</p>
+        <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.charges}</p>
       </button>
 
       {chargesOpen && (
         <div className="pb-1">
           {/* Aspora Brokerage */}
           <div className="flex items-center justify-between py-2 pl-3">
-            <p className="text-[13px] text-muted-foreground">Aspora Brokerage</p>
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.brokerage}</p>
+            <p className="text-[16px] text-muted-foreground">Aspora Brokerage</p>
+            <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.brokerage}</p>
           </div>
 
           {/* Regulatory Fees row */}
@@ -313,30 +313,30 @@ function ChargesAccordion({ d }: { d: TradeDetail }) {
             className="flex items-center justify-between w-full py-2 pl-3"
           >
             <div className="flex items-center gap-1.5">
-              <p className="text-[13px] text-muted-foreground">Regulatory Fees</p>
+              <p className="text-[16px] text-muted-foreground">Regulatory Fees</p>
               <Chevron open={regOpen} />
             </div>
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.regulatoryFee}</p>
+            <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.regulatoryFee}</p>
           </button>
 
           {regOpen && (
             <>
               <div className="h-px bg-border/30 mx-3 mb-2" />
               <div className="flex items-center justify-between py-1.5 pl-6">
-                <p className="text-[13px] text-muted-foreground">SEC Fee</p>
-                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.secFee.toFixed(2)}</p>
+                <p className="text-[16px] text-muted-foreground">SEC Fee</p>
+                <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.secFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between py-1.5 pl-6">
-                <p className="text-[13px] text-muted-foreground">FINRA Fee</p>
-                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.finraFee.toFixed(2)}</p>
+                <p className="text-[16px] text-muted-foreground">FINRA Fee</p>
+                <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.finraFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between py-1.5 pl-6">
-                <p className="text-[13px] text-muted-foreground">Exchange Fees</p>
-                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.exchangeFee.toFixed(2)}</p>
+                <p className="text-[16px] text-muted-foreground">Exchange Fees</p>
+                <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.exchangeFee.toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between py-1.5 pl-6 mb-1">
-                <p className="text-[13px] text-muted-foreground">OPRA Fee</p>
-                <p className="text-[13px] font-semibold text-foreground tabular-nums">${d.opraFee.toFixed(2)}</p>
+                <p className="text-[16px] text-muted-foreground">OPRA Fee</p>
+                <p className="text-[16px] font-semibold text-foreground tabular-nums">${d.opraFee.toFixed(2)}</p>
               </div>
             </>
           )}
@@ -363,8 +363,8 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <CopyRow label="Order ID" value={d.orderId} />
         <ChargesAccordion d={d} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-muted-foreground">{d.side === "Buy" ? "Cash Used" : "Cash Added"}</p>
-          <p className={cn("text-[14px] font-extrabold tabular-nums", d.side === "Buy" ? "text-red-500" : "text-[#10B981]")}>
+          <p className="text-[16px] font-semibold text-muted-foreground">{d.side === "Buy" ? "Cash Used" : "Cash Added"}</p>
+          <p className={cn("text-[16px] font-bold tabular-nums", d.side === "Buy" ? "text-red-500" : "text-[#10B981]")}>
             {d.side === "Buy" ? `- $${Math.abs(d.cashImpact).toLocaleString()}` : `+ $${Math.abs(d.cashImpact).toLocaleString()}`}
           </p>
         </div>
@@ -376,7 +376,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     return (
       <>
         {d.message && (
-          <div className={cn("rounded-xl px-3.5 py-3 mb-3 text-[13px] font-medium leading-relaxed",
+          <div className={cn("rounded-xl px-3.5 py-3 mb-3 text-[16px] font-medium leading-relaxed",
             tx.status === "failed" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700"
           )}>
             {d.message}
@@ -391,8 +391,8 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         {d.regulatoryFee !== undefined && <DRow label="Regulatory Fees" value={`$${d.regulatoryFee}`} />}
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-            <p className="text-[13px] font-semibold text-muted-foreground">Cash Added</p>
-            <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
+            <p className="text-[16px] font-semibold text-muted-foreground">Cash Added</p>
+            <p className="text-[16px] font-bold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
           </div>
         )}
       </>
@@ -403,7 +403,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     return (
       <>
         {d.message && (
-          <div className="rounded-xl bg-red-50 px-3.5 py-3 mb-3 text-[13px] font-medium text-red-600 leading-relaxed">
+          <div className="rounded-xl bg-red-50 px-3.5 py-3 mb-3 text-[16px] font-medium text-red-600 leading-relaxed">
             {d.message}
           </div>
         )}
@@ -414,8 +414,8 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         {d.charges !== undefined && d.charges > 0 && <DRow label="Charges & Fees" value={`$${d.charges}`} />}
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-            <p className="text-[13px] font-semibold text-muted-foreground">Cash Deducted</p>
-            <p className="text-[14px] font-extrabold tabular-nums text-red-500">- ${Math.abs(d.cashImpact).toLocaleString()}</p>
+            <p className="text-[16px] font-semibold text-muted-foreground">Cash Deducted</p>
+            <p className="text-[16px] font-bold tabular-nums text-red-500">- ${Math.abs(d.cashImpact).toLocaleString()}</p>
           </div>
         )}
       </>
@@ -426,16 +426,16 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     return (
       <>
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center text-[12px] font-bold text-muted-foreground">{d.ticker[0]}</div>
-          <p className="text-[13px] font-semibold text-foreground">{d.company}</p>
+          <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center text-[14px] font-bold text-muted-foreground">{d.ticker[0]}</div>
+          <p className="text-[16px] font-semibold text-foreground">{d.company}</p>
         </div>
         <DRow label="Amount"           value={`$${d.amount}`} />
         <DRow label="Dividend per share" value={`$${d.perShare}`} />
         <DRow label="Shares Held"      value={String(d.sharesHeld)} />
         <DRow label="Tax Withheld"     value={`$${d.taxWithheld}`} valueClass="text-red-500" />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-muted-foreground">Net Credited Cash</p>
-          <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.netCredited}</p>
+          <p className="text-[16px] font-semibold text-muted-foreground">Net Credited Cash</p>
+          <p className="text-[16px] font-bold tabular-nums text-[#10B981]">+ ${d.netCredited}</p>
         </div>
       </>
     );
@@ -445,7 +445,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     if (d.subKind === "adjustment") {
       return (
         <>
-          <p className="text-[13px] text-muted-foreground mb-4">{d.description}</p>
+          <p className="text-[16px] text-muted-foreground mb-4">{d.description}</p>
           <DRow label="Margin Required" value={`$${d.marginBefore?.toLocaleString()} → $${d.marginAfter?.toLocaleString()}`} />
           <DRow label="Change"          value={`- $${Math.abs(d.change!).toLocaleString()}`} valueClass="text-red-500" />
           <DRow label="Net Margin"      value={`$${d.netMargin?.toLocaleString()}`} />
@@ -454,14 +454,14 @@ function DrawerBody({ tx }: { tx: Transaction }) {
     }
     return (
       <>
-        {d.instrument && <p className="text-[13px] font-semibold text-foreground mb-1">{d.instrument}</p>}
-        <p className="text-[13px] text-muted-foreground mb-4">{d.description}</p>
+        {d.instrument && <p className="text-[16px] font-semibold text-foreground mb-1">{d.instrument}</p>}
+        <p className="text-[16px] text-muted-foreground mb-4">{d.description}</p>
         <DRow label="Contract"        value={String(d.contracts)} />
         <DRow label="Amount Credited" value={`$${d.amountCredited}`} />
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-            <p className="text-[13px] font-semibold text-muted-foreground">Cash Added</p>
-            <p className="text-[14px] font-extrabold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
+            <p className="text-[16px] font-semibold text-muted-foreground">Cash Added</p>
+            <p className="text-[16px] font-bold tabular-nums text-[#10B981]">+ ${d.cashImpact.toLocaleString()}</p>
           </div>
         )}
       </>
@@ -471,13 +471,13 @@ function DrawerBody({ tx }: { tx: Transaction }) {
   if (d.kind === "interest") {
     return (
       <>
-        <p className="text-[13px] text-muted-foreground mb-4 leading-relaxed">{d.description}</p>
+        <p className="text-[16px] text-muted-foreground mb-4 leading-relaxed">{d.description}</p>
         <DRow label="Period"          value={d.period} />
         {d.contracts !== undefined && <DRow label="Contract" value={String(d.contracts)} />}
         <DRow label="Amount Credited" value={`$${Math.abs(d.amountCredited).toFixed(2)}`} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-muted-foreground">{d.subKind === "credited" ? "Cash Added" : "Cash Deducted"}</p>
-          <p className={cn("text-[14px] font-extrabold tabular-nums", d.subKind === "credited" ? "text-[#10B981]" : "text-red-500")}>
+          <p className="text-[16px] font-semibold text-muted-foreground">{d.subKind === "credited" ? "Cash Added" : "Cash Deducted"}</p>
+          <p className={cn("text-[16px] font-bold tabular-nums", d.subKind === "credited" ? "text-[#10B981]" : "text-red-500")}>
             {d.subKind === "credited" ? "+ " : "- "}${Math.abs(d.cashImpact).toFixed(2)}
           </p>
         </div>
@@ -514,10 +514,10 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
         <div className="px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[16px] font-extrabold text-foreground leading-snug">{title}</p>
+              <p className="text-[20px] font-bold text-foreground leading-snug">{title}</p>
               <div className="flex items-center gap-2 mt-1">
                 <StatusBadge status={tx.status} />
-                <p className="text-[12px] text-muted-foreground">{dateShort}</p>
+                <p className="text-[14px] text-muted-foreground">{dateShort}</p>
               </div>
             </div>
             <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50 shrink-0 mt-0.5">
@@ -543,8 +543,8 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
 function BRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between py-2.5">
-      <p className={cn("text-[13px]", bold ? "font-bold text-foreground" : "text-muted-foreground")}>{label}</p>
-      <p className={cn("text-[13px] tabular-nums", bold ? "font-bold text-foreground" : "font-semibold text-foreground")}>{value}</p>
+      <p className={cn("text-[16px]", bold ? "font-bold text-foreground" : "text-muted-foreground")}>{label}</p>
+      <p className={cn("text-[16px] tabular-nums", bold ? "font-bold text-foreground" : "font-semibold text-foreground")}>{value}</p>
     </div>
   );
 }
@@ -552,7 +552,7 @@ function BRow({ label, value, bold }: { label: string; value: string; bold?: boo
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[14px] font-bold text-foreground mb-3">{title}</p>
+      <p className="text-[16px] font-bold text-foreground mb-3">{title}</p>
       <div className="rounded-2xl bg-white border border-border/50 px-4">{children}</div>
     </div>
   );
@@ -564,7 +564,7 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
       <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
         {/* Header */}
         <div className="px-5 pt-5 pb-4 shrink-0 flex items-center justify-between">
-          <p className="text-[16px] font-extrabold text-foreground">Detailed Breakup</p>
+          <p className="text-[20px] font-bold text-foreground">Detailed Breakup</p>
           <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50">
             <X size={20} className="text-foreground" />
           </button>
@@ -585,16 +585,12 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
           <SectionCard title="Cash">
             <BRow label="Available Cash"       value={fmtUSD(FUNDS.availableCash)} />
             <BRow label="Withdrawable Balance" value={fmtUSD(FUNDS.withdrawableBalance)} />
-            <div className="h-px bg-border/40 my-1" />
-            <button className="py-3 text-[13px] font-semibold text-blue-500 active:opacity-60">Learn more</button>
           </SectionCard>
 
           {/* P&L */}
           <SectionCard title="P&L">
             <BRow label="Realised Profit"   value={fmtUSD(FUNDS.realisedProfit)} />
             <BRow label="Unrealised Profit" value={fmtUSD(FUNDS.unrealisedProfit)} />
-            <div className="h-px bg-border/40 my-1" />
-            <button className="py-3 text-[13px] font-semibold text-blue-500 active:opacity-60">Learn more</button>
           </SectionCard>
 
           {/* Funds Used */}
@@ -626,12 +622,12 @@ export function BuyingPowerTab() {
       <div className="px-5 pt-6 pb-2">
         <div className="rounded-3xl bg-white border border-border/50 px-5 pt-5 pb-0 overflow-hidden">
           <div className="flex flex-col items-center text-center mb-5">
-            <p className="text-[12px] text-muted-foreground font-medium mb-1">Available to Trade</p>
-            <p className="text-[38px] font-extrabold text-foreground leading-none tabular-nums">
+            <p className="text-[14px] text-muted-foreground font-medium mb-1">Available to Trade</p>
+            <p className="text-[38px] font-bold text-foreground leading-none tabular-nums">
               {fmtUSD(FUNDS.availableBalance)}
             </p>
             <div className="mt-2">
-              <span className="text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+              <span className="text-[14px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
                 ↑ +$4,151 this month
               </span>
             </div>
@@ -639,11 +635,11 @@ export function BuyingPowerTab() {
 
           <div className="h-px bg-border/40 -mx-5" />
           <div className="flex gap-3 py-4">
-            <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-muted/40 py-3 text-[13px] font-bold text-foreground active:opacity-70 transition-opacity">
+            <button className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full border border-border/60 bg-background text-[15px] font-semibold text-foreground active:opacity-70 transition-opacity">
               <Landmark size={14} />
               Withdraw
             </button>
-            <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-3 text-[13px] font-bold text-background active:opacity-75 transition-opacity">
+            <button className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full bg-foreground text-[15px] font-semibold text-background active:opacity-75 transition-opacity">
               + Deposit
             </button>
           </div>
@@ -652,27 +648,27 @@ export function BuyingPowerTab() {
 
       {/* ── Funds Breakup card ── */}
       <div className="px-5 pt-5 pb-2">
-        <p className="text-[16px] font-bold text-foreground mb-3">Funds Breakup</p>
+        <p className="text-[20px] font-bold text-foreground mb-3">Funds Breakup</p>
         <div className="rounded-2xl bg-white border border-border/50 px-4 pt-4 pb-0">
           <div className="flex items-start gap-6 mb-4">
             <div>
               <p className="text-[12px] text-muted-foreground mb-0.5">Opening Balance</p>
-              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.openingBalance)}</p>
+              <p className="text-[16px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.openingBalance)}</p>
             </div>
             <div>
               <p className="text-[12px] text-muted-foreground mb-0.5">Funds added Today</p>
-              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.fundsAddedToday)}</p>
+              <p className="text-[16px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.fundsAddedToday)}</p>
             </div>
             <div>
               <p className="text-[12px] text-muted-foreground mb-0.5">Margin Utilised</p>
-              <p className="text-[13px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.marginUtilised)}</p>
+              <p className="text-[16px] font-bold text-foreground tabular-nums">{fmtUSD(FUNDS.marginUtilised)}</p>
             </div>
           </div>
           <div className="h-px bg-border/40 -mx-4" />
           <div className="flex items-center justify-center py-3.5">
             <button
               onClick={() => setShowBreakup(true)}
-              className="text-[13px] font-semibold text-foreground active:opacity-60"
+              className="text-[16px] font-semibold text-foreground active:opacity-60"
             >
               View Details
             </button>
@@ -682,7 +678,7 @@ export function BuyingPowerTab() {
 
       {/* ── History ── */}
       <div className="px-5 pt-5">
-        <p className="text-[16px] font-bold text-foreground mb-4">History</p>
+        <p className="text-[20px] font-bold text-foreground mb-4">History</p>
 
         {/* Filter tabs — scrollable */}
         <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar">
@@ -691,7 +687,7 @@ export function BuyingPowerTab() {
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors shrink-0",
+                "px-4 py-2 rounded-full text-[16px] font-semibold whitespace-nowrap transition-colors shrink-0",
                 filter === f ? "bg-foreground text-background" : "border border-border/50 text-muted-foreground"
               )}
             >
@@ -706,13 +702,13 @@ export function BuyingPowerTab() {
             <button
               key={tx.id}
               onClick={() => setSelectedTx(tx)}
-              className="w-full text-left rounded-2xl border border-border/50 bg-white px-4 py-3.5 active:opacity-75 transition-opacity"
+              className="w-full text-left rounded-2xl border border-border/50 bg-white px-5 py-5 active:opacity-75 transition-opacity"
             >
-              <p className="text-[12px] text-muted-foreground mb-1">{tx.date}</p>
+              <p className="text-[14px] text-muted-foreground mb-1">{tx.date}</p>
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[13px] font-semibold text-foreground">{tx.description}</p>
+                <p className="text-[16px] font-semibold text-foreground">{tx.description}</p>
                 <p className={cn(
-                  "text-[13px] font-bold tabular-nums whitespace-nowrap shrink-0",
+                  "text-[16px] font-bold tabular-nums whitespace-nowrap shrink-0",
                   tx.amount >= 0 ? "text-[#10B981]" : "text-red-500"
                 )}>
                   {fmtAmt(tx.amount)}

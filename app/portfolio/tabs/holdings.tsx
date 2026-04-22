@@ -100,7 +100,7 @@ export function HoldingsTab() {
       {/* Advisory banner — top */}
       {!advisoryDismissed && (
         <div className="mx-5 mb-4 flex items-center justify-between rounded-xl bg-[#F2F2F2] px-4 py-3">
-          <p className="text-[13px] text-muted-foreground">Advisory holding won&apos;t be visible here</p>
+          <p className="text-[14px] text-muted-foreground">Advisory holding won&apos;t be visible here</p>
           <button onClick={() => setAdvisoryDismissed(true)} className="ml-3 shrink-0 active:opacity-60">
             <X size={17} className="text-muted-foreground" />
           </button>
@@ -115,7 +115,7 @@ export function HoldingsTab() {
               key={cat}
               onClick={() => { setCategory(cat); setPnlExpanded(false); }}
               className={cn(
-                "flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap",
+                "flex-1 py-2.5 rounded-xl text-[16px] font-semibold transition-all whitespace-nowrap",
                 category === cat
                   ? "bg-white text-foreground shadow-sm"
                   : "text-[#41484B]"
@@ -134,11 +134,11 @@ export function HoldingsTab() {
           {/* Invested + Current value */}
           <div className="flex gap-10 mb-3.5">
             <div>
-              <p className="text-[13px] text-muted-foreground mb-1">Invested</p>
+              <p className="text-[16px] text-muted-foreground mb-1">Invested</p>
               <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroInvested)}</p>
             </div>
             <div>
-              <p className="text-[13px] text-muted-foreground mb-1">Current value</p>
+              <p className="text-[16px] text-muted-foreground mb-1">Current value</p>
               <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroCurrentValue)}</p>
             </div>
           </div>
@@ -150,9 +150,9 @@ export function HoldingsTab() {
             className="w-full flex items-center justify-between mb-2.5 active:opacity-70 transition-opacity"
             onClick={() => setPnlExpanded((v) => !v)}
           >
-            <span className="text-[13px] text-muted-foreground">P&L</span>
+            <span className="text-[16px] text-muted-foreground">P&L</span>
             <div className="flex items-center gap-1.5">
-              <span className={cn("text-[14px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              <span className={cn("text-[16px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                 {heroPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroPnl))} ({heroPnlPct >= 0 ? "+" : ""}{heroPnlPct.toFixed(1)}%)
               </span>
               <ChevronDown
@@ -166,14 +166,14 @@ export function HoldingsTab() {
           {pnlExpanded && (
             <>
               <div className="flex items-center justify-between mb-2.5 pl-2">
-                <span className="text-[13px] text-muted-foreground">Unrealised P&L</span>
-                <span className={cn("text-[14px] font-semibold", heroUnrealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                <span className="text-[16px] text-muted-foreground">Unrealised P&L</span>
+                <span className={cn("text-[16px] font-semibold", heroUnrealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                   {heroUnrealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroUnrealisedPnl))} ({heroUnrealisedPct >= 0 ? "+" : ""}{heroUnrealisedPct.toFixed(1)}%)
                 </span>
               </div>
               <div className="flex items-center justify-between mb-2.5 pl-2">
-                <span className="text-[13px] text-muted-foreground">Realised P&L</span>
-                <span className={cn("text-[14px] font-semibold", heroRealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+                <span className="text-[16px] text-muted-foreground">Realised P&L</span>
+                <span className={cn("text-[16px] font-semibold", heroRealisedPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                   {heroRealisedPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroRealisedPnl))} ({heroRealisedPct >= 0 ? "+" : ""}{heroRealisedPct.toFixed(1)}%)
                 </span>
               </div>
@@ -182,18 +182,18 @@ export function HoldingsTab() {
 
           {/* Estimated XIRR row */}
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-muted-foreground">Estimated XIRR</span>
-            <span className={cn("text-[14px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
+            <span className="text-[16px] text-muted-foreground">Estimated XIRR</span>
+            <span className={cn("text-[16px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
               {heroXirr >= 0 ? "+" : ""}{heroXirr.toFixed(1)}%
             </span>
           </div>
         </div>
 
         {/* Gray strip — Today's P&L, peeks below the white card */}
-        <div className="bg-[#F2F3F7] rounded-b-2xl px-4 pt-3 pb-3.5 -mt-3 pt-[calc(0.75rem+12px)]">
+        <div className="bg-[#F2F3F7] rounded-b-2xl px-4 pt-2 pb-2.5 -mt-3">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-muted-foreground">Today&apos;s P&L</span>
-            <span className={cn("text-[14px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+            <span className="text-[16px] text-muted-foreground">Today&apos;s P&L</span>
+            <span className={cn("text-[16px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
                 {heroTodayPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroTodayPnl))} ({heroTodayPnlPct >= 0 ? "+" : ""}{heroTodayPnlPct.toFixed(1)}%)
               </span>
           </div>
@@ -202,7 +202,7 @@ export function HoldingsTab() {
 
       {/* Holdings count + Change/Value toggle */}
       <div className="mx-5 mb-3 flex items-center justify-between">
-        <p className="text-[13px] font-semibold text-foreground">{filtered.length} Holdings</p>
+        <p className="text-[16px] font-semibold text-foreground">{filtered.length} Holdings</p>
         <div className="flex items-center gap-2">
           {/* Settings button — only shown when "Change" is active */}
           {valueMode === "Change" && (
@@ -219,7 +219,7 @@ export function HoldingsTab() {
                 key={mode}
                 onClick={() => setValueMode(mode)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all",
+                  "px-4 py-1.5 rounded-full text-[16px] font-semibold transition-all",
                   valueMode === mode ? "bg-black text-white" : "text-muted-foreground"
                 )}
               >
@@ -239,14 +239,14 @@ export function HoldingsTab() {
 
           {/* Range row */}
           <div className="flex items-center justify-between mb-6">
-            <span className="text-[14px] text-muted-foreground">Range</span>
+            <span className="text-[16px] text-muted-foreground">Range</span>
             <div className="flex items-center gap-1.5">
               {CHANGE_RANGES.map((r) => (
                 <button
                   key={r}
                   onClick={() => setChangeRange(r)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+                    "px-3 py-1.5 rounded-full text-[16px] font-semibold border transition-all",
                     changeRange === r
                       ? "bg-foreground text-background border-foreground"
                       : "border-border/60 text-foreground bg-transparent"
@@ -260,14 +260,14 @@ export function HoldingsTab() {
 
           {/* Change type row */}
           <div className="flex items-center justify-between">
-            <span className="text-[14px] text-muted-foreground">Change</span>
+            <span className="text-[16px] text-muted-foreground">Change</span>
             <div className="flex rounded-xl border border-border/50 overflow-hidden">
               {(["Percentage", "Absolute"] as ChangeType[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setChangeType(t)}
                   className={cn(
-                    "px-4 py-2 text-[13px] font-semibold transition-all",
+                    "px-4 py-2 text-[16px] font-semibold transition-all",
                     changeType === t
                       ? "bg-foreground text-background"
                       : "text-foreground bg-background"
@@ -301,45 +301,45 @@ export function HoldingsTab() {
           return (
             <div
               key={h.name}
-              className="rounded-2xl border border-[#E9E9E9] bg-white px-4 py-3.5 active:opacity-75 transition-opacity"
+              className="rounded-2xl border border-[#E9E9E9] bg-white px-5 py-5 active:opacity-75 transition-opacity"
             >
               {/* Top row: name + current value */}
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-foreground leading-snug truncate">{h.name}</p>
+                  <p className="text-[16px] font-bold text-foreground leading-snug truncate">{h.name}</p>
                   {h.tag && (
-                    <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+                    <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[12px] font-bold text-foreground">
                       {h.tag}
                     </span>
                   )}
                 </div>
-                <p className="text-[16px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
+                <p className="text-[20px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
               </div>
 
               {/* Bottom row: labeled columns + P&L */}
-              <div className="flex items-center justify-between gap-2 text-[12px]">
+              <div className="flex items-center justify-between gap-2 text-[14px]">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-                    <span className="font-semibold text-foreground">{h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5).replace(/\.?0+$/, "")}</span>
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                    <span className="font-normal text-foreground">{h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5).replace(/\.?0+$/, "")}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-                    <span className="font-semibold text-foreground">${h.avgPrice}</span>
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                    <span className="font-normal text-foreground">${h.avgPrice}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+                    <span className="font-normal text-foreground">
                       ${h.currentPrice}
-                      <span className="ml-1 text-[12px] font-medium text-muted-foreground">
+                      <span className="ml-1 text-[14px] font-medium text-muted-foreground">
                         ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
                       </span>
                     </span>
                   </div>
                 </div>
-                <p className="text-[13px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
+                <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
               </div>
             </div>
           );

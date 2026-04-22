@@ -14,7 +14,7 @@ import { PositionsTab } from "./tabs/positions";
 import { OrdersTab } from "./tabs/orders";
 import { BuyingPowerTab } from "./tabs/buying-power";
 import { SipsTab } from "./tabs/sips";
-import { AdvisoryTab } from "./tabs/advisory";
+import { CollectionsTab } from "./tabs/collections";
 import { PnlTab } from "./tabs/pnl";
 import { ReportsTab } from "./tabs/reports";
 
@@ -22,7 +22,7 @@ import { ReportsTab } from "./tabs/reports";
 /*  Tab definitions                                                    */
 /* ------------------------------------------------------------------ */
 
-const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "Advisory", "P&L", "Reports"] as const;
+const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "Collections", "P&L", "Reports"] as const;
 type Tab = (typeof tabs)[number];
 
 /* ------------------------------------------------------------------ */
@@ -118,7 +118,7 @@ export default function PortfolioPage() {
               {activeTab === "Orders" && <OrdersTab />}
               {activeTab === "Buying Power" && <BuyingPowerTab />}
               {activeTab === "SIPs" && <SipsTab />}
-              {activeTab === "Advisory" && <AdvisoryTab />}
+              {activeTab === "Collections" && <CollectionsTab />}
               {activeTab === "P&L" && <PnlTab />}
               {activeTab === "Reports" && <ReportsTab />}
             </motion.div>
@@ -126,10 +126,10 @@ export default function PortfolioPage() {
         </div>
       </div>
 
-      {/* Floating Analyse Portfolio button */}
+      {/* Floating Analyse Portfolio button — Overview tab only */}
       <div
         className="absolute bottom-[calc(56px+env(safe-area-inset-bottom,0px)+30px)] left-0 right-0 flex justify-center pb-3 pointer-events-none z-30 transition-all duration-300"
-        style={{ opacity: showAnalyse ? 1 : 0, transform: showAnalyse ? "translateY(0)" : "translateY(10px)" }}
+        style={{ opacity: showAnalyse && activeTab === "Overview" ? 1 : 0, transform: showAnalyse && activeTab === "Overview" ? "translateY(0)" : "translateY(10px)" }}
       >
         <button className="pointer-events-auto flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background shadow-lg active:opacity-80 transition-opacity">
           Analyse Portfolio

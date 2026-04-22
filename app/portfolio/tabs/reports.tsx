@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import {
-  ChevronRight, ChevronDown, Search, X,
+  ChevronRight, ChevronLeft, ChevronDown, Search, X,
   FileText, TrendingUp, ShieldAlert, Receipt, Brain,
   Mail, Download, CalendarDays,
 } from "lucide-react";
@@ -230,6 +230,107 @@ type Range = typeof RANGES[number];
 type Delivery = "email" | "pdf";
 
 /* ------------------------------------------------------------------ */
+/*  Inline calendar for reports drawer                                  */
+/* ------------------------------------------------------------------ */
+
+interface CalDateVal { year: number; month: number; day: number }
+
+const CAL_MONTHS = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+const CAL_DAYS = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+
+function calDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate(); }
+function calFirstDow(y: number, m: number) { return (new Date(y, m, 1).getDay() + 6) % 7; }
+function calToNum(d: CalDateVal) { return d.year * 10000 + d.month * 100 + d.day; }
+function calFmt(d: CalDateVal) { return `${CAL_MONTHS[d.month].slice(0,3)} ${d.day}, ${d.year}`; }
+
+function InlineCalendar({
+  from, to, selecting, onSelect,
+}: {
+  from: CalDateVal | null; to: CalDateVal | null;
+  selecting: "from" | "to";
+  onSelect: (d: CalDateVal) => void;
+}) {
+  const today = new Date();
+  const [cy, setCy] = useState(today.getFullYear());
+  const [cm, setCm] = useState(today.getMonth());
+
+  const total = calDaysInMonth(cy, cm);
+  const offset = calFirstDow(cy, cm);
+  const cells: (number | null)[] = [...Array(offset).fill(null), ...Array.from({ length: total }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const rows: (number | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+
+  const fromNum = from ? calToNum(from) : null;
+  const toNum   = to   ? calToNum(to)   : null;
+  const cellNum = (d: number) => cy * 10000 + cm * 100 + d;
+
+  function prevMonth() { if (cm === 0) { setCm(11); setCy(y => y - 1); } else setCm(m => m - 1); }
+  function nextMonth() { if (cm === 11) { setCm(0); setCy(y => y + 1); } else setCm(m => m + 1); }
+
+  return (
+    <div className="mt-3 rounded-2xl border border-border/50 bg-white px-4 py-3">
+      {/* Month nav */}
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1.5 rounded-full active:bg-muted/50">
+          <ChevronLeft size={16} className="text-foreground" />
+        </button>
+        <p className="text-[16px] font-bold text-foreground">{CAL_MONTHS[cm]} {cy}</p>
+        <button onClick={nextMonth} className="p-1.5 rounded-full active:bg-muted/50">
+          <ChevronRight size={16} className="text-foreground" />
+        </button>
+      </div>
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {CAL_DAYS.map(l => (
+          <p key={l} className="text-[12px] text-muted-foreground text-center font-semibold py-0.5">{l}</p>
+        ))}
+      </div>
+      {/* Days */}
+      {rows.map((row, ri) => (
+        <div key={ri} className="grid grid-cols-7">
+          {row.map((day, ci) => {
+            if (!day) return <div key={ci} />;
+            const n = cellNum(day);
+            const isFrom = fromNum !== null && n === fromNum;
+            const isTo   = toNum   !== null && n === toNum;
+            const inRange = fromNum && toNum && n > Math.min(fromNum, toNum) && n < Math.max(fromNum, toNum);
+            const active = isFrom || isTo;
+            return (
+              <button
+                key={ci}
+                onClick={() => onSelect({ year: cy, month: cm, day })}
+                className={cn(
+                  "relative h-9 flex items-center justify-center",
+                  inRange && "bg-muted/50",
+                  isFrom && "rounded-l-full",
+                  isTo   && "rounded-r-full",
+                  (isFrom && isTo) && "rounded-full",
+                )}
+              >
+                <span className={cn(
+                  "w-8 h-8 flex items-center justify-center rounded-full text-[14px] font-medium",
+                  active ? "bg-foreground text-background font-bold" : "text-foreground",
+                )}>
+                  {day}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ))}
+      {/* Selecting indicator */}
+      <p className="text-[12px] text-muted-foreground text-center mt-3">
+        {selecting === "from" ? "Select start date" : "Select end date"}
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -240,10 +341,27 @@ type Delivery = "email" | "pdf";
 function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void }) {
   const [range, setRange]       = useState<Range>("6M");
   const [delivery, setDelivery] = useState<Delivery | null>(null);
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo]     = useState("");
+  const [calFrom, setCalFrom]   = useState<CalDateVal | null>(null);
+  const [calTo,   setCalTo]     = useState<CalDateVal | null>(null);
+  const [selecting, setSelecting] = useState<"from" | "to">("from");
 
-  const canSubmit = delivery !== null && (range !== "Custom" || (customFrom && customTo));
+  function handleCalSelect(d: CalDateVal) {
+    if (selecting === "from") {
+      setCalFrom(d);
+      setCalTo(null);
+      setSelecting("to");
+    } else {
+      if (calFrom && calToNum(d) < calToNum(calFrom)) {
+        setCalTo(calFrom);
+        setCalFrom(d);
+      } else {
+        setCalTo(d);
+      }
+      setSelecting("from");
+    }
+  }
+
+  const canSubmit = delivery !== null && (range !== "Custom" || (calFrom && calTo));
 
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
@@ -252,8 +370,8 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
         <div className="px-5 pt-6 pb-4 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[16px] font-extrabold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[13px] text-muted-foreground mt-1">{item.description}</p>
+              <p className="text-[20px] font-bold text-foreground leading-snug">{item.title}</p>
+              <p className="text-[16px] text-muted-foreground mt-1">{item.description}</p>
             </div>
             <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50 shrink-0 mt-0.5">
               <X size={20} className="text-foreground" />
@@ -269,7 +387,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
           <div>
             <div className="flex items-center gap-2 mb-3">
               <CalendarDays size={14} className="text-muted-foreground" />
-              <p className="text-[13px] font-bold text-foreground">Select Time Range</p>
+              <p className="text-[16px] font-bold text-foreground">Select Time Range</p>
             </div>
             <div className="flex gap-2 flex-wrap">
               {RANGES.map((r) => (
@@ -277,7 +395,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                   key={r}
                   onClick={() => setRange(r)}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors",
+                    "px-4 py-2 rounded-xl text-[16px] font-semibold transition-colors",
                     range === r ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground"
                   )}
                 >
@@ -287,32 +405,46 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
             </div>
 
             {range === "Custom" && (
-              <div className="flex gap-3 mt-3">
-                <div className="flex-1">
-                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">From</p>
-                  <input
-                    type="date"
-                    value={customFrom}
-                    onChange={(e) => setCustomFrom(e.target.value)}
-                    className="w-full rounded-xl border border-border/60 px-3 py-2.5 text-[13px] text-foreground bg-white outline-none focus:border-foreground/40 transition-colors"
-                  />
+              <div className="mt-3">
+                {/* From / To summary pills */}
+                <div className="flex gap-2 mb-1">
+                  <button
+                    onClick={() => setSelecting("from")}
+                    className={cn(
+                      "flex-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                      selecting === "from" ? "border-foreground" : "border-border/50"
+                    )}
+                  >
+                    <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">From</p>
+                    <p className="text-[16px] font-semibold text-foreground">
+                      {calFrom ? calFmt(calFrom) : "—"}
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => setSelecting("to")}
+                    className={cn(
+                      "flex-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                      selecting === "to" ? "border-foreground" : "border-border/50"
+                    )}
+                  >
+                    <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">To</p>
+                    <p className="text-[16px] font-semibold text-foreground">
+                      {calTo ? calFmt(calTo) : "—"}
+                    </p>
+                  </button>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">To</p>
-                  <input
-                    type="date"
-                    value={customTo}
-                    onChange={(e) => setCustomTo(e.target.value)}
-                    className="w-full rounded-xl border border-border/60 px-3 py-2.5 text-[13px] text-foreground bg-white outline-none focus:border-foreground/40 transition-colors"
-                  />
-                </div>
+                <InlineCalendar
+                  from={calFrom} to={calTo}
+                  selecting={selecting}
+                  onSelect={handleCalSelect}
+                />
               </div>
             )}
           </div>
 
           {/* Delivery method */}
           <div>
-            <p className="text-[13px] font-bold text-foreground mb-3">How would you like it?</p>
+            <p className="text-[16px] font-bold text-foreground mb-3">How would you like it?</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDelivery("email")}
@@ -330,8 +462,8 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                   <Mail size={18} />
                 </div>
                 <div className="text-center">
-                  <p className="text-[13px] font-bold text-foreground">Email</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">Sent to your inbox</p>
+                  <p className="text-[16px] font-bold text-foreground">Email</p>
+                  <p className="text-[14px] text-muted-foreground mt-0.5">Sent to your inbox</p>
                 </div>
               </button>
 
@@ -351,8 +483,8 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
                   <Download size={18} />
                 </div>
                 <div className="text-center">
-                  <p className="text-[13px] font-bold text-foreground">Download PDF</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">Save to device</p>
+                  <p className="text-[16px] font-bold text-foreground">Download PDF</p>
+                  <p className="text-[14px] text-muted-foreground mt-0.5">Save to device</p>
                 </div>
               </button>
             </div>
@@ -364,7 +496,7 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
         <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
           <button
             disabled={!canSubmit}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[14px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[16px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
           >
             {delivery === "email" ? <Mail size={17} /> : <Download size={17} />}
             {delivery === "email"
@@ -383,8 +515,8 @@ function ReportRow({ item, onTap }: { item: ReportItem; onTap: () => void }) {
   return (
     <button onClick={onTap} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground leading-snug">{item.title}</p>
-        <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
+        <p className="text-[16px] font-semibold text-foreground leading-snug">{item.title}</p>
+        <p className="text-[14px] text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
       </div>
       <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
     </button>
@@ -397,11 +529,11 @@ function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelec
     <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/20 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-5 active:bg-muted/20 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-bold text-foreground">{sub.label}</p>
-          <span className="text-[12px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
+          <p className="text-[16px] font-bold text-foreground">{sub.label}</p>
+          <span className="text-[14px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
             {sub.items.length}
           </span>
         </div>
@@ -437,7 +569,7 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
   }, [query]);
 
   if (results.length === 0) {
-    return <p className="text-center text-[13px] text-muted-foreground py-10">No reports match &ldquo;{query}&rdquo;</p>;
+    return <p className="text-center text-[16px] text-muted-foreground py-10">No reports match &ldquo;{query}&rdquo;</p>;
   }
 
   return (
@@ -445,8 +577,8 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
       {results.map(({ item, category, subSection }, i) => (
         <button key={i} onClick={() => onSelectReport(item)} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-foreground leading-snug">{item.title}</p>
-            <p className="text-[12px] text-muted-foreground/60 mt-0.5">{category} · {subSection}</p>
+            <p className="text-[16px] font-semibold text-foreground leading-snug">{item.title}</p>
+            <p className="text-[14px] text-muted-foreground/60 mt-0.5">{category} · {subSection}</p>
           </div>
           <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
         </button>
@@ -479,7 +611,7 @@ export function ReportsTab() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search reports…"
-            className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none"
+            className="flex-1 bg-transparent text-[16px] text-foreground placeholder:text-muted-foreground outline-none"
           />
           {query.length > 0 && (
             <button onClick={() => setQuery("")} className="shrink-0 active:opacity-60">
@@ -495,7 +627,7 @@ export function ReportsTab() {
 
             {/* Quick Access — 2-column grid */}
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Access</p>
+              <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Access</p>
               <div className="grid grid-cols-2 gap-2.5">
                 {QUICK_ACCESS.map(({ title, categoryId }, i) => {
                   const cat = CATEGORIES.find((c) => c.id === categoryId)!;
@@ -510,8 +642,8 @@ export function ReportsTab() {
                         {cat.icon}
                       </span>
                       <div className="min-w-0 w-full">
-                        <p className="text-[13px] font-bold text-foreground leading-snug">{item.title}</p>
-                        <p className="text-[12px] text-muted-foreground mt-0.5">{cat.label}</p>
+                        <p className="text-[14px] font-semibold text-foreground leading-snug">{item.title}</p>
+                        <p className="text-[14px] text-muted-foreground mt-0.5">{cat.label}</p>
                       </div>
                     </button>
                   );
@@ -521,7 +653,7 @@ export function ReportsTab() {
 
             {/* Category chips + reports below */}
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
+              <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
 
               {/* Chips */}
               <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4">
@@ -532,7 +664,7 @@ export function ReportsTab() {
                       key={cat.id}
                       onClick={() => setActiveCategory(cat.id)}
                       className={cn(
-                        "flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[13px] font-semibold whitespace-nowrap transition-colors shrink-0",
+                        "flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[16px] font-semibold whitespace-nowrap transition-colors shrink-0",
                         isActive ? "bg-foreground text-background" : "bg-muted/50 border border-border/40 text-foreground"
                       )}
                     >

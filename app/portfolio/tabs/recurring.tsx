@@ -23,72 +23,72 @@ export function RecurringTab() {
       {/* Summary */}
       <div className="mb-4 flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3">
         <div>
-          <p className="text-[13px] text-muted-foreground">Active</p>
+          <p className="text-[16px] text-muted-foreground">Active</p>
           <p className="text-[18px] font-bold tabular-nums text-foreground">{activeData.length}</p>
         </div>
         <div className="text-right">
-          <p className="text-[13px] text-muted-foreground">Monthly Total</p>
-          <p className="text-[16px] font-semibold tabular-nums text-foreground">
+          <p className="text-[16px] text-muted-foreground">Monthly Total</p>
+          <p className="text-[20px] font-semibold tabular-nums text-foreground">
             {totalMonthly.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
 
       {/* Active recurring */}
-      <p className="mb-2 text-[13px] font-semibold text-foreground">Active</p>
+      <p className="mb-2 text-[16px] font-semibold text-foreground">Active</p>
       <div className="space-y-2">
         {activeData.map((r) => (
           <div
             key={r.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-5"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 {r.isCollection && <FolderOpen size={14} className="text-blue-500" />}
-                <p className="text-[14px] font-semibold text-foreground">{r.symbol}</p>
+                <p className="text-[16px] font-semibold text-foreground">{r.symbol}</p>
                 <RefreshCw size={12} className="text-muted-foreground" />
               </div>
-              <p className="text-[13px] text-muted-foreground truncate">{r.name}</p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground/60">
+              <p className="text-[16px] text-muted-foreground truncate">{r.name}</p>
+              <p className="mt-0.5 text-[14px] text-muted-foreground/60">
                 {r.frequency} · Next: {r.nextDate}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[14px] font-semibold tabular-nums text-foreground">
+              <p className="text-[16px] font-semibold tabular-nums text-foreground">
                 {r.amount.toFixed(2)}
               </p>
-              <span className="text-[12px] font-medium text-gain">Active</span>
+              <span className="text-[14px] font-medium text-gain">Active</span>
             </div>
           </div>
         ))}
       </div>
 
       {/* Add new button */}
-      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3.5 text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
+      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-3.5 text-[16px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-border">
         + Add Recurring Investment
       </button>
 
       {/* Cancelled recurring */}
-      <p className="mb-2 mt-6 text-[13px] font-semibold text-foreground">Cancelled</p>
+      <p className="mb-2 mt-6 text-[16px] font-semibold text-foreground">Cancelled</p>
       <div className="space-y-2">
         {cancelledData.map((r) => (
           <div
             key={r.symbol}
-            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-3.5 opacity-60"
+            className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 px-5 py-5 opacity-60"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-[14px] font-semibold text-foreground">{r.symbol}</p>
+                <p className="text-[16px] font-semibold text-foreground">{r.symbol}</p>
                 <XCircle size={12} className="text-muted-foreground" />
               </div>
-              <p className="text-[13px] text-muted-foreground truncate">{r.name}</p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground/60">
+              <p className="text-[16px] text-muted-foreground truncate">{r.name}</p>
+              <p className="mt-0.5 text-[14px] text-muted-foreground/60">
                 Was {r.frequency} · {r.amount.toFixed(2)}/mo
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[12px] font-medium text-muted-foreground">Cancelled</span>
-              <p className="text-[12px] text-muted-foreground/60">{r.cancelledOn}</p>
+              <span className="text-[14px] font-medium text-muted-foreground">Cancelled</span>
+              <p className="text-[14px] text-muted-foreground/60">{r.cancelledOn}</p>
             </div>
           </div>
         ))}
