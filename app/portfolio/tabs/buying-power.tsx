@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Landmark, X } from "lucide-react";
+import { Copy, Landmark, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -238,6 +238,21 @@ function DRow({ label, value, valueClass }: { label: string; value: string; valu
   );
 }
 
+function CopyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0">
+      <p className="text-[13px] text-muted-foreground">{label}</p>
+      <button
+        className="flex items-center gap-1.5 active:opacity-60"
+        onClick={() => navigator.clipboard?.writeText(value)}
+      >
+        <p className="text-[13px] font-semibold text-foreground tabular-nums">#{value}</p>
+        <Copy size={12} className="text-muted-foreground shrink-0" />
+      </button>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Chevron                                                            */
 /* ------------------------------------------------------------------ */
@@ -336,7 +351,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <DRow label="Limit Price"       value={`$${d.limitPrice}`} />
         <DRow label="Total"             value={`$${d.total.toLocaleString()}`} />
         <DRow label="Order Executed At" value={d.executedAt} />
-        <DRow label="Order ID"          value={`#${d.orderId}`} />
+        <CopyRow label="Order ID" value={d.orderId} />
         <ChargesAccordion d={d} />
         <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-muted-foreground">{d.side === "Buy" ? "Cash Used" : "Cash Added"}</p>
@@ -361,7 +376,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <DRow label="Amount"         value={`$${d.depositAmount.toLocaleString()}`} />
         <DRow label="Source"         value={d.source} />
         <DRow label={tx.status === "pending" ? "Attempted At" : "Processed At"} value={d.processedAt} />
-        <DRow label="Transaction ID" value={`#${d.transactionId}`} />
+        <CopyRow label="Transaction ID" value={d.transactionId} />
         {d.charges !== undefined && <DRow label="Charges & Fees" value={`$${d.charges}`} />}
         {d.brokerage !== undefined && <DRow label="Aspora Brokerage" value={`$${d.brokerage}`} />}
         {d.regulatoryFee !== undefined && <DRow label="Regulatory Fees" value={`$${d.regulatoryFee}`} />}
@@ -386,7 +401,7 @@ function DrawerBody({ tx }: { tx: Transaction }) {
         <DRow label="Amount"         value={`$${d.amount.toLocaleString()}`} />
         <DRow label="Source"         value={d.source} />
         <DRow label={tx.status === "success" ? "Processed At" : "Attempted At"} value={d.processedAt} />
-        <DRow label="Transaction ID" value={`#${d.transactionId}`} />
+        <CopyRow label="Transaction ID" value={d.transactionId} />
         {d.charges !== undefined && d.charges > 0 && <DRow label="Charges & Fees" value={`$${d.charges}`} />}
         {d.cashImpact !== undefined && (
           <div className="mt-3 rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
