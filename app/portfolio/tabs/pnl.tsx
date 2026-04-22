@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -115,12 +115,11 @@ function presetRange(preset: RangePreset): { from: DateVal; to: DateVal } {
 /* ------------------------------------------------------------------ */
 
 function Calendar({
-  year, month, from, to, selecting,
+  year, month, from, to,
   onSelectDay, onPrevMonth, onNextMonth,
 }: {
   year: number; month: number;
   from: DateVal | null; to: DateVal | null;
-  selecting: "from" | "to";
   onSelectDay: (d: DateVal) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
@@ -280,7 +279,6 @@ function DateRangeDrawer({
           <Calendar
             year={calYear} month={calMonth}
             from={localFrom} to={localTo}
-            selecting={selecting}
             onSelectDay={handleDay}
             onPrevMonth={prevMonth}
             onNextMonth={nextMonth}

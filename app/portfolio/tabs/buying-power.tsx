@@ -609,61 +609,6 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
 }
 
 /* ------------------------------------------------------------------ */
-/*  Buying Power Chart                                                 */
-/* ------------------------------------------------------------------ */
-
-const CHART_POINTS = [
-  18_400, 21_200, 19_800, 23_500, 22_100, 25_300, 24_000,
-  27_600, 26_100, 28_900, 27_400, 30_200, 28_600, 31_800,
-  30_500, 29_200, 32_400, 31_000, 33_600, 32_100, 34_800,
-  33_200, 35_900, 34_400, 36_700, 35_100, 37_500, 36_200,
-  38_400, 22_623,
-];
-
-function BuyingPowerChart() {
-  const W = 340; const H = 110;
-  const pad = { l: 0, r: 72, t: 8, b: 8 };
-  const cw = W - pad.l - pad.r;
-  const ch = H - pad.t - pad.b;
-
-  const min = Math.min(...CHART_POINTS);
-  const max = Math.max(...CHART_POINTS);
-  const range = max - min || 1;
-
-  const pts = CHART_POINTS.map((v, i) => ({
-    x: pad.l + (i / (CHART_POINTS.length - 1)) * cw,
-    y: pad.t + ch - ((v - min) / range) * ch,
-  }));
-
-  const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const areaPath = `${linePath} L${pts[pts.length - 1].x.toFixed(1)},${(pad.t + ch).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t + ch).toFixed(1)} Z`;
-
-  const last = pts[pts.length - 1];
-
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="overflow-visible">
-      <defs>
-        <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#F59E0B" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.03" />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill="url(#bpGrad)" />
-      <path d={linePath} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Dot at current value */}
-      <circle cx={last.x} cy={last.y} r="4" fill="#F59E0B" />
-      <circle cx={last.x} cy={last.y} r="8" fill="#F59E0B" fillOpacity="0.2" />
-      {/* Vertical dashed line */}
-      <line x1={last.x} y1={last.y + 6} x2={last.x} y2={pad.t + ch} stroke="#F59E0B" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
-      {/* Annotation */}
-      <text x={last.x + 10} y={last.y - 2} fontSize="9" fill="#6B7280" fontFamily="system-ui">added $10K</text>
-      <text x={last.x + 10} y={last.y + 10} fontSize="9" fill="#6B7280" fontFamily="system-ui">this month</text>
-      <text x={last.x + 10} y={last.y + 22} fontSize="10" fill="#F59E0B" fontWeight="700" fontFamily="system-ui">$22,623</text>
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 

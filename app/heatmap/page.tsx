@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sliders, LayoutGrid, List, Rows3, ChevronDown, X, Check, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, Rows3, ChevronDown, X, Check, TrendingUp, TrendingDown } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
@@ -21,9 +21,9 @@ import {
   treemapLayout,
   type TreemapInput,
 } from "@/components/heatmap/treemap";
-import type { HeatmapIndexId, ColorAxis, LensDef } from "@/components/heatmap/types";
+import type { HeatmapIndexId, ColorAxis, LensDef } from "@/components/heatmap/types"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DEFAULT_LENS } from "@/components/heatmap/types";
-import { HeatmapLensSheet } from "@/components/heatmap/lens-sheet";
+import { HeatmapLensSheet } from "@/components/heatmap/lens-sheet"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const TM_W = 400;
 const TM_H = 1100;
@@ -39,6 +39,7 @@ export default function HeatmapPage() {
   // const [lens, setLens] = useState<LensDef>(DEFAULT_LENS);
   // const [lensOpen, setLensOpen] = useState(false);
   const [marketSheetOpen, setMarketSheetOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isScrolled, setIsScrolled] = useState(false);
   const [viewMode, setViewMode] = useState<"heatmap" | "list" | "grid">("heatmap");
   const [helpOpen, setHelpOpen] = useState(true);
