@@ -56,7 +56,6 @@ const HOLDINGS: Holding[] = [
 
 const CATEGORIES: Category[] = ["All", "Stocks", "ETFs", "G. ETFs"];
 
-const PORTFOLIO = { invested: 46_284.20, currentValue: 52_183.60, pnl: 5_899.40, pnlPct: 12.7, xirr: 14, todayPnl: 118.12, todayPnlPct: 2 };
 
 const fmtMoney = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

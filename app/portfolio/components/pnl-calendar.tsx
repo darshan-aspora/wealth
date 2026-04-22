@@ -254,7 +254,6 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
         <div className="px-5">
           {/* ── DAY view ── */}
           {selection.type === "day" && (() => {
-            const { dayData } = selection;
             return (
               <>
                 <div className="flex items-center justify-between mb-4">
