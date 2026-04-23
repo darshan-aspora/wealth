@@ -1,21 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-
-type SipBadge = "ETF" | "G.ETF" | "Collection";
-
-interface Sip {
-  id: number;
-  name: string;
-  amount: number;
-  frequency: string;
-  badge?: SipBadge;
-  dueDate: Date;
-}
-
-function fmtDue(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
-}
+import { SipCard, type Sip } from "./shared-sip";
 
 const ACTIVE_SIPS: Sip[] = [
   { id: 1,  name: "Alibaba Group Holding Limited", amount: 20,  frequency: "Weekly on Friday",       dueDate: new Date("2026-04-23") },
@@ -41,31 +27,7 @@ export function ActiveSips() {
 
         <div className="flex flex-col gap-3">
           {ACTIVE_SIPS.map((sip) => (
-            <div
-              key={sip.id}
-              className="rounded-2xl border border-border/50 bg-white overflow-hidden"
-            >
-              <div className="px-5 pt-5 pb-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                      <p className="text-[16px] font-bold text-foreground leading-tight">{sip.name}</p>
-                      {sip.badge && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground shrink-0">
-                          {sip.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] text-muted-foreground">${sip.amount}</span>
-                      <span className="text-muted-foreground/40 text-[14px]">|</span>
-                      <span className="text-[14px] text-muted-foreground">{sip.frequency}</span>
-                    </div>
-                  </div>
-                  <span className="text-[13px] text-muted-foreground shrink-0 mt-0.5">{fmtDue(sip.dueDate)}</span>
-                </div>
-              </div>
-            </div>
+            <SipCard key={sip.id} sip={sip} />
           ))}
         </div>
       </CardContent>

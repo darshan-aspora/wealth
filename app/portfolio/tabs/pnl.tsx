@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { OrderCard, type CompletedOrder } from "@/app/portfolio/components/shared-order";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -257,10 +258,26 @@ function DateRangeDrawer({
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
-        <div className="px-5 pt-5 pb-4 shrink-0">
-          <p className="text-[18px] font-bold text-foreground mb-4">Date Range</p>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
 
+        {/* Header: close top-right, title left, subtitle below */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] font-bold text-foreground leading-tight">Date Range</p>
+              <p className="text-[14px] text-muted-foreground mt-1">Select a custom date range for your P&amp;L</p>
+            </div>
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 pt-4 pb-2">
           {/* From / To inputs */}
           <div className="flex gap-3 mb-5">
             <button
@@ -298,13 +315,14 @@ function DateRangeDrawer({
           />
         </div>
 
-        <div className="px-5 pb-8 pt-2 shrink-0">
+        {/* CTA */}
+        <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/40">
           <button
             disabled={!localFrom || !localTo}
             onClick={() => localFrom && localTo && onConfirm(localFrom, localTo)}
             className="w-full rounded-2xl bg-foreground py-4 text-[16px] font-bold text-background disabled:opacity-40 active:opacity-75 transition-opacity"
           >
-            Confirm
+            Apply
           </button>
         </div>
       </SheetContent>
@@ -420,48 +438,36 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Order cards — matches orders tab card layout                       */
+/*  Map PnlOrder → CompletedOrder for shared OrderCard                */
 /* ------------------------------------------------------------------ */
 
-function PnlSideBadge({ side }: { side: "B" | "S" }) {
-  return (
-    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[12px] font-bold shrink-0 bg-muted text-foreground">
-      {side}
-    </span>
-  );
-}
-
-function OrderRow({ order }: { order: PnlOrder }) {
-  const label = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
-  const qtyLabel = order.lots !== undefined ? `${order.qty} Lot` : String(order.qty);
-
-  return (
-    <div className="rounded-2xl bg-white border border-border/50 px-5 py-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <PnlSideBadge side={order.side} />
-          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <p className="text-[16px] font-bold text-foreground tracking-wide whitespace-nowrap">{label}</p>
-            {order.tag && (
-              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{order.tag}</span>
-            )}
-          </div>
-        </div>
-        <span className="text-[16px] font-bold text-foreground tabular-nums whitespace-nowrap">{qtyLabel}</span>
-      </div>
-      <div className="flex items-center justify-between mt-2 pl-[30px]">
-        <p className="text-[16px] text-muted-foreground font-medium">
-          Avg: ${order.avgExecutedPrice}
-        </p>
-        <p className={cn(
-          "text-[16px] font-bold tabular-nums",
-          order.pnl >= 0 ? "text-emerald-500" : "text-red-500"
-        )}>
-          {order.pnl >= 0 ? "+" : ""}{order.pnl}
-        </p>
-      </div>
-    </div>
-  );
+function toCompletedOrder(o: PnlOrder): CompletedOrder {
+  return {
+    kind:            "completed",
+    symbol:          o.symbol,
+    companyName:     o.companyName,
+    expiry:          o.expiry,
+    optionType:      o.optionType,
+    tag:             o.tag,
+    side:            o.side,
+    filledQty:       o.qty,
+    totalQty:        o.qty,
+    lots:            o.lots,
+    priceType:       "market",
+    price:           o.avgExecutedPrice,
+    avgExecutedPrice: o.avgExecutedPrice,
+    investedAmount:  o.buyPrice * o.qty,
+    charges:         0,
+    brokerage:       0,
+    regulatoryFee:   0,
+    secFee:          0,
+    finraFee:        0,
+    exchangeFee:     0,
+    opraFee:         0,
+    orderId:         "",
+    time:            "",
+    executedAt:      "",
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -530,7 +536,7 @@ export function PnlTab() {
         </div>
 
         <div className="space-y-2.5">
-          {RANGE_DATA[preset].orders.map((o) => <OrderRow key={o.symbol} order={o} />)}
+          {RANGE_DATA[preset].orders.map((o) => <OrderCard key={o.symbol} order={toCompletedOrder(o)} />)}
         </div>
       </div>
 
