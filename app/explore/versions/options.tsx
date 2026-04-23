@@ -403,7 +403,7 @@ export function ExploreOptions() {
               </div>
               {/* Chain link CTA */}
               <button
-                onClick={() => router.push(`/home-v3/options-chain/${encodeURIComponent(item.symbol)}`)}
+                onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)}
                 className="w-9 h-9 rounded-full border border-border/60 flex items-center justify-center active:bg-muted/50 transition-colors shrink-0"
               >
                 <Link2 size={15} strokeWidth={1.8} className="text-muted-foreground" />
