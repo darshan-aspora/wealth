@@ -360,7 +360,7 @@ export default function OptionsChainPage() {
                 const isATM   = row.strike === atmStrike;
                 const callITM = row.strike < currentPrice && !isATM;
                 const callOTM = row.strike > currentPrice && !isATM;
-                const isCallSelected = selected?.strike === row.strike && selected?.side === "call";
+                void (selected?.strike === row.strike && selected?.side === "call"); // selection shown via strike column badge
                 return (
                   <div
                     key={row.strike}
@@ -396,7 +396,7 @@ export default function OptionsChainPage() {
                 const isATM  = row.strike === atmStrike;
                 const putITM = row.strike > currentPrice && !isATM;
                 const putOTM = row.strike < currentPrice && !isATM;
-                const isPutSelected = selected?.strike === row.strike && selected?.side === "put";
+                void (selected?.strike === row.strike && selected?.side === "put"); // selection shown via strike column badge
                 return (
                   <div
                     key={row.strike}
