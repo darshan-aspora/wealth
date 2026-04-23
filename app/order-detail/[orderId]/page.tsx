@@ -143,7 +143,7 @@ export default function OrderDetailPage() {
   const isLot       = order.lots !== undefined;
   const status      = deriveStatus(order);
   const meta        = STATUS_META[status];
-  const isPartial   = status === "partial";
+  void (status === "partial"); // isPartial reserved for future use
 
   const qtyLabel = isLot
     ? `${fmtQty(order.filledQty)} / ${fmtQty(order.totalQty)} Lot`

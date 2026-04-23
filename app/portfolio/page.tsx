@@ -15,7 +15,6 @@ import { PositionsTab } from "./tabs/positions";
 import { OrdersTab } from "./tabs/orders";
 import { BuyingPowerTab } from "./tabs/buying-power";
 import { SipsTab } from "./tabs/sips";
-import { CollectionsTab } from "./tabs/collections";
 import { PnlTab } from "./tabs/pnl";
 import { ReportsTab } from "./tabs/reports";
 
