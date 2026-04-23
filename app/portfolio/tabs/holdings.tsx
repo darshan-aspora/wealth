@@ -219,6 +219,12 @@ const fmtInt = (n: number) =>
 
 export function HoldingsTab({ empty }: { empty?: boolean }) {
   const router = useRouter();
+  const [category, setCategory] = useState<Category>("All");
+  const [valueMode, setValueMode] = useState<ValueMode>("Value");
+  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
+  const [changeSheetOpen, setChangeSheetOpen] = useState(false);
+  const [changeRange, setChangeRange] = useState<ChangeRange>("Max");
+
   if (empty) {
     return (
       <EmptyState
@@ -233,11 +239,6 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
       />
     );
   }
-  const [category, setCategory] = useState<Category>("All");
-  const [valueMode, setValueMode] = useState<ValueMode>("Value");
-  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
-  const [changeSheetOpen, setChangeSheetOpen] = useState(false);
-  const [changeRange, setChangeRange] = useState<ChangeRange>("Max");
 
   const filtered =
     category === "All" ? HOLDINGS : HOLDINGS.filter((h) => h.category === category);

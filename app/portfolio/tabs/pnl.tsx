@@ -481,6 +481,16 @@ addOrders(allPnlOrders);
 /* ------------------------------------------------------------------ */
 
 export function PnlTab({ empty }: { empty?: boolean }) {
+  const today = new Date();
+  const todayVal: DateVal = { year: today.getFullYear(), month: today.getMonth(), day: today.getDate() };
+  const monthAgo = new Date(today); monthAgo.setMonth(monthAgo.getMonth() - 1);
+  const monthAgoVal: DateVal = { year: monthAgo.getFullYear(), month: monthAgo.getMonth(), day: monthAgo.getDate() };
+
+  const [preset, setPreset]       = useState<RangePreset>("Custom");
+  const [from,   setFrom]         = useState<DateVal>(monthAgoVal);
+  const [to,     setTo]           = useState<DateVal>(todayVal);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   if (empty) {
     return (
       <EmptyState
@@ -493,16 +503,6 @@ export function PnlTab({ empty }: { empty?: boolean }) {
       />
     );
   }
-
-  const today = new Date();
-  const todayVal: DateVal = { year: today.getFullYear(), month: today.getMonth(), day: today.getDate() };
-  const monthAgo = new Date(today); monthAgo.setMonth(monthAgo.getMonth() - 1);
-  const monthAgoVal: DateVal = { year: monthAgo.getFullYear(), month: monthAgo.getMonth(), day: monthAgo.getDate() };
-
-  const [preset, setPreset]       = useState<RangePreset>("Custom");
-  const [from,   setFrom]         = useState<DateVal>(monthAgoVal);
-  const [to,     setTo]           = useState<DateVal>(todayVal);
-  const [pickerOpen, setPickerOpen] = useState(false);
 
   const PRESETS: RangePreset[] = ["1M", "3M", "Current FY", "Custom"];
 

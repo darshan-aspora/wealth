@@ -539,6 +539,8 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
 
 export function ReportsTab({ empty }: { empty?: boolean }) {
   const [activeCategory, setActiveCategory] = useState<CategoryId>("core");
+  const [query, setQuery]                   = useState("");
+  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
 
   if (empty) {
     return (
@@ -552,8 +554,6 @@ export function ReportsTab({ empty }: { empty?: boolean }) {
       />
     );
   }
-  const [query, setQuery]                   = useState("");
-  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
 
   const selectedCategory = CATEGORIES.find((c) => c.id === activeCategory)!;
   const isSearching = query.trim().length > 0;
