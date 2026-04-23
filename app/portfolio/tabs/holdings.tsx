@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -12,13 +13,14 @@ const CHANGE_RANGES: ChangeRange[] = ["1D", "1M", "3M", "6M", "1Y", "Max"];
 /*  Types & data                                                       */
 /* ------------------------------------------------------------------ */
 
-type Category = "All" | "Stocks" | "ETF" | "Global ETF" | "Collections";
+type Category = "All" | "Stocks" | "ETF" | "Global ETF";
 type ValueMode = "Change" | "Value";
 
-interface Lot {
-  date: string;        // "DD MMM YYYY"
+interface Transaction {
+  date: string;          // "DD MMM YYYY"
   qty: number;
-  buyPrice: number;
+  price: number;
+  side: "buy" | "sell";
 }
 
 interface Holding {
@@ -33,34 +35,172 @@ interface Holding {
   dayChangePct: number;
   xirr: number;
   category: "Stocks" | "ETF" | "Global ETF";
-  lots: Lot[];
+  transactions: Transaction[];
 }
 
-const HOLDINGS: Holding[] = [
+export type { Holding, Transaction };
+export const HOLDINGS: Holding[] = [
   // Stocks (9)
-  { name: "Apple Inc.",                 category: "Stocks",     xirr: 22.1, qty: 15,      avgPrice: 178.25, currentPrice: 211.50, currentValue: 3_172, pnl:   499, pnlPct:  18.7, dayChangePct:  1.2, lots: [{ date: "12 Jan 2024", qty: 10, buyPrice: 172.40 }, { date: "08 Jul 2024", qty: 5, buyPrice: 190.00 }] },
-  { name: "Microsoft Corporation",      category: "Stocks",     xirr: 10.4, qty: 8,       avgPrice: 385.10, currentPrice: 415.80, currentValue: 3_326, pnl:   245, pnlPct:   7.9, dayChangePct:  0.6, lots: [{ date: "03 Mar 2024", qty: 5, buyPrice: 378.20 }, { date: "15 Nov 2024", qty: 3, buyPrice: 396.50 }] },
-  { name: "NVIDIA Corporation",         category: "Stocks",     xirr: 18.9, qty: 5,       avgPrice: 820.50, currentPrice: 875.20, currentValue: 4_376, pnl:   273, pnlPct:   6.7, dayChangePct:  2.1, lots: [{ date: "20 Feb 2024", qty: 3, buyPrice: 790.00 }, { date: "10 Sep 2024", qty: 2, buyPrice: 862.00 }] },
-  { name: "Alphabet Inc.",              category: "Stocks",     xirr: 24.3, qty: 12,      avgPrice: 142.80, currentPrice: 172.40, currentValue: 2_068, pnl:   355, pnlPct:  20.7, dayChangePct:  0.9, lots: [{ date: "05 Jun 2023", qty: 8, buyPrice: 135.60 }, { date: "18 Jan 2024", qty: 4, buyPrice: 157.20 }] },
-  { name: "Meta Platforms, Inc.",       category: "Stocks",     xirr:  9.6, qty: 3.02584, avgPrice: 490.20, currentPrice: 528.60, currentValue: 1_599, pnl:   116, pnlPct:   7.8, dayChangePct: -0.4, lots: [{ date: "22 Apr 2024", qty: 3.02584, buyPrice: 490.20 }] },
-  { name: "Tesla, Inc.",                category: "Stocks",     xirr:-31.2, qty: 6,       avgPrice: 248.30, currentPrice: 178.90, currentValue: 1_073, pnl:  -416, pnlPct: -27.9, dayChangePct: -3.2, lots: [{ date: "14 Aug 2023", qty: 4, buyPrice: 240.00 }, { date: "02 Jan 2024", qty: 2, buyPrice: 264.90 }] },
-  { name: "Amazon.com, Inc.",           category: "Stocks",     xirr: 13.8, qty: 10,      avgPrice: 178.40, currentPrice: 196.80, currentValue: 1_968, pnl:   184, pnlPct:  10.3, dayChangePct:  0.7, lots: [{ date: "30 Oct 2023", qty: 6, buyPrice: 172.10 }, { date: "11 Mar 2024", qty: 4, buyPrice: 187.00 }] },
-  { name: "Netflix, Inc.",              category: "Stocks",     xirr: 11.2, qty: 4,       avgPrice: 580.00, currentPrice: 628.40, currentValue: 2_513, pnl:   193, pnlPct:   8.3, dayChangePct:  1.5, lots: [{ date: "19 May 2024", qty: 4, buyPrice: 580.00 }] },
-  { name: "Super Micro Computer, Inc.", category: "Stocks",     xirr:-18.6, qty: 20,      avgPrice:  42.10, currentPrice:  35.60, currentValue:   712, pnl:  -130, pnlPct: -15.4, dayChangePct: -2.8, lots: [{ date: "07 Apr 2026", qty: 12, buyPrice: 44.50 }, { date: "19 Sep 2022", qty: 8, buyPrice: 38.60 }] },
+  {
+    name: "Apple Inc.", category: "Stocks", xirr: 22.1, qty: 15, avgPrice: 178.25,
+    currentPrice: 211.50, currentValue: 3_172, pnl: 499, pnlPct: 18.7, dayChangePct: 1.2,
+    transactions: [
+      { date: "14 Jun 2023", qty: 12,  price: 168.50, side: "buy"  },
+      { date: "05 Jan 2024", qty: 4,   price: 185.20, side: "sell" },
+      { date: "12 Apr 2024", qty: 3.5, price: 172.40, side: "buy"  },
+      { date: "08 Jul 2024", qty: 3.5, price: 190.00, side: "buy"  },
+    ],
+  },
+  {
+    name: "Microsoft Corporation", category: "Stocks", xirr: 10.4, qty: 8, avgPrice: 385.10,
+    currentPrice: 415.80, currentValue: 3_326, pnl: 245, pnlPct: 7.9, dayChangePct: 0.6,
+    transactions: [
+      { date: "03 Mar 2024", qty: 5,   price: 378.20, side: "buy"  },
+      { date: "22 Aug 2024", qty: 2,   price: 408.10, side: "sell" },
+      { date: "15 Nov 2024", qty: 5,   price: 396.50, side: "buy"  },
+    ],
+  },
+  {
+    name: "NVIDIA Corporation", category: "Stocks", xirr: 18.9, qty: 5, avgPrice: 820.50,
+    currentPrice: 875.20, currentValue: 4_376, pnl: 273, pnlPct: 6.7, dayChangePct: 2.1,
+    transactions: [
+      { date: "20 Feb 2024", qty: 4,    price: 790.00, side: "buy"  },
+      { date: "14 May 2024", qty: 1,    price: 850.00, side: "sell" },
+      { date: "10 Sep 2024", qty: 2,    price: 862.00, side: "buy"  },
+    ],
+  },
+  {
+    name: "Alphabet Inc.", category: "Stocks", xirr: 24.3, qty: 12, avgPrice: 142.80,
+    currentPrice: 172.40, currentValue: 2_068, pnl: 355, pnlPct: 20.7, dayChangePct: 0.9,
+    transactions: [
+      { date: "05 Jun 2023", qty: 8,    price: 135.60, side: "buy"  },
+      { date: "18 Jan 2024", qty: 4,    price: 157.20, side: "buy"  },
+    ],
+  },
+  {
+    name: "Meta Platforms, Inc.", category: "Stocks", xirr: 9.6, qty: 3.02584, avgPrice: 490.20,
+    currentPrice: 528.60, currentValue: 1_599, pnl: 116, pnlPct: 7.8, dayChangePct: -0.4,
+    transactions: [
+      { date: "10 Feb 2024", qty: 1.52584, price: 487.30, side: "buy"  },
+      { date: "22 Apr 2024", qty: 1.50000, price: 492.80, side: "buy"  },
+    ],
+  },
+  {
+    name: "Tesla, Inc.", category: "Stocks", xirr: -31.2, qty: 6, avgPrice: 248.30,
+    currentPrice: 178.90, currentValue: 1_073, pnl: -416, pnlPct: -27.9, dayChangePct: -3.2,
+    transactions: [
+      { date: "14 Aug 2023", qty: 8,    price: 240.00, side: "buy"  },
+      { date: "12 Nov 2023", qty: 2,    price: 254.50, side: "sell" },
+      { date: "02 Jan 2024", qty: 2,    price: 264.90, side: "buy"  },
+      { date: "18 Mar 2024", qty: 1,    price: 218.40, side: "sell" },
+      { date: "07 Jun 2024", qty: 0.75, price: 195.20, side: "buy"  },
+      { date: "29 Aug 2024", qty: 0.75, price: 205.80, side: "sell" },
+      { date: "05 Nov 2024", qty: 1.25, price: 212.50, side: "buy"  },
+    ],
+  },
+  {
+    name: "Amazon.com, Inc.", category: "Stocks", xirr: 13.8, qty: 10, avgPrice: 178.40,
+    currentPrice: 196.80, currentValue: 1_968, pnl: 184, pnlPct: 10.3, dayChangePct: 0.7,
+    transactions: [
+      { date: "30 Oct 2023", qty: 6,    price: 172.10, side: "buy"  },
+      { date: "11 Mar 2024", qty: 4,    price: 187.00, side: "buy"  },
+    ],
+  },
+  {
+    name: "Netflix, Inc.", category: "Stocks", xirr: 11.2, qty: 4, avgPrice: 580.00,
+    currentPrice: 628.40, currentValue: 2_513, pnl: 193, pnlPct: 8.3, dayChangePct: 1.5,
+    transactions: [
+      { date: "19 May 2024", qty: 6,    price: 575.00, side: "buy"  },
+      { date: "02 Aug 2024", qty: 2,    price: 620.00, side: "sell" },
+    ],
+  },
+  {
+    name: "Super Micro Computer, Inc.", category: "Stocks", xirr: -18.6, qty: 20, avgPrice: 42.10,
+    currentPrice: 35.60, currentValue: 712, pnl: -130, pnlPct: -15.4, dayChangePct: -2.8,
+    transactions: [
+      { date: "19 Sep 2022", qty: 15,   price: 38.60, side: "buy"  },
+      { date: "04 Jan 2023", qty: 5,    price: 52.40, side: "sell" },
+      { date: "07 Apr 2023", qty: 12,   price: 44.50, side: "buy"  },
+      { date: "11 Oct 2023", qty: 2,    price: 29.80, side: "sell" },
+    ],
+  },
   // ETFs (5)
-  { name: "SPDR S&P 500 ETF Trust",     category: "ETF", tag: "ETF",       xirr: 20.1, qty: 20, avgPrice: 445.30, currentPrice: 528.40, currentValue: 10_568, pnl: 1_662, pnlPct:  18.7, dayChangePct:  0.5, lots: [{ date: "10 Jan 2023", qty: 12, buyPrice: 428.00 }, { date: "25 Jun 2023", qty: 8, buyPrice: 470.10 }] },
-  { name: "Invesco QQQ Trust",          category: "ETF", tag: "ETF",       xirr: 14.2, qty: 10, avgPrice: 425.60, currentPrice: 471.20, currentValue:  4_712, pnl:   456, pnlPct:  10.7, dayChangePct:  0.8, lots: [{ date: "14 Feb 2024", qty: 10, buyPrice: 425.60 }] },
-  { name: "SPDR Gold Shares",           category: "ETF", tag: "ETF",       xirr: 12.8, qty: 8,  avgPrice: 184.20, currentPrice: 218.60, currentValue:  1_748, pnl:   275, pnlPct:  18.7, dayChangePct:  0.3, lots: [{ date: "08 Aug 2023", qty: 5, buyPrice: 178.00 }, { date: "03 Dec 2023", qty: 3, buyPrice: 194.60 }] },
-  { name: "iShares Core S&P 500 ETF",  category: "ETF", tag: "ETF",       xirr: 19.4, qty: 15, avgPrice: 448.10, currentPrice: 527.80, currentValue:  7_917, pnl: 1_195, pnlPct:  17.8, dayChangePct:  0.5, lots: [{ date: "22 Mar 2023", qty: 10, buyPrice: 435.20 }, { date: "17 Jul 2024", qty: 5, buyPrice: 474.00 }] },
-  { name: "Vanguard Total Stock Market",category: "ETF", tag: "ETF",       xirr: 15.6, qty: 12, avgPrice: 220.40, currentPrice: 248.30, currentValue:  2_979, pnl:   334, pnlPct:  12.7, dayChangePct:  0.4, lots: [{ date: "01 Nov 2023", qty: 12, buyPrice: 220.40 }] },
+  {
+    name: "SPDR S&P 500 ETF Trust", category: "ETF", tag: "ETF", xirr: 20.1, qty: 20,
+    avgPrice: 445.30, currentPrice: 528.40, currentValue: 10_568, pnl: 1_662, pnlPct: 18.7, dayChangePct: 0.5,
+    transactions: [
+      { date: "10 Jan 2023", qty: 12,   price: 428.00, side: "buy"  },
+      { date: "25 Jun 2023", qty: 5,    price: 462.00, side: "buy"  },
+      { date: "14 Oct 2023", qty: 2,    price: 418.50, side: "sell" },
+      { date: "08 Mar 2024", qty: 5,    price: 487.20, side: "buy"  },
+    ],
+  },
+  {
+    name: "Invesco QQQ Trust", category: "ETF", tag: "ETF", xirr: 14.2, qty: 10,
+    avgPrice: 425.60, currentPrice: 471.20, currentValue: 4_712, pnl: 456, pnlPct: 10.7, dayChangePct: 0.8,
+    transactions: [
+      { date: "14 Feb 2024", qty: 10,   price: 425.60, side: "buy"  },
+    ],
+  },
+  {
+    name: "SPDR Gold Shares", category: "ETF", tag: "ETF", xirr: 12.8, qty: 8,
+    avgPrice: 184.20, currentPrice: 218.60, currentValue: 1_748, pnl: 275, pnlPct: 18.7, dayChangePct: 0.3,
+    transactions: [
+      { date: "08 Aug 2023", qty: 5,    price: 178.00, side: "buy"  },
+      { date: "03 Dec 2023", qty: 3,    price: 194.60, side: "buy"  },
+    ],
+  },
+  {
+    name: "iShares Core S&P 500 ETF", category: "ETF", tag: "ETF", xirr: 19.4, qty: 15,
+    avgPrice: 448.10, currentPrice: 527.80, currentValue: 7_917, pnl: 1_195, pnlPct: 17.8, dayChangePct: 0.5,
+    transactions: [
+      { date: "22 Mar 2023", qty: 10,   price: 435.20, side: "buy"  },
+      { date: "17 Jul 2024", qty: 5,    price: 474.00, side: "buy"  },
+    ],
+  },
+  {
+    name: "Vanguard Total Stock Market", category: "ETF", tag: "ETF", xirr: 15.6, qty: 12,
+    avgPrice: 220.40, currentPrice: 248.30, currentValue: 2_979, pnl: 334, pnlPct: 12.7, dayChangePct: 0.4,
+    transactions: [
+      { date: "01 Nov 2023", qty: 15,   price: 218.50, side: "buy"  },
+      { date: "09 Apr 2024", qty: 3,    price: 238.10, side: "sell" },
+    ],
+  },
   // Global ETFs (4)
-  { name: "iShares MSCI World ETF",             category: "Global ETF", tag: "Global ETF", xirr: 11.0, qty: 25, avgPrice:  88.20, currentPrice:  96.40, currentValue: 2_410, pnl:  205, pnlPct:   9.3, dayChangePct:  0.3, lots: [{ date: "09 Sep 2023", qty: 15, buyPrice: 85.40 }, { date: "14 Feb 2024", qty: 10, buyPrice: 92.30 }] },
-  { name: "Vanguard FTSE All-World ETF",        category: "Global ETF", tag: "Global ETF", xirr: 10.2, qty: 18, avgPrice:  98.50, currentPrice: 106.80, currentValue: 1_922, pnl:  149, pnlPct:   8.4, dayChangePct:  0.2, lots: [{ date: "27 Apr 2024", qty: 18, buyPrice: 98.50 }] },
-  { name: "iShares MSCI Emerging Markets ETF",  category: "Global ETF", tag: "Global ETF", xirr: -4.1, qty: 30, avgPrice:  40.10, currentPrice:  38.60, currentValue: 1_158, pnl:  -45, pnlPct:  -3.7, dayChangePct: -0.6, lots: [{ date: "12 Jun 2023", qty: 20, buyPrice: 41.20 }, { date: "05 Jan 2024", qty: 10, buyPrice: 37.90 }] },
-  { name: "SPDR MSCI ACWI ex-US ETF",           category: "Global ETF", tag: "Global ETF", xirr:  9.8, qty: 22, avgPrice:  82.30, currentPrice:  89.10, currentValue: 1_960, pnl:  149, pnlPct:   8.3, dayChangePct:  0.4, lots: [{ date: "18 Oct 2023", qty: 22, buyPrice: 82.30 }] },
+  {
+    name: "iShares MSCI World ETF", category: "Global ETF", tag: "Global ETF", xirr: 11.0, qty: 25,
+    avgPrice: 88.20, currentPrice: 96.40, currentValue: 2_410, pnl: 205, pnlPct: 9.3, dayChangePct: 0.3,
+    transactions: [
+      { date: "09 Sep 2023", qty: 15,   price: 85.40, side: "buy"  },
+      { date: "14 Feb 2024", qty: 10,   price: 92.30, side: "buy"  },
+    ],
+  },
+  {
+    name: "Vanguard FTSE All-World ETF", category: "Global ETF", tag: "Global ETF", xirr: 10.2, qty: 18,
+    avgPrice: 98.50, currentPrice: 106.80, currentValue: 1_922, pnl: 149, pnlPct: 8.4, dayChangePct: 0.2,
+    transactions: [
+      { date: "27 Apr 2024", qty: 20,   price: 97.80, side: "buy"  },
+      { date: "15 Aug 2024", qty: 2,    price: 104.20, side: "sell" },
+    ],
+  },
+  {
+    name: "iShares MSCI Emerging Markets ETF", category: "Global ETF", tag: "Global ETF", xirr: -4.1, qty: 30,
+    avgPrice: 40.10, currentPrice: 38.60, currentValue: 1_158, pnl: -45, pnlPct: -3.7, dayChangePct: -0.6,
+    transactions: [
+      { date: "12 Jun 2023", qty: 20,   price: 41.20, side: "buy"  },
+      { date: "05 Jan 2024", qty: 10,   price: 37.90, side: "buy"  },
+    ],
+  },
+  {
+    name: "SPDR MSCI ACWI ex-US ETF", category: "Global ETF", tag: "Global ETF", xirr: 9.8, qty: 22,
+    avgPrice: 82.30, currentPrice: 89.10, currentValue: 1_960, pnl: 149, pnlPct: 8.3, dayChangePct: 0.4,
+    transactions: [
+      { date: "18 Oct 2023", qty: 22,   price: 82.30, side: "buy"  },
+    ],
+  },
 ];
 
-const CATEGORIES: Category[] = ["All", "Stocks", "ETF", "Global ETF", "Collections"];
+const CATEGORIES: Category[] = ["All", "Stocks", "ETF", "Global ETF"];
 
 
 const fmtMoney = (n: number) =>
@@ -73,108 +213,16 @@ const fmtInt = (n: number) =>
 /* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
-/*  Holding Breakup Drawer                                             */
-/* ------------------------------------------------------------------ */
-
-function HoldingBreakupDrawer({ holding, onClose }: { holding: Holding | null; onClose: () => void }) {
-  if (!holding) return null;
-  const cp = holding.currentPrice;
-
-  return (
-    <Sheet open={!!holding} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[85dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-border" />
-        </div>
-
-        {/* Header: close top-right, title left, subtitle below */}
-        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-bold text-foreground leading-tight">{holding.name}</p>
-              <p className="text-[14px] text-muted-foreground mt-1">
-                {holding.tag ? `${holding.tag} · Current price $${cp.toFixed(2)}` : `Current price $${cp.toFixed(2)}`}
-              </p>
-            </div>
-            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
-              <X size={20} className="text-foreground" />
-            </button>
-          </div>
-          {/* Summary stats */}
-          <div className="flex items-center gap-4 mt-3">
-            <div>
-              <p className="text-[14px] text-muted-foreground mb-0.5">Avg Price</p>
-              <p className="text-[16px] font-semibold text-foreground">${holding.avgPrice.toFixed(2)}</p>
-            </div>
-            <div className="w-px h-7 bg-border/40" />
-            <div>
-              <p className="text-[14px] text-muted-foreground mb-0.5">Total Qty</p>
-              <p className="text-[16px] font-semibold text-foreground">{holding.qty % 1 === 0 ? holding.qty : holding.qty.toFixed(5).replace(/\.?0+$/, "")}</p>
-            </div>
-            <div className="w-px h-7 bg-border/40" />
-            <div>
-              <p className="text-[14px] text-muted-foreground mb-0.5">Total Return</p>
-              <p className={cn("text-[16px] font-semibold tabular-nums", holding.pnlPct >= 0 ? "text-emerald-500" : "text-red-500")}>
-                {holding.pnlPct >= 0 ? "+" : ""}{holding.pnlPct.toFixed(2)}%
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Lot breakdown */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Column headers */}
-          <div className="px-5 pt-4 pb-2 grid grid-cols-3 text-[14px] text-muted-foreground uppercase tracking-wide">
-            <span>Purchase</span>
-            <span className="text-center">Qty × Avg Price</span>
-            <span className="text-right">Return</span>
-          </div>
-
-          <div className="px-5 divide-y divide-border/40">
-            {holding.lots.map((lot, i) => {
-              const lotReturn = ((cp - lot.buyPrice) / lot.buyPrice) * 100;
-              const lotPnl = (cp - lot.buyPrice) * lot.qty;
-              return (
-                <div key={i} className="py-4">
-                  <div className="grid grid-cols-3 items-start">
-                    <div>
-                      <p className="text-[18px] font-semibold text-foreground tabular-nums">${(lot.buyPrice * lot.qty).toFixed(2)}</p>
-                      <p className="text-[16px] text-muted-foreground mt-0.5">{lot.date}</p>
-                    </div>
-                    <p className="text-[16px] text-foreground text-center tabular-nums mt-0.5">
-                      {lot.qty % 1 === 0 ? lot.qty : lot.qty.toFixed(4).replace(/\.?0+$/, "")} × ${lot.buyPrice.toFixed(2)}
-                    </p>
-                    <div className="text-right">
-                      <p className={cn("text-[18px] font-semibold tabular-nums", lotReturn >= 0 ? "text-emerald-500" : "text-red-500")}>
-                        {lotReturn >= 0 ? "+" : ""}{lotReturn.toFixed(2)}%
-                      </p>
-                      <p className={cn("text-[16px] tabular-nums mt-0.5", lotReturn >= 0 ? "text-emerald-500" : "text-red-500")}>
-                        {lotPnl >= 0 ? "+" : ""}${Math.abs(lotPnl).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
 export function HoldingsTab() {
+  const router = useRouter();
   const [category, setCategory] = useState<Category>("All");
   const [valueMode, setValueMode] = useState<ValueMode>("Value");
   const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
   const [changeSheetOpen, setChangeSheetOpen] = useState(false);
   const [changeRange, setChangeRange] = useState<ChangeRange>("Max");
-  const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
 
   const filtered =
     category === "All" ? HOLDINGS : HOLDINGS.filter((h) => h.category === category);
@@ -343,7 +391,7 @@ export function HoldingsTab() {
       </Sheet>
 
       {/* Holdings list */}
-      <div className="px-5 space-y-2.5">
+      <div className="px-5 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {filtered.map((h) => {
           const isGain = h.pnl >= 0;
           const sign = isGain ? "+" : "-";
@@ -360,11 +408,11 @@ export function HoldingsTab() {
           return (
             <button
               key={h.name}
-              onClick={() => setSelectedHolding(h)}
-              className="w-full text-left rounded-2xl border border-[#E9E9E9] bg-white px-5 py-5 active:opacity-75 transition-opacity"
+              onClick={() => router.push(`/holding-detail/${encodeURIComponent(h.name)}`)}
+              className="w-full text-left py-4 active:opacity-75 transition-opacity"
             >
               {/* Top row: name + current value */}
-              <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   <p className="text-[16px] font-bold text-foreground leading-snug truncate">{h.name}</p>
                   {h.tag && (
@@ -373,43 +421,39 @@ export function HoldingsTab() {
                     </span>
                   )}
                 </div>
-                <p className="text-[20px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
+                <p className="text-[18px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
               </div>
 
               {/* Bottom row: labeled columns + P&L */}
               <div className="flex items-center justify-between gap-2 text-[14px]">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
                     <span className="font-normal text-foreground">{h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5).replace(/\.?0+$/, "")}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
                     <span className="font-normal text-foreground">${h.avgPrice}</span>
                   </div>
                   <div className="w-px h-6 bg-border/50" />
                   <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
                     <span className="font-normal text-foreground">
                       ${h.currentPrice}
-                      <span className="ml-1 text-[14px] font-medium text-muted-foreground">
+                      <span className="ml-1 text-[13px] font-medium text-muted-foreground">
                         ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
                       </span>
                     </span>
                   </div>
                 </div>
-                <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
+                <p className="text-[15px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
               </div>
             </button>
           );
         })}
       </div>
 
-      <HoldingBreakupDrawer
-        holding={selectedHolding}
-        onClose={() => setSelectedHolding(null)}
-      />
     </div>
   );
 }

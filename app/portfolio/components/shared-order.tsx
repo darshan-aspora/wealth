@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -11,6 +12,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export type OrderSide = "B" | "S";
 export type PriceType = "market" | "limit" | "sl_trigger" | "sl_limit" | "trigger";
+
+export type OrderSource = "direct" | "sip" | "collection";
 
 export interface BaseOrder {
   symbol:         string;
@@ -36,6 +39,8 @@ export interface BaseOrder {
   orderId:        string;
   time:           string;
   executedAt:     string;
+  placedAt?:      string;
+  orderSource?:   OrderSource;
 }
 
 export interface OpenOrder      extends BaseOrder { kind: "open" }
@@ -332,18 +337,37 @@ export function OrderDrawer({ order, onClose }: { order: Order; onClose: () => v
 }
 
 /* ------------------------------------------------------------------ */
-/*  Self-contained card components (manage their own drawer state)     */
+/*  All orders registry (used by detail page for lookup)              */
+/* ------------------------------------------------------------------ */
+
+export const ALL_ORDERS: Order[] = [];
+
+export function registerOrders(orders: Order[]) {
+  ALL_ORDERS.length = 0;
+  ALL_ORDERS.push(...orders);
+}
+
+export function addOrders(orders: Order[]) {
+  for (const o of orders) {
+    if (!ALL_ORDERS.find((x) => x.orderId === o.orderId)) {
+      ALL_ORDERS.push(o);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Self-contained card components (navigate to full-page detail)     */
 /* ------------------------------------------------------------------ */
 
 export function OrderCard({ order }: { order: Order }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const router = useRouter();
   const label = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
 
   return (
     <>
       <button
-        onClick={() => setDrawerOpen(true)}
-        className="w-full text-left rounded-2xl border border-border/50 bg-white px-5 py-5 active:opacity-75 transition-opacity"
+        onClick={() => router.push(`/order-detail/${order.orderId}`)}
+        className="w-full text-left px-5 py-4 active:opacity-75 transition-opacity"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -373,7 +397,6 @@ export function OrderCard({ order }: { order: Order }) {
         </div>
       </button>
 
-      {drawerOpen && <OrderDrawer order={order} onClose={() => setDrawerOpen(false)} />}
     </>
   );
 }

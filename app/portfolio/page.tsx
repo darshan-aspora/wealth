@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useAI } from "@/contexts/ai-context";
+import { useSearchParams, useRouter } from "next/navigation";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { HeaderV3 } from "@/components/header";
 import { TickerMarquee } from "@/components/ticker";
@@ -22,15 +23,20 @@ import { ReportsTab } from "./tabs/reports";
 /*  Tab definitions                                                    */
 /* ------------------------------------------------------------------ */
 
-const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "Collections", "P&L", "Reports"] as const;
+const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "P&L", "Reports"] as const;
 type Tab = (typeof tabs)[number];
 
 /* ------------------------------------------------------------------ */
 /*  Main page                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function PortfolioPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
+function PortfolioContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const t = searchParams.get("tab") as Tab | null;
+    return t && (tabs as readonly string[]).includes(t) ? t : "Overview";
+  });
   const { setAISource } = useAI();
   useEffect(() => { setAISource({ type: "portfolio" }); }, [setAISource]);
 
@@ -44,6 +50,12 @@ export default function PortfolioPage() {
       container.scrollTo({ left: Math.max(0, scrollLeft), behavior: "smooth" });
     });
   }, []);
+
+  const handleTabChange = useCallback((tab: Tab, el: HTMLButtonElement) => {
+    setActiveTab(tab);
+    scrollTabToCenter(el);
+    router.replace(`?tab=${encodeURIComponent(tab)}`, { scroll: false });
+  }, [router, scrollTabToCenter]);
 
 
   return (
@@ -62,7 +74,7 @@ export default function PortfolioPage() {
               {tabs.map((tab, i) => (
                 <button
                   key={tab}
-                  onClick={(e) => { setActiveTab(tab); scrollTabToCenter(e.currentTarget); }}
+                  onClick={(e) => handleTabChange(tab, e.currentTarget)}
                   className={cn(
                     "relative whitespace-nowrap py-2.5 text-[16px] font-semibold transition-colors",
                     i === 0 ? "pr-3" : "px-3",
@@ -104,7 +116,6 @@ export default function PortfolioPage() {
               {activeTab === "Orders" && <OrdersTab />}
               {activeTab === "Buying Power" && <BuyingPowerTab />}
               {activeTab === "SIPs" && <SipsTab />}
-              {activeTab === "Collections" && <CollectionsTab />}
               {activeTab === "P&L" && <PnlTab />}
               {activeTab === "Reports" && <ReportsTab />}
             </motion.div>
@@ -124,5 +135,13 @@ export default function PortfolioPage() {
       <BottomNavV2 />
       <HomeIndicator />
     </div>
+  );
+}
+
+export default function PortfolioPage() {
+  return (
+    <Suspense>
+      <PortfolioContent />
+    </Suspense>
   );
 }

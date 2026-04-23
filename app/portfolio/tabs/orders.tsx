@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   type OpenOrder, type CompletedOrder, type FailedOrder, type Order,
-  OrderCard,
+  OrderCard, registerOrders,
 } from "@/app/portfolio/components/shared-order";
 
 /* ------------------------------------------------------------------ */
@@ -18,10 +18,10 @@ type OrderTab = "open" | "completed" | "failed";
 /* ------------------------------------------------------------------ */
 
 const OPEN_ORDERS: OpenOrder[] = [
-  { kind: "open", symbol: "AAPL", companyName: "Apple Inc",   category: "#MegaCap",  expiry: "230 APR 27", optionType: "CALL", side: "B", filledQty: 0,    totalQty: 1,  lots: 1,  priceType: "limit",      price: 12.3,  investedAmount: 30,  charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123456", time: "10:32 AM", executedAt: "10:02:34" },
-  { kind: "open", symbol: "TSLA", companyName: "Tesla Inc",   category: "#MegaCap",                                             side: "S", filledQty: 2.45, totalQty: 15,           priceType: "market",     price: 220,   investedAmount: 50,  charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123457", time: "10:15 AM", executedAt: "10:15:22" },
-  { kind: "open", symbol: "NVDA", companyName: "NVIDIA Corp", category: "#Growth",                                               side: "B", filledQty: 6,    totalQty: 12,           priceType: "limit",      price: 870,   investedAmount: 870, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123458", time: "09:55 AM", executedAt: "09:55:10" },
-  { kind: "open", symbol: "QQQ",  companyName: "Invesco QQQ", category: "#Index",    tag: "ETF",                                 side: "B", filledQty: 3,    totalQty: 15,           priceType: "limit",      price: 390,   investedAmount: 390, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123459", time: "09:40 AM", executedAt: "09:40:00" },
+  { kind: "open", symbol: "AAPL", companyName: "Apple Inc",   category: "#MegaCap",  expiry: "230 APR 27", optionType: "CALL", side: "B", filledQty: 0,    totalQty: 1,  lots: 1,  priceType: "limit",      price: 12.3,  investedAmount: 30,  charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123456", time: "10:32 AM", executedAt: "10:02:34", placedAt: "10:32:00", orderSource: "direct" },
+  { kind: "open", symbol: "TSLA", companyName: "Tesla Inc",   category: "#MegaCap",                                             side: "S", filledQty: 2.45, totalQty: 15,           priceType: "market",     price: 220,   investedAmount: 50,  charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123457", time: "10:15 AM", executedAt: "10:15:22", placedAt: "10:15:00", orderSource: "sip" },
+  { kind: "open", symbol: "NVDA", companyName: "NVIDIA Corp", category: "#Growth",                                               side: "B", filledQty: 6,    totalQty: 12,           priceType: "limit",      price: 870,   investedAmount: 870, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123458", time: "09:55 AM", executedAt: "09:55:10", placedAt: "09:55:00", orderSource: "collection" },
+  { kind: "open", symbol: "QQQ",  companyName: "Invesco QQQ", category: "#Index",    tag: "ETF",                                 side: "B", filledQty: 3,    totalQty: 15,           priceType: "limit",      price: 390,   investedAmount: 390, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123459", time: "09:40 AM", executedAt: "09:40:00", placedAt: "09:40:00", orderSource: "direct" },
   { kind: "open", symbol: "VOO",  companyName: "Vanguard S&P",category: "#Index",    tag: "ETF",                                 side: "B", filledQty: 0,    totalQty: 50,           priceType: "limit",      price: 240,   investedAmount: 240, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123460", time: "09:30 AM", executedAt: "09:30:00" },
   { kind: "open", symbol: "AMD",  companyName: "AMD Inc",     category: "#Option",   expiry: "150 APR 27", optionType: "PUT",   side: "S", filledQty: 0,    totalQty: 2,  lots: 2,  priceType: "sl_trigger", price: 18,    investedAmount: 18,  charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123461", time: "09:20 AM", executedAt: "09:20:00" },
   { kind: "open", symbol: "GLD",  companyName: "SPDR Gold",   category: "#Commodity",tag: "ETF",                                 side: "B", filledQty: 0,    totalQty: 15,           priceType: "market",     price: 318,   investedAmount: 318, charges: 0.70, brokerage: 0.05, regulatoryFee: 0.65, secFee: 0.20, finraFee: 0.15, exchangeFee: 0.20, opraFee: 0.10, orderId: "ORD123462", time: "09:10 AM", executedAt: "09:10:00" },
@@ -59,6 +59,9 @@ const TABS: { id: OrderTab; label: string }[] = [
   { id: "failed",    label: "Failed"    },
 ];
 
+// Register all orders globally so the detail page can look them up by ID
+registerOrders([...OPEN_ORDERS, ...COMPLETED_ORDERS, ...FAILED_ORDERS]);
+
 export function OrdersTab() {
   const [activeTab, setActiveTab] = useState<OrderTab>("open");
 
@@ -95,8 +98,8 @@ export function OrdersTab() {
         )}
       </div>
 
-      {/* Cards — each manages its own drawer */}
-      <div className="px-5 space-y-2.5">
+      {/* List — each item manages its own drawer */}
+      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {orders.map((o, i) => <OrderCard key={i} order={o} />)}
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Landmark, X } from "lucide-react";
+import { Copy, Landmark, X, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -544,10 +544,17 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
 /*  Funds Breakup Drawer                                               */
 /* ------------------------------------------------------------------ */
 
-function BRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function BRow({ label, value, bold, onInfo }: { label: string; value: string; bold?: boolean; onInfo?: () => void }) {
   return (
     <div className="flex items-center justify-between py-2.5">
-      <p className={cn("text-[16px]", bold ? "font-bold text-foreground" : "text-muted-foreground")}>{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className={cn("text-[16px]", bold ? "font-bold text-foreground" : "text-muted-foreground")}>{label}</p>
+        {onInfo && (
+          <button onClick={onInfo} className="text-muted-foreground/50 active:opacity-60 shrink-0">
+            <Info size={14} strokeWidth={2} />
+          </button>
+        )}
+      </div>
       <p className={cn("text-[16px] tabular-nums", bold ? "font-bold text-foreground" : "font-semibold text-foreground")}>{value}</p>
     </div>
   );
@@ -563,6 +570,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [marginInfoOpen, setMarginInfoOpen] = useState(false);
+
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
@@ -571,7 +580,7 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        {/* Header: close top-right, title left, subtitle below */}
+        {/* Header */}
         <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -587,12 +596,16 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
         <div className="overflow-y-auto flex-1 px-5 pb-8 pt-5 space-y-6">
           {/* Summary card */}
           <div className="rounded-2xl bg-white border border-border/50 px-4">
-            <BRow label="Opening Balance"       value={fmtUSD(FUNDS.openingBalance)} />
-            <BRow label="Funds added Today"     value={fmtUSD(FUNDS.fundsAddedToday)} />
-            <BRow label="Margin from Collateral" value={fmtUSD(FUNDS.marginFromCollateral)} />
-            <BRow label="Margin Utilised"       value={fmtUSD(FUNDS.marginUtilised)} />
+            <BRow label="Opening Balance"   value={fmtUSD(FUNDS.openingBalance)} />
+            <BRow label="Funds added Today" value={fmtUSD(FUNDS.fundsAddedToday)} />
+            <BRow
+              label="Available Margin"
+              value={fmtUSD(FUNDS.marginFromCollateral)}
+              onInfo={() => setMarginInfoOpen(true)}
+            />
+            <BRow label="Margin Utilised"   value={fmtUSD(FUNDS.marginUtilised)} />
             <div className="h-px bg-border/40 my-1" />
-            <BRow label="Available Balance"     value={fmtUSD(FUNDS.availableBalance)} bold />
+            <BRow label="Available Balance" value={fmtUSD(FUNDS.availableBalance)} bold />
           </div>
 
           {/* Cash */}
@@ -613,6 +626,40 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
             <BRow label="Trade Charges"   value={fmtUSD(FUNDS.tradeCharges)} />
           </SectionCard>
         </div>
+
+        {/* Available Margin info panel */}
+        {marginInfoOpen && (
+          <div className="absolute inset-0 rounded-t-3xl bg-background flex flex-col z-10">
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1 rounded-full bg-border" />
+            </div>
+            <div className="flex items-center gap-2 px-5 pt-3 pb-4 border-b border-border/40 shrink-0">
+              <button onClick={() => setMarginInfoOpen(false)} className="rounded-full p-1 active:bg-muted/50 shrink-0">
+                <X size={18} className="text-foreground" />
+              </button>
+              <p className="text-[17px] font-bold text-foreground">Available Margin</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pt-5 pb-8 space-y-4">
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-foreground">Available Margin</span> is the additional buying power provided against your existing holdings pledged as collateral.
+              </p>
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                When you pledge stocks or ETFs held in your account, the broker lends you a percentage of their market value as margin. This amount is added to your cash balance to increase your total buying power.
+              </p>
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                Note that margin is subject to market value changes — if your pledged holdings drop in value, your available margin may reduce accordingly.
+              </p>
+            </div>
+            <div className="px-5 pb-8 pt-3 border-t border-border/40 shrink-0">
+              <button
+                onClick={() => setMarginInfoOpen(false)}
+                className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -662,7 +709,7 @@ export function BuyingPowerTab() {
 
       {/* ── Funds Breakup card ── */}
       <div className="px-5 pt-5 pb-2">
-        <p className="text-[20px] font-bold text-foreground mb-3">Funds Breakup</p>
+        <p className="text-[14px] text-muted-foreground mb-3">Funds Breakup</p>
         <div className="rounded-2xl bg-white border border-border/50 px-4 pt-4 pb-0">
           <div className="flex items-start gap-6 mb-4">
             <div>
@@ -711,12 +758,12 @@ export function BuyingPowerTab() {
         </div>
 
         {/* Transaction list */}
-        <div className="space-y-2.5">
+        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
           {filtered.map((tx) => (
             <button
               key={tx.id}
               onClick={() => setSelectedTx(tx)}
-              className="w-full text-left rounded-2xl border border-border/50 bg-white px-5 py-5 active:opacity-75 transition-opacity"
+              className="w-full text-left px-5 py-4 active:opacity-75 transition-opacity"
             >
               <p className="text-[14px] text-muted-foreground mb-1">{tx.date}</p>
               <div className="flex items-center justify-between gap-3">

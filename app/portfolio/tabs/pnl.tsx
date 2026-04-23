@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { OrderCard, type CompletedOrder } from "@/app/portfolio/components/shared-order";
+import { OrderCard, addOrders, type CompletedOrder } from "@/app/portfolio/components/shared-order";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -15,6 +15,7 @@ type RangePreset = "1M" | "3M" | "Current FY" | "Custom";
 interface DateVal { year: number; month: number; day: number }
 
 interface PnlOrder {
+  orderId: string;
   symbol: string;
   companyName: string;
   side: "B" | "S";
@@ -41,36 +42,36 @@ interface RangeData {
 const RANGE_DATA: Record<RangePreset, RangeData> = {
   "1M": {
     orders: [
-      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
-      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
+      { orderId: "PNL1M001", symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { orderId: "PNL1M002", symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 10, brokerage: 7, regulatory: 3, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50 },
   },
   "3M": {
     orders: [
-      { symbol: "AAPL", companyName: "Apple Inc",    side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
-      { symbol: "NVDA", companyName: "NVIDIA Corp",  side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
-      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
-      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
+      { orderId: "PNL3M001", symbol: "AAPL", companyName: "Apple Inc",    side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
+      { orderId: "PNL3M002", symbol: "NVDA", companyName: "NVIDIA Corp",  side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
+      { orderId: "PNL3M003", symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { orderId: "PNL3M004", symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 28, brokerage: 20, regulatory: 8, secFee: 2.20, finraFee: 1.80, exchangeFee: 2.80, opraFee: 1.20 },
   },
   "Current FY": {
     orders: [
-      { symbol: "AAPL", companyName: "Apple Inc",      side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
-      { symbol: "NVDA", companyName: "NVIDIA Corp",    side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
-      { symbol: "TSLA", companyName: "Tesla Inc",      side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
-      { symbol: "SPY",  companyName: "SPDR S&P 500",   side: "B", qty: 20, tag: "ETF",  buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
-      { symbol: "QQQ",  companyName: "Invesco QQQ",    side: "S", qty: 8,  tag: "ETF",  buyPrice: 380, sellPrice: 412, avgExecutedPrice: 412, pnl: 256 },
-      { symbol: "META", companyName: "Meta Platforms", side: "S", qty: 3,  expiry: "350 APR 12", optionType: "CALL", lots: 3, buyPrice: 310, sellPrice: 290, avgExecutedPrice: 290, pnl: -60 },
-      { symbol: "AMD",  companyName: "AMD Inc",        side: "B", qty: 12, buyPrice: 145, sellPrice: 162, avgExecutedPrice: 162, pnl: 204 },
+      { orderId: "PNLFY001", symbol: "AAPL", companyName: "Apple Inc",      side: "S", qty: 15, buyPrice: 178, sellPrice: 195, avgExecutedPrice: 195, pnl: 255  },
+      { orderId: "PNLFY002", symbol: "NVDA", companyName: "NVIDIA Corp",    side: "B", qty: 5,  buyPrice: 820, sellPrice: 870, avgExecutedPrice: 870, pnl: 250  },
+      { orderId: "PNLFY003", symbol: "TSLA", companyName: "Tesla Inc",      side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { orderId: "PNLFY004", symbol: "SPY",  companyName: "SPDR S&P 500",   side: "B", qty: 20, tag: "ETF",  buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
+      { orderId: "PNLFY005", symbol: "QQQ",  companyName: "Invesco QQQ",    side: "S", qty: 8,  tag: "ETF",  buyPrice: 380, sellPrice: 412, avgExecutedPrice: 412, pnl: 256 },
+      { orderId: "PNLFY006", symbol: "META", companyName: "Meta Platforms", side: "S", qty: 3,  expiry: "350 APR 12", optionType: "CALL", lots: 3, buyPrice: 310, sellPrice: 290, avgExecutedPrice: 290, pnl: -60 },
+      { orderId: "PNLFY007", symbol: "AMD",  companyName: "AMD Inc",        side: "B", qty: 12, buyPrice: 145, sellPrice: 162, avgExecutedPrice: 162, pnl: 204 },
     ],
     charges: { total: 62, brokerage: 44, regulatory: 18, secFee: 5.10, finraFee: 3.90, exchangeFee: 6.20, opraFee: 2.80 },
   },
   "Custom": {
     orders: [
-      { symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
-      { symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
+      { orderId: "PNLCU001", symbol: "TSLA", companyName: "Tesla Inc",    side: "S", qty: 10, buyPrice: 244, sellPrice: 222, avgExecutedPrice: 222, pnl: -220 },
+      { orderId: "PNLCU002", symbol: "SPY",  companyName: "SPDR S&P 500", side: "B", qty: 20, tag: "ETF", buyPrice: 100, sellPrice: 120, avgExecutedPrice: 120, pnl: 400 },
     ],
     charges: { total: 10, brokerage: 7, regulatory: 3, secFee: 0.80, finraFee: 0.50, exchangeFee: 1.20, opraFee: 0.50 },
   },
@@ -443,32 +444,36 @@ function SummaryCard({ from, to, onOpenPicker, data }: {
 
 function toCompletedOrder(o: PnlOrder): CompletedOrder {
   return {
-    kind:            "completed",
-    symbol:          o.symbol,
-    companyName:     o.companyName,
-    expiry:          o.expiry,
-    optionType:      o.optionType,
-    tag:             o.tag,
-    side:            o.side,
-    filledQty:       o.qty,
-    totalQty:        o.qty,
-    lots:            o.lots,
-    priceType:       "market",
-    price:           o.avgExecutedPrice,
+    kind:             "completed",
+    symbol:           o.symbol,
+    companyName:      o.companyName,
+    expiry:           o.expiry,
+    optionType:       o.optionType,
+    tag:              o.tag,
+    side:             o.side,
+    filledQty:        o.qty,
+    totalQty:         o.qty,
+    lots:             o.lots,
+    priceType:        "market",
+    price:            o.avgExecutedPrice,
     avgExecutedPrice: o.avgExecutedPrice,
-    investedAmount:  o.buyPrice * o.qty,
-    charges:         0,
-    brokerage:       0,
-    regulatoryFee:   0,
-    secFee:          0,
-    finraFee:        0,
-    exchangeFee:     0,
-    opraFee:         0,
-    orderId:         "",
-    time:            "",
-    executedAt:      "",
+    investedAmount:   o.buyPrice * o.qty,
+    charges:          0,
+    brokerage:        0,
+    regulatoryFee:    0,
+    secFee:           0,
+    finraFee:         0,
+    exchangeFee:      0,
+    opraFee:          0,
+    orderId:          o.orderId,
+    time:             "",
+    executedAt:       "",
   };
 }
+
+// Register all unique P&L orders so the detail page can look them up
+const allPnlOrders = Object.values(RANGE_DATA).flatMap((d) => d.orders.map(toCompletedOrder));
+addOrders(allPnlOrders);
 
 /* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
@@ -535,7 +540,7 @@ export function PnlTab() {
           </button>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
           {RANGE_DATA[preset].orders.map((o) => <OrderCard key={o.symbol} order={toCompletedOrder(o)} />)}
         </div>
       </div>

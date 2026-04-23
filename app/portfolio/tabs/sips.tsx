@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
 
@@ -9,11 +9,14 @@ import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/share
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type SipFilter = "All" | "Stocks" | "ETFs" | "Glo. ETFs" | "Collections";
+type SipFilter = "All" | "Stocks" | "ETF" | "Global ETF" | "Collections";
 
 interface Sip extends SharedSip {
   filter: Exclude<SipFilter, "All">;
+  paused?: boolean;
 }
+
+export type { Sip };
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                          */
@@ -26,19 +29,21 @@ const ACTIVE_SIPS: Sip[] = [
   { id: 7,  name: "Super Micro Computer, Inc.",     amount: 15,  frequency: "Monthly on 12th",         dueDate: new Date("2026-04-27"), filter: "Stocks"      },
   { id: 8,  name: "Tesla, Inc.",                    amount: 50,  frequency: "Fortnightly on Friday",   dueDate: new Date("2026-04-30"), filter: "Stocks"      },
   { id: 10, name: "Alphabet Inc.",                  amount: 50,  frequency: "Fortnightly on Friday",   dueDate: new Date("2026-04-30"), filter: "Stocks"      },
-  { id: 4,  name: "iShares MSCI ACWI ETF",         amount: 60,  frequency: "Weekly on Friday",        badge: "G.ETF",      dueDate: new Date("2026-05-01"), filter: "Glo. ETFs"   },
+  { id: 4,  name: "iShares MSCI ACWI ETF",         amount: 60,  frequency: "Weekly on Friday",        badge: "G.ETF",      dueDate: new Date("2026-05-01"), filter: "Global ETF"  },
   { id: 9,  name: "Apple Inc.",                     amount: 100, frequency: "Daily Monday to Friday",  dueDate: new Date("2026-05-05"), filter: "Stocks"      },
-  { id: 2,  name: "Invesco QQQ Trust Series 1",    amount: 80,  frequency: "Monthly on 12th",         badge: "ETF",        dueDate: new Date("2026-05-12"), filter: "ETFs"        },
+  { id: 2,  name: "Invesco QQQ Trust Series 1",    amount: 80,  frequency: "Monthly on 12th",         badge: "ETF",        dueDate: new Date("2026-05-12"), filter: "ETF"         },
   { id: 5,  name: "JP Morgan Chase & Co.",          amount: 80,  frequency: "Monthly on 12th",         dueDate: new Date("2026-05-12"), filter: "Stocks"      },
 ].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()) as Sip[];
 
 const PAUSED_SIPS: Sip[] = [
-  { id: 11, name: "Amazon.com, Inc.",  amount: 80, frequency: "Fortnightly on Friday", dueDate: new Date("2026-04-30"), filter: "Stocks" },
-  { id: 12, name: "Walmart Inc.",      amount: 40, frequency: "Fortnightly on Friday", dueDate: new Date("2026-05-07"), filter: "Stocks" },
-  { id: 13, name: "Freshworks Inc.",   amount: 50, frequency: "Monthly on 12th",       dueDate: new Date("2026-05-12"), filter: "Stocks" },
+  { id: 11, name: "Amazon.com, Inc.",  amount: 80, frequency: "Fortnightly on Friday", dueDate: new Date("2026-04-30"), filter: "Stocks", paused: true },
+  { id: 12, name: "Walmart Inc.",      amount: 40, frequency: "Fortnightly on Friday", dueDate: new Date("2026-05-07"), filter: "Stocks", paused: true },
+  { id: 13, name: "Freshworks Inc.",   amount: 50, frequency: "Monthly on 12th",       dueDate: new Date("2026-05-12"), filter: "Stocks", paused: true },
 ];
 
-const FILTERS: SipFilter[] = ["All", "Stocks", "ETFs", "Glo. ETFs", "Collections"];
+export const ALL_SIPS: Sip[] = [...ACTIVE_SIPS, ...PAUSED_SIPS];
+
+const FILTERS: SipFilter[] = ["All", "Stocks", "ETF", "Global ETF", "Collections"];
 
 const SUMMARY = {
   monthlyPlanned: 4182,
@@ -51,47 +56,26 @@ const SUMMARY = {
 /* ------------------------------------------------------------------ */
 
 function PausedSipCard({ sip }: { sip: Sip }) {
-  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full text-left px-5 pt-5 pb-5 active:opacity-70 transition-opacity"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap mb-2">
-              <p className="text-[16px] font-bold text-foreground leading-tight">{sip.name}</p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[14px] font-semibold text-foreground">${sip.amount}</span>
-              <span className="text-muted-foreground/40 text-[14px]">|</span>
-              <span className="text-[14px] text-muted-foreground">{sip.frequency}</span>
-            </div>
+    <button
+      onClick={() => router.push(`/sip-detail/${sip.id}`)}
+      className="w-full text-left px-5 py-4 active:opacity-70 transition-opacity"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <p className="text-[16px] font-bold text-foreground leading-tight">{sip.name}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[14px] font-semibold text-foreground">${sip.amount}</span>
+            <span className="text-muted-foreground/40 text-[14px]">|</span>
+            <span className="text-[14px] text-muted-foreground">{sip.frequency}</span>
           </div>
         </div>
-      </button>
-
-      {open && (
-        <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button
-            onClick={() => setOpen(false)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[13px] font-semibold text-foreground active:bg-muted/30 transition-colors"
-          >
-            <Play size={13} />
-            Resume
-          </button>
-          <button
-            onClick={() => setOpen(false)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[13px] font-semibold text-red-500 active:bg-muted/30 transition-colors"
-          >
-            <X size={13} />
-            Cancel
-          </button>
-        </div>
-      )}
-    </div>
+      </div>
+    </button>
   );
 }
 
@@ -114,7 +98,7 @@ export function SipsTab() {
     <div className="pb-24">
 
       {/* ── Filter chips ── */}
-      <div className="px-5 pt-4 pb-3">
+      <div className="px-5 pt-4 pb-4">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {FILTERS.map((f) => (
             <button
@@ -134,7 +118,7 @@ export function SipsTab() {
       </div>
 
       {/* ── Summary card ── */}
-      <div className="mx-5 mb-5 rounded-2xl border border-border/50 bg-white px-4 py-4">
+      <div className="mx-5 mb-4 rounded-2xl border border-border/50 bg-white px-4 py-4">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[12px] text-muted-foreground mb-0.5">Monthly Planned</p>
@@ -161,8 +145,8 @@ export function SipsTab() {
         </div>
       )}
       {filteredActive.length > 0 && (
-        <div className="mx-5 flex flex-col gap-3 mb-6">
-          {filteredActive.map((s) => <SipCard key={s.id} sip={s} showActions />)}
+        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40 mb-6">
+          {filteredActive.map((s) => <SipCard key={s.id} sip={s} />)}
         </div>
       )}
 
@@ -173,7 +157,7 @@ export function SipsTab() {
         </div>
       )}
       {filteredPaused.length > 0 && (
-        <div className="mx-5 flex flex-col gap-3">
+        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
           {filteredPaused.map((s) => <PausedSipCard key={s.id} sip={s} />)}
         </div>
       )}

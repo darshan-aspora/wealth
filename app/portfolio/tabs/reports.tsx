@@ -471,10 +471,10 @@ function ReportRow({ item, onTap }: { item: ReportItem; onTap: () => void }) {
 function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelectReport: (item: ReportItem) => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
+    <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-5 active:bg-muted/20 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/20 transition-colors"
       >
         <div className="flex items-center gap-2">
           <p className="text-[16px] font-bold text-foreground">{sub.label}</p>
@@ -485,7 +485,7 @@ function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelec
         <ChevronDown size={15} className={cn("text-muted-foreground transition-transform shrink-0", open ? "rotate-180" : "")} />
       </button>
       {open && (
-        <div className="divide-y divide-border/40 border-t border-border/40">
+        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
           {sub.items.map((item, i) => <ReportRow key={i} item={item} onTap={() => onSelectReport(item)} />)}
         </div>
       )}
@@ -595,7 +595,7 @@ export function ReportsTab() {
               </div>
 
               {/* Sub-sections for active category */}
-              <div className="space-y-2.5">
+              <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
                 {selectedCategory.subSections.map((sub, i) => (
                   <SubSectionAccordion key={i} sub={sub} onSelectReport={setSelectedReport} />
                 ))}

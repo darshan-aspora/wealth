@@ -65,7 +65,6 @@ const OPEN: OpenPosition[] = [
   // 3. Partially filled — 15 of 25 lots filled
   { symbol: "META",                                     side: "S",          orderedQty: 25, filledQty: 15, avgPrice: 264,    ltp: 293,    ltpChangePct:  12.0, pnl: 175_000, status: "partial_fill"                  },
   // 4. Pending — no fills yet
-  { symbol: "QQQ",  tag: "ETF",                         side: "B",          orderedQty: 50, filledQty: 0,  avgPrice: 390.20, ltp: 409.75, ltpChangePct:   5.0, pnl:      0,  status: "pending"                       },
   // 5. Fully open, normal
   { symbol: "NVDA",                                     side: "B",          orderedQty: 10, filledQty: 10, avgPrice: 820.50, ltp: 875.20, ltpChangePct:   2.1, pnl:    547, status: "open"                          },
 ];
@@ -172,23 +171,21 @@ function QtyDisplay({ p }: { p: OpenPosition }) {
 /*  Expiry warning                                                     */
 /* ------------------------------------------------------------------ */
 
-function ExpiryBanner({ days }: { days: number }) {
+function ExpiryBadge({ days }: { days: number }) {
   const isToday = days === 0;
   return (
-    <div className={cn(
-      "flex items-center gap-1.5 border-b px-4 py-2",
+    <span className={cn(
+      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold",
       isToday
-        ? "bg-foreground/5 border-foreground/10"
-        : "bg-muted/60 border-border/40"
+        ? "bg-foreground/10 text-foreground"
+        : "bg-muted text-muted-foreground"
     )}>
       {isToday
-        ? <AlertTriangle size={12} className="text-foreground shrink-0" />
-        : <Clock size={12} className="text-muted-foreground shrink-0" />
+        ? <AlertTriangle size={10} className="shrink-0" />
+        : <Clock size={10} className="shrink-0" />
       }
-      <p className={cn("text-[14px] font-semibold", isToday ? "text-foreground" : "text-muted-foreground")}>
-        {isToday ? "Expiring today" : `${days} day${days !== 1 ? "s" : ""} left for expiry`}
-      </p>
-    </div>
+      {isToday ? "Expiring today" : `${days}d left`}
+    </span>
   );
 }
 
@@ -206,25 +203,22 @@ function OpenCard({ p, expanded, onToggle }: {
   const showExpiry = p.daysToExpiry !== undefined && p.daysToExpiry <= 5;
 
   return (
-    <div className={cn(
-      "rounded-2xl border bg-white overflow-hidden transition-shadow",
-      expanded ? "border-foreground/20 shadow-md" : "border-border/50"
-    )}>
-      {/* Expiry warning */}
-      {showExpiry && <ExpiryBanner days={p.daysToExpiry!} />}
-
+    <div style={expanded ? { borderTop: "1px solid #e1e1e1", borderBottom: "1px solid #e1e1e1" } : {}}>
       {/* Tappable card body */}
-      <button className="w-full text-left px-5 py-5 active:bg-muted/20 transition-colors" onClick={onToggle}>
-        {/* Row 1: S/B badge + label left-aligned */}
-        <div className="flex items-center gap-2 mb-2.5">
-          <SideBadge side={p.side} />
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
-            {p.tag && (
-              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
-            )}
-            <OpenStatusBadge status={p.status} filledQty={p.filledQty} orderedQty={p.orderedQty} />
+      <button className="w-full text-left px-5 py-4 active:bg-muted/20 transition-colors" onClick={onToggle}>
+        {/* Row 1: S/B badge + label + expiry badge right-aligned */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <SideBadge side={p.side} />
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+              <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
+              {p.tag && (
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
+              )}
+              <OpenStatusBadge status={p.status} filledQty={p.filledQty} orderedQty={p.orderedQty} />
+            </div>
           </div>
+          {showExpiry && <ExpiryBadge days={p.daysToExpiry!} />}
         </div>
 
         {/* Row 2: labeled columns + P&L */}
@@ -256,9 +250,7 @@ function OpenCard({ p, expanded, onToggle }: {
           </div>
 
           {/* P&L — hidden for pending */}
-          {isPending ? (
-            <span className="text-[14px] text-muted-foreground font-medium">Awaiting fill</span>
-          ) : (
+          {isPending ? null : (
             <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
               {fmtPnl(p.pnl)}
             </p>
@@ -269,15 +261,15 @@ function OpenCard({ p, expanded, onToggle }: {
       {/* Expanded actions */}
       {expanded && !isPending && (
         <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="w-[22%] flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
             <Plus size={14} />
             Add
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
             <LogOut size={14} />
             Exit position
           </button>
-          <button className="w-[22%] flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
             Details
             <ArrowRight size={14} />
           </button>
@@ -285,10 +277,10 @@ function OpenCard({ p, expanded, onToggle }: {
       )}
       {expanded && isPending && (
         <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
             Cancel order
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
             Details
             <ArrowRight size={14} />
           </button>
@@ -474,7 +466,7 @@ export function PositionsTab() {
         <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{OPEN.length}</span>
       </div>
 
-      <div className="px-5 space-y-2.5">
+      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {OPEN.map((p, i) => (
           <OpenCard
             key={i}
@@ -491,13 +483,13 @@ export function PositionsTab() {
         <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{CLOSED.length}</span>
       </div>
 
-      <div className="px-5 space-y-2.5">
+      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {CLOSED.map((p, i) => {
           const label = [p.symbol, p.expiry, p.type].filter(Boolean).join(" ");
           const isPartial = p.reason === "partial_close";
           const isWorthless = p.reason === "expired_worthless";
           return (
-            <div key={i} className="rounded-2xl border border-border/40 bg-[#FAFAFA] px-5 py-5">
+            <div key={i} className="px-5 py-4">
               {/* Row 1: label + reason badge */}
               <div className="flex items-start justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0">
