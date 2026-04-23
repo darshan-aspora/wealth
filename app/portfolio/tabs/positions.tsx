@@ -90,6 +90,7 @@ const CLOSED: ClosedPosition[] = [
 const todayPnl    = 3_750;
 const todayPnlPct = 3.0;
 const realisedPnl = 1_750;
+const mtmPrice    = 52_340;
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -318,20 +319,27 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-6 pb-4 shrink-0">
-          <button onClick={onClose} className="rounded-full p-1 -ml-1 active:bg-muted/50">
-            <X size={20} className="text-foreground" />
-          </button>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
-        <div className="px-5 pb-4 shrink-0">
-          <p className="text-[24px] font-bold text-foreground">Exit all positions</p>
-          <p className="text-[16px] text-muted-foreground mt-1">All selected positions will be closed at market price</p>
+
+        {/* Header: close top-right, title left, subtitle below */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] font-bold text-foreground leading-tight">Exit all positions</p>
+              <p className="text-[14px] text-muted-foreground mt-1">Selected positions will be closed at market price</p>
+            </div>
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
         </div>
 
         {/* List */}
-        <div className="overflow-y-auto flex-1 px-5 space-y-3 pb-4">
+        <div className="overflow-y-auto flex-1 px-5 space-y-3 pb-4 pt-4">
           {exitablePositions.map((p, i) => {
             const label = [p.symbol, p.expiry, p.type].filter(Boolean).join(" ");
             const isChecked = selected.has(i);
@@ -394,7 +402,7 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
 
         {/* CTA */}
-        <div className="shrink-0 px-5 pb-8 pt-3">
+        <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/40">
           <button
             disabled={selected.size === 0}
             className="w-full flex items-center justify-between bg-foreground text-background rounded-2xl px-5 py-4 active:opacity-80 transition-opacity disabled:opacity-40"
@@ -448,9 +456,15 @@ export function PositionsTab() {
             Exit all
           </button>
         </div>
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#F8F9FA] px-3.5 py-2.5">
-          <p className="text-[14px] text-muted-foreground font-medium">Realised P&L</p>
-          <p className="text-[16px] font-bold tabular-nums text-foreground">{fmtPnl(realisedPnl)}</p>
+        <div className="mt-4 flex items-center rounded-xl bg-[#F8F9FA] divide-x divide-border/40">
+          <div className="flex-1 px-3.5 py-2.5">
+            <p className="text-[12px] text-muted-foreground mb-0.5">Realised P&L</p>
+            <p className="text-[15px] font-semibold tabular-nums text-foreground">{fmtPnl(realisedPnl)}</p>
+          </div>
+          <div className="flex-1 px-3.5 py-2.5">
+            <p className="text-[12px] text-muted-foreground mb-0.5">MTM Price</p>
+            <p className="text-[15px] font-semibold tabular-nums text-foreground">${mtmPrice.toLocaleString()}</p>
+          </div>
         </div>
       </div>
 

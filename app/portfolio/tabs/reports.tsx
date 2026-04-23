@@ -216,18 +216,8 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-const QUICK_ACCESS: { title: string; categoryId: CategoryId }[] = [
-  { title: "Monthly Statement",       categoryId: "core" },
-  { title: "Trade Confirmations",     categoryId: "core" },
-  { title: "Capital Gains Report",    categoryId: "tax" },
-  { title: "Portfolio vs Benchmark",  categoryId: "performance" },
-  { title: "Tax Loss Harvesting",     categoryId: "tax" },
-  { title: "Value at Risk (VaR)",     categoryId: "risk" },
-];
-
-const RANGES = ["1M", "3M", "6M", "1Y", "Custom"] as const;
+const RANGES = ["1D", "1M", "3M", "6M", "1Y", "Custom"] as const;
 type Range = typeof RANGES[number];
-type Delivery = "email" | "pdf";
 
 /* ------------------------------------------------------------------ */
 /*  Inline calendar for reports drawer                                  */
@@ -339,10 +329,9 @@ function InlineCalendar({
 /* ------------------------------------------------------------------ */
 
 function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void }) {
-  const [range, setRange]       = useState<Range>("6M");
-  const [delivery, setDelivery] = useState<Delivery | null>(null);
-  const [calFrom, setCalFrom]   = useState<CalDateVal | null>(null);
-  const [calTo,   setCalTo]     = useState<CalDateVal | null>(null);
+  const [range, setRange]         = useState<Range>("6M");
+  const [calFrom, setCalFrom]     = useState<CalDateVal | null>(null);
+  const [calTo,   setCalTo]       = useState<CalDateVal | null>(null);
   const [selecting, setSelecting] = useState<"from" | "to">("from");
 
   function handleCalSelect(d: CalDateVal) {
@@ -361,25 +350,26 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
     }
   }
 
-  const canSubmit = delivery !== null && (range !== "Custom" || (calFrom && calTo));
-
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col">
-        {/* Header */}
-        <div className="px-5 pt-6 pb-4 shrink-0">
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+
+        {/* Header: close top-right, title left, subtitle below */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[20px] font-bold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[16px] text-muted-foreground mt-1">{item.description}</p>
+              <p className="text-[18px] font-bold text-foreground leading-tight">{item.title}</p>
+              <p className="text-[14px] text-muted-foreground mt-1">{item.description}</p>
             </div>
-            <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50 shrink-0 mt-0.5">
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
               <X size={20} className="text-foreground" />
             </button>
           </div>
         </div>
-
-        <div className="h-px bg-border/40 shrink-0" />
 
         <div className="overflow-y-auto flex-1 px-5 py-5 space-y-6">
 
@@ -389,13 +379,13 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
               <CalendarDays size={14} className="text-muted-foreground" />
               <p className="text-[16px] font-bold text-foreground">Select Time Range</p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
               {RANGES.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRange(r)}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-[16px] font-semibold transition-colors",
+                    "px-4 py-2 rounded-xl text-[14px] font-semibold transition-colors whitespace-nowrap shrink-0",
                     range === r ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground"
                   )}
                 >
@@ -442,68 +432,23 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
             )}
           </div>
 
-          {/* Delivery method */}
-          <div>
-            <p className="text-[16px] font-bold text-foreground mb-3">How would you like it?</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDelivery("email")}
-                className={cn(
-                  "flex-1 flex flex-col items-center gap-2.5 rounded-2xl border py-5 transition-colors",
-                  delivery === "email"
-                    ? "border-foreground bg-foreground/5"
-                    : "border-border/50 bg-white"
-                )}
-              >
-                <div className={cn(
-                  "w-10 h-10 rounded-2xl flex items-center justify-center",
-                  delivery === "email" ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
-                )}>
-                  <Mail size={18} />
-                </div>
-                <div className="text-center">
-                  <p className="text-[16px] font-bold text-foreground">Email</p>
-                  <p className="text-[14px] text-muted-foreground mt-0.5">Sent to your inbox</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setDelivery("pdf")}
-                className={cn(
-                  "flex-1 flex flex-col items-center gap-2.5 rounded-2xl border py-5 transition-colors",
-                  delivery === "pdf"
-                    ? "border-foreground bg-foreground/5"
-                    : "border-border/50 bg-white"
-                )}
-              >
-                <div className={cn(
-                  "w-10 h-10 rounded-2xl flex items-center justify-center",
-                  delivery === "pdf" ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
-                )}>
-                  <Download size={18} />
-                </div>
-                <div className="text-center">
-                  <p className="text-[16px] font-bold text-foreground">Download PDF</p>
-                  <p className="text-[14px] text-muted-foreground mt-0.5">Save to device</p>
-                </div>
-              </button>
-            </div>
-          </div>
-
         </div>
 
-        {/* CTA */}
-        <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
+        {/* CTAs */}
+        <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/40 flex gap-3">
           <button
-            disabled={!canSubmit}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[16px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
+            disabled={range === "Custom" && !(calFrom && calTo)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border/60 py-4 text-[16px] font-bold text-foreground active:opacity-70 transition-opacity disabled:opacity-30"
           >
-            {delivery === "email" ? <Mail size={17} /> : <Download size={17} />}
-            {delivery === "email"
-              ? "Send to Email"
-              : delivery === "pdf"
-              ? "Download PDF"
-              : "Select a delivery method"}
+            <Mail size={17} />
+            Email
+          </button>
+          <button
+            disabled={range === "Custom" && !(calFrom && calTo)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-[16px] font-bold text-background active:opacity-75 transition-opacity disabled:opacity-30"
+          >
+            <Download size={17} />
+            Download PDF
           </button>
         </div>
       </SheetContent>
@@ -623,35 +568,9 @@ export function ReportsTab() {
 
       {!isSearching && (
         <>
-          <div className="px-5 space-y-6">
+          <div className="px-5">
 
-            {/* Quick Access — 2-column grid */}
-            <div>
-              <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Access</p>
-              <div className="grid grid-cols-2 gap-2.5">
-                {QUICK_ACCESS.map(({ title, categoryId }, i) => {
-                  const cat = CATEGORIES.find((c) => c.id === categoryId)!;
-                  const item = cat.subSections.flatMap((s) => s.items).find((it) => it.title === title)!;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedReport(item)}
-                      className="flex flex-col items-start gap-2.5 rounded-2xl border border-border/50 bg-white px-3.5 py-3.5 text-left active:bg-muted/20 transition-colors"
-                    >
-                      <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-muted/60 text-muted-foreground">
-                        {cat.icon}
-                      </span>
-                      <div className="min-w-0 w-full">
-                        <p className="text-[14px] font-semibold text-foreground leading-snug">{item.title}</p>
-                        <p className="text-[14px] text-muted-foreground mt-0.5">{cat.label}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Category chips + reports below */}
+            {/* Category chips + reports */}
             <div>
               <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
 

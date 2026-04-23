@@ -109,7 +109,7 @@ export function BuyingPower() {
           </button>
           <button
             onClick={() => setSheetOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full bg-foreground text-[15px] font-semibold text-background active:opacity-70 transition-opacity"
+            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full border border-border/60 bg-background text-[15px] font-semibold text-foreground active:opacity-70 transition-opacity"
           >
             <span className="text-[18px] leading-none">+</span>
             Deposit

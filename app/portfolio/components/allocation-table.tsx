@@ -3,6 +3,8 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
+const SHOW_TOTAL_ROW = false; // toggle to true to re-enable the total row
+
 /* ------------------------------------------------------------------ */
 /*  Shared types                                                       */
 /* ------------------------------------------------------------------ */
@@ -137,8 +139,8 @@ export function AllocationTable({
                   </td>
                 </tr>
               ))}
-              {/* Total row */}
-              <tr className="border-t-2 border-border/60">
+              {/* Total row — controlled by SHOW_TOTAL_ROW */}
+              {SHOW_TOTAL_ROW && <tr className="border-t-2 border-border/60">
                 <td className="py-3.5 pl-5 pr-2 sticky left-0 bg-card z-10">
                   <p className="text-[13px] font-bold text-foreground">Total</p>
                 </td>
@@ -149,7 +151,7 @@ export function AllocationTable({
                 </td>
                 <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">100%</td>
                 <td className="py-3.5 pr-5 pl-2 text-right text-[13px] tabular-nums text-foreground">—</td>
-              </tr>
+              </tr>}
             </tbody>
           </table>
         </div>

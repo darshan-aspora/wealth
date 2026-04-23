@@ -509,26 +509,30 @@ function TxDrawer({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
 
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-4 shrink-0">
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+
+        {/* Header: close top-right, title left, subtitle below */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[20px] font-bold text-foreground leading-snug">{title}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <StatusBadge status={tx.status} />
-                <p className="text-[14px] text-muted-foreground">{dateShort}</p>
-              </div>
+              <p className="text-[18px] font-bold text-foreground leading-tight">{title}</p>
+              <p className="text-[14px] text-muted-foreground mt-1">{dateShort}</p>
             </div>
-            <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50 shrink-0 mt-0.5">
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
               <X size={20} className="text-foreground" />
             </button>
           </div>
         </div>
 
-        <div className="h-px bg-border/40 shrink-0" />
-
         <div className="overflow-y-auto flex-1 px-5 py-4">
+          {/* Status badge just below header divider */}
+          <div className="mb-3">
+            <StatusBadge status={tx.status} />
+          </div>
           <DrawerBody tx={tx} />
         </div>
       </SheetContent>
@@ -561,16 +565,26 @@ function SectionCard({ title, children }: { title: string; children: React.React
 function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-4 shrink-0 flex items-center justify-between">
-          <p className="text-[20px] font-bold text-foreground">Detailed Breakup</p>
-          <button onClick={onClose} className="rounded-full p-1 -mr-1 active:bg-muted/50">
-            <X size={20} className="text-foreground" />
-          </button>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        <div className="overflow-y-auto flex-1 px-5 pb-8 space-y-6">
+        {/* Header: close top-right, title left, subtitle below */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] font-bold text-foreground leading-tight">Funds Breakup</p>
+              <p className="text-[14px] text-muted-foreground mt-1">A detailed view of your available capital</p>
+            </div>
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 pb-8 pt-5 space-y-6">
           {/* Summary card */}
           <div className="rounded-2xl bg-white border border-border/50 px-4">
             <BRow label="Opening Balance"       value={fmtUSD(FUNDS.openingBalance)} />

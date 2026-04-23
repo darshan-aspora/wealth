@@ -11,9 +11,9 @@ const FILTER_TABS: FilterTab[] = ["Stocks", "ETF", "Global ETF", "Collections"];
 
 type Tab = "gainers" | "losers" | "neutral";
 const tabs: { id: Tab; label: string }[] = [
-  { id: "gainers", label: "Gainers" },
-  { id: "losers",  label: "Losers" },
-  { id: "neutral", label: "Neutral" },
+  { id: "gainers", label: "Outperforming" },
+  { id: "losers",  label: "Underperforming" },
+  { id: "neutral", label: "Steady" },
 ];
 
 const INITIAL_COUNT = 6;
@@ -61,7 +61,7 @@ export function TopMovers() {
       <CardContent className="p-5 pb-3">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[15px] font-semibold text-foreground">Top Movers</p>
+          <p className="text-[15px] font-semibold text-foreground">Portfolio Performance</p>
           <button
             onClick={() => {
               setFilterTab((prev) => {

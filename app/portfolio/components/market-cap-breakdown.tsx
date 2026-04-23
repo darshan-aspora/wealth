@@ -14,8 +14,8 @@ const rows: AllocationRow[] = [
 export function MarketCapBreakdown() {
   return (
     <AllocationTable
-      title="Market Cap for Stocks"
-      subtitle="Too concentrated in one size? This helps you spot the imbalance"
+      title="Holdings by Market Cap"
+      subtitle="See how your stock portfolio is spread across company sizes"
       firstColumnLabel="Cap"
       rows={rows}
     />

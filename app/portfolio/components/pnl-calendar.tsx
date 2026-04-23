@@ -63,6 +63,8 @@ const MOCK_CHARGES = {
   ],
 };
 
+const CHARGES_TOTAL = MOCK_CHARGES.brokerage + MOCK_CHARGES.regulatory.reduce((s, r) => s + r.amount, 0);
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -124,27 +126,36 @@ function PnlBreakdownCard({ realisedPnl, dateLabel }: { realisedPnl: number; dat
   const chargesTotal = MOCK_CHARGES.brokerage + regulatoryTotal;
   const netPnl = realisedPnl - chargesTotal;
   const isGain = realisedPnl >= 0;
+  const isNetGain = netPnl >= 0;
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-      {/* Realised P&L — collapsed by default */}
-      <button
-        onClick={() => setRealisedExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/30 transition-colors"
-      >
+      {/* Net Realised P&L — always visible */}
+      <div className="flex items-center justify-between px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-foreground">Realised P&L</span>
+          <span className="text-[14px] font-semibold text-foreground">Net Realised P&L</span>
           <span className="text-[11px] text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5">{dateLabel}</span>
         </div>
+        <span className={cn("text-[16px] font-bold", isNetGain ? "text-gain" : "text-loss")}>{formatPnL(netPnl)}</span>
+      </div>
+
+      <div className="h-px bg-border/30 mx-4" />
+
+      {/* Realised P&L — collapsible */}
+      <button
+        onClick={() => setRealisedExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/30 transition-colors"
+      >
+        <span className="text-[13px] text-muted-foreground">Realised P&L</span>
         <div className="flex items-center gap-1.5">
-          <span className={cn("text-[15px] font-bold", isGain ? "text-gain" : "text-loss")}>{formatPnL(realisedPnl)}</span>
-          <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200", realisedExpanded && "rotate-180")} />
+          <span className={cn("text-[13px] font-semibold", isGain ? "text-gain" : "text-loss")}>{formatPnL(realisedPnl)}</span>
+          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform duration-200", realisedExpanded && "rotate-180")} />
         </div>
       </button>
 
       {realisedExpanded && (
         <div className="border-t border-border/30">
-          {/* Gross P&L + Total Charges summary */}
+          {/* Gross P&L + Total Charges */}
           <div className="px-4 pt-3 pb-2 space-y-2">
             <div className="flex justify-between">
               <span className="text-[13px] text-muted-foreground">Gross P&L</span>
@@ -190,14 +201,6 @@ function PnlBreakdownCard({ realisedPnl, dateLabel }: { realisedPnl: number; dat
               ))}
             </div>
           )}
-
-          <div className="h-px bg-border/40 mx-4" />
-
-          {/* Net Realised P&L */}
-          <div className="flex items-center justify-between px-4 py-3.5">
-            <span className="text-[14px] font-semibold text-foreground">Net Realised P&L</span>
-            <span className={cn("text-[15px] font-bold", netPnl >= 0 ? "text-gain" : "text-loss")}>{formatPnL(netPnl)}</span>
-          </div>
         </div>
       )}
     </div>
@@ -345,21 +348,24 @@ function PnlStats({ days }: { days: DayPnL[] }) {
   const totalTrades = trading.reduce((s, d) => s + d.trades, 0);
   const greenDays = trading.filter((d) => d.pnl >= 0).length;
   const winRate = trading.length > 0 ? Math.round((greenDays / trading.length) * 100) : 0;
+  const charges = totalTrades * 0.70;
+  const netRealisedPnl = totalPnl - charges;
+
+  const items = [
+    { label: "P&L",              node: <PnlValue value={totalPnl} className="text-[15px] leading-tight" /> },
+    { label: "Net Realised P&L", node: <PnlValue value={netRealisedPnl} className="text-[15px] leading-tight" /> },
+    { label: "Trades",           node: <span className="text-[15px] font-bold text-foreground">{totalTrades}</span> },
+    { label: "Win Rate",         node: <span className="text-[15px] font-bold text-foreground">{winRate}%</span> },
+  ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      <div>
-        <p className="text-[12px] text-muted-foreground mb-0.5">P&L</p>
-        <PnlValue value={totalPnl} className="text-[18px] leading-tight" />
-      </div>
-      <div>
-        <p className="text-[12px] text-muted-foreground mb-0.5">Trades</p>
-        <span className="text-[18px] font-bold text-foreground">{totalTrades}</span>
-      </div>
-      <div>
-        <p className="text-[12px] text-muted-foreground mb-0.5">Win Rate</p>
-        <span className="text-[18px] font-bold text-foreground">{winRate}%</span>
-      </div>
+    <div className="flex divide-x divide-border/40 rounded-xl bg-muted/30 overflow-hidden">
+      {items.map(({ label, node }) => (
+        <div key={label} className="flex-1 flex flex-col items-center py-2.5 px-1 gap-0.5">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide whitespace-nowrap">{label}</p>
+          {node}
+        </div>
+      ))}
     </div>
   );
 }
@@ -382,7 +388,7 @@ function DayCell({ day, isToday, onTap }: { day: DayPnL; isToday: boolean; onTap
       <span className="text-[14px] font-semibold text-foreground/80 mb-0.5">{day.date}</span>
       {day.isTrading ? (
         <>
-          <PnlValue value={day.pnl} className="text-[13px] leading-tight" />
+          <PnlValue value={day.pnl - CHARGES_TOTAL} className="text-[13px] leading-tight" />
           <span className="text-[10px] text-muted-foreground mt-0.5">{day.trades} trade{day.trades !== 1 ? "s" : ""}</span>
         </>
       ) : (
@@ -546,7 +552,7 @@ function YearView({ onMonthTap }: { onMonthTap: (monthIndex: number, year: numbe
               <span className="text-[13px] font-semibold text-foreground/80 mb-0.5">{MONTH_NAMES_SHORT[month]}</span>
               {hasData ? (
                 <>
-                  <PnlValue value={stats.pnl} className="text-[14px] leading-tight" />
+                  <PnlValue value={stats.pnl - CHARGES_TOTAL} className="text-[14px] leading-tight" />
                   <span className="text-[10px] text-muted-foreground mt-0.5">{stats.trades} trades</span>
                 </>
               ) : (

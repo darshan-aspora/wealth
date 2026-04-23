@@ -251,7 +251,7 @@ export function OrderDrawer({ order, onClose }: { order: Order; onClose: () => v
           </div>
           <Divider />
 
-          {isCompleted && <>
+          {(isCompleted || isOpen) && <>
             <Divider />
             <div className="py-2.5">
               <button

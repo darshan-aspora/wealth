@@ -36,8 +36,6 @@ export default function PortfolioPage() {
 
   const tabsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showAnalyse, setShowAnalyse] = useState(false);
-
   const scrollTabToCenter = useCallback((el: HTMLButtonElement) => {
     requestAnimationFrame(() => {
       const container = tabsRef.current;
@@ -47,18 +45,6 @@ export default function PortfolioPage() {
     });
   }, []);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => setShowAnalyse(el.scrollTop > 80);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Reset button visibility when switching away from Overview
-  useEffect(() => {
-    if (activeTab !== "Overview") setShowAnalyse(false);
-  }, [activeTab]);
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
@@ -127,14 +113,13 @@ export default function PortfolioPage() {
       </div>
 
       {/* Floating Analyse Portfolio button — Overview tab only */}
-      <div
-        className="absolute bottom-[calc(56px+env(safe-area-inset-bottom,0px)+30px)] left-0 right-0 flex justify-center pb-3 pointer-events-none z-30 transition-all duration-300"
-        style={{ opacity: showAnalyse && activeTab === "Overview" ? 1 : 0, transform: showAnalyse && activeTab === "Overview" ? "translateY(0)" : "translateY(10px)" }}
-      >
-        <button className="pointer-events-auto flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background shadow-lg active:opacity-80 transition-opacity">
-          Analyse Portfolio
-        </button>
-      </div>
+      {activeTab === "Overview" && (
+        <div className="absolute bottom-[calc(56px+env(safe-area-inset-bottom,0px)+30px)] left-0 right-0 flex justify-center pb-3 pointer-events-none z-30">
+          <button className="pointer-events-auto flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background shadow-lg active:opacity-80 transition-opacity">
+            Analyse Portfolio
+          </button>
+        </div>
+      )}
 
       <BottomNavV2 />
       <HomeIndicator />
