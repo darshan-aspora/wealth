@@ -8,7 +8,8 @@ export function PortfolioPerformance() {
 
   return (
     <div className="px-1 py-4">
-      <p className="text-[15px] font-semibold text-foreground mb-5">Portfolio Performance</p>
+      <p className="text-[15px] font-semibold text-foreground mb-1">Portfolio Performance</p>
+      <p className="text-[12px] text-muted-foreground mb-5 leading-snug">Returns across different time periods compared to your invested amount.</p>
       <div className="flex items-end justify-between gap-3">
         {PERIOD_RETURNS.map((r) => {
           const heightPct = (Math.abs(r.value) / maxVal) * 100;

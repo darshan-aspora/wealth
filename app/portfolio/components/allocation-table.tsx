@@ -68,7 +68,7 @@ export function AllocationTable({
     <Card className="border-border/50 shadow-none overflow-hidden">
       <CardContent className="p-5 pb-3">
         <p className="text-[15px] font-semibold text-foreground mb-1">{title}</p>
-        {subtitle && <p className="text-[13px] text-muted-foreground mb-4">{subtitle}</p>}
+        {subtitle && <p className="text-[14px] text-muted-foreground mb-4">{subtitle}</p>}
 
         {/* Stacked allocation bar */}
         <div className="flex h-3 rounded-full overflow-hidden mb-2">
@@ -109,30 +109,30 @@ export function AllocationTable({
                     <div className="flex items-center gap-2.5">
                       <div className={cn("w-[3px] h-8 rounded-full shrink-0", r.color)} />
                       <div>
-                        <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">{r.name}</p>
+                        <p className="text-[14px] font-semibold text-foreground leading-tight whitespace-nowrap">{r.name}</p>
                         {r.subtitle && (
                           <p className="text-[11px] text-muted-foreground leading-tight">{r.subtitle}</p>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
+                  <td className="py-3.5 px-2 text-right text-[14px] tabular-nums text-foreground">
                     {fmt(r.current)}
                   </td>
-                  <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
+                  <td className="py-3.5 px-2 text-right text-[14px] tabular-nums text-foreground">
                     {fmt(r.invested)}
                   </td>
                   <td className={cn(
-                    "py-3.5 px-2 text-right text-[13px] tabular-nums font-medium whitespace-nowrap",
+                    "py-3.5 px-2 text-right text-[14px] tabular-nums font-medium whitespace-nowrap",
                     r.pnl >= 0 ? "text-gain" : "text-loss"
                   )}>
                     {r.pnl >= 0 ? "+" : ""}{fmt(r.pnl)} ({r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%)
                   </td>
-                  <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">
+                  <td className="py-3.5 px-2 text-right text-[14px] tabular-nums text-foreground">
                     {r.allocation.toFixed(1)}%
                   </td>
                   <td className={cn(
-                    "py-3.5 pr-5 pl-2 text-right text-[13px] tabular-nums font-medium",
+                    "py-3.5 pr-5 pl-2 text-right text-[14px] tabular-nums font-medium",
                     r.xirr >= 0 ? "text-gain" : "text-loss"
                   )}>
                     {r.xirr >= 0 ? "+" : ""}{r.xirr}%
@@ -142,15 +142,15 @@ export function AllocationTable({
               {/* Total row — controlled by SHOW_TOTAL_ROW */}
               {SHOW_TOTAL_ROW && <tr className="border-t-2 border-border/60">
                 <td className="py-3.5 pl-5 pr-2 sticky left-0 bg-card z-10">
-                  <p className="text-[13px] font-bold text-foreground">Total</p>
+                  <p className="text-[14px] font-bold text-foreground">Total</p>
                 </td>
-                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.current)}</td>
-                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums font-semibold text-foreground">{fmt(total.invested)}</td>
-                <td className={cn("py-3.5 px-2 text-right text-[13px] tabular-nums font-bold whitespace-nowrap", total.pnl >= 0 ? "text-gain" : "text-loss")}>
+                <td className="py-3.5 px-2 text-right text-[14px] tabular-nums font-semibold text-foreground">{fmt(total.current)}</td>
+                <td className="py-3.5 px-2 text-right text-[14px] tabular-nums font-semibold text-foreground">{fmt(total.invested)}</td>
+                <td className={cn("py-3.5 px-2 text-right text-[14px] tabular-nums font-bold whitespace-nowrap", total.pnl >= 0 ? "text-gain" : "text-loss")}>
                   {total.pnl >= 0 ? "+" : ""}{fmt(total.pnl)} ({total.pnl >= 0 ? "+" : ""}{total.pnlPct.toFixed(1)}%)
                 </td>
-                <td className="py-3.5 px-2 text-right text-[13px] tabular-nums text-foreground">100%</td>
-                <td className="py-3.5 pr-5 pl-2 text-right text-[13px] tabular-nums text-foreground">—</td>
+                <td className="py-3.5 px-2 text-right text-[14px] tabular-nums text-foreground">100%</td>
+                <td className="py-3.5 pr-5 pl-2 text-right text-[14px] tabular-nums text-foreground">—</td>
               </tr>}
             </tbody>
           </table>

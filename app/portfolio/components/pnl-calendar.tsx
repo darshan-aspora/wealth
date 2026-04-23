@@ -683,6 +683,7 @@ export function PnlCalendar() {
           <CalendarDays size={18} className="text-foreground" />
           <CardTitle className="text-[15px]">P&L Calendar</CardTitle>
         </div>
+        <p className="text-[12px] text-muted-foreground leading-snug">Daily profit and loss at a glance — tap any day to see your trades.</p>
       </CardHeader>
 
       <CardContent className="px-5 pb-5 pt-0">

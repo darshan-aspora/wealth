@@ -81,7 +81,15 @@ const EXPIRY_GROUPS = [
 
 const ROW_H    = 52;
 const STRIKE_W = 72;
-const ATM_PILL_H = 28; // pill height for offset calc
+const ATM_PILL_H = 22; // pill height for offset calc
+
+function barWidths(strikeIdx: number, totalRows: number): { red: number; green: number } {
+  const rand = seeded(strikeIdx * 137 + 42);
+  const t = strikeIdx / Math.max(1, totalRows - 1); // 0 = top row (low strike), 1 = bottom row (high strike)
+  const r = Math.round(3 + t * 13 + (rand() - 0.5) * 4);
+  const g = Math.round(3 + (1 - t) * 13 + (rand() - 0.5) * 4);
+  return { red: Math.max(3, Math.min(16, r)), green: Math.max(3, Math.min(16, g)) };
+}
 
 // Columns from center outward: LTP (innermost) → Gamma (outermost)
 const SIDE_COLS = [
@@ -158,6 +166,7 @@ export default function OptionsChainPage() {
   const [expiry, setExpiry]           = useState(EXPIRY_GROUPS[0].items[0].date);
   const [expiryOpen, setExpiryOpen]   = useState(false);
   const [ltpOpen, setLtpOpen]         = useState(false);
+  const [sortAsc, setSortAsc]         = useState(true);
 
   type TradeSelection = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number };
   const [selected, setSelected]       = useState<TradeSelection | null>(null);
@@ -165,18 +174,19 @@ export default function OptionsChainPage() {
 
   const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
     setSelected((prev) => {
-      if (prev && prev.strike === strike && prev.side === side) {
-        if (prev.mode === "buy") return { ...prev, mode: "sell" };
-        return null; // third tap = deselect
-      }
+      if (prev && prev.strike === strike && prev.side === side) return null; // tap same = deselect
       setLots(1);
       return { strike, side, mode: "buy", ltp };
     });
   }, []);
 
-  const chain = useMemo(
+  const baseChain = useMemo(
     () => buildChain(currentPrice, hashStr(symbol + expiry)),
     [currentPrice, symbol, expiry],
+  );
+  const chain = useMemo(
+    () => sortAsc ? baseChain : [...baseChain].reverse(),
+    [baseChain, sortAsc],
   );
 
   // Single closest strike to current price = ATM
@@ -187,10 +197,12 @@ export default function OptionsChainPage() {
     ).strike;
   }, [chain, currentPrice]);
 
-  // Index of first row where strike > currentPrice (ATM divider goes before this)
+  // Index of the ATM boundary row — first row crossing past currentPrice in whichever sort direction
   const atmDividerIdx = useMemo(
-    () => chain.findIndex((r) => r.strike > currentPrice),
-    [chain, currentPrice],
+    () => sortAsc
+      ? chain.findIndex((r) => r.strike > currentPrice)
+      : chain.findIndex((r) => r.strike < currentPrice),
+    [chain, currentPrice, sortAsc],
   );
 
   // Y-position (in px) of the ATM divider line from top of scroll content
@@ -204,7 +216,7 @@ export default function OptionsChainPage() {
     // Center the ATM pill in the viewport
     const targetScrollTop = atmDividerY - el.clientHeight / 2 + ATM_PILL_H / 2;
     el.scrollTop = Math.max(0, targetScrollTop);
-  }, [expiry, atmDividerY]);
+  }, [expiry, sortAsc, atmDividerY]);
 
   /* ── Mirrored horizontal scroll ── */
   // Left panel: cols ordered [Gamma…LTP] (outermost→inner), starts scrolled far-right (LTP visible)
@@ -306,9 +318,14 @@ export default function OptionsChainPage() {
           </div>
         </div>
         {/* Strike header */}
-        <div className="shrink-0 flex items-center justify-center py-1.5" style={{ width: STRIKE_W }}>
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Strike ↕</span>
-        </div>
+        <button
+          onClick={() => setSortAsc((v) => !v)}
+          className="shrink-0 flex items-center justify-center gap-0.5 py-1.5 active:opacity-60"
+          style={{ width: STRIKE_W }}
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Strike</span>
+          <span className="text-[10px] text-muted-foreground">{sortAsc ? " ↑" : " ↓"}</span>
+        </button>
         {/* Right headers: innermost (LTP) → outermost (Gamma) */}
         <div ref={rightHdrRef} className="overflow-x-hidden no-scrollbar flex" style={{ flex: 1, minWidth: 0 }}>
           <div className="flex" style={{ width: SIDE_W }}>
@@ -339,7 +356,7 @@ export default function OptionsChainPage() {
               className="absolute left-0 right-0 flex items-center justify-center pointer-events-none"
               style={{ top: atmDividerY - ATM_PILL_H / 2, height: ATM_PILL_H, zIndex: 20 }}
             >
-              <div className="flex items-center gap-1.5 bg-foreground rounded-full px-4 py-1.5 shadow-lg">
+              <div className="flex items-center gap-1.5 bg-foreground rounded-full px-3.5 py-[5px] shadow-lg">
                 <span className="text-[12px] font-bold text-background tabular-nums">{currentPrice.toFixed(2)}</span>
                 <span className={cn("text-[11px] font-semibold tabular-nums", stock.pct >= 0 ? "text-gain" : "text-loss")}>
                   {stock.pct >= 0 ? "+" : ""}{stock.pct.toFixed(2)}%
@@ -357,21 +374,31 @@ export default function OptionsChainPage() {
           >
             <div style={{ width: SIDE_W, height: totalH }}>
               {chain.map((row) => {
-                const isATM   = row.strike === atmStrike;
-                const callITM = row.strike < currentPrice && !isATM;
-                const callOTM = row.strike > currentPrice && !isATM;
-                void (selected?.strike === row.strike && selected?.side === "call"); // selection shown via strike column badge
+                const isATM        = row.strike === atmStrike;
+                const callITM      = row.strike < currentPrice && !isATM;
+                const callOTM      = row.strike > currentPrice && !isATM;
+                const isCallSelected = selected?.strike === row.strike && selected?.side === "call";
+                const rowBg = isCallSelected
+                  ? ""
+                  : isATM ? "bg-muted/60" : callITM ? "bg-gain/[0.08]" : callOTM ? "bg-amber-50/70" : "";
                 return (
                   <div
                     key={row.strike}
                     onClick={() => handleRowTap(row.strike, "call", row.call.ltp)}
                     className={cn(
-                      "flex items-center justify-end border-b border-border/20 cursor-pointer active:opacity-80",
-                      isATM   && "bg-muted/60",
-                      callITM && "bg-gain/[0.08]",
-                      callOTM && "bg-amber-50/70",
+                      "flex items-center justify-end border-b border-border/20 cursor-pointer active:opacity-75",
+                      rowBg,
                     )}
-                    style={{ height: ROW_H, width: SIDE_W }}
+                    style={{
+                      height: ROW_H,
+                      width: SIDE_W,
+                      ...(isCallSelected ? {
+                        background: "white",
+                        boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                        zIndex: 5,
+                        position: "relative",
+                      } : {}),
+                    }}
                   >
                     {[...SIDE_COLS].reverse().map((col) => (
                       <div key={col.key} className={cn("flex items-center justify-end shrink-0", col.key === "ltp" ? "pr-6" : "pr-2")} style={{ width: col.w }}>
@@ -393,21 +420,31 @@ export default function OptionsChainPage() {
           >
             <div style={{ width: SIDE_W, height: totalH }}>
               {chain.map((row) => {
-                const isATM  = row.strike === atmStrike;
-                const putITM = row.strike > currentPrice && !isATM;
-                const putOTM = row.strike < currentPrice && !isATM;
-                void (selected?.strike === row.strike && selected?.side === "put"); // selection shown via strike column badge
+                const isATM       = row.strike === atmStrike;
+                const putITM      = row.strike > currentPrice && !isATM;
+                const putOTM      = row.strike < currentPrice && !isATM;
+                const isPutSelected = selected?.strike === row.strike && selected?.side === "put";
+                const rowBg = isPutSelected
+                  ? ""
+                  : isATM ? "bg-muted/60" : putITM ? "bg-gain/[0.08]" : putOTM ? "bg-amber-50/70" : "";
                 return (
                   <div
                     key={row.strike}
                     onClick={() => handleRowTap(row.strike, "put", row.put.ltp)}
                     className={cn(
-                      "flex items-center justify-start border-b border-border/20 cursor-pointer active:opacity-80",
-                      isATM  && "bg-muted/60",
-                      putITM && "bg-gain/[0.08]",
-                      putOTM && "bg-amber-50/70",
+                      "flex items-center justify-start border-b border-border/20 cursor-pointer active:opacity-75",
+                      rowBg,
                     )}
-                    style={{ height: ROW_H, width: SIDE_W }}
+                    style={{
+                      height: ROW_H,
+                      width: SIDE_W,
+                      ...(isPutSelected ? {
+                        background: "white",
+                        boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                        zIndex: 5,
+                        position: "relative",
+                      } : {}),
+                    }}
                   >
                     {SIDE_COLS.map((col) => (
                       <div key={col.key} className={cn("flex items-center justify-start shrink-0", col.key === "ltp" ? "pl-6" : "pl-2")} style={{ width: col.w }}>
@@ -425,34 +462,35 @@ export default function OptionsChainPage() {
             className="absolute top-0 bottom-0 bg-background border-l border-r border-border/25"
             style={{ left: "50%", transform: "translateX(-50%)", width: STRIKE_W, zIndex: 10 }}
           >
-            {chain.map((row) => {
-              const isATM = row.strike === atmStrike;
+            {chain.map((row, rowIdx) => {
+              const isATM         = row.strike === atmStrike;
               const isRowSelected = selected?.strike === row.strike;
-              const selSide = isRowSelected ? selected!.side : null;
-              const selMode = isRowSelected ? selected!.mode : null;
-              const modeColor = selMode === "buy" ? "bg-gain" : "bg-loss";
+              const selSide       = isRowSelected ? selected!.side : null;
+              const { red: redW, green: greenW } = barWidths(rowIdx, chain.length);
               return (
                 <div
                   key={row.strike}
                   className={cn(
                     "relative flex flex-col items-center justify-center border-b border-border/20",
-                    isATM ? "bg-foreground/[0.05]" : "bg-background",
+                    isATM && !isRowSelected ? "bg-foreground/[0.05]" : "bg-background",
                   )}
-                  style={{ height: ROW_H }}
+                  style={{
+                    height: ROW_H,
+                    ...(isRowSelected ? {
+                      background: "white",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                      zIndex: 15,
+                      position: "relative",
+                    } : {}),
+                  }}
                 >
-                  {/* Call-side selection indicator — square pill at left border, vertically centered */}
+                  {/* Call-side selection: thin bar on left edge */}
                   {isRowSelected && selSide === "call" && (
-                    <div className={cn("absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center rounded-[5px] font-bold text-white z-20 shadow-md", modeColor)}
-                      style={{ width: 22, height: 22, fontSize: 10 }}>
-                      {selMode === "buy" ? "B" : "S"}
-                    </div>
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-full bg-foreground/60" />
                   )}
-                  {/* Put-side selection indicator — square pill at right border, vertically centered */}
+                  {/* Put-side selection: thin bar on right edge */}
                   {isRowSelected && selSide === "put" && (
-                    <div className={cn("absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 flex items-center justify-center rounded-[5px] font-bold text-white z-20 shadow-md", modeColor)}
-                      style={{ width: 22, height: 22, fontSize: 10 }}>
-                      {selMode === "buy" ? "B" : "S"}
-                    </div>
+                    <div className="absolute right-0 top-0 bottom-0 w-[3px] rounded-l-full bg-foreground/60" />
                   )}
                   <span className={cn(
                     "text-[13px] font-semibold tabular-nums",
@@ -460,9 +498,9 @@ export default function OptionsChainPage() {
                   )}>
                     {row.strike.toFixed(1)}
                   </span>
-                  <div className="flex gap-0.5 mt-1">
-                    <div className="w-3 h-[2px] rounded-full bg-loss/60" />
-                    <div className="w-3 h-[2px] rounded-full bg-gain/60" />
+                  <div className="flex gap-0.5 mt-1 items-center">
+                    <div className="h-[2px] rounded-full bg-loss/60" style={{ width: redW }} />
+                    <div className="h-[2px] rounded-full bg-gain/60" style={{ width: greenW }} />
                   </div>
                 </div>
               );
@@ -504,44 +542,45 @@ export default function OptionsChainPage() {
             transition={{ type: "spring", stiffness: 420, damping: 35 }}
             className="shrink-0 border-t border-border/40 bg-background px-4 pt-4 pb-8"
           >
-            {/* Row 1: option details + close */}
-            <div className="flex items-center justify-between mb-2.5">
+            {/* Row 1: option identity + close */}
+            <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => router.push(`/options-chain/${encodeURIComponent(symbol)}`)}
                 className="flex items-center gap-1 min-w-0"
               >
                 <p className="text-[14px] font-bold text-foreground truncate">
-                  {selected.strike.toFixed(1)} {selected.side === "call" ? "CE" : "PE"}
-                  <span className="font-normal text-muted-foreground"> {expiryShort}</span>
-                  <span className="font-normal text-border/80"> &nbsp;|&nbsp; </span>
+                  {selected.strike.toFixed(1)}&nbsp;{selected.side === "call" ? "CE" : "PE"}
+                  <span className="font-normal text-muted-foreground"> · {expiryShort}</span>
+                  <span className="text-border/60"> &ensp;|&ensp;</span>
                   <span className="font-normal text-muted-foreground">LTP ${selected.ltp.toFixed(2)}</span>
                 </p>
-                <ChevronRight size={15} strokeWidth={2.2} className="text-muted-foreground shrink-0" />
+                <ChevronRight size={14} strokeWidth={2.2} className="text-muted-foreground shrink-0 ml-0.5" />
               </button>
               <button
                 onClick={() => setSelected(null)}
                 className="rounded-full p-1.5 bg-muted/60 active:opacity-70 shrink-0 ml-2"
               >
-                <X size={15} strokeWidth={2.5} className="text-foreground" />
+                <X size={14} strokeWidth={2.5} className="text-foreground" />
               </button>
             </div>
 
-            {/* Row 2: balance + margin */}
-            <div className="flex items-center justify-between mb-3 px-0.5">
-              <div className="flex items-center gap-1.5">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-semibold">Available</p>
+            {/* Row 2: info pills */}
+            <div className="flex gap-2.5 mb-4">
+              <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Available</p>
                 <p className="text-[14px] font-bold text-foreground tabular-nums">$12,450.00</p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-semibold">Req. Margin</p>
+              <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Req. Margin</p>
                 <p className="text-[14px] font-bold text-foreground tabular-nums">
                   ${(selected.ltp * lots * 100).toFixed(2)}
                 </p>
               </div>
             </div>
 
-            {/* Row 3: lots stepper + buy/sell button */}
-            <div className="flex items-stretch gap-3" style={{ height: 48 }}>
+            {/* Row 3: lots stepper + Sell + Buy */}
+            <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
+              {/* Lots stepper */}
               <div className="flex items-stretch rounded-xl border border-border/60 overflow-hidden shrink-0">
                 <button
                   onClick={() => setLots((l) => Math.max(1, l - 1))}
@@ -549,7 +588,7 @@ export default function OptionsChainPage() {
                 >
                   <Minus size={14} strokeWidth={2.5} className="text-foreground" />
                 </button>
-                <span className="flex items-center justify-center px-3 text-[15px] font-bold text-foreground tabular-nums min-w-[36px]">
+                <span className="flex items-center justify-center px-2 text-[15px] font-bold text-foreground tabular-nums min-w-[30px]">
                   {lots}
                 </span>
                 <button
@@ -559,14 +598,31 @@ export default function OptionsChainPage() {
                   <Plus size={14} strokeWidth={2.5} className="text-foreground" />
                 </button>
               </div>
+
+              {/* Sell button */}
               <button
-                onClick={() => setSelected((prev) => prev ? { ...prev, mode: prev.mode === "buy" ? "sell" : "buy" } : null)}
+                onClick={() => setSelected((prev) => prev ? { ...prev, mode: "sell" } : null)}
                 className={cn(
-                  "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold text-white transition-colors active:opacity-90",
-                  selected.mode === "buy" ? "bg-gain" : "bg-loss"
+                  "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors active:opacity-90 border",
+                  selected.mode === "sell"
+                    ? "bg-loss text-white border-loss"
+                    : "border-loss/50 text-loss bg-loss/[0.04]"
                 )}
               >
-                {selected.mode === "buy" ? "Buy" : "Sell"} · {lots} {lots === 1 ? "Lot" : "Lots"}
+                Sell · {lots} {lots === 1 ? "Lot" : "Lots"}
+              </button>
+
+              {/* Buy button */}
+              <button
+                onClick={() => setSelected((prev) => prev ? { ...prev, mode: "buy" } : null)}
+                className={cn(
+                  "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors active:opacity-90 border",
+                  selected.mode === "buy"
+                    ? "bg-gain text-white border-gain"
+                    : "border-gain/50 text-gain bg-gain/[0.04]"
+                )}
+              >
+                Buy · {lots} {lots === 1 ? "Lot" : "Lots"}
               </button>
             </div>
           </motion.div>

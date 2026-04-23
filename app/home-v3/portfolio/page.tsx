@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,9 +19,15 @@ import { ReportsTab } from "@/app/portfolio/tabs/reports";
 const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "Advisory", "P&L", "Reports"] as const;
 type Tab = (typeof tabs)[number];
 
-export default function HomeV3Portfolio() {
+function PortfolioContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [analysisOpen, setAnalysisOpen] = useState(false);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") as Tab | null;
+    if (tab && tabs.includes(tab)) setActiveTab(tab);
+  }, [searchParams]);
 
   return (
     <>
@@ -97,5 +104,13 @@ export default function HomeV3Portfolio() {
         {analysisOpen && <AnalysisPage onClose={() => setAnalysisOpen(false)} />}
       </AnimatePresence>
     </>
+  );
+}
+
+export default function HomeV3Portfolio() {
+  return (
+    <Suspense>
+      <PortfolioContent />
+    </Suspense>
   );
 }

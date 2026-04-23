@@ -14,7 +14,10 @@ export function PositionsSummary() {
     <Card className="border-border/50 shadow-none">
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-[15px] font-bold text-foreground">Open Positions</p>
+          <div>
+            <p className="text-[15px] font-bold text-foreground">Open Positions</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">Live MTM and intraday change on your active trades.</p>
+          </div>
           <ChevronRight size={18} strokeWidth={1.8} className="text-muted-foreground" />
         </div>
 

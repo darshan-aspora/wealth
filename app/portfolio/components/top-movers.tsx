@@ -61,7 +61,10 @@ export function TopMovers() {
       <CardContent className="p-5 pb-3">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[15px] font-semibold text-foreground">Portfolio Performance</p>
+          <div>
+            <p className="text-[15px] font-semibold text-foreground">Top Movers</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">Your best and worst performing holdings right now.</p>
+          </div>
           <button
             onClick={() => {
               setFilterTab((prev) => {

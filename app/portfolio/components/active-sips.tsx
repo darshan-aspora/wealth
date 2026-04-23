@@ -22,7 +22,7 @@ export function ActiveSips() {
       <CardContent className="p-5">
         <p className="text-[17px] font-bold text-foreground">Active SIP ({ACTIVE_SIPS.length})</p>
         <p className="text-[13px] text-muted-foreground mt-1 mb-4">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+          Scheduled investments running on autopilot — set it and keep compounding.
         </p>
 
         <div className="flex flex-col gap-3">
