@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
+import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -83,8 +85,22 @@ function PausedSipCard({ sip }: { sip: Sip }) {
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
-export function SipsTab() {
+export function SipsTab({ empty }: { empty?: boolean }) {
   const [filter, setFilter] = useState<SipFilter>("All");
+
+  if (empty) {
+    return (
+      <EmptyState
+        icon={RefreshCw}
+        title="No active SIPs"
+        subtitle="Set up a Systematic Investment Plan to invest automatically in stocks, ETFs, or collections."
+        actions={[
+          { label: "Create a SIP", href: "/home-v3", primary: true },
+          { label: "Explore Stocks & ETFs", href: "/home-v3" },
+        ]}
+      />
+    );
+  }
 
   const filteredActive = filter === "All"
     ? ACTIVE_SIPS

@@ -6,6 +6,7 @@ import {
   FileText, TrendingUp, ShieldAlert, Receipt, Brain,
   Mail, Download, CalendarDays,
 } from "lucide-react";
+import { EmptyState } from "../components/empty-state";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -536,8 +537,21 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
 /*  Tab                                                                */
 /* ------------------------------------------------------------------ */
 
-export function ReportsTab() {
+export function ReportsTab({ empty }: { empty?: boolean }) {
   const [activeCategory, setActiveCategory] = useState<CategoryId>("core");
+
+  if (empty) {
+    return (
+      <EmptyState
+        icon={FileText}
+        title="No reports available"
+        subtitle="Reports like tax statements, P&L summaries, and contract notes will appear here once you start trading."
+        actions={[
+          { label: "Start Investing", href: "/home-v3", primary: true },
+        ]}
+      />
+    );
+  }
   const [query, setQuery]                   = useState("");
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
 

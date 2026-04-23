@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Home,
@@ -18,6 +18,8 @@ import {
   BookOpen,
   ChevronRight,
   Wallet,
+  Database,
+  Ghost,
   type LucideIcon,
 } from "lucide-react";
 import { LayoutGroup, motion } from "framer-motion";
@@ -173,6 +175,112 @@ export function BottomNavV1() {
   return <TabBar tabs={v1Tabs} layoutId="bnav-v1" />;
 }
 
+/* ------------------------------------------------------------------ */
+/*  V2 with Portfolio mode picker                                      */
+/* ------------------------------------------------------------------ */
+
 export function BottomNavV2() {
-  return <TabBar tabs={v2Tabs} layoutId="bnav-v2" />;
+  const pathname = usePathname();
+  const router = useRouter();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  return (
+    <>
+      <nav className="border-t border-border/50 bg-background/80 backdrop-blur-xl">
+        <LayoutGroup id="bnav-v2">
+          <div className="flex items-center justify-around px-2 pb-2 pt-1.5">
+            {v2Tabs.map((tab) => {
+              const isPortfolio = tab.label === "Portfolio";
+              const isActive =
+                pathname === tab.href ||
+                (tab.href !== "/" && pathname.startsWith(tab.href));
+
+              if (isPortfolio) {
+                return (
+                  <button
+                    key={tab.href}
+                    onClick={() => setPickerOpen(true)}
+                    className={cn(
+                      "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    <motion.div
+                      className="relative"
+                      animate={{ scale: isActive ? 1.05 : 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                    >
+                      <tab.icon size={24} strokeWidth={1.6} />
+                    </motion.div>
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  <motion.div
+                    className="relative"
+                    animate={{ scale: isActive ? 1.05 : 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                  >
+                    <tab.icon size={24} strokeWidth={1.6} />
+                  </motion.div>
+                  <span>{tab.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </LayoutGroup>
+      </nav>
+
+      {/* Portfolio mode picker sheet */}
+      <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl p-0 inset-x-0 mx-auto max-w-[430px]">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+          <div className="px-5 pt-3 pb-6">
+            <p className="text-[18px] font-bold text-foreground mb-1">View Portfolio</p>
+            <p className="text-[14px] text-muted-foreground mb-5">Choose how you want to preview the portfolio</p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => { setPickerOpen(false); router.push("/portfolio?mode=full"); }}
+                className="w-full flex items-center gap-4 rounded-2xl border border-border/50 bg-muted/30 px-4 py-4 text-left active:opacity-70 transition-opacity"
+              >
+                <div className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+                  <Database size={20} className="text-background" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-foreground">With Data</p>
+                  <p className="text-[13px] text-muted-foreground">See portfolio with holdings, positions, orders and more</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => { setPickerOpen(false); router.push("/portfolio?mode=empty"); }}
+                className="w-full flex items-center gap-4 rounded-2xl border border-border/50 bg-muted/30 px-4 py-4 text-left active:opacity-70 transition-opacity"
+              >
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <Ghost size={20} className="text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-foreground">Empty State</p>
+                  <p className="text-[13px] text-muted-foreground">Preview what the portfolio looks like with no activity</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
 }

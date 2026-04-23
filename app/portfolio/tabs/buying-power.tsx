@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Landmark, X, Info } from "lucide-react";
+import { Copy, Landmark, X, Info, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -669,10 +670,24 @@ function FundsBreakupDrawer({ open, onClose }: { open: boolean; onClose: () => v
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
-export function BuyingPowerTab() {
+export function BuyingPowerTab({ empty }: { empty?: boolean }) {
   const [filter, setFilter]           = useState<FilterTab>("All");
   const [selectedTx, setSelectedTx]   = useState<Transaction | null>(null);
   const [showBreakup, setShowBreakup] = useState(false);
+
+  if (empty) {
+    return (
+      <EmptyState
+        icon={Wallet}
+        title="No funds added yet"
+        subtitle="Add money to your account to start investing. Your transaction history will appear here."
+        actions={[
+          { label: "Add Funds", primary: true },
+          { label: "Learn More" },
+        ]}
+      />
+    );
+  }
 
   const filtered = filter === "All" ? HISTORY : HISTORY.filter((h) => h.filter === filter);
 

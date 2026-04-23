@@ -36,6 +36,7 @@ function PortfolioContent() {
     const t = searchParams.get("tab") as Tab | null;
     return t && (tabs as readonly string[]).includes(t) ? t : "Overview";
   });
+  const empty = searchParams.get("mode") === "empty";
   const { setAISource } = useAI();
   useEffect(() => { setAISource({ type: "portfolio" }); }, [setAISource]);
 
@@ -53,8 +54,10 @@ function PortfolioContent() {
   const handleTabChange = useCallback((tab: Tab, el: HTMLButtonElement) => {
     setActiveTab(tab);
     scrollTabToCenter(el);
-    router.replace(`?tab=${encodeURIComponent(tab)}`, { scroll: false });
-  }, [router, scrollTabToCenter]);
+    const mode = searchParams.get("mode");
+    const modeParam = mode ? `&mode=${mode}` : "";
+    router.replace(`?tab=${encodeURIComponent(tab)}${modeParam}`, { scroll: false });
+  }, [router, scrollTabToCenter, searchParams]);
 
 
   return (
@@ -109,14 +112,14 @@ function PortfolioContent() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === "Overview" && <PortfolioOverview />}
-              {activeTab === "Holdings" && <HoldingsTab />}
-              {activeTab === "Positions" && <PositionsTab />}
-              {activeTab === "Orders" && <OrdersTab />}
-              {activeTab === "Buying Power" && <BuyingPowerTab />}
-              {activeTab === "SIPs" && <SipsTab />}
-              {activeTab === "P&L" && <PnlTab />}
-              {activeTab === "Reports" && <ReportsTab />}
+              {activeTab === "Overview" && <PortfolioOverview empty={empty} />}
+              {activeTab === "Holdings" && <HoldingsTab empty={empty} />}
+              {activeTab === "Positions" && <PositionsTab empty={empty} />}
+              {activeTab === "Orders" && <OrdersTab empty={empty} />}
+              {activeTab === "Buying Power" && <BuyingPowerTab empty={empty} />}
+              {activeTab === "SIPs" && <SipsTab empty={empty} />}
+              {activeTab === "P&L" && <PnlTab empty={empty} />}
+              {activeTab === "Reports" && <ReportsTab empty={empty} />}
             </motion.div>
           </AnimatePresence>
         </div>

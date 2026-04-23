@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ClipboardList } from "lucide-react";
 import {
   type OpenOrder, type CompletedOrder, type FailedOrder, type Order,
   OrderCard, registerOrders,
 } from "@/app/portfolio/components/shared-order";
+import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -62,8 +64,21 @@ const TABS: { id: OrderTab; label: string }[] = [
 // Register all orders globally so the detail page can look them up by ID
 registerOrders([...OPEN_ORDERS, ...COMPLETED_ORDERS, ...FAILED_ORDERS]);
 
-export function OrdersTab() {
+export function OrdersTab({ empty }: { empty?: boolean }) {
   const [activeTab, setActiveTab] = useState<OrderTab>("open");
+
+  if (empty) {
+    return (
+      <EmptyState
+        icon={ClipboardList}
+        title="No orders yet"
+        subtitle="You haven't placed any orders. Explore stocks and ETFs to make your first trade."
+        actions={[
+          { label: "Explore & Trade", href: "/home-v3", primary: true },
+        ]}
+      />
+    );
+  }
 
   const orders: Order[] =
     activeTab === "open"      ? OPEN_ORDERS :

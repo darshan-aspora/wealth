@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Activity } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -417,10 +418,23 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function PositionsTab() {
+export function PositionsTab({ empty }: { empty?: boolean }) {
   const isGain = todayPnl >= 0;
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [exitAllOpen, setExitAllOpen] = useState(false);
+
+  if (empty) {
+    return (
+      <EmptyState
+        icon={Activity}
+        title="No open positions"
+        subtitle="You don't have any open intraday or F&O positions. Explore the markets to get started."
+        actions={[
+          { label: "Explore Markets", href: "/home-v3", primary: true },
+        ]}
+      />
+    );
+  }
 
   return (
     <div className="pb-24">

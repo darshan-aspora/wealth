@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { OrderCard, addOrders, type CompletedOrder } from "@/app/portfolio/components/shared-order";
+import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -479,7 +480,20 @@ addOrders(allPnlOrders);
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
-export function PnlTab() {
+export function PnlTab({ empty }: { empty?: boolean }) {
+  if (empty) {
+    return (
+      <EmptyState
+        icon={TrendingUp}
+        title="No P&L data yet"
+        subtitle="Your profit & loss will appear here once you start trading. Make your first trade to get started."
+        actions={[
+          { label: "Explore & Trade", href: "/home-v3", primary: true },
+        ]}
+      />
+    );
+  }
+
   const today = new Date();
   const todayVal: DateVal = { year: today.getFullYear(), month: today.getMonth(), day: today.getDate() };
   const monthAgo = new Date(today); monthAgo.setMonth(monthAgo.getMonth() - 1);

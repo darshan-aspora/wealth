@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, SlidersHorizontal } from "lucide-react";
+import { X, SlidersHorizontal, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { EmptyState } from "../components/empty-state";
 
 type ChangeRange = "1D" | "1M" | "3M" | "6M" | "1Y" | "Max";
 const CHANGE_RANGES: ChangeRange[] = ["1D", "1M", "3M", "6M", "1Y", "Max"];
@@ -216,8 +217,22 @@ const fmtInt = (n: number) =>
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
-export function HoldingsTab() {
+export function HoldingsTab({ empty }: { empty?: boolean }) {
   const router = useRouter();
+  if (empty) {
+    return (
+      <EmptyState
+        icon={Layers}
+        title="No holdings yet"
+        subtitle="Start building your portfolio by investing in stocks, ETFs, or Global ETFs."
+        actions={[
+          { label: "Explore Stocks", href: "/home-v3", primary: true },
+          { label: "Explore ETFs", href: "/home-v3" },
+          { label: "Explore Global ETFs", href: "/home-v3" },
+        ]}
+      />
+    );
+  }
   const [category, setCategory] = useState<Category>("All");
   const [valueMode, setValueMode] = useState<ValueMode>("Value");
   const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
