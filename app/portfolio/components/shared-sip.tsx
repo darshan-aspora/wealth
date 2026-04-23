@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Pencil, Pause, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /* ------------------------------------------------------------------ */
