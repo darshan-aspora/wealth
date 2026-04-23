@@ -16,6 +16,7 @@ import { ExploreFundedNotTraded, ExploreFooter } from "./versions/funded-not-tra
 import { ETFFundedNotTraded } from "./versions/etf-funded-not-traded";
 import { AdvisoryBaskets } from "./versions/advisory-baskets";
 import { AlgoStrategies } from "./versions/algo-strategies";
+import { ExploreOptions } from "./versions/options";
 import { cn } from "@/lib/utils";
 
 type ExploreTab = "equity" | "etf" | "options" | "advisory" | "algo";
@@ -149,11 +150,7 @@ function ExploreContent() {
             {currentVersion === "funded-not-traded" && <ETFFundedNotTraded />}
           </>
         )}
-        {activeTab === "options" && (
-          <div className="flex flex-1 items-center justify-center px-6 py-20">
-            <p className="text-[16px] text-muted-foreground">Options — coming soon</p>
-          </div>
-        )}
+        {activeTab === "options" && <ExploreOptions />}
         {activeTab === "advisory" && (
           <AdvisoryBaskets onDismiss={() => setActiveTab(prevTabRef.current)} />
         )}

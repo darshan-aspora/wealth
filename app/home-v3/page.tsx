@@ -11,6 +11,7 @@ import { ExploreFTUX } from "@/app/explore/versions/ftux";
 import { ExploreFundedNotTraded, ExploreFooter } from "@/app/explore/versions/funded-not-traded";
 import { ETFFundedNotTraded } from "@/app/explore/versions/etf-funded-not-traded";
 import { GlobalETFFundedNotTraded } from "@/app/explore/versions/global-etf-funded-not-traded";
+import { ExploreOptions } from "@/app/explore/versions/options";
 import { cn } from "@/lib/utils";
 
 type ExploreTab = "equity" | "etf" | "global-etf" | "options";
@@ -117,11 +118,7 @@ function ExploreContent() {
         </>
       )}
       {activeTab === "global-etf" && <GlobalETFFundedNotTraded />}
-      {activeTab === "options" && (
-        <div className="flex items-center justify-center px-6 py-20">
-          <p className="text-[16px] text-muted-foreground">Options — coming soon</p>
-        </div>
-      )}
+      {activeTab === "options" && <ExploreOptions />}
 
     </>
   );

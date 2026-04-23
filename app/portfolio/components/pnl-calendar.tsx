@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays, ChevronDown, Briefcase, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -213,25 +213,36 @@ function PnlBreakdownCard({ realisedPnl, dateLabel }: { realisedPnl: number; dat
 
 function OrderCards({ orders }: { orders: DayOrder[] }) {
   return (
-    <div className="space-y-2 mb-4">
+    <div className="space-y-2.5">
       {orders.map((o) => {
         const isGain = o.pnl >= 0;
         return (
-          <div key={o.symbol} className="flex items-center justify-between rounded-xl border border-border/50 bg-card px-4 py-3">
-            <div>
-              <p className="text-[14px] font-bold text-foreground mb-1">{o.symbol}</p>
-              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                <Briefcase size={11} />
-                <span>{o.qty}</span>
-                <span className="text-border">|</span>
-                <span>${o.avgPrice}</span>
-                <ArrowRight size={11} />
-                <span>${o.exitPrice}</span>
+          <div key={o.symbol} className="rounded-2xl border border-border/50 bg-white px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[14px] font-bold shrink-0 bg-muted text-foreground">S</span>
+                <p className="text-[16px] font-bold text-foreground tracking-wide">{o.symbol}</p>
+              </div>
+              <p className={cn("text-[16px] font-bold tabular-nums", isGain ? "text-gain" : "text-loss")}>
+                {isGain ? "+" : ""}{o.pnl}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 mt-2.5 pl-[30px]">
+              <div className="flex flex-col">
+                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                <span className="text-[14px] font-semibold text-foreground">{o.qty}</span>
+              </div>
+              <div className="w-px h-6 bg-border/50" />
+              <div className="flex flex-col">
+                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                <span className="text-[14px] font-semibold text-foreground">${o.avgPrice}</span>
+              </div>
+              <div className="w-px h-6 bg-border/50" />
+              <div className="flex flex-col">
+                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Exit</span>
+                <span className="text-[14px] font-semibold text-foreground">${o.exitPrice}</span>
               </div>
             </div>
-            <p className={cn("text-[17px] font-bold", isGain ? "text-gain" : "text-loss")}>
-              {isGain ? "+" : ""}{o.pnl}
-            </p>
           </div>
         );
       })}
@@ -246,59 +257,61 @@ function OrderCards({ orders }: { orders: DayOrder[] }) {
 function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection; onClose: () => void }) {
   const isGain = selection.pnl >= 0;
 
+  const title = selection.label;
+  const subtitle =
+    selection.type === "day"
+      ? `${formatPnL(selection.pnl - CHARGES_TOTAL)} net · ${selection.trades} order${selection.trades !== 1 ? "s" : ""}`
+      : selection.type === "month"
+      ? `${formatPnL(selection.pnl - CHARGES_TOTAL)} net · ${selection.stats.trades} trades`
+      : `${formatPnL(selection.pnl - CHARGES_TOTAL)} net lifetime P&L`;
+
   return (
     <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl px-0 pb-8 max-h-[88dvh] overflow-y-auto no-scrollbar">
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-9 h-1 rounded-full bg-muted-foreground/20" />
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[92dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        <div className="px-5">
+        {/* Header */}
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] font-bold text-foreground leading-tight">{title}</p>
+              <p className={cn("text-[14px] font-medium mt-1", isGain ? "text-gain" : "text-loss")}>{subtitle}</p>
+            </div>
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1 px-5 py-5 space-y-4">
+
           {/* ── DAY view ── */}
-          {selection.type === "day" && (() => {
-            return (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
-                    <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
-                      {formatPnL(selection.pnl)} · {selection.trades} order{selection.trades !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <span className="text-[13px] text-muted-foreground border border-border/60 rounded-full px-3 py-1.5">Value ↕</span>
-                </div>
-
-
-
-                <OrderCards orders={MOCK_ORDERS} />
-                <PnlBreakdownCard key={selection.label} realisedPnl={selection.pnl} dateLabel={selection.label} />
-              </>
-            );
-          })()}
+          {selection.type === "day" && (
+            <>
+              <p className="text-[14px] font-semibold text-foreground">Top Orders</p>
+              <OrderCards orders={MOCK_ORDERS} />
+              <PnlBreakdownCard realisedPnl={selection.pnl} dateLabel={selection.label} />
+            </>
+          )}
 
           {/* ── MONTH view ── */}
           {selection.type === "month" && (() => {
             const { stats } = selection;
             return (
               <>
-                <div className="mb-4">
-                  <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
-                  <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
-                    {formatPnL(selection.pnl)} · {stats.trades} trades
-                  </p>
-                </div>
-
                 <StatGrid items={[
                   { label: "Win Rate",   value: `${stats.winRate}%` },
                   { label: "Green Days", value: `${stats.greenDays}`, colored: true, isGain: true },
                   { label: "Red Days",   value: `${stats.redDays}`,  colored: true, isGain: false },
                   { label: "Avg / Day",  value: formatPnL(stats.pnl / (stats.greenDays + stats.redDays || 1)), colored: true, isGain },
                 ]} />
-
-                <p className="text-[13px] font-semibold text-foreground mb-2">Top Orders</p>
+                <p className="text-[14px] font-semibold text-foreground">Top Orders</p>
                 <OrderCards orders={MOCK_ORDERS} />
-                <PnlBreakdownCard key={selection.label} realisedPnl={selection.pnl} dateLabel={selection.label} />
+                <PnlBreakdownCard realisedPnl={selection.pnl} dateLabel={selection.label} />
               </>
             );
           })()}
@@ -308,13 +321,6 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
             const { stats } = selection;
             return (
               <>
-                <div className="mb-4">
-                  <p className="text-[18px] font-bold text-foreground">{selection.label}</p>
-                  <p className={cn("text-[13px] font-medium mt-0.5", isGain ? "text-gain" : "text-loss")}>
-                    {formatPnL(selection.pnl)} lifetime P&L
-                  </p>
-                </div>
-
                 <StatGrid items={[
                   { label: "Total P&L",   value: formatPnL(stats.pnl),       colored: true, isGain },
                   { label: "Total Trades",value: `${stats.trades}` },
@@ -325,13 +331,13 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
                   { label: "Best Day",    value: formatPnL(stats.bestDay),   colored: true, isGain: true },
                   { label: "Worst Day",   value: formatPnL(stats.worstDay),  colored: true, isGain: false },
                 ]} />
-
-                <p className="text-[13px] font-semibold text-foreground mb-2">Recent Orders</p>
+                <p className="text-[14px] font-semibold text-foreground">Recent Orders</p>
                 <OrderCards orders={MOCK_ORDERS} />
-                <PnlBreakdownCard key="alltime" realisedPnl={stats.pnl} dateLabel="All Time" />
+                <PnlBreakdownCard realisedPnl={stats.pnl} dateLabel="All Time" />
               </>
             );
           })()}
+
         </div>
       </SheetContent>
     </Sheet>
@@ -352,8 +358,8 @@ function PnlStats({ days }: { days: DayPnL[] }) {
   const netRealisedPnl = totalPnl - charges;
 
   const items = [
-    { label: "P&L",              node: <PnlValue value={totalPnl} className="text-[15px] leading-tight" /> },
-    { label: "Net Realised P&L", node: <PnlValue value={netRealisedPnl} className="text-[15px] leading-tight" /> },
+    { label: "Gross P&L", node: <PnlValue value={totalPnl} className="text-[15px] leading-tight" /> },
+    { label: "Net P&L",   node: <PnlValue value={netRealisedPnl} className="text-[15px] leading-tight" /> },
     { label: "Trades",           node: <span className="text-[15px] font-bold text-foreground">{totalTrades}</span> },
     { label: "Win Rate",         node: <span className="text-[15px] font-bold text-foreground">{winRate}%</span> },
   ];

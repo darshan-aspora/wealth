@@ -62,7 +62,7 @@ export function WidgetHeader({
         {flipper && (
           <button
             onClick={flipper.onFlip}
-            className="flex items-center gap-1.5 overflow-hidden text-[14px] font-semibold text-muted-foreground active:opacity-70 transition-opacity"
+            className="flex items-center gap-1.5 overflow-hidden rounded-full border border-border/60 bg-background px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 transition-opacity"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
