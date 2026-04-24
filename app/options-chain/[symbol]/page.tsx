@@ -6,100 +6,7 @@ import { X, ChevronDown, Info, ChevronRight, Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-
-/* ------------------------------------------------------------------ */
-/*  Greeks generator                                                   */
-/* ------------------------------------------------------------------ */
-
-function seeded(seed: number) {
-  let s = Math.abs(seed) % 2147483647 || 1;
-  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-}
-function hashStr(str: string) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-interface GreekRow {
-  strike: number;
-  call: { ltp: number; ltpChgPct: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
-  put:  { ltp: number; ltpChgPct: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
-}
-
-function buildChain(currentPrice: number, seed: number): GreekRow[] {
-  const rand = seeded(seed);
-  const step = currentPrice > 500 ? 5 : currentPrice > 100 ? 2.5 : 1;
-  const base = Math.round(currentPrice / step) * step;
-  const rows: GreekRow[] = [];
-
-  for (let i = -20; i <= 20; i++) {   // 41 strikes total
-    const strike  = +(base + i * step).toFixed(1);
-    const dist    = (strike - currentPrice) / currentPrice;
-    const absDist = Math.abs(dist);
-    const iv      = +(0.28 + absDist * 0.35 + rand() * 0.06).toFixed(2);
-    const cDelta  = +Math.max(0.01, Math.min(0.99, 0.5 - dist * 3.5 + (rand() - 0.5) * 0.04)).toFixed(2);
-    const pDelta  = +(cDelta - 1).toFixed(2);
-    const gamma   = +(Math.max(0.0001, 0.0009 * Math.exp(-absDist * 22) + rand() * 0.00015)).toFixed(4);
-    const vega    = Math.max(1, Math.round(14 * Math.exp(-absDist * 10) + rand() * 2));
-    const theta   = -Math.max(1, Math.round(18 * Math.exp(-absDist * 9) + rand() * 3));
-    const callIntr = Math.max(0, currentPrice - strike);
-    const putIntr  = Math.max(0, strike - currentPrice);
-    const tv       = currentPrice * 0.018 * Math.max(0.04, 1 - absDist * 3);
-
-    rows.push({
-      strike,
-      call: { ltp: +(callIntr + tv + rand() * 0.3).toFixed(2), ltpChgPct: +((rand() - 0.45) * 7).toFixed(2), iv, delta: cDelta, theta, vega, gamma },
-      put:  { ltp: +(putIntr  + tv * 0.75 + rand() * 0.25).toFixed(2), ltpChgPct: +((rand() - 0.45) * 5).toFixed(2), iv, delta: pDelta, theta, vega, gamma },
-    });
-  }
-  return rows;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Static data                                                        */
-/* ------------------------------------------------------------------ */
-
-const STOCK_PRICES: Record<string, { price: number; pct: number }> = {
-  NVIDIA:    { price: 924.80, pct:  3.2 },
-  Apple:     { price: 198.50, pct:  2.9 },
-  Microsoft: { price: 425.30, pct:  2.2 },
-  Alphabet:  { price: 176.80, pct:  1.7 },
-  Meta:      { price: 502.40, pct:  1.5 },
-};
-
-// ETFs & Indices: Daily · Weekly · Monthly · Quarterly · Yearly
-const EXPIRY_GROUPS_ETF = [
-  { label: "Daily",     items: [{ date: "24 Apr 2026", tag: "0D" }, { date: "25 Apr 2026", tag: "1D" }, { date: "28 Apr 2026", tag: "2D" }] },
-  { label: "Weekly",    items: [{ date: "1 May 2026",  tag: "1W" }, { date: "8 May 2026",  tag: "2W" }, { date: "15 May 2026", tag: "3W" }, { date: "22 May 2026", tag: "4W" }] },
-  { label: "Monthly",   items: [{ date: "29 May 2026", tag: "May" }, { date: "26 Jun 2026", tag: "Jun" }, { date: "31 Jul 2026", tag: "Jul" }, { date: "28 Aug 2026", tag: "Aug" }] },
-  { label: "Quarterly", items: [{ date: "25 Sep 2026", tag: "Sep Q" }, { date: "25 Dec 2026", tag: "Dec Q" }, { date: "26 Mar 2027", tag: "Mar Q" }] },
-  { label: "Yearly",    items: [{ date: "25 Dec 2026", tag: "2026" }, { date: "31 Dec 2027", tag: "2027" }, { date: "31 Dec 2028", tag: "2028" }] },
-];
-
-// Stocks: Weekly · Monthly · Yearly (leap / LEAPS)
-const EXPIRY_GROUPS_STOCK = [
-  { label: "Weekly",  items: [{ date: "1 May 2026",  tag: "1W" }, { date: "8 May 2026",  tag: "2W" }, { date: "15 May 2026", tag: "3W" }, { date: "22 May 2026", tag: "4W" }] },
-  { label: "Monthly", items: [{ date: "29 May 2026", tag: "May" }, { date: "26 Jun 2026", tag: "Jun" }, { date: "31 Jul 2026", tag: "Jul" }, { date: "28 Aug 2026", tag: "Aug" }, { date: "25 Sep 2026", tag: "Sep" }, { date: "25 Dec 2026", tag: "Dec" }] },
-  { label: "Yearly (LEAPS)", items: [{ date: "15 Jan 2027", tag: "Jan '27" }, { date: "21 Jan 2028", tag: "Jan '28 ✦" }, { date: "20 Jan 2032", tag: "Jan '32 ✦" }] },
-];
-
-// Symbols treated as ETF/Index
-const ETF_INDEX_SYMBOLS = new Set([
-  // Tickers
-  "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT", "HYG", "EEM",
-  "VXX", "UVXY", "SQQQ", "TQQQ", "SPXL", "SPXS", "ACWI", "EFA", "VTI",
-  // Indices
-  "SPX", "NDX", "RUT", "VIX", "DJIA",
-  // Full names used in TOP_CHAINS
-  "S&P 500", "NASDAQ 100",
-  "SPDR S&P 500", "Invesco QQQ", "iShares Russell",
-  "iShares MSCI ACWI ETF", "Invesco QQQ Trust Series 1",
-]);
-
-function getExpiryGroups(symbol: string) {
-  return ETF_INDEX_SYMBOLS.has(symbol) ? EXPIRY_GROUPS_ETF : EXPIRY_GROUPS_STOCK;
-}
+import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, seeded, STOCK_PRICES } from "@/lib/options-chain";
 
 /* ------------------------------------------------------------------ */
 /*  Layout constants                                                   */
@@ -284,8 +191,7 @@ export default function OptionsChainPage() {
     if (lh) { lh.scrollLeft = lh.scrollWidth; }
   }, [chain]);
 
-  const expiryShort = expiry
-    .replace(" 2026", "").replace(" 2027", " '27").replace(" 2028", " '28");
+  const expiryShort = formatExpiryShort(expiry);
 
   // Total content height (no dedicated ATM row — pill overlays the border)
   const totalH = chain.length * ROW_H;
@@ -299,12 +205,14 @@ export default function OptionsChainPage() {
         <button onClick={() => router.back()} className="rounded-full p-1.5 active:bg-muted/50 shrink-0">
           <X size={18} strokeWidth={2.2} className="text-foreground" />
         </button>
-        <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
-          <p className="text-[17px] font-bold text-foreground">{symbol}</p>
-          <p className="text-[15px] font-semibold tabular-nums text-foreground">{currentPrice.toFixed(2)}</p>
-          <p className={cn("text-[13px] font-semibold tabular-nums", stock.pct >= 0 ? "text-gain" : "text-loss")}>
-            {stock.pct >= 0 ? "+" : ""}{stock.pct.toFixed(2)}%
-          </p>
+        <div className="flex-1 flex flex-col min-w-0">
+          <p className="text-[17px] font-bold text-foreground leading-tight">{symbol}</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-[13px] font-semibold tabular-nums text-foreground">{currentPrice.toFixed(2)}</p>
+            <p className={cn("text-[12px] font-semibold tabular-nums", stock.pct >= 0 ? "text-gain" : "text-loss")}>
+              {stock.pct >= 0 ? "+" : ""}{stock.pct.toFixed(2)}%
+            </p>
+          </div>
         </div>
         <button
           onClick={() => setExpiryOpen(true)}
@@ -421,7 +329,7 @@ export default function OptionsChainPage() {
                       width: SIDE_W,
                       ...(isCallSelected ? {
                         background: "white",
-                        boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                        boxShadow: "0 2px 12px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)",
                         zIndex: 5,
                         position: "relative",
                       } : {}),
@@ -467,7 +375,7 @@ export default function OptionsChainPage() {
                       width: SIDE_W,
                       ...(isPutSelected ? {
                         background: "white",
-                        boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                        boxShadow: "0 2px 12px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)",
                         zIndex: 5,
                         position: "relative",
                       } : {}),
@@ -486,13 +394,12 @@ export default function OptionsChainPage() {
 
           {/* Center strike column — always on top, no scroll */}
           <div
-            className="absolute top-0 bottom-0 bg-background border-l border-r border-border/25"
+            className="absolute top-0 bottom-0 bg-background"
             style={{ left: "50%", transform: "translateX(-50%)", width: STRIKE_W, zIndex: 10 }}
           >
             {chain.map((row, rowIdx) => {
               const isATM         = row.strike === atmStrike;
               const isRowSelected = selected?.strike === row.strike;
-              const selSide       = isRowSelected ? selected!.side : null;
               const { red: redW, green: greenW } = barWidths(rowIdx, chain.length);
               return (
                 <div
@@ -505,20 +412,12 @@ export default function OptionsChainPage() {
                     height: ROW_H,
                     ...(isRowSelected ? {
                       background: "white",
-                      boxShadow: "0 2px 12px rgba(0,0,0,0.13), 0 0 0 1.5px rgba(0,0,0,0.09)",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)",
                       zIndex: 15,
                       position: "relative",
                     } : {}),
                   }}
                 >
-                  {/* Call-side selection: thin bar on left edge */}
-                  {isRowSelected && selSide === "call" && (
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-full bg-foreground/60" />
-                  )}
-                  {/* Put-side selection: thin bar on right edge */}
-                  {isRowSelected && selSide === "put" && (
-                    <div className="absolute right-0 top-0 bottom-0 w-[3px] rounded-l-full bg-foreground/60" />
-                  )}
                   <span className={cn(
                     "text-[13px] font-semibold tabular-nums",
                     isATM ? "text-foreground" : "text-muted-foreground",
@@ -572,7 +471,15 @@ export default function OptionsChainPage() {
             {/* Row 1: option identity + close */}
             <div className="flex items-center justify-between mb-4">
               <button
-                onClick={() => router.push(`/options-chain/${encodeURIComponent(symbol)}`)}
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    strike: selected.strike.toFixed(1),
+                    side: selected.side,
+                    expiry,
+                    ltp: selected.ltp.toFixed(2),
+                  });
+                  router.push(`/options-chain/${encodeURIComponent(symbol)}/leg?${params.toString()}`);
+                }}
                 className="flex items-center gap-1 min-w-0"
               >
                 <p className="text-[14px] font-bold text-foreground truncate">
@@ -592,66 +499,77 @@ export default function OptionsChainPage() {
             </div>
 
             {/* Row 2: info pills */}
-            <div className="flex gap-2.5 mb-4">
-              <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Available</p>
-                <p className="text-[14px] font-bold text-foreground tabular-nums">$12,450.00</p>
-              </div>
-              <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Req. Margin</p>
-                <p className="text-[14px] font-bold text-foreground tabular-nums">
-                  ${(selected.ltp * lots * 100).toFixed(2)}
-                </p>
-              </div>
-            </div>
+            {(() => {
+              const available = 12450;
+              const reqMargin = selected.ltp * lots * 100;
+              const insufficient = reqMargin > available;
+              return (
+                <>
+                  <div className="flex gap-2.5 mb-4">
+                    <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Available</p>
+                      <p className="text-[14px] font-bold text-foreground tabular-nums">${available.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className={cn("flex-1 rounded-xl px-3.5 py-2.5", insufficient ? "bg-loss/10" : "bg-muted/40")}>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Req. Margin</p>
+                      <p className={cn("text-[14px] font-bold tabular-nums", insufficient ? "text-loss" : "text-foreground")}>
+                        ${reqMargin.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Row 3: lots stepper + Sell + Buy */}
-            <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
-              {/* Lots stepper */}
-              <div className="flex items-stretch rounded-xl border border-border/60 overflow-hidden shrink-0">
-                <button
-                  onClick={() => setLots((l) => Math.max(1, l - 1))}
-                  className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
-                >
-                  <Minus size={14} strokeWidth={2.5} className="text-foreground" />
-                </button>
-                <span className="flex items-center justify-center px-2 text-[15px] font-bold text-foreground tabular-nums min-w-[30px]">
-                  {lots}
-                </span>
-                <button
-                  onClick={() => setLots((l) => l + 1)}
-                  className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
-                >
-                  <Plus size={14} strokeWidth={2.5} className="text-foreground" />
-                </button>
-              </div>
+                  {/* Row 3: lots stepper + Sell + Buy */}
+                  <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
+                    {/* Lots stepper */}
+                    <div className="flex items-stretch rounded-xl border border-border/60 overflow-hidden shrink-0">
+                      <button
+                        onClick={() => setLots((l) => Math.max(1, l - 1))}
+                        className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
+                      >
+                        <Minus size={14} strokeWidth={2.5} className="text-foreground" />
+                      </button>
+                      <span className="flex items-center justify-center px-2 text-[15px] font-bold text-foreground tabular-nums min-w-[30px]">
+                        {lots}
+                      </span>
+                      <button
+                        onClick={() => setLots((l) => l + 1)}
+                        className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
+                      >
+                        <Plus size={14} strokeWidth={2.5} className="text-foreground" />
+                      </button>
+                    </div>
 
-              {/* Sell button */}
-              <button
-                onClick={() => setSelected((prev) => prev ? { ...prev, mode: "sell" } : null)}
-                className={cn(
-                  "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors active:opacity-90 border",
-                  selected.mode === "sell"
-                    ? "bg-loss text-white border-loss"
-                    : "border-loss/50 text-loss bg-loss/[0.04]"
-                )}
-              >
-                Sell · {lots} {lots === 1 ? "Lot" : "Lots"}
-              </button>
+                    {/* Sell button */}
+                    <button
+                      disabled={insufficient}
+                      onClick={() => !insufficient && setSelected((prev) => prev ? { ...prev, mode: "sell" } : null)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border",
+                        insufficient
+                          ? "border-border/40 text-muted-foreground/40 bg-transparent cursor-not-allowed"
+                          : "border-loss text-loss bg-transparent active:opacity-70"
+                      )}
+                    >
+                      Sell · {lots} {lots === 1 ? "Lot" : "Lots"}
+                    </button>
 
-              {/* Buy button */}
-              <button
-                onClick={() => setSelected((prev) => prev ? { ...prev, mode: "buy" } : null)}
-                className={cn(
-                  "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors active:opacity-90 border",
-                  selected.mode === "buy"
-                    ? "bg-gain text-white border-gain"
-                    : "border-gain/50 text-gain bg-gain/[0.04]"
-                )}
-              >
-                Buy · {lots} {lots === 1 ? "Lot" : "Lots"}
-              </button>
-            </div>
+                    {/* Buy button */}
+                    <button
+                      disabled={insufficient}
+                      onClick={() => !insufficient && setSelected((prev) => prev ? { ...prev, mode: "buy" } : null)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border",
+                        insufficient
+                          ? "border-border/40 text-muted-foreground/40 bg-transparent cursor-not-allowed"
+                          : "border-gain text-gain bg-transparent active:opacity-70"
+                      )}
+                    >
+                      Buy · {lots} {lots === 1 ? "Lot" : "Lots"}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </motion.div>
         )}
       </AnimatePresence>

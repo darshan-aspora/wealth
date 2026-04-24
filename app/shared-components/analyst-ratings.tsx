@@ -3,14 +3,14 @@
 import { cn } from "@/lib/utils";
 import { ArrowUp, ArrowRight, ArrowDown } from "lucide-react";
 import { AIAnnotation } from "./ai-annotation";
-import { ANALYST_RATINGS } from "./mock-data";
+import { getAnalystRatings } from "./mock-data";
 
 interface AnalystRatingsProps {
   symbol: string;
 }
 
 export function AnalystRatings({ symbol }: AnalystRatingsProps) {
-  const data = ANALYST_RATINGS[symbol];
+  const data = getAnalystRatings(symbol);
   if (!data) return null;
 
   const { ratings } = data;

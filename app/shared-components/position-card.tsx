@@ -2,14 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { ChevronRight, Wallet } from "lucide-react";
-import { POSITIONS } from "./mock-data";
+import { getPosition } from "./mock-data";
 
 interface PositionCardProps {
   symbol: string;
 }
 
 export function PositionCard({ symbol }: PositionCardProps) {
-  const position = POSITIONS[symbol];
+  const position = getPosition(symbol);
   if (!position) return null;
 
   const totalGain = position.totalReturn >= 0;

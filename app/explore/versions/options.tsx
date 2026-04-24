@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpDown, Link2 } from "lucide-react";
+import { ArrowUpDown, Link2, LayoutGrid, TrendingUp, BarChart2, Layers, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -26,19 +26,19 @@ type AssetType = "Stock" | "Index" | "ETF" | "Global ETF";
 /*  Table primitive                                                    */
 /* ------------------------------------------------------------------ */
 
-function OptionsTable({ cols, rows }: { cols: ColDef[]; rows: React.ReactNode[][] }) {
+function OptionsTable({ cols, rows, onRowClick }: { cols: ColDef[]; rows: React.ReactNode[][]; onRowClick?: (i: number) => void }) {
   if (rows.length === 0) {
     return <p className="px-5 py-5 text-[14px] text-muted-foreground text-center">No data for this filter.</p>;
   }
   const [first, ...rest] = cols;
   return (
-    <div className="overflow-x-auto no-scrollbar">
-      <table className="w-full text-sm border-collapse" style={{ minWidth: 460 }}>
+    <div>
+      <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="text-muted-foreground text-[12px] uppercase tracking-wider">
-            <th className="text-left py-2.5 pl-5 pr-2 font-medium sticky left-0 bg-card z-10 whitespace-nowrap">{first.label}</th>
+            <th className="text-left py-2.5 pl-5 pr-2 font-medium w-full">{first.label}</th>
             {rest.map((col, i) => (
-              <th key={i} className={cn("py-2.5 px-2 font-medium whitespace-nowrap", col.align === "left" ? "text-left" : "text-right", i === rest.length - 1 && "pr-5")} style={col.minWidth ? { minWidth: col.minWidth } : undefined}>
+              <th key={i} className={cn("py-2.5 px-2 font-medium whitespace-nowrap", col.align === "left" ? "text-left" : "text-right", i === rest.length - 1 && "pr-5")}>
                 {col.label}
               </th>
             ))}
@@ -46,8 +46,8 @@ function OptionsTable({ cols, rows }: { cols: ColDef[]; rows: React.ReactNode[][
         </thead>
         <tbody>
           {rows.map((row, ri) => (
-            <tr key={ri} className="border-t border-border/30">
-              <td className="py-3.5 pl-5 pr-2 sticky left-0 bg-card z-10">
+            <tr key={ri} className={cn("border-t border-border/30", onRowClick && "cursor-pointer active:bg-muted/40")} onClick={() => onRowClick?.(ri)}>
+              <td className="py-3.5 pl-5 pr-2 w-full">
                 <div className="flex items-center gap-2.5">
                   <div className="w-[3px] h-8 rounded-full shrink-0 bg-neutral-800" />
                   {row[0]}
@@ -69,6 +69,14 @@ function OptionsTable({ cols, rows }: { cols: ColDef[]; rows: React.ReactNode[][
 /* ------------------------------------------------------------------ */
 /*  Shared UI atoms                                                    */
 /* ------------------------------------------------------------------ */
+
+function fmtNum(raw: string): string {
+  const n = +raw.replace(/[^0-9.]/g, "");
+  if (isNaN(n)) return raw;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
 
 function PctBadge({ value }: { value: number }) {
   const pos = value >= 0;
@@ -172,7 +180,7 @@ type PopularRow = { assetType: AssetType; index: string; option: string; underly
 const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
   "Mega Cap": {
     "Daily Expiry": [
-      { assetType: "Index",      index: "NASDAQ 100", option: "Apr 20 18000 CALL", underlying: "17,995",    oi: "1.2M" },
+      { assetType: "Index",      index: "NDX", option: "Apr 20 18000 CALL", underlying: "17,995",    oi: "1.2M" },
       { assetType: "ETF",        index: "SPY",        option: "Apr 20 5200 PUT",   underlying: "5,195.25",  oi: "899K" },
       { assetType: "ETF",        index: "QQQ",        option: "Apr 20 420 CALL",   underlying: "419.80",    oi: "750K" },
       { assetType: "ETF",        index: "IWM",        option: "Apr 20 195 PUT",    underlying: "193.40",    oi: "620K" },
@@ -183,14 +191,14 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     Weekly: [
       { assetType: "ETF",        index: "SPY",        option: "Apr 26 5200 PUT",   underlying: "5,195.25",  oi: "1.1M" },
       { assetType: "ETF",        index: "QQQ",        option: "Apr 26 420 CALL",   underlying: "419.80",    oi: "890K" },
-      { assetType: "Index",      index: "NASDAQ 100", option: "Apr 26 18200 CALL", underlying: "18,190.10", oi: "760K" },
+      { assetType: "Index",      index: "NDX", option: "Apr 26 18200 CALL", underlying: "18,190.10", oi: "760K" },
       { assetType: "Stock",      index: "MSFT",       option: "Apr 26 440 CALL",   underlying: "425.30",    oi: "480K" },
       { assetType: "Global ETF", index: "VEA",        option: "Apr 26 50 CALL",    underlying: "49.60",     oi: "140K" },
     ],
     Monthly: [
       { assetType: "ETF",        index: "SPY",        option: "May 17 5300 CALL",  underlying: "5,195.25",  oi: "2.1M" },
       { assetType: "ETF",        index: "QQQ",        option: "May 17 450 CALL",   underlying: "419.80",    oi: "1.8M" },
-      { assetType: "Index",      index: "NASDAQ 100", option: "May 17 19000 CALL", underlying: "18,190.10", oi: "1.4M" },
+      { assetType: "Index",      index: "NDX", option: "May 17 19000 CALL", underlying: "18,190.10", oi: "1.4M" },
       { assetType: "Stock",      index: "AAPL",       option: "May 17 200 CALL",   underlying: "188.50",    oi: "980K" },
       { assetType: "Global ETF", index: "EFA",        option: "May 17 84 CALL",    underlying: "81.40",     oi: "220K" },
     ],
@@ -198,54 +206,54 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
       { assetType: "ETF",        index: "SPY",        option: "Jun 20 5500 CALL",  underlying: "5,195.25",  oi: "3.2M" },
       { assetType: "ETF",        index: "QQQ",        option: "Jun 20 480 CALL",   underlying: "419.80",    oi: "2.6M" },
       { assetType: "Stock",      index: "NVDA",       option: "Jun 20 1000 CALL",  underlying: "924.80",    oi: "1.5M" },
-      { assetType: "Index",      index: "S&P 500",    option: "Jun 20 5600 CALL",  underlying: "5,195.25",  oi: "2.1M" },
+      { assetType: "Index",      index: "SPX",    option: "Jun 20 5600 CALL",  underlying: "5,195.25",  oi: "2.1M" },
       { assetType: "Global ETF", index: "EFA",        option: "Jun 20 86 CALL",    underlying: "81.40",     oi: "310K" },
     ],
   },
   "Large Cap": {
     "Daily Expiry": [
-      { assetType: "Stock",      index: "JPMorgan",   option: "Apr 20 200 CALL",  underlying: "198.40",  oi: "480K" },
-      { assetType: "Stock",      index: "Goldman",    option: "Apr 20 450 PUT",   underlying: "447.20",  oi: "360K" },
+      { assetType: "Stock",      index: "JPM",   option: "Apr 20 200 CALL",  underlying: "198.40",  oi: "480K" },
+      { assetType: "Stock",      index: "GS",    option: "Apr 20 450 PUT",   underlying: "447.20",  oi: "360K" },
       { assetType: "ETF",        index: "XLF",        option: "Apr 20 42 CALL",   underlying: "41.80",   oi: "290K" },
-      { assetType: "Index",      index: "Russell 1000",option: "Apr 20 2400 CALL",underlying: "2,390.10",oi: "210K" },
+      { assetType: "Index",      index: "RUI",option: "Apr 20 2400 CALL",underlying: "2,390.10",oi: "210K" },
       { assetType: "Global ETF", index: "EWJ",        option: "Apr 20 68 CALL",   underlying: "67.40",   oi: "140K" },
     ],
     Weekly: [
-      { assetType: "Stock",      index: "JPMorgan",   option: "Apr 26 205 CALL",  underlying: "198.40",  oi: "510K" },
+      { assetType: "Stock",      index: "JPM",   option: "Apr 26 205 CALL",  underlying: "198.40",  oi: "510K" },
       { assetType: "ETF",        index: "XLF",        option: "Apr 26 43 CALL",   underlying: "41.80",   oi: "320K" },
-      { assetType: "Stock",      index: "Visa",       option: "Apr 26 280 CALL",  underlying: "278.90",  oi: "310K" },
+      { assetType: "Stock",      index: "V",       option: "Apr 26 280 CALL",  underlying: "278.90",  oi: "310K" },
       { assetType: "Global ETF", index: "EWJ",        option: "Apr 26 69 CALL",   underlying: "67.40",   oi: "160K" },
     ],
     Monthly: [
-      { assetType: "Stock",      index: "JPMorgan",   option: "May 17 210 CALL",  underlying: "198.40",  oi: "680K" },
+      { assetType: "Stock",      index: "JPM",   option: "May 17 210 CALL",  underlying: "198.40",  oi: "680K" },
       { assetType: "ETF",        index: "XLF",        option: "May 17 44 CALL",   underlying: "41.80",   oi: "420K" },
-      { assetType: "Index",      index: "Russell 1000",option: "May 17 2450 CALL",underlying: "2,390.10",oi: "280K" },
+      { assetType: "Index",      index: "RUI",option: "May 17 2450 CALL",underlying: "2,390.10",oi: "280K" },
     ],
     Quarterly: [
-      { assetType: "Stock",      index: "JPMorgan",   option: "Jun 20 220 CALL",  underlying: "198.40",  oi: "820K" },
+      { assetType: "Stock",      index: "JPM",   option: "Jun 20 220 CALL",  underlying: "198.40",  oi: "820K" },
       { assetType: "ETF",        index: "XLF",        option: "Jun 20 46 CALL",   underlying: "41.80",   oi: "510K" },
       { assetType: "Global ETF", index: "EWJ",        option: "Jun 20 72 CALL",   underlying: "67.40",   oi: "210K" },
     ],
   },
   "Mid Cap": {
     "Daily Expiry": [
-      { assetType: "Stock",  index: "Zebra Tech",  option: "Apr 20 310 CALL",  underlying: "308.50",  oi: "125K" },
+      { assetType: "Stock",  index: "ZBRA",  option: "Apr 20 310 CALL",  underlying: "308.50",  oi: "125K" },
       { assetType: "ETF",    index: "MDY",         option: "Apr 20 580 CALL",  underlying: "578.20",  oi: "98K"  },
-      { assetType: "Stock",  index: "Saia Inc",    option: "Apr 20 440 CALL",  underlying: "438.80",  oi: "82K"  },
-      { assetType: "Index",  index: "S&P 400",     option: "Apr 20 2800 CALL", underlying: "2,790.40",oi: "74K"  },
+      { assetType: "Stock",  index: "SAIA",    option: "Apr 20 440 CALL",  underlying: "438.80",  oi: "82K"  },
+      { assetType: "Index",  index: "MID",     option: "Apr 20 2800 CALL", underlying: "2,790.40",oi: "74K"  },
     ],
     Weekly: [
-      { assetType: "Stock",  index: "Zebra Tech",  option: "Apr 26 315 CALL",  underlying: "308.50",  oi: "140K" },
+      { assetType: "Stock",  index: "ZBRA",  option: "Apr 26 315 CALL",  underlying: "308.50",  oi: "140K" },
       { assetType: "ETF",    index: "MDY",         option: "Apr 26 585 CALL",  underlying: "578.20",  oi: "112K" },
-      { assetType: "Stock",  index: "BioTechne",   option: "Apr 26 64 CALL",   underlying: "61.40",   oi: "88K"  },
+      { assetType: "Stock",  index: "TECH",   option: "Apr 26 64 CALL",   underlying: "61.40",   oi: "88K"  },
     ],
     Monthly: [
-      { assetType: "Stock",  index: "Zebra Tech",  option: "May 17 320 CALL",  underlying: "308.50",  oi: "180K" },
+      { assetType: "Stock",  index: "ZBRA",  option: "May 17 320 CALL",  underlying: "308.50",  oi: "180K" },
       { assetType: "ETF",    index: "MDY",         option: "May 17 592 CALL",  underlying: "578.20",  oi: "148K" },
-      { assetType: "Index",  index: "S&P 400",     option: "May 17 2850 CALL", underlying: "2,790.40",oi: "96K"  },
+      { assetType: "Index",  index: "MID",     option: "May 17 2850 CALL", underlying: "2,790.40",oi: "96K"  },
     ],
     Quarterly: [
-      { assetType: "Stock",  index: "Zebra Tech",  option: "Jun 20 330 CALL",  underlying: "308.50",  oi: "220K" },
+      { assetType: "Stock",  index: "ZBRA",  option: "Jun 20 330 CALL",  underlying: "308.50",  oi: "220K" },
       { assetType: "ETF",    index: "MDY",         option: "Jun 20 600 CALL",  underlying: "578.20",  oi: "180K" },
     ],
   },
@@ -254,12 +262,12 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
       { assetType: "ETF",    index: "IWM",         option: "Apr 20 195 CALL",  underlying: "193.80",  oi: "310K" },
       { assetType: "ETF",    index: "SLY",         option: "Apr 20 82 PUT",    underlying: "81.40",   oi: "94K"  },
       { assetType: "Stock",  index: "SMTC",        option: "Apr 20 44 CALL",   underlying: "42.80",   oi: "38K"  },
-      { assetType: "Index",  index: "Russell 2000",option: "Apr 20 1980 CALL", underlying: "1,974.20",oi: "68K"  },
+      { assetType: "Index",  index: "RUT",option: "Apr 20 1980 CALL", underlying: "1,974.20",oi: "68K"  },
     ],
     Weekly: [
       { assetType: "ETF",    index: "IWM",         option: "Apr 26 197 CALL",  underlying: "193.80",  oi: "340K" },
       { assetType: "Stock",  index: "SMTC",        option: "Apr 26 46 CALL",   underlying: "42.80",   oi: "42K"  },
-      { assetType: "Index",  index: "Russell 2000",option: "Apr 26 1990 CALL", underlying: "1,974.20",oi: "82K"  },
+      { assetType: "Index",  index: "RUT",option: "Apr 26 1990 CALL", underlying: "1,974.20",oi: "82K"  },
     ],
     Monthly: [
       { assetType: "ETF",    index: "IWM",         option: "May 17 200 CALL",  underlying: "193.80",  oi: "480K" },
@@ -268,7 +276,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
     Quarterly: [
       { assetType: "ETF",    index: "IWM",         option: "Jun 20 205 CALL",  underlying: "193.80",  oi: "560K" },
-      { assetType: "Index",  index: "Russell 2000",option: "Jun 20 2020 CALL", underlying: "1,974.20",oi: "120K" },
+      { assetType: "Index",  index: "RUT",option: "Jun 20 2020 CALL", underlying: "1,974.20",oi: "120K" },
     ],
   },
   "Micro Cap": {
@@ -333,7 +341,7 @@ const UNDER_10_DATA: Record<MarketCap, Under10Row[]> = {
     { assetType: "Stock",      index: "CDAY",  strike: "Apr 19 72 CALL",  price: "$8.20", change:  14.3 },
     { assetType: "Stock",      index: "SAIA",  strike: "Apr 19 450 PUT",  price: "$6.50", change:  -9.8 },
     { assetType: "ETF",        index: "MDY",   strike: "Apr 19 590 CALL", price: "$7.80", change:   4.2 },
-    { assetType: "Index",      index: "S&P 400",strike: "Apr 19 2820 CALL",price:"$9.40", change:   8.6 },
+    { assetType: "Index",      index: "MID",strike: "Apr 19 2820 CALL",price:"$9.40", change:   8.6 },
     { assetType: "Stock",      index: "ITRI",  strike: "Apr 18 88 CALL",  price: "$4.15", change:  16.2 },
   ],
   "Small Cap": [
@@ -366,109 +374,109 @@ type SectorRow = { assetType: AssetType; index: string; option: string; oi: stri
 const SECTORIAL_DATA: Record<MarketCap, Record<SectorChip, SectorRow[]>> = {
   "Mega Cap": {
     FinTech: [
-      { assetType: "ETF",        index: "Vanguard Financials", option: "Apr 20 96 CALL",   oi: "15,894", vol: "3,180" },
-      { assetType: "Stock",      index: "Visa",                option: "Apr 20 285 CALL",  oi: "8,420",  vol: "1,684" },
-      { assetType: "Global ETF", index: "iShares Global Fin",  option: "Apr 20 22 CALL",   oi: "4,210",  vol: "842"   },
-      { assetType: "Stock",      index: "Mastercard",          option: "Apr 20 490 CALL",  oi: "6,180",  vol: "1,236" },
-      { assetType: "ETF",        index: "SPDR Financials",     option: "Apr 20 42 CALL",   oi: "12,400", vol: "2,480" },
+      { assetType: "ETF",        index: "VFH",   option: "Apr 20 96 CALL",   oi: "15,894", vol: "3,180" },
+      { assetType: "Stock",      index: "V",     option: "Apr 20 285 CALL",  oi: "8,420",  vol: "1,684" },
+      { assetType: "Global ETF", index: "IXG",   option: "Apr 20 22 CALL",   oi: "4,210",  vol: "842"   },
+      { assetType: "Stock",      index: "MA",    option: "Apr 20 490 CALL",  oi: "6,180",  vol: "1,236" },
+      { assetType: "ETF",        index: "XLF",   option: "Apr 20 42 CALL",   oi: "12,400", vol: "2,480" },
     ],
     "Clean Energy": [
-      { assetType: "ETF",        index: "iShares Clean Energy",option: "Apr 20 18 CALL",   oi: "42,300", vol: "8,460" },
-      { assetType: "ETF",        index: "Invesco Solar",       option: "Apr 20 65 PUT",    oi: "28,440", vol: "5,688" },
-      { assetType: "Global ETF", index: "iShares Global Clean",option: "Apr 20 14 CALL",   oi: "9,800",  vol: "1,960" },
-      { assetType: "Stock",      index: "NextEra Energy",      option: "Apr 20 80 CALL",   oi: "18,400", vol: "3,680" },
+      { assetType: "ETF",        index: "ICLN",  option: "Apr 20 18 CALL",   oi: "42,300", vol: "8,460" },
+      { assetType: "ETF",        index: "TAN",   option: "Apr 20 65 PUT",    oi: "28,440", vol: "5,688" },
+      { assetType: "Global ETF", index: "INRG",  option: "Apr 20 14 CALL",   oi: "9,800",  vol: "1,960" },
+      { assetType: "Stock",      index: "NEE",   option: "Apr 20 80 CALL",   oi: "18,400", vol: "3,680" },
     ],
     Biotech: [
-      { assetType: "ETF",        index: "iShares Biotech",     option: "Apr 20 130 CALL",  oi: "38,200", vol: "7,640" },
-      { assetType: "Stock",      index: "Regeneron",           option: "Apr 20 800 CALL",  oi: "5,600",  vol: "1,120" },
-      { assetType: "ETF",        index: "SPDR Biotech",        option: "Apr 20 90 PUT",    oi: "24,900", vol: "4,980" },
-      { assetType: "Global ETF", index: "iShares Global HC",   option: "Apr 20 48 CALL",   oi: "6,200",  vol: "1,240" },
+      { assetType: "ETF",        index: "IBB",   option: "Apr 20 130 CALL",  oi: "38,200", vol: "7,640" },
+      { assetType: "Stock",      index: "REGN",  option: "Apr 20 800 CALL",  oi: "5,600",  vol: "1,120" },
+      { assetType: "ETF",        index: "XBI",   option: "Apr 20 90 PUT",    oi: "24,900", vol: "4,980" },
+      { assetType: "Global ETF", index: "IXJ",   option: "Apr 20 48 CALL",   oi: "6,200",  vol: "1,240" },
     ],
     EV: [
-      { assetType: "Stock",      index: "Tesla",               option: "Apr 20 200 CALL",  oi: "48,600", vol: "9,720" },
-      { assetType: "ETF",        index: "Global X EV",         option: "Apr 20 28 CALL",   oi: "52,400", vol: "10,480"},
-      { assetType: "Global ETF", index: "iShares Self-Driving",option: "Apr 20 34 PUT",    oi: "31,200", vol: "6,240" },
-      { assetType: "Stock",      index: "Rivian",              option: "Apr 20 14 CALL",   oi: "22,400", vol: "4,480" },
+      { assetType: "Stock",      index: "TSLA",  option: "Apr 20 200 CALL",  oi: "48,600", vol: "9,720" },
+      { assetType: "ETF",        index: "DRIV",  option: "Apr 20 28 CALL",   oi: "52,400", vol: "10,480"},
+      { assetType: "Global ETF", index: "IDRV",  option: "Apr 20 34 PUT",    oi: "31,200", vol: "6,240" },
+      { assetType: "Stock",      index: "RIVN",  option: "Apr 20 14 CALL",   oi: "22,400", vol: "4,480" },
     ],
     Automobile: [
-      { assetType: "ETF",        index: "SPDR Auto",           option: "Apr 20 72 CALL",   oi: "29,800", vol: "5,960" },
-      { assetType: "Stock",      index: "Ford",                option: "Apr 20 12 CALL",   oi: "38,400", vol: "7,680" },
-      { assetType: "Global ETF", index: "iShares Transport",   option: "Apr 20 56 PUT",    oi: "22,400", vol: "4,480" },
-      { assetType: "Stock",      index: "GM",                  option: "Apr 20 46 CALL",   oi: "24,800", vol: "4,960" },
+      { assetType: "ETF",        index: "CARZ",  option: "Apr 20 72 CALL",   oi: "29,800", vol: "5,960" },
+      { assetType: "Stock",      index: "F",     option: "Apr 20 12 CALL",   oi: "38,400", vol: "7,680" },
+      { assetType: "Global ETF", index: "IYT",   option: "Apr 20 56 PUT",    oi: "22,400", vol: "4,480" },
+      { assetType: "Stock",      index: "GM",    option: "Apr 20 46 CALL",   oi: "24,800", vol: "4,960" },
     ],
   },
   "Large Cap": {
     FinTech: [
-      { assetType: "Stock",      index: "JPMorgan",   option: "Apr 20 205 CALL", oi: "9,840",  vol: "1,968" },
-      { assetType: "ETF",        index: "XLF",        option: "Apr 20 43 CALL",  oi: "14,200", vol: "2,840" },
-      { assetType: "Stock",      index: "PayPal",     option: "Apr 20 72 CALL",  oi: "12,300", vol: "2,460" },
-      { assetType: "Global ETF", index: "EWJ",        option: "Apr 20 69 CALL",  oi: "5,400",  vol: "1,080" },
+      { assetType: "Stock",      index: "JPM",   option: "Apr 20 205 CALL", oi: "9,840",  vol: "1,968" },
+      { assetType: "ETF",        index: "XLF",   option: "Apr 20 43 CALL",  oi: "14,200", vol: "2,840" },
+      { assetType: "Stock",      index: "PYPL",  option: "Apr 20 72 CALL",  oi: "12,300", vol: "2,460" },
+      { assetType: "Global ETF", index: "EWJ",   option: "Apr 20 69 CALL",  oi: "5,400",  vol: "1,080" },
     ],
     "Clean Energy": [
-      { assetType: "Stock",      index: "NextEra",    option: "Apr 20 82 CALL",  oi: "18,400", vol: "3,680" },
-      { assetType: "ETF",        index: "ICLN",       option: "Apr 20 18 PUT",   oi: "24,200", vol: "4,840" },
-      { assetType: "Global ETF", index: "iShares GCE",option: "Apr 20 14 CALL",  oi: "8,600",  vol: "1,720" },
+      { assetType: "Stock",      index: "NEE",   option: "Apr 20 82 CALL",  oi: "18,400", vol: "3,680" },
+      { assetType: "ETF",        index: "ICLN",  option: "Apr 20 18 PUT",   oi: "24,200", vol: "4,840" },
+      { assetType: "Global ETF", index: "INRG",  option: "Apr 20 14 CALL",  oi: "8,600",  vol: "1,720" },
     ],
     Biotech: [
-      { assetType: "Stock",      index: "Regeneron",  option: "Apr 20 800 CALL", oi: "5,600",  vol: "1,120" },
-      { assetType: "ETF",        index: "IBB",        option: "Apr 20 138 CALL", oi: "22,400", vol: "4,480" },
-      { assetType: "Stock",      index: "Biogen",     option: "Apr 20 260 PUT",  oi: "4,200",  vol: "840"   },
+      { assetType: "Stock",      index: "REGN",  option: "Apr 20 800 CALL", oi: "5,600",  vol: "1,120" },
+      { assetType: "ETF",        index: "IBB",   option: "Apr 20 138 CALL", oi: "22,400", vol: "4,480" },
+      { assetType: "Stock",      index: "BIIB",  option: "Apr 20 260 PUT",  oi: "4,200",  vol: "840"   },
     ],
     EV: [
-      { assetType: "Stock",      index: "Tesla",      option: "Apr 20 200 CALL", oi: "48,600", vol: "9,720" },
-      { assetType: "ETF",        index: "KARS",       option: "Apr 20 26 CALL",  oi: "18,400", vol: "3,680" },
-      { assetType: "Stock",      index: "Rivian",     option: "Apr 20 14 CALL",  oi: "22,400", vol: "4,480" },
+      { assetType: "Stock",      index: "TSLA",  option: "Apr 20 200 CALL", oi: "48,600", vol: "9,720" },
+      { assetType: "ETF",        index: "KARS",  option: "Apr 20 26 CALL",  oi: "18,400", vol: "3,680" },
+      { assetType: "Stock",      index: "RIVN",  option: "Apr 20 14 CALL",  oi: "22,400", vol: "4,480" },
     ],
     Automobile: [
-      { assetType: "Stock",      index: "Ford",       option: "Apr 20 12 CALL",  oi: "38,400", vol: "7,680" },
-      { assetType: "ETF",        index: "CARZ",       option: "Apr 20 38 CALL",  oi: "12,600", vol: "2,520" },
-      { assetType: "Stock",      index: "GM",         option: "Apr 20 46 CALL",  oi: "24,800", vol: "4,960" },
+      { assetType: "Stock",      index: "F",     option: "Apr 20 12 CALL",  oi: "38,400", vol: "7,680" },
+      { assetType: "ETF",        index: "CARZ",  option: "Apr 20 38 CALL",  oi: "12,600", vol: "2,520" },
+      { assetType: "Stock",      index: "GM",    option: "Apr 20 46 CALL",  oi: "24,800", vol: "4,960" },
     ],
   },
   "Mid Cap": {
     FinTech:        [
-      { assetType: "Stock",      index: "Green Dot",  option: "Apr 20 26 CALL",  oi: "3,820",  vol: "764"  },
-      { assetType: "ETF",        index: "FINX",       option: "Apr 20 32 CALL",  oi: "5,640",  vol: "1,128"},
-      { assetType: "Stock",      index: "Repay Hold.",option: "Apr 20 14 PUT",   oi: "2,440",  vol: "488"  },
+      { assetType: "Stock",      index: "GDOT",  option: "Apr 20 26 CALL",  oi: "3,820",  vol: "764"  },
+      { assetType: "ETF",        index: "FINX",  option: "Apr 20 32 CALL",  oi: "5,640",  vol: "1,128"},
+      { assetType: "Stock",      index: "RPAY",  option: "Apr 20 14 PUT",   oi: "2,440",  vol: "488"  },
     ],
     "Clean Energy": [
-      { assetType: "Stock",      index: "Sunrun",     option: "Apr 20 18 CALL",  oi: "9,600",  vol: "1,920"},
-      { assetType: "ETF",        index: "TAN",        option: "Apr 20 32 CALL",  oi: "14,200", vol: "2,840"},
-      { assetType: "Stock",      index: "SunPower",   option: "Apr 20 8 PUT",    oi: "6,200",  vol: "1,240"},
+      { assetType: "Stock",      index: "RUN",   option: "Apr 20 18 CALL",  oi: "9,600",  vol: "1,920"},
+      { assetType: "ETF",        index: "TAN",   option: "Apr 20 32 CALL",  oi: "14,200", vol: "2,840"},
+      { assetType: "Stock",      index: "SPWR",  option: "Apr 20 8 PUT",    oi: "6,200",  vol: "1,240"},
     ],
     Biotech:        [
-      { assetType: "Stock",      index: "Halozyme",   option: "Apr 20 52 CALL",  oi: "4,800",  vol: "960"  },
-      { assetType: "ETF",        index: "XBI",        option: "Apr 20 94 CALL",  oi: "18,400", vol: "3,680"},
+      { assetType: "Stock",      index: "HALO",  option: "Apr 20 52 CALL",  oi: "4,800",  vol: "960"  },
+      { assetType: "ETF",        index: "XBI",   option: "Apr 20 94 CALL",  oi: "18,400", vol: "3,680"},
     ],
     EV:             [
-      { assetType: "Stock",      index: "Luminar",    option: "Apr 20 6 CALL",   oi: "14,200", vol: "2,840"},
-      { assetType: "ETF",        index: "DRIV",       option: "Apr 20 18 CALL",  oi: "8,400",  vol: "1,680"},
+      { assetType: "Stock",      index: "LAZR",  option: "Apr 20 6 CALL",   oi: "14,200", vol: "2,840"},
+      { assetType: "ETF",        index: "DRIV",  option: "Apr 20 18 CALL",  oi: "8,400",  vol: "1,680"},
     ],
     Automobile:     [
-      { assetType: "Stock",      index: "Modine Mfg", option: "Apr 20 82 CALL",  oi: "2,600",  vol: "520"  },
-      { assetType: "ETF",        index: "CARZ",       option: "Apr 20 38 PUT",   oi: "4,800",  vol: "960"  },
+      { assetType: "Stock",      index: "MOD",   option: "Apr 20 82 CALL",  oi: "2,600",  vol: "520"  },
+      { assetType: "ETF",        index: "CARZ",  option: "Apr 20 38 PUT",   oi: "4,800",  vol: "960"  },
     ],
   },
   "Small Cap": {
     FinTech:        [
-      { assetType: "Stock",      index: "Paysign",    option: "Apr 20 4 CALL",   oi: "1,240",  vol: "248"  },
-      { assetType: "ETF",        index: "FINX",       option: "Apr 20 32 PUT",   oi: "2,840",  vol: "568"  },
+      { assetType: "Stock",      index: "PAYS",  option: "Apr 20 4 CALL",   oi: "1,240",  vol: "248"  },
+      { assetType: "ETF",        index: "FINX",  option: "Apr 20 32 PUT",   oi: "2,840",  vol: "568"  },
     ],
     "Clean Energy": [
-      { assetType: "Stock",      index: "Altus Power", option: "Apr 20 8 CALL",  oi: "4,200",  vol: "840"  },
-      { assetType: "ETF",        index: "TAN",        option: "Apr 20 32 PUT",   oi: "6,400",  vol: "1,280"},
+      { assetType: "Stock",      index: "AMPS",  option: "Apr 20 8 CALL",   oi: "4,200",  vol: "840"  },
+      { assetType: "ETF",        index: "TAN",   option: "Apr 20 32 PUT",   oi: "6,400",  vol: "1,280"},
     ],
     Biotech:        [
-      { assetType: "Stock",      index: "Inhibrx",    option: "Apr 20 22 CALL",  oi: "3,600",  vol: "720"  },
-      { assetType: "ETF",        index: "XBI",        option: "Apr 20 94 PUT",   oi: "8,200",  vol: "1,640"},
+      { assetType: "Stock",      index: "INBX",  option: "Apr 20 22 CALL",  oi: "3,600",  vol: "720"  },
+      { assetType: "ETF",        index: "XBI",   option: "Apr 20 94 PUT",   oi: "8,200",  vol: "1,640"},
     ],
     EV:             [
-      { assetType: "Stock",      index: "Ideanomics", option: "Apr 20 2 CALL",   oi: "8,200",  vol: "1,640"},
-      { assetType: "ETF",        index: "KARS",       option: "Apr 20 26 PUT",   oi: "4,600",  vol: "920"  },
+      { assetType: "Stock",      index: "IDEA",  option: "Apr 20 2 CALL",   oi: "8,200",  vol: "1,640"},
+      { assetType: "ETF",        index: "KARS",  option: "Apr 20 26 PUT",   oi: "4,600",  vol: "920"  },
     ],
     Automobile:     [
-      { assetType: "Stock",      index: "Motorcar",   option: "Apr 20 18 CALL",  oi: "1,400",  vol: "280"  },
-      { assetType: "ETF",        index: "CARZ",       option: "Apr 20 38 CALL",  oi: "2,800",  vol: "560"  },
+      { assetType: "Stock",      index: "MCRR",  option: "Apr 20 18 CALL",  oi: "1,400",  vol: "280"  },
+      { assetType: "ETF",        index: "CARZ",  option: "Apr 20 38 CALL",  oi: "2,800",  vol: "560"  },
     ],
   },
   "Micro Cap": {
@@ -691,16 +699,40 @@ export function ExploreOptions() {
         </div>
       </div>
 
-      {/* ── Filter chips ── */}
-      <div className="overflow-x-auto no-scrollbar px-5">
-        <div className="flex gap-2">
-          {FILTER_CHIPS.map((chip) => (
-            <button key={chip} onClick={() => setFilter(chip)} className={cn("shrink-0 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors", filter === chip ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>
-              {chip}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ── Filter tiles ── */}
+      {(() => {
+        const tiles: { chip: FilterChip; icon: React.ElementType; label: string }[] = [
+          { chip: "All",        icon: LayoutGrid, label: "All"        },
+          { chip: "Stocks",     icon: TrendingUp, label: "Stocks"     },
+          { chip: "Indices",    icon: BarChart2,  label: "Indices"    },
+          { chip: "ETF",        icon: Layers,     label: "ETF"        },
+          { chip: "Global ETF", icon: Globe,      label: "Global ETF" },
+        ];
+        return (
+          <div className="px-5">
+            <div className="flex gap-2.5">
+              {tiles.map(({ chip, icon: Icon, label }) => {
+                const active = filter === chip;
+                return (
+                  <button
+                    key={chip}
+                    onClick={() => setFilter(chip)}
+                    className={cn(
+                      "flex-1 flex flex-col items-center gap-1.5 rounded-2xl py-2.5 transition-all",
+                      active
+                        ? "bg-foreground text-background"
+                        : "bg-muted/60 text-muted-foreground"
+                    )}
+                  >
+                    <Icon size={18} strokeWidth={2} />
+                    <span className="text-[11px] font-semibold whitespace-nowrap">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Top Option Chains ── */}
       <WidgetCard title="Top Option Chains" subtitle="Most active options across indices, ETFs, and stocks.">
@@ -735,16 +767,14 @@ export function ExploreOptions() {
         <TabRow tabs={POPULAR_TABS} active={popularTab} onChange={setPopularTab} />
         <OptionsTable
           cols={[
-            { label: "Index" },
-            { label: "Option",      align: "right", minWidth: 150 },
-            { label: "Underlying",  align: "right", minWidth: 90  },
-            { label: "OI",          align: "right", minWidth: 60  },
+            { label: "Options"              },
+            { label: "OI",  align: "right" },
+            { label: "Vol", align: "right" },
           ]}
           rows={popularRows.map((r) => [
-            <Cell key="i" top={r.index} />,
-            <NumCell key="o" value={r.option} />,
-            <NumCell key="u" value={r.underlying} />,
+            <Cell key="i" top={r.index} bottom={r.option} />,
             <NumCell key="oi" value={r.oi} />,
+            <NumCell key="v" value={fmtNum(String(Math.round(+r.oi.replace(/K$/,"000").replace(/M$/,"000000").replace(/[^0-9]/g,"") * 0.22)))} />,
           ])}
         />
       </WidgetCard>
@@ -753,13 +783,11 @@ export function ExploreOptions() {
       <WidgetCard title="Top Options Under $10" subtitle="Affordable contracts to control big positions with less capital." cap={under10Cap} onCycle={() => setUnder10Cap(nextCap(under10Cap))}>
         <OptionsTable
           cols={[
-            { label: "Index" },
-            { label: "Strike",     align: "right", minWidth: 150 },
-            { label: "Opt. Price", align: "right", minWidth: 90  },
+            { label: "Options"                    },
+            { label: "Opt. Price", align: "right" },
           ]}
           rows={under10Rows.map((r) => [
-            <Cell key="i" top={r.index} />,
-            <NumCell key="s" value={r.strike} />,
+            <Cell key="i" top={r.index} bottom={r.strike} />,
             <div key="p" className="text-right">
               <p className="text-[14px] font-semibold text-foreground tabular-nums">{r.price}</p>
               <PctBadge value={r.change} />
@@ -773,16 +801,14 @@ export function ExploreOptions() {
         <SectorChips chips={SECTOR_CHIPS} active={sector} onChange={setSector} />
         <OptionsTable
           cols={[
-            { label: "Index" },
-            { label: "Option", align: "right", minWidth: 150 },
-            { label: "OI",     align: "right", minWidth: 70  },
-            { label: "Vol",    align: "right", minWidth: 60  },
+            { label: "Options"              },
+            { label: "OI",  align: "right" },
+            { label: "Vol", align: "right" },
           ]}
           rows={sectorialRows.map((r) => [
-            <Cell key="i" top={r.index} />,
-            <NumCell key="o" value={r.option} />,
-            <NumCell key="oi" value={r.oi} />,
-            <NumCell key="v" value={r.vol} />,
+            <Cell key="i" top={r.index} bottom={r.option} />,
+            <NumCell key="oi" value={fmtNum(r.oi)} />,
+            <NumCell key="v" value={fmtNum(r.vol)} />,
           ])}
         />
       </WidgetCard>
@@ -792,14 +818,14 @@ export function ExploreOptions() {
         <TabRow tabs={FOCUS_TABS} active={focusTab} onChange={setFocusTab} />
         <OptionsTable
           cols={[
-            { label: "Ticker" },
-            { label: "Contract",  align: "right", minWidth: 150 },
-            { label: "Open Int.", align: "right", minWidth: 80  },
+            { label: "Options"              },
+            { label: "OI",  align: "right" },
+            { label: "Vol", align: "right" },
           ]}
           rows={focusRows.map((r) => [
-            <Cell key="t" top={r.ticker} />,
-            <NumCell key="c" value={r.contract} />,
-            <NumCell key="oi" value={r.openInt} />,
+            <Cell key="t" top={r.ticker} bottom={r.contract} />,
+            <NumCell key="oi" value={fmtNum(r.openInt)} />,
+            <NumCell key="v" value={fmtNum(String(Math.round(+r.openInt.replace(/,/g, "") * 0.18)))} />,
           ])}
         />
       </WidgetCard>

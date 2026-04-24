@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AIAnnotation } from "./ai-annotation";
-import { SIMILAR_STOCKS } from "./mock-data";
+import { getSimilarStocks } from "./mock-data";
 import { ALL_TICKERS, TickerLogo, formatPrice, formatPercent, isGain, type TickerItem } from "@/components/ticker";
 
 interface SimilarStocksProps {
@@ -11,8 +11,7 @@ interface SimilarStocksProps {
 }
 
 export function SimilarStocks({ symbol }: SimilarStocksProps) {
-  const similar = SIMILAR_STOCKS[symbol];
-  if (!similar) return null;
+  const similar = getSimilarStocks(symbol);
 
   const tickers = similar
     .map((s) => ALL_TICKERS.find((t) => t.symbol === s))

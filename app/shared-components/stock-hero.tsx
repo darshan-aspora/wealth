@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { TickerLogo, formatPrice, formatChange, formatPercent, isGain, type TickerItem } from "@/components/ticker";
 import { StockChart } from "./stock-chart";
 import { AIAnnotation } from "./ai-annotation";
-import { AI_ONE_LINERS, generateChartData, type ChartTimeframe } from "./mock-data";
+import { getAIOneLiner, generateChartData, type ChartTimeframe } from "./mock-data";
 
 const TIMEFRAMES: ChartTimeframe[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "5Y", "ALL"];
 
@@ -21,7 +21,7 @@ export function StockHero({ ticker }: StockHeroProps) {
   const [showVolume, setShowVolume] = useState(false);
 
   const gain = isGain(ticker);
-  const oneLiner = AI_ONE_LINERS[ticker.symbol] || "Market data loading...";
+  const oneLiner = getAIOneLiner(ticker.symbol);
 
   const chartData = useMemo(
     () => generateChartData(ticker.symbol, timeframe, ticker.price, ticker.changePercent),

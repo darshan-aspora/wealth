@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { AIAnnotation } from "./ai-annotation";
-import { PERFORMANCE } from "./mock-data";
+import { getPerformance } from "./mock-data";
 import { formatPrice } from "@/components/ticker";
 
 interface PerformanceProps {
@@ -10,7 +10,7 @@ interface PerformanceProps {
 }
 
 export function Performance({ symbol }: PerformanceProps) {
-  const perf = PERFORMANCE[symbol];
+  const perf = getPerformance(symbol);
   if (!perf) return null;
 
   const benchDelta = perf.benchmark.stockReturn - perf.benchmark.benchReturn;

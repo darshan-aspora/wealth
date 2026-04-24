@@ -2,14 +2,14 @@
 
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { KEY_METRICS } from "./mock-data";
+import { getKeyMetrics } from "./mock-data";
 
 interface KeyMetricsProps {
   symbol: string;
 }
 
 export function KeyMetrics({ symbol }: KeyMetricsProps) {
-  const metrics = KEY_METRICS[symbol];
+  const metrics = getKeyMetrics(symbol);
   if (!metrics) return null;
 
   return (

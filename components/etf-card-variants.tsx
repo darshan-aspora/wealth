@@ -123,12 +123,14 @@ export function ETFCardHero({ etf = sampleETF }: { etf?: ETFCardData }) {
 export function ETFCardLadder({
   etf = sampleETF,
   className,
+  onClick,
 }: {
   etf?: ETFCardData;
   className?: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className={cn("rounded-2xl bg-muted p-4 flex flex-col", className)}>
+    <div onClick={onClick} className={cn("rounded-2xl bg-muted p-4 flex flex-col", className, onClick && "cursor-pointer active:opacity-80 transition-opacity")}>
       {/* Header — logo + (title stacked over price/day %) */}
       <div className="flex items-start gap-2.5 mb-4">
         <div className="h-8 w-8 rounded-full bg-muted-foreground/20 shrink-0" />

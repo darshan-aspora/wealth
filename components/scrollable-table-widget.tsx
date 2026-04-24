@@ -43,6 +43,7 @@ export interface ScrollableTableWidgetProps {
   animationKey?: string;
   footer?: STWFooter;
   className?: string;
+  onRowClick?: (rowIndex: number) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -68,6 +69,7 @@ export function ScrollableTableWidget({
   animationKey,
   footer,
   className,
+  onRowClick,
 }: ScrollableTableWidgetProps) {
   const alignCls = (align?: "left" | "center" | "right") =>
     align === "left" ? "text-left" : align === "center" ? "text-center" : "text-right";
@@ -144,7 +146,7 @@ export function ScrollableTableWidget({
                 {frozenCol?.header}
               </div>
               {rows.map((row, i) => (
-                <div key={i} className={cn(rowHeight, "flex items-center pl-5 pr-3")}>
+                <div key={i} onClick={() => onRowClick?.(i)} className={cn(rowHeight, "flex items-center pl-5 pr-3", onRowClick && "cursor-pointer active:bg-muted/50")}>
                   {row[0]}
                 </div>
               ))}
@@ -172,7 +174,7 @@ export function ScrollableTableWidget({
                 </thead>
                 <tbody>
                   {rows.map((row, rowIdx) => (
-                    <tr key={rowIdx} className={rowHeight}>
+                    <tr key={rowIdx} onClick={() => onRowClick?.(rowIdx)} className={cn(rowHeight, onRowClick && "cursor-pointer active:bg-muted/50")}>
                       {row.slice(1).map((cell, colIdx) => (
                         <td
                           key={colIdx}

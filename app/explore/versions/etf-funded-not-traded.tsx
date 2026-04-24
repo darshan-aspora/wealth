@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useTheme } from "@/components/theme-provider";
 import {
@@ -1859,6 +1860,7 @@ export function PopularETFsWidget({
   etfs: etfsOverride,
 }: PopularETFsWidgetProps = {}) {
   const [variant, setVariant] = useState<"grid" | "scroll">("scroll");
+  const router = useRouter();
 
   return (
     <div>
@@ -1875,7 +1877,7 @@ export function PopularETFsWidget({
         return variant === "grid" ? (
           <div className="grid grid-cols-2 gap-3">
             {etfs.map((etf) => (
-              <ETFCardLadder key={etf.symbol} etf={popularETFToCardData(etf)} />
+              <ETFCardLadder key={etf.symbol} etf={popularETFToCardData(etf)} onClick={() => router.push(`/etf/${etf.symbol}`)} />
             ))}
           </div>
         ) : (
@@ -1887,6 +1889,7 @@ export function PopularETFsWidget({
                     key={etf.symbol}
                     etf={popularETFToCardData(etf)}
                     className="shrink-0 w-[280px]"
+                    onClick={() => router.push(`/etf/${etf.symbol}`)}
                   />
                 ))}
               </div>
@@ -1896,6 +1899,7 @@ export function PopularETFsWidget({
                     key={etf.symbol}
                     etf={popularETFToCardData(etf)}
                     className="shrink-0 w-[280px]"
+                    onClick={() => router.push(`/etf/${etf.symbol}`)}
                   />
                 ))}
               </div>
@@ -1987,6 +1991,7 @@ export function ExploreByThemesWidget({
 }: ExploreByThemesWidgetProps = {}) {
   const [activeTheme, setActiveTheme] = useState<string>(tabs[0]?.id ?? "");
   const etfs = themeData[activeTheme] ?? [];
+  const router = useRouter();
 
   return (
     <div>
@@ -2022,6 +2027,7 @@ export function ExploreByThemesWidget({
                 key={etf.symbol}
                 etf={popularETFToCardData(etf)}
                 className="shrink-0 w-[280px]"
+                onClick={() => router.push(`/etf/${etf.symbol}`)}
               />
             ))}
           </div>
@@ -2031,6 +2037,7 @@ export function ExploreByThemesWidget({
                 key={etf.symbol}
                 etf={popularETFToCardData(etf)}
                 className="shrink-0 w-[280px]"
+                onClick={() => router.push(`/etf/${etf.symbol}`)}
               />
             ))}
           </div>
@@ -2362,6 +2369,7 @@ function ExploreByTopAMCsWidget() {
   const etfs = amcETFs[activeAMC];
   const row1 = etfs.slice(0, Math.ceil(etfs.length / 2));
   const row2 = etfs.slice(Math.ceil(etfs.length / 2));
+  const router = useRouter();
 
   return (
     <div>
@@ -2398,6 +2406,7 @@ function ExploreByTopAMCsWidget() {
                 key={etf.symbol}
                 etf={popularETFToCardData(etf)}
                 className="shrink-0 w-[280px]"
+                onClick={() => router.push(`/etf/${etf.symbol}`)}
               />
             ))}
           </div>
@@ -2407,6 +2416,7 @@ function ExploreByTopAMCsWidget() {
                 key={etf.symbol}
                 etf={popularETFToCardData(etf)}
                 className="shrink-0 w-[280px]"
+                onClick={() => router.push(`/etf/${etf.symbol}`)}
               />
             ))}
           </div>

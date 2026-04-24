@@ -3,14 +3,14 @@
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { AIAnnotation } from "./ai-annotation";
-import { OWNERSHIP } from "./mock-data";
+import { getOwnership } from "./mock-data";
 
 interface OwnershipProps {
   symbol: string;
 }
 
 export function Ownership({ symbol }: OwnershipProps) {
-  const data = OWNERSHIP[symbol];
+  const data = getOwnership(symbol);
   if (!data) return null;
 
   return (

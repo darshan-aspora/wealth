@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Zap, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AI_BRIEFINGS } from "./mock-data";
+import { getAIBriefing } from "./mock-data";
 
 interface AIBriefingProps {
   symbol: string;
 }
 
 export function AIBriefingSection({ symbol }: AIBriefingProps) {
-  const briefing = AI_BRIEFINGS[symbol];
+  const briefing = getAIBriefing(symbol);
   const [expanded, setExpanded] = useState(false);
 
   if (!briefing) {

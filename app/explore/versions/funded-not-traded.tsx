@@ -219,6 +219,7 @@ function TopMoversCardless() {
       columns={columns}
       rows={rows}
       animationKey={`${moverType}-${capSize}`}
+      onRowClick={(i) => router.push(`/stocks/${stocks[i].symbol}`)}
       footer={{
         label: "View All",
         onPress: () => {
@@ -655,6 +656,7 @@ const ratedStocks: Record<RatingTab, RatedStock[]> = {
 /* ------------------------------------------------------------------ */
 
 function AnalystRatingsWidget() {
+  const router = useRouter();
   const [ratingTab, setRatingTab] = useState<RatingTab>("strong-buy");
   const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -793,6 +795,7 @@ function AnalystRatingsWidget() {
       rows={rows}
       scrollableMinWidth={620}
       animationKey={`${ratingTab}-${capSize}`}
+      onRowClick={(i) => router.push(`/stocks/${stocks[i].symbol}`)}
       footer={{ label: "View All", href: `/explore/analyst-ratings?tab=${ratingTab}` }}
     />
   );
@@ -1296,6 +1299,7 @@ const popularDescriptions: Record<PopularTab, { title: string; body: React.React
 };
 
 function PopularStocksWidget() {
+  const router = useRouter();
   const [tab, setTab] = useState<PopularTab>("most-invested");
   const [capSize, setCapSize] = useState<CapSize>("mega");
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -1380,6 +1384,7 @@ function PopularStocksWidget() {
       rows={rows}
       scrollableMinWidth={500}
       animationKey={`${tab}-${capSize}`}
+      onRowClick={(i) => router.push(`/stocks/${stocks[i].symbol}`)}
       footer={{ label: "View All", href: `/explore/popular-stocks?tab=${tab}` }}
     />
   );

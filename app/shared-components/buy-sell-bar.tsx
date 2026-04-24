@@ -1,6 +1,6 @@
 "use client";
 
-import { POSITIONS } from "./mock-data";
+import { getPosition } from "./mock-data";
 import { formatPrice } from "@/components/ticker";
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +11,7 @@ interface BuySellBarProps {
 }
 
 export function BuySellBar({ symbol, onBuy, onSell }: BuySellBarProps) {
-  const position = POSITIONS[symbol];
+  const position = getPosition(symbol);
   const buyingPower = 12485.0;
 
   return (

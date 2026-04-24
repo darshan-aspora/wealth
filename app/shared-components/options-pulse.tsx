@@ -2,14 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { AIAnnotation } from "./ai-annotation";
-import { OPTIONS_PULSE } from "./mock-data";
+import { getOptionsPulse } from "./mock-data";
 
 interface OptionsPulseProps {
   symbol: string;
 }
 
 export function OptionsPulse({ symbol }: OptionsPulseProps) {
-  const data = OPTIONS_PULSE[symbol];
+  const data = getOptionsPulse(symbol);
   if (!data) {
     return (
       <div className="px-5 py-4">
