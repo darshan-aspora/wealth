@@ -1065,7 +1065,7 @@ function generateETFAnalystRatings(symbol: string, entry: ETFDirectoryEntry): An
     ratings: { strongBuy, buy, hold, sell, strongSell },
     priceTarget: { low: +low, avg: +avg, high: +high, current },
     annotation: `${upsidePct}% upside to consensus — ${strongBuy + buy > hold + sell ? "constructive" : "mixed"} analyst sentiment`,
-    recentCalls: [0, 1, 2].map((i) => ({
+    recentCalls: [0, 1, 2].map(() => ({
       firm: firms[Math.floor(r() * firms.length)],
       direction: directions[Math.floor(r() * directions.length)],
       rating: ratings[Math.floor(r() * ratings.length)],

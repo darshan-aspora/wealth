@@ -1,5 +1,5 @@
 import { ALL_TICKERS, type TickerItem } from "@/components/ticker";
-import { KEY_METRICS, PERFORMANCE, ANALYST_RATINGS, SIMILAR_STOCKS } from "@/app/stocks/[symbol]/components/mock-data";
+import { KEY_METRICS, PERFORMANCE, ANALYST_RATINGS, SIMILAR_STOCKS } from "@/app/shared-components/mock-data";
 
 /* ------------------------------------------------------------------ */
 /*  Format helpers                                                    */

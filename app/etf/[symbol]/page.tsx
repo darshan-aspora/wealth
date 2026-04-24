@@ -348,7 +348,7 @@ export default function ETFPage() {
 
   useEffect(() => {
     setAISource({ type: "stock-detail", symbol: SYMBOL, name: ticker.name });
-  }, [setAISource, ticker.name]);
+  }, [setAISource, ticker.name, SYMBOL]);
 
   const [activeTab, setActiveTab] = useState<ETFTab>("Overview");
   const [isWatchlisted, setIsWatchlisted] = useState(false);

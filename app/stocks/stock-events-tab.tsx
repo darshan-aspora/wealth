@@ -65,6 +65,7 @@ function getEventsForSymbol(symbol: string) {
 
 // ─── Mini Calendar ────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MiniCalendar({ year, month, highlightDay }: { year: number; month: number; highlightDay: number }) {
   const firstDow = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();

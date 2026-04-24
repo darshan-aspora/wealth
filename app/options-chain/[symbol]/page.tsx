@@ -6,7 +6,7 @@ import { X, ChevronDown, Info, ChevronRight, Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, seeded, STOCK_PRICES } from "@/lib/options-chain";
+import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, seeded, STOCK_PRICES, type GreekRow } from "@/lib/options-chain";
 
 /* ------------------------------------------------------------------ */
 /*  Layout constants                                                   */

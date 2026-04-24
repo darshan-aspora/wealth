@@ -18,6 +18,7 @@ interface ColDef {
 const MARKET_CAPS = ["Mega Cap", "Large Cap", "Mid Cap", "Small Cap", "Micro Cap", "Nano Cap"] as const;
 type MarketCap = (typeof MARKET_CAPS)[number];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FILTER_CHIPS = ["All", "Stocks", "Indices", "ETF", "Global ETF"] as const;
 type FilterChip = (typeof FILTER_CHIPS)[number];
 type AssetType = "Stock" | "Index" | "ETF" | "Global ETF";

@@ -172,6 +172,7 @@ interface TechnicalsProps {
   symbol: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Technicals({ symbol: _symbol }: TechnicalsProps) {
   const [activePeriod, setActivePeriod] = useState<TimePeriod>("1D");
 

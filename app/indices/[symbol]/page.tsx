@@ -13,7 +13,7 @@ import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/contexts/ai-context";
 import { StockNewsTab } from "../../stocks/stock-news-tab";
-import { StockEventsTab } from "../../stocks/stock-events-tab";
+
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -2613,6 +2613,7 @@ function TabContent({
 
 // ─── Index PE Widget ─────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function IndexPEWidget() {
   const index = useIndex();
   return (

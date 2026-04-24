@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Info, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -89,12 +89,14 @@ function formatCurrency(value: number, digits = 2) {
   }).format(value);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatShortNumber(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return `${Math.round(value)}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildPayoffBars(count: number, side: OptionSide, mode: TradeMode) {
   return Array.from({ length: count }, (_, index) => {
     const pivot = Math.floor(count * 0.58);
@@ -310,8 +312,8 @@ function buildXLabels(period: Period, count: number): string[] {
 
 function CandleChart({ ltp, seed }: { ltp: number; seed: number }) {
   const [period, setPeriod] = useState<Period>("1M");
-  const counts: Record<Period, number> = { "1D": 24, "1W": 7, "1M": 30, "3M": 60 };
-  const candles = useMemo(() => buildCandles(ltp * 0.82, seed, counts[period]), [ltp, seed, period]);
+  const counts: Record<Period, number> = useMemo(() => ({ "1D": 24, "1W": 7, "1M": 30, "3M": 60 }), []);
+  const candles = useMemo(() => buildCandles(ltp * 0.82, seed, counts[period]), [ltp, seed, counts, period]);
 
   const chartRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -498,7 +500,6 @@ function CandleChart({ ltp, seed }: { ltp: number; seed: number }) {
         <div className="pointer-events-none absolute bottom-0 left-0" style={{ right: `${(PAD_RIGHT / W) * 100}%`, height: `${(PAD_BOT / SVG_VH) * 100}%` }}>
           {candles.map((_, i) => {
             if (i % xLabelStep !== 0) return null;
-            const leftPct = (((i + 0.5) * candleW) / W * ((W - PAD_RIGHT) / W) * 100).toFixed(2);
             return (
               <div key={i} className="absolute -translate-x-1/2" style={{ left: `${((i + 0.5) / candles.length * 100).toFixed(2)}%`, bottom: 2 }}>
                 <span className="text-[0.5625em] text-muted-foreground whitespace-nowrap">{xLabels[i]}</span>
@@ -533,8 +534,6 @@ function PayoffFull({
   breakEven,
   entryCost,
   daysToExpiry,
-  maxProfit,
-  maxLoss,
 }: {
   side: OptionSide;
   tradeMode: TradeMode;
@@ -542,8 +541,6 @@ function PayoffFull({
   breakEven: number;
   entryCost: number;
   daysToExpiry: number;
-  maxProfit: string;
-  maxLoss: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -709,8 +706,8 @@ export default function OptionLegDetailPage() {
   const closeGreeksSheet = () => { setGreeksSheetVisible(false); setTimeout(() => setGreeksSheetMounted(false), 300); };
   const [side, setSide] = useState<OptionSide>(initialSide);
   const [tradeMode, setTradeMode] = useState<TradeMode>("buy");
-  const [expiry, setExpiry] = useState(initialExpiry);
-  const [selectedStrike, setSelectedStrike] = useState(initialStrike);
+  const [expiry] = useState(initialExpiry);
+  const [selectedStrike] = useState(initialStrike);
 
 
   const stock = STOCK_PRICES[symbol] ?? { price: 200, pct: 0 };
@@ -737,18 +734,6 @@ export default function OptionLegDetailPage() {
     ? (side === "call" ? "Unlimited" : formatCurrency(Math.max(0, (strike - ltp) * 100), 0))
     : formatCurrency(entryCost, 0);
   const expiryShort = formatExpiryShort(expiry);
-  const contractLabel = `${symbol} ${expiryShort} ${strike.toFixed(1)} ${side === "call" ? "Call" : "Put"}`;
-
-  const snapshotRows = [
-    { label: "Today's Open", value: formatCurrency(Math.max(0.5, ltp - 0.4)) },
-    { label: "Today's High", value: formatCurrency(ltp + 0.8) },
-    { label: "Today's Low", value: formatCurrency(Math.max(0.1, ltp - 1.1)) },
-    { label: "Volume Today", value: formatShortNumber(45_800) },
-    { label: "Open Interest", value: formatShortNumber(12_200_000) },
-    { label: "Change in OI", value: "+4.2%" },
-    { label: "Implied Vol (IV)", value: `${(leg.iv * 100).toFixed(2)}%` },
-    { label: "Days to Expiry", value: `${daysToExpiry} Days` },
-  ];
 
   const greekRows = [
     { label: "Delta", value: leg.delta.toFixed(2), note: side === "call" ? "Bullish sensitivity" : "Bearish sensitivity" },
@@ -757,18 +742,6 @@ export default function OptionLegDetailPage() {
     { label: "Vega", value: leg.vega.toFixed(2), note: "Volatility impact" },
   ];
 
-  const analysisCards = [
-    {
-      title: "Bull Call Spread",
-      body: `Buy ${strike.toFixed(1)}C + Sell ${(strike + 5).toFixed(1)}C · Reduce cost`,
-      tags: ["Bullish", `${formatCurrency(entryCost * 0.72, 0)} cost`, "POP: 42%"],
-    },
-    {
-      title: "Long Straddle",
-      body: `Buy ${strike.toFixed(1)}C + Buy ${strike.toFixed(1)}P · Big move thesis`,
-      tags: ["Neutral", `${formatCurrency(entryCost * 1.9, 0)} cost`],
-    },
-  ];
 
   return (
     <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-[#fafafa] text-base">
@@ -846,8 +819,6 @@ export default function OptionLegDetailPage() {
               breakEven={breakEven}
               entryCost={entryCost}
               daysToExpiry={daysToExpiry}
-              maxProfit={maxProfit}
-              maxLoss={maxLoss}
             />
           )}
 
