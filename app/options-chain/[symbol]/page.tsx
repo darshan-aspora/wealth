@@ -68,12 +68,38 @@ const STOCK_PRICES: Record<string, { price: number; pct: number }> = {
   Meta:      { price: 502.40, pct:  1.5 },
 };
 
-const EXPIRY_GROUPS = [
-  { label: "Daily",   items: [{ date: "19 Mar 2026", tag: "0D" }, { date: "20 Mar 2026", tag: "1D" }, { date: "24 Mar 2026", tag: "3D" }] },
-  { label: "Weekly",  items: [{ date: "26 Mar 2026", tag: "1W" }, { date: "2 Apr 2026",  tag: "2W" }, { date: "9 Apr 2026",  tag: "3W" }, { date: "16 Apr 2026", tag: "4W" }] },
-  { label: "Monthly", items: [{ date: "17 Apr 2026", tag: "Apr" }, { date: "15 May 2026", tag: "May" }, { date: "19 Jun 2026", tag: "Jun" }, { date: "18 Sep 2026", tag: "Sep" }, { date: "18 Dec 2026", tag: "Dec" }] },
-  { label: "LEAPS",   items: [{ date: "15 Jan 2027", tag: "Jan '27" }, { date: "21 Jan 2028", tag: "Jan '28" }] },
+// ETFs & Indices: Daily · Weekly · Monthly · Quarterly · Yearly
+const EXPIRY_GROUPS_ETF = [
+  { label: "Daily",     items: [{ date: "24 Apr 2026", tag: "0D" }, { date: "25 Apr 2026", tag: "1D" }, { date: "28 Apr 2026", tag: "2D" }] },
+  { label: "Weekly",    items: [{ date: "1 May 2026",  tag: "1W" }, { date: "8 May 2026",  tag: "2W" }, { date: "15 May 2026", tag: "3W" }, { date: "22 May 2026", tag: "4W" }] },
+  { label: "Monthly",   items: [{ date: "29 May 2026", tag: "May" }, { date: "26 Jun 2026", tag: "Jun" }, { date: "31 Jul 2026", tag: "Jul" }, { date: "28 Aug 2026", tag: "Aug" }] },
+  { label: "Quarterly", items: [{ date: "25 Sep 2026", tag: "Sep Q" }, { date: "25 Dec 2026", tag: "Dec Q" }, { date: "26 Mar 2027", tag: "Mar Q" }] },
+  { label: "Yearly",    items: [{ date: "25 Dec 2026", tag: "2026" }, { date: "31 Dec 2027", tag: "2027" }, { date: "31 Dec 2028", tag: "2028" }] },
 ];
+
+// Stocks: Weekly · Monthly · Yearly (leap / LEAPS)
+const EXPIRY_GROUPS_STOCK = [
+  { label: "Weekly",  items: [{ date: "1 May 2026",  tag: "1W" }, { date: "8 May 2026",  tag: "2W" }, { date: "15 May 2026", tag: "3W" }, { date: "22 May 2026", tag: "4W" }] },
+  { label: "Monthly", items: [{ date: "29 May 2026", tag: "May" }, { date: "26 Jun 2026", tag: "Jun" }, { date: "31 Jul 2026", tag: "Jul" }, { date: "28 Aug 2026", tag: "Aug" }, { date: "25 Sep 2026", tag: "Sep" }, { date: "25 Dec 2026", tag: "Dec" }] },
+  { label: "Yearly (LEAPS)", items: [{ date: "15 Jan 2027", tag: "Jan '27" }, { date: "21 Jan 2028", tag: "Jan '28 ✦" }, { date: "20 Jan 2032", tag: "Jan '32 ✦" }] },
+];
+
+// Symbols treated as ETF/Index
+const ETF_INDEX_SYMBOLS = new Set([
+  // Tickers
+  "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT", "HYG", "EEM",
+  "VXX", "UVXY", "SQQQ", "TQQQ", "SPXL", "SPXS", "ACWI", "EFA", "VTI",
+  // Indices
+  "SPX", "NDX", "RUT", "VIX", "DJIA",
+  // Full names used in TOP_CHAINS
+  "S&P 500", "NASDAQ 100",
+  "SPDR S&P 500", "Invesco QQQ", "iShares Russell",
+  "iShares MSCI ACWI ETF", "Invesco QQQ Trust Series 1",
+]);
+
+function getExpiryGroups(symbol: string) {
+  return ETF_INDEX_SYMBOLS.has(symbol) ? EXPIRY_GROUPS_ETF : EXPIRY_GROUPS_STOCK;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Layout constants                                                   */
@@ -163,7 +189,8 @@ export default function OptionsChainPage() {
   const stock        = STOCK_PRICES[symbol] ?? { price: 200, pct: 0 };
   const currentPrice = stock.price;
 
-  const [expiry, setExpiry]           = useState(EXPIRY_GROUPS[0].items[0].date);
+  const expiryGroups = getExpiryGroups(symbol);
+  const [expiry, setExpiry]           = useState(expiryGroups[0].items[0].date);
   const [expiryOpen, setExpiryOpen]   = useState(false);
   const [ltpOpen, setLtpOpen]         = useState(false);
   const [sortAsc, setSortAsc]         = useState(true);
@@ -644,7 +671,7 @@ export default function OptionsChainPage() {
               </div>
               <p className="px-5 pt-2 pb-3 text-[20px] font-bold text-foreground">Expiry</p>
               <div className="overflow-y-auto no-scrollbar" style={{ maxHeight: "72vh" }}>
-                {EXPIRY_GROUPS.map((group) => (
+                {expiryGroups.map((group) => (
                   <div key={group.label}>
                     <p className="px-5 pt-3 pb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
                       {group.label}

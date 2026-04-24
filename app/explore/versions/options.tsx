@@ -100,11 +100,14 @@ function FlipperBtn({ cap, onCycle }: { cap: MarketCap; onCycle: () => void }) {
   );
 }
 
-function WidgetCard({ title, cap, onCycle, children }: { title: string; cap?: MarketCap; onCycle?: () => void; children: React.ReactNode }) {
+function WidgetCard({ title, subtitle, cap, onCycle, children }: { title: string; subtitle?: string; cap?: MarketCap; onCycle?: () => void; children: React.ReactNode }) {
   return (
     <div className="mx-5 rounded-2xl border border-border/50 bg-card overflow-hidden">
-      <div className="px-5 pt-4 pb-1 flex items-center justify-between">
-        <p className="text-[17px] font-bold text-foreground">{title}</p>
+      <div className="px-5 pt-4 pb-1 flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[17px] font-bold text-foreground">{title}</p>
+          {subtitle && <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{subtitle}</p>}
+        </div>
         {cap && onCycle && <FlipperBtn cap={cap} onCycle={onCycle} />}
       </div>
       {children}
@@ -602,12 +605,13 @@ const IN_FOCUS_DATA: Record<MarketCap, Record<FocusTab, FocusRow[]>> = {
 /*  Static — Top Chains                                                */
 /* ------------------------------------------------------------------ */
 
-const TOP_CHAINS = [
-  { symbol: "NVIDIA",    price: 924.80, change:  3.2 },
-  { symbol: "Apple",     price: 188.50, change:  2.9 },
-  { symbol: "Microsoft", price: 425.30, change:  1.2 },
-  { symbol: "Alphabet",  price: 519.80, change:  1.7 },
-  { symbol: "Meta",      price: 502.40, change: 13.0 },
+const TOP_CHAINS: { symbol: string; ticker: string; price: number; change: number; assetType: AssetType }[] = [
+  { symbol: "S&P 500",         ticker: "SPX",  price: 5_195.25, change:  1.1, assetType: "Index"      },
+  { symbol: "NASDAQ 100",      ticker: "NDX",  price: 18_190.1, change:  1.8, assetType: "Index"      },
+  { symbol: "SPDR S&P 500",    ticker: "SPY",  price:   519.52, change:  1.1, assetType: "ETF"        },
+  { symbol: "iShares MSCI ACWI ETF", ticker: "ACWI", price: 102.30, change: 0.9, assetType: "Global ETF" },
+  { symbol: "NVIDIA",          ticker: "NVDA", price:   924.80, change:  3.2, assetType: "Stock"      },
+  { symbol: "Apple",           ticker: "AAPL", price:   188.50, change:  2.9, assetType: "Stock"      },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -637,29 +641,53 @@ export function ExploreOptions() {
 
       {/* ── Learn Options Banner ── */}
       <div className="mx-5 mt-5 rounded-2xl bg-[#1C1C1E] overflow-hidden">
-        <div className="flex justify-center pt-6 pb-2">
-          <div className="flex gap-1 items-end opacity-25">
-            {[28, 44, 36, 56, 40, 64, 48].map((h, i) => (
-              <div key={i} className="w-5 rounded-t-sm bg-white" style={{ height: h }} />
-            ))}
+        {/* Hero: copy with ghost diagram behind */}
+        <div className="relative overflow-hidden">
+          {/* Ghost payoff diagram — very faint, purely atmospheric */}
+          <svg viewBox="0 0 335 140" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 w-full h-full opacity-[0.6]">
+            <polygon points="0,0 142,118 0,118" fill="#F87171" />
+            <polygon points="193,118 335,0 335,118" fill="#4ADE80" />
+            <polyline points="0,0 142,118 335,118" stroke="#F87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points="0,118 193,118 335,0" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="168" cy="118" r="4" fill="white" fillOpacity="0.6" />
+          </svg>
+
+          {/* Heavy veil so diagram reads as background texture only */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, #1C1C1E 55%, rgba(28,28,30,0.7) 100%)" }} />
+
+          {/* Copy */}
+          <div className="relative px-5 pt-5 pb-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Options 101</p>
+            <p className="text-[22px] font-bold text-white leading-snug">Learn to trade<br />options in 3 mins</p>
+            <p className="text-[13px] text-white/40 mt-2 leading-snug">Step-by-step lessons built<br />for US markets.</p>
           </div>
         </div>
-        <div className="px-5 pb-5">
-          <p className="text-[18px] font-bold text-white text-center">Learn Options</p>
-          <p className="text-[13px] text-white/50 text-center mt-1 mb-4">Simplest chapter designed for you</p>
-          <div className="flex flex-col gap-2">
-            <button className="w-full flex items-center justify-between rounded-xl bg-white/10 px-4 py-3.5 active:opacity-75 transition-opacity">
-              <p className="text-[14px] font-semibold text-white">I&apos;m first time option trader</p>
-              <span className="text-white/60 text-[18px] leading-none">→</span>
-            </button>
-            <button className="w-full flex items-center justify-between rounded-xl bg-white/10 px-4 py-3.5 active:opacity-75 transition-opacity">
-              <p className="text-[14px] font-semibold text-white">I know options, teach me US options</p>
-              <span className="text-white/60 text-[18px] leading-none">→</span>
-            </button>
-          </div>
-          <p className="text-[12px] text-white/40 text-center mt-3">
-            You will learn to <span className="text-white/60 font-semibold">place order in 3 mins</span>
-          </p>
+
+        {/* Divider */}
+        <div className="mx-5 h-px bg-white/8" />
+
+        {/* CTA rows */}
+        <div className="flex flex-col divide-y divide-white/[0.06]">
+          <button className="flex items-center justify-between px-5 py-4 active:opacity-60 transition-opacity">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[16px]">🌱</div>
+              <div className="text-left">
+                <p className="text-[14px] font-semibold text-white">New to options</p>
+                <p className="text-[12px] text-white/40">Start from absolute basics</p>
+              </div>
+            </div>
+            <span className="text-white/30 text-[16px]">›</span>
+          </button>
+          <button className="flex items-center justify-between px-5 py-4 active:opacity-60 transition-opacity">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[16px]">⚡</div>
+              <div className="text-left">
+                <p className="text-[14px] font-semibold text-white">Know options, new to US</p>
+                <p className="text-[12px] text-white/40">Skip basics, learn US market rules</p>
+              </div>
+            </div>
+            <span className="text-white/30 text-[16px]">›</span>
+          </button>
         </div>
       </div>
 
@@ -675,15 +703,22 @@ export function ExploreOptions() {
       </div>
 
       {/* ── Top Option Chains ── */}
-      <WidgetCard title="Top Option Chains">
+      <WidgetCard title="Top Option Chains" subtitle="Most active options across indices, ETFs, and stocks.">
         <div className="pb-2">
-          {TOP_CHAINS.map((item, i) => (
-            <div key={item.symbol} className={cn("flex items-center gap-3 px-5 py-3.5", i < TOP_CHAINS.length - 1 && "border-b border-border/30")}>
-              <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
+          {TOP_CHAINS.filter((item) => matchesFilter(item.assetType, filter)).map((item, i, arr) => (
+            <div key={item.symbol} className={cn("flex items-center gap-3 px-5 py-3.5", i < arr.length - 1 && "border-b border-border/30")}>
+              <div className="w-10 h-10 rounded-xl bg-muted shrink-0 flex items-center justify-center">
+                <span className="text-[11px] font-bold text-muted-foreground">{item.ticker}</span>
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-bold text-foreground">{item.symbol}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[15px] font-bold text-foreground truncate">{item.symbol}</p>
+                  <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                    {item.assetType === "Global ETF" ? "G.ETF" : item.assetType}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-[13px] text-muted-foreground tabular-nums">${item.price.toFixed(2)}</p>
+                  <p className="text-[13px] text-muted-foreground tabular-nums">${item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <PctBadge value={item.change} />
                 </div>
               </div>
@@ -696,7 +731,7 @@ export function ExploreOptions() {
       </WidgetCard>
 
       {/* ── Popular ── */}
-      <WidgetCard title="Popular" cap={popularCap} onCycle={() => setPopularCap(nextCap(popularCap))}>
+      <WidgetCard title="Popular" subtitle="High open interest options getting the most trader attention." cap={popularCap} onCycle={() => setPopularCap(nextCap(popularCap))}>
         <TabRow tabs={POPULAR_TABS} active={popularTab} onChange={setPopularTab} />
         <OptionsTable
           cols={[
@@ -715,7 +750,7 @@ export function ExploreOptions() {
       </WidgetCard>
 
       {/* ── Top Options Under $10 ── */}
-      <WidgetCard title="Top Options Under $10" cap={under10Cap} onCycle={() => setUnder10Cap(nextCap(under10Cap))}>
+      <WidgetCard title="Top Options Under $10" subtitle="Affordable contracts to control big positions with less capital." cap={under10Cap} onCycle={() => setUnder10Cap(nextCap(under10Cap))}>
         <OptionsTable
           cols={[
             { label: "Index" },
@@ -734,7 +769,7 @@ export function ExploreOptions() {
       </WidgetCard>
 
       {/* ── Sectorial ── */}
-      <WidgetCard title="Sectorial" cap={sectorCap} onCycle={() => setSectorCap(nextCap(sectorCap))}>
+      <WidgetCard title="Sectorial" subtitle="Browse options by sector to trade industry themes directly." cap={sectorCap} onCycle={() => setSectorCap(nextCap(sectorCap))}>
         <SectorChips chips={SECTOR_CHIPS} active={sector} onChange={setSector} />
         <OptionsTable
           cols={[
@@ -753,7 +788,7 @@ export function ExploreOptions() {
       </WidgetCard>
 
       {/* ── Options in Focus ── */}
-      <WidgetCard title="Options in Focus" cap={focusCap} onCycle={() => setFocusCap(nextCap(focusCap))}>
+      <WidgetCard title="Options in Focus" subtitle="Top gainers, losers, and unusual activity worth watching today." cap={focusCap} onCycle={() => setFocusCap(nextCap(focusCap))}>
         <TabRow tabs={FOCUS_TABS} active={focusTab} onChange={setFocusTab} />
         <OptionsTable
           cols={[
