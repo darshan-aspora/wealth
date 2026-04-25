@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
-  ChevronRight, ChevronLeft, ChevronDown, Search, X,
+  ChevronRight, ChevronLeft, ChevronDown, X,
   FileText, TrendingUp, ShieldAlert, Receipt, Brain,
   Mail, Download, CalendarDays,
 } from "lucide-react";
@@ -429,52 +429,10 @@ function CategoryAccordion({ cat, onSelectSub }: { cat: Category; onSelectSub: (
 }
 
 /* ------------------------------------------------------------------ */
-/*  Search results                                                     */
-/* ------------------------------------------------------------------ */
-
-function SearchResults({ query, onSelectSub }: { query: string; onSelectSub: (sub: SubSection) => void }) {
-  const results = useMemo(() => {
-    const q = query.toLowerCase();
-    const out: { sub: SubSection; category: string }[] = [];
-    for (const cat of CATEGORIES) {
-      for (const sub of cat.subSections) {
-        if (
-          sub.label.toLowerCase().includes(q) ||
-          sub.description.toLowerCase().includes(q) ||
-          sub.includes.some((s) => s.toLowerCase().includes(q))
-        ) {
-          out.push({ sub, category: cat.label });
-        }
-      }
-    }
-    return out;
-  }, [query]);
-
-  if (results.length === 0) {
-    return <p className="text-center text-[16px] text-muted-foreground py-10">No reports match &ldquo;{query}&rdquo;</p>;
-  }
-
-  return (
-    <div className="rounded-2xl border border-border/50 bg-white overflow-hidden divide-y divide-border/40">
-      {results.map(({ sub, category }, i) => (
-        <button key={i} onClick={() => onSelectSub(sub)} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
-          <div className="flex-1 min-w-0">
-            <p className="text-[16px] font-semibold text-foreground leading-snug">{sub.label}</p>
-            <p className="text-[14px] text-muted-foreground/60 mt-0.5">{category} · {sub.includes.length} reports</p>
-          </div>
-          <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Tab                                                                */
 /* ------------------------------------------------------------------ */
 
 export function ReportsTab({ empty }: { empty?: boolean }) {
-  const [query, setQuery]           = useState("");
   const [selectedSub, setSelectedSub] = useState<SubSection | null>(null);
 
   if (empty) {
@@ -490,49 +448,18 @@ export function ReportsTab({ empty }: { empty?: boolean }) {
     );
   }
 
-  const isSearching = query.trim().length > 0;
-
   return (
     <div className="pb-24">
-
-      {/* Search bar */}
-      <div className="px-5 pt-4 pb-4">
-        <div className="flex items-center gap-2.5 rounded-2xl bg-muted/50 border border-border/40 px-3.5 py-2.5">
-          <Search size={15} className="text-muted-foreground shrink-0" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search reports…"
-            className="flex-1 bg-transparent text-[16px] text-foreground placeholder:text-muted-foreground outline-none"
-          />
-          {query.length > 0 && (
-            <button onClick={() => setQuery("")} className="shrink-0 active:opacity-60">
-              <X size={14} className="text-muted-foreground" />
-            </button>
-          )}
-        </div>
+      <div className="px-5 pt-4 space-y-3">
+        <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Categories</p>
+        {CATEGORIES.map((cat) => (
+          <CategoryAccordion key={cat.id} cat={cat} onSelectSub={setSelectedSub} />
+        ))}
       </div>
-
-      {!isSearching && (
-        <div className="px-5 space-y-3">
-          <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Categories</p>
-          {CATEGORIES.map((cat) => (
-            <CategoryAccordion key={cat.id} cat={cat} onSelectSub={setSelectedSub} />
-          ))}
-        </div>
-      )}
-
-      {isSearching && (
-        <div className="px-5">
-          <SearchResults query={query} onSelectSub={setSelectedSub} />
-        </div>
-      )}
 
       {selectedSub && (
         <ReportDrawer sub={selectedSub} onClose={() => setSelectedSub(null)} />
       )}
-
     </div>
   );
 }
