@@ -110,7 +110,8 @@ export default function OptionsChainPage() {
     setSelected((prev) => {
       if (prev && prev.strike === strike && prev.side === side) return null; // tap same = deselect
       setLots(1);
-      return { strike, side, mode: "buy", ltp };
+      // Level 1 only: calls are sold (covered call), puts are bought (protective put)
+      return { strike, side, mode: side === "call" ? "sell" : "buy", ltp };
     });
   }, []);
 
@@ -518,7 +519,7 @@ export default function OptionsChainPage() {
                     </div>
                   </div>
 
-                  {/* Row 3: lots stepper + Sell + Buy */}
+                  {/* Row 3: lots stepper + strategy action */}
                   <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
                     {/* Lots stepper */}
                     <div className="flex items-stretch rounded-xl border border-border/60 overflow-hidden shrink-0">
@@ -539,32 +540,17 @@ export default function OptionsChainPage() {
                       </button>
                     </div>
 
-                    {/* Sell button */}
+                    {/* Single Level 1 strategy button */}
                     <button
                       disabled={insufficient}
-                      onClick={() => !insufficient && setSelected((prev) => prev ? { ...prev, mode: "sell" } : null)}
                       className={cn(
-                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border",
+                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border border-border/60",
                         insufficient
-                          ? "border-border/40 text-muted-foreground/40 bg-transparent cursor-not-allowed"
-                          : "border-loss text-loss bg-transparent active:opacity-70"
+                          ? "text-muted-foreground/40 cursor-not-allowed"
+                          : "text-foreground bg-transparent active:bg-muted/40"
                       )}
                     >
-                      Sell · {lots} {lots === 1 ? "Lot" : "Lots"}
-                    </button>
-
-                    {/* Buy button */}
-                    <button
-                      disabled={insufficient}
-                      onClick={() => !insufficient && setSelected((prev) => prev ? { ...prev, mode: "buy" } : null)}
-                      className={cn(
-                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border",
-                        insufficient
-                          ? "border-border/40 text-muted-foreground/40 bg-transparent cursor-not-allowed"
-                          : "border-gain text-gain bg-transparent active:opacity-70"
-                      )}
-                    >
-                      Buy · {lots} {lots === 1 ? "Lot" : "Lots"}
+                      {selected.side === "call" ? "Sell Covered Call" : "Buy Protective Put"} · {lots} {lots === 1 ? "Lot" : "Lots"}
                     </button>
                   </div>
                 </>

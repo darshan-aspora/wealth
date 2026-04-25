@@ -705,7 +705,8 @@ export default function OptionLegDetailPage() {
   const openGreeksSheet = () => { setGreeksSheetMounted(true); requestAnimationFrame(() => setGreeksSheetVisible(true)); };
   const closeGreeksSheet = () => { setGreeksSheetVisible(false); setTimeout(() => setGreeksSheetMounted(false), 300); };
   const [side, setSide] = useState<OptionSide>(initialSide);
-  const [tradeMode, setTradeMode] = useState<TradeMode>("buy");
+  // Level 1 only: calls are always sold (covered call), puts are always bought (protective put)
+  const tradeMode: TradeMode = side === "call" ? "sell" : "buy";
   const [expiry] = useState(initialExpiry);
   const [selectedStrike] = useState(initialStrike);
 
@@ -781,20 +782,6 @@ export default function OptionLegDetailPage() {
                   )}
                 >
                   {s === "call" ? "Call" : "Put"}
-                </button>
-              ))}
-            </div>
-            <div className="inline-flex items-center rounded-lg bg-muted p-0.5">
-              {(["buy", "sell"] as TradeMode[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setTradeMode(m)}
-                  className={cn(
-                    "rounded-md px-2.5 py-1 text-[0.6875em] font-semibold transition-colors",
-                    tradeMode === m ? "bg-foreground text-background shadow-sm" : "text-muted-foreground",
-                  )}
-                >
-                  {m === "buy" ? "Buy" : "Sell"}
                 </button>
               ))}
             </div>
@@ -887,12 +874,10 @@ export default function OptionLegDetailPage() {
             Set Alert
           </Button>
           <Button
-            className={cn(
-              "h-11 rounded-xl text-[0.9375em] font-semibold text-white",
-              tradeMode === "buy" ? "bg-black hover:bg-black/95" : "bg-loss hover:bg-loss/95",
-            )}
+            variant="outline"
+            className="h-11 rounded-xl border-black/10 text-[0.9375em] font-semibold text-foreground"
           >
-            {tradeMode === "buy" ? "Buy" : "Sell"}
+            {side === "call" ? "Sell Covered Call" : "Buy Protective Put"}
           </Button>
         </div>
       </div>
