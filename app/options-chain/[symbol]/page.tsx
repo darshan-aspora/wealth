@@ -519,6 +519,16 @@ export default function OptionsChainPage() {
                     </div>
                   </div>
 
+                  {/* Level 1 eligibility notice */}
+                  <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-1">
+                    <Info size={13} className="text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      {selected.side === "call"
+                        ? "Covered calls require you to own shares of this stock."
+                        : "Protective puts require you to own shares of this stock."}
+                    </p>
+                  </div>
+
                   {/* Row 3: lots stepper + strategy action */}
                   <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
                     {/* Lots stepper */}

@@ -866,6 +866,14 @@ export default function OptionLegDetailPage() {
       </main>
 
       <div className="shrink-0 border-t border-border/50 bg-background px-4 pb-7 pt-3">
+        <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-3">
+          <Info size={13} className="text-muted-foreground shrink-0 mt-0.5" />
+          <p className="text-[0.75em] text-muted-foreground leading-snug">
+            {side === "call"
+              ? "Covered calls require you to already own shares of this stock. The call is sold against your existing position."
+              : "Protective puts require you to already own shares of this stock. The put is bought to hedge your long position."}
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
