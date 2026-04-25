@@ -14,14 +14,10 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 /*  Data                                                               */
 /* ------------------------------------------------------------------ */
 
-interface ReportItem {
-  title: string;
-  description: string;
-}
-
 interface SubSection {
   label: string;
-  items: ReportItem[];
+  description: string;
+  includes: string[];
 }
 
 type CategoryId = "core" | "performance" | "risk" | "tax" | "behavioral";
@@ -41,44 +37,23 @@ const CATEGORIES: Category[] = [
     subSections: [
       {
         label: "Account Statements",
-        items: [
-          { title: "Monthly Statement",               description: "Full summary of activity each month" },
-          { title: "Quarterly Statement",             description: "Three-month period overview" },
-          { title: "Annual Statement",                description: "Full-year account ledger" },
-          { title: "Custom Date-Range Statement",     description: "Define your own reporting window" },
-          { title: "Consolidated Statement",          description: "Combined view across multiple accounts" },
-        ],
+        description: "Full account activity summaries across all periods",
+        includes: ["Monthly Statement", "Quarterly Statement", "Annual Statement", "Custom Date-Range Statement", "Consolidated Statement"],
       },
       {
         label: "Transaction Reports",
-        items: [
-          { title: "Full Transaction History",        description: "Every debit and credit on your account" },
-          { title: "Deposits & Withdrawals",          description: "All fund movements in and out" },
-          { title: "Cash Ledger Report",              description: "Day-by-day cash balance log" },
-          { title: "Dividend Transactions",           description: "Dividends received across all holdings" },
-          { title: "Interest Earned Report",          description: "Interest credited on cash & margin" },
-          { title: "Corporate Action History",        description: "Splits, mergers, spinoffs & rights" },
-        ],
+        description: "Every debit, credit, and fund movement on your account",
+        includes: ["Full Transaction History", "Deposits & Withdrawals", "Cash Ledger Report", "Dividend Transactions", "Interest Earned Report", "Corporate Action History"],
       },
       {
         label: "Holdings Reports",
-        items: [
-          { title: "Current Holdings Report",         description: "Live snapshot of your portfolio" },
-          { title: "Historical Holdings Report",      description: "Portfolio composition at any past date" },
-          { title: "Holdings by Asset Class",         description: "Equity, ETF, options & cash breakdown" },
-          { title: "Holdings by Sector",              description: "Allocation across market sectors" },
-          { title: "Holdings by Geography",           description: "Country and region exposure" },
-        ],
+        description: "Snapshot and historical breakdown of your portfolio holdings",
+        includes: ["Current Holdings Report", "Historical Holdings Report", "Holdings by Asset Class", "Holdings by Sector", "Holdings by Geography"],
       },
       {
         label: "Orders & Trades",
-        items: [
-          { title: "Trade Confirmations",             description: "Per-trade execution details" },
-          { title: "Order History Report",            description: "All open, completed & failed orders" },
-          { title: "Filled vs Cancelled Orders",      description: "Execution success analysis" },
-          { title: "Average Execution Price",         description: "Price quality per instrument" },
-          { title: "Trade Settlement Report",         description: "Settlement status for all trades" },
-        ],
+        description: "Execution details and order history across all instruments",
+        includes: ["Trade Confirmations", "Order History Report", "Filled vs Cancelled Orders", "Average Execution Price", "Trade Settlement Report"],
       },
     ],
   },
@@ -89,33 +64,18 @@ const CATEGORIES: Category[] = [
     subSections: [
       {
         label: "Returns",
-        items: [
-          { title: "Portfolio vs Benchmark",          description: "Returns compared to SPX, NDX & more" },
-          { title: "Time Weighted Return (TWR)",      description: "Performance independent of cash flows" },
-          { title: "Money Weighted Return (IRR)",     description: "Return adjusted for your cash flows" },
-          { title: "Daily P&L Report",                description: "Day-by-day profit and loss log" },
-          { title: "Monthly P&L Report",              description: "Month-over-month performance summary" },
-          { title: "Annual Performance Report",       description: "Full-year returns and analysis" },
-        ],
+        description: "Portfolio return analysis across different time horizons",
+        includes: ["Portfolio vs Benchmark", "Time Weighted Return (TWR)", "Money Weighted Return (IRR)", "Daily P&L Report", "Monthly P&L Report", "Annual Performance Report"],
       },
       {
         label: "Gain / Loss",
-        items: [
-          { title: "Realized Gains Report",           description: "Closed position profit and loss" },
-          { title: "Unrealized Gains Report",         description: "Open position floating P&L" },
-          { title: "Tax Lot Report",                  description: "Per-lot cost basis and holding period" },
-          { title: "FIFO / LIFO Gains Report",        description: "Gains under different accounting methods" },
-          { title: "Wash Sale Report",                description: "Disallowed loss transactions flagged" },
-        ],
+        description: "Realized and unrealized P&L with tax lot detail",
+        includes: ["Realized Gains Report", "Unrealized Gains Report", "Tax Lot Report", "FIFO / LIFO Gains Report", "Wash Sale Report"],
       },
       {
         label: "Attribution",
-        items: [
-          { title: "Contribution by Asset",           description: "Which positions drove your return" },
-          { title: "Contribution by Sector",          description: "Sector-level performance attribution" },
-          { title: "Contribution by Strategy",        description: "Return by trading strategy or theme" },
-          { title: "Contribution by Geography",       description: "Regional return attribution" },
-        ],
+        description: "Break down what drove your returns by asset, sector and strategy",
+        includes: ["Contribution by Asset", "Contribution by Sector", "Contribution by Strategy", "Contribution by Geography"],
       },
     ],
   },
@@ -126,33 +86,18 @@ const CATEGORIES: Category[] = [
     subSections: [
       {
         label: "Portfolio Risk",
-        items: [
-          { title: "Portfolio Volatility Report",     description: "Standard deviation of your returns" },
-          { title: "Maximum Drawdown Report",         description: "Worst peak-to-trough decline" },
-          { title: "Downside Risk Report",            description: "Below-target return analysis" },
-          { title: "Value at Risk (VaR)",             description: "Potential loss at confidence levels" },
-          { title: "Beta vs Market",                  description: "Portfolio sensitivity to market moves" },
-          { title: "Correlation Matrix",              description: "How your holdings move together" },
-        ],
+        description: "Volatility, drawdown, VaR and sensitivity metrics",
+        includes: ["Portfolio Volatility Report", "Maximum Drawdown Report", "Downside Risk Report", "Value at Risk (VaR)", "Beta vs Market", "Correlation Matrix"],
       },
       {
         label: "Concentration Risk",
-        items: [
-          { title: "Position Concentration",          description: "Overweight positions flagged" },
-          { title: "Sector Concentration",            description: "Heavy sector bets highlighted" },
-          { title: "Top 10 Exposure Report",          description: "Your ten largest holdings by weight" },
-          { title: "Single Stock Exposure",           description: "Idiosyncratic risk per position" },
-          { title: "Country Exposure Risk",           description: "Geopolitical concentration flags" },
-        ],
+        description: "Overweight positions and heavy sector or country bets",
+        includes: ["Position Concentration", "Sector Concentration", "Top 10 Exposure Report", "Single Stock Exposure", "Country Exposure Risk"],
       },
       {
         label: "Scenario Analysis",
-        items: [
-          { title: "Market Crash Simulation",         description: "Portfolio impact of a 2008-style crash" },
-          { title: "Interest Rate Change Impact",     description: "Sensitivity to rate hikes or cuts" },
-          { title: "Inflation Impact Simulation",     description: "Real return under inflation scenarios" },
-          { title: "Currency Fluctuation Simulation", description: "FX exposure stress test" },
-        ],
+        description: "Stress test your portfolio against historical and hypothetical events",
+        includes: ["Market Crash Simulation", "Interest Rate Change Impact", "Inflation Impact Simulation", "Currency Fluctuation Simulation"],
       },
     ],
   },
@@ -163,32 +108,18 @@ const CATEGORIES: Category[] = [
     subSections: [
       {
         label: "Core Tax Reports",
-        items: [
-          { title: "Capital Gains Report",            description: "Total realized gains for the period" },
-          { title: "Short vs Long Term Gains",        description: "Holding period tax categorization" },
-          { title: "Dividend Tax Report",             description: "Qualified vs ordinary dividends" },
-          { title: "Interest Tax Report",             description: "Taxable interest income earned" },
-          { title: "Tax Lot Report",                  description: "Per-lot basis and holding period" },
-        ],
+        description: "Capital gains, dividends, and interest income for filing",
+        includes: ["Capital Gains Report", "Short vs Long Term Gains", "Dividend Tax Report", "Interest Tax Report", "Tax Lot Report"],
       },
       {
         label: "Advanced Tax Tools",
-        items: [
-          { title: "Tax Loss Harvesting",             description: "Positions eligible for loss booking" },
-          { title: "Tax Optimization Report",         description: "Strategies to reduce your tax bill" },
-          { title: "Realized Gain Optimization",      description: "Lot selection for minimum tax impact" },
-          { title: "Carry Forward Losses",            description: "Unused losses to offset future gains" },
-        ],
+        description: "Harvesting opportunities and optimization strategies",
+        includes: ["Tax Loss Harvesting", "Tax Optimization Report", "Realized Gain Optimization", "Carry Forward Losses"],
       },
       {
         label: "Jurisdiction Specific",
-        items: [
-          { title: "Form 1099 Suite (US)",            description: "1099-B, DIV, INT, MISC for IRS filing" },
-          { title: "Form 1042-S (Non-US)",            description: "US-sourced income withholding report" },
-          { title: "Capital Gains Statement (India)", description: "STCG / LTCG per Indian tax rules" },
-          { title: "Capital Gains Summary (UK)",      description: "CGT report for HMRC filing" },
-          { title: "EU Tax Summary",                  description: "Aggregated report for EU jurisdictions" },
-        ],
+        description: "Country-specific tax forms and filing summaries",
+        includes: ["Form 1099 Suite (US)", "Form 1042-S (Non-US)", "Capital Gains Statement (India)", "Capital Gains Summary (UK)", "EU Tax Summary"],
       },
     ],
   },
@@ -199,19 +130,13 @@ const CATEGORIES: Category[] = [
     subSections: [
       {
         label: "Investor Psychology",
-        items: [
-          { title: "Emotional Trading Detection",     description: "Trades made during high-volatility spikes" },
-          { title: "Panic Selling Report",            description: "Exits during market downturns flagged" },
-          { title: "FOMO Trading Detection",          description: "Chasing momentum patterns identified" },
-        ],
+        description: "Detect emotional trading patterns and behavioral biases",
+        includes: ["Emotional Trading Detection", "Panic Selling Report", "FOMO Trading Detection"],
       },
       {
         label: "Habit Reports",
-        items: [
-          { title: "Investment Consistency",          description: "How regularly you invest over time" },
-          { title: "Long Term Holding Behavior",      description: "Average holding periods by asset" },
-          { title: "Portfolio Turnover Rate",         description: "How often you rotate your holdings" },
-        ],
+        description: "Track consistency, holding behavior and portfolio turnover",
+        includes: ["Investment Consistency", "Long Term Holding Behavior", "Portfolio Turnover Rate"],
       },
     ],
   },
@@ -221,7 +146,7 @@ const RANGES = ["1D", "1M", "3M", "6M", "1Y", "Custom"] as const;
 type Range = typeof RANGES[number];
 
 /* ------------------------------------------------------------------ */
-/*  Inline calendar for reports drawer                                  */
+/*  Inline calendar                                                    */
 /* ------------------------------------------------------------------ */
 
 interface CalDateVal { year: number; month: number; day: number }
@@ -264,7 +189,6 @@ function InlineCalendar({
 
   return (
     <div className="mt-3 rounded-2xl border border-border/50 bg-white px-4 py-3">
-      {/* Month nav */}
       <div className="flex items-center justify-between mb-3">
         <button onClick={prevMonth} className="p-1.5 rounded-full active:bg-muted/50">
           <ChevronLeft size={16} className="text-foreground" />
@@ -274,13 +198,11 @@ function InlineCalendar({
           <ChevronRight size={16} className="text-foreground" />
         </button>
       </div>
-      {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {CAL_DAYS.map(l => (
           <p key={l} className="text-[12px] text-muted-foreground text-center font-semibold py-0.5">{l}</p>
         ))}
       </div>
-      {/* Days */}
       {rows.map((row, ri) => (
         <div key={ri} className="grid grid-cols-7">
           {row.map((day, ci) => {
@@ -313,7 +235,6 @@ function InlineCalendar({
           })}
         </div>
       ))}
-      {/* Selecting indicator */}
       <p className="text-[12px] text-muted-foreground text-center mt-3">
         {selecting === "from" ? "Select start date" : "Select end date"}
       </p>
@@ -322,14 +243,10 @@ function InlineCalendar({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
+/*  Report drawer                                                      */
 /* ------------------------------------------------------------------ */
 
-/* ------------------------------------------------------------------ */
-/*  Report request drawer                                              */
-/* ------------------------------------------------------------------ */
-
-function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void }) {
+function ReportDrawer({ sub, onClose }: { sub: SubSection; onClose: () => void }) {
   const [range, setRange]         = useState<Range>("6M");
   const [calFrom, setCalFrom]     = useState<CalDateVal | null>(null);
   const [calTo,   setCalTo]       = useState<CalDateVal | null>(null);
@@ -354,17 +271,15 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        {/* Header: close top-right, title left, subtitle below */}
         <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-bold text-foreground leading-tight">{item.title}</p>
-              <p className="text-[14px] text-muted-foreground mt-1">{item.description}</p>
+              <p className="text-[18px] font-bold text-foreground leading-tight">{sub.label}</p>
+              <p className="text-[14px] text-muted-foreground mt-1">{sub.description}</p>
             </div>
             <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
               <X size={20} className="text-foreground" />
@@ -373,6 +288,19 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
         </div>
 
         <div className="overflow-y-auto flex-1 px-5 py-5 space-y-6">
+
+          {/* Included reports */}
+          <div>
+            <p className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Included in this report</p>
+            <div className="rounded-2xl border border-border/50 bg-muted/30 divide-y divide-border/40 overflow-hidden">
+              {sub.includes.map((name, i) => (
+                <div key={i} className="flex items-center gap-2.5 px-4 py-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-foreground/30 shrink-0" />
+                  <p className="text-[15px] text-foreground font-medium">{name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Time range */}
           <div>
@@ -397,7 +325,6 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
 
             {range === "Custom" && (
               <div className="mt-3">
-                {/* From / To summary pills */}
                 <div className="flex gap-2 mb-1">
                   <button
                     onClick={() => setSelecting("from")}
@@ -435,7 +362,6 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
 
         </div>
 
-        {/* CTAs */}
         <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/40 flex gap-3">
           <button
             disabled={range === "Custom" && !(calFrom && calTo)}
@@ -457,37 +383,45 @@ function ReportDrawer({ item, onClose }: { item: ReportItem; onClose: () => void
   );
 }
 
-function ReportRow({ item, onTap }: { item: ReportItem; onTap: () => void }) {
-  return (
-    <button onClick={onTap} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
-      <div className="flex-1 min-w-0">
-        <p className="text-[16px] font-semibold text-foreground leading-snug">{item.title}</p>
-        <p className="text-[14px] text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
-      </div>
-      <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
-    </button>
-  );
-}
+/* ------------------------------------------------------------------ */
+/*  Category accordion                                                 */
+/* ------------------------------------------------------------------ */
 
-function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelectReport: (item: ReportItem) => void }) {
+function CategoryAccordion({ cat, onSelectSub }: { cat: Category; onSelectSub: (sub: SubSection) => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div>
+    <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/20 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-4 active:bg-muted/20 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <p className="text-[16px] font-bold text-foreground">{sub.label}</p>
-          <span className="text-[14px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
-            {sub.items.length}
+        <div className="flex items-center gap-2.5">
+          <span className="text-foreground">{cat.icon}</span>
+          <p className="text-[17px] font-bold text-foreground">{cat.label}</p>
+          <span className="text-[13px] font-semibold text-muted-foreground bg-muted/60 rounded-full px-1.5 py-0.5">
+            {cat.subSections.length}
           </span>
         </div>
-        <ChevronDown size={15} className={cn("text-muted-foreground transition-transform shrink-0", open ? "rotate-180" : "")} />
+        <ChevronDown size={16} className={cn("text-muted-foreground transition-transform shrink-0", open ? "rotate-180" : "")} />
       </button>
+
       {open && (
-        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
-          {sub.items.map((item, i) => <ReportRow key={i} item={item} onTap={() => onSelectReport(item)} />)}
+        <div className="divide-y divide-border/40 border-t border-border/40">
+          {cat.subSections.map((sub, i) => (
+            <button
+              key={i}
+              onClick={() => onSelectSub(sub)}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] font-semibold text-foreground leading-snug">{sub.label}</p>
+                <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">
+                  {sub.includes.length} reports included
+                </p>
+              </div>
+              <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -498,16 +432,18 @@ function SubSectionAccordion({ sub, onSelectReport }: { sub: SubSection; onSelec
 /*  Search results                                                     */
 /* ------------------------------------------------------------------ */
 
-function SearchResults({ query, onSelectReport }: { query: string; onSelectReport: (item: ReportItem) => void }) {
+function SearchResults({ query, onSelectSub }: { query: string; onSelectSub: (sub: SubSection) => void }) {
   const results = useMemo(() => {
     const q = query.toLowerCase();
-    const out: { item: ReportItem; category: string; subSection: string }[] = [];
+    const out: { sub: SubSection; category: string }[] = [];
     for (const cat of CATEGORIES) {
       for (const sub of cat.subSections) {
-        for (const item of sub.items) {
-          if (item.title.toLowerCase().includes(q) || item.description.toLowerCase().includes(q)) {
-            out.push({ item, category: cat.label, subSection: sub.label });
-          }
+        if (
+          sub.label.toLowerCase().includes(q) ||
+          sub.description.toLowerCase().includes(q) ||
+          sub.includes.some((s) => s.toLowerCase().includes(q))
+        ) {
+          out.push({ sub, category: cat.label });
         }
       }
     }
@@ -520,11 +456,11 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
 
   return (
     <div className="rounded-2xl border border-border/50 bg-white overflow-hidden divide-y divide-border/40">
-      {results.map(({ item, category, subSection }, i) => (
-        <button key={i} onClick={() => onSelectReport(item)} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
+      {results.map(({ sub, category }, i) => (
+        <button key={i} onClick={() => onSelectSub(sub)} className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left active:bg-muted/30 transition-colors">
           <div className="flex-1 min-w-0">
-            <p className="text-[16px] font-semibold text-foreground leading-snug">{item.title}</p>
-            <p className="text-[14px] text-muted-foreground/60 mt-0.5">{category} · {subSection}</p>
+            <p className="text-[16px] font-semibold text-foreground leading-snug">{sub.label}</p>
+            <p className="text-[14px] text-muted-foreground/60 mt-0.5">{category} · {sub.includes.length} reports</p>
           </div>
           <ChevronRight size={15} className="text-muted-foreground/40 shrink-0" />
         </button>
@@ -538,9 +474,8 @@ function SearchResults({ query, onSelectReport }: { query: string; onSelectRepor
 /* ------------------------------------------------------------------ */
 
 export function ReportsTab({ empty }: { empty?: boolean }) {
-  const [activeCategory, setActiveCategory] = useState<CategoryId>("core");
-  const [query, setQuery]                   = useState("");
-  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
+  const [query, setQuery]           = useState("");
+  const [selectedSub, setSelectedSub] = useState<SubSection | null>(null);
 
   if (empty) {
     return (
@@ -555,7 +490,6 @@ export function ReportsTab({ empty }: { empty?: boolean }) {
     );
   }
 
-  const selectedCategory = CATEGORIES.find((c) => c.id === activeCategory)!;
   const isSearching = query.trim().length > 0;
 
   return (
@@ -581,55 +515,22 @@ export function ReportsTab({ empty }: { empty?: boolean }) {
       </div>
 
       {!isSearching && (
-        <>
-          <div className="px-5">
-
-            {/* Category chips + reports */}
-            <div>
-              <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Categories</p>
-
-              {/* Chips */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4">
-                {CATEGORIES.map((cat) => {
-                  const isActive = activeCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[16px] font-semibold whitespace-nowrap transition-colors shrink-0",
-                        isActive ? "bg-foreground text-background" : "bg-muted/50 border border-border/40 text-foreground"
-                      )}
-                    >
-                      {cat.icon}
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Sub-sections for active category */}
-              <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
-                {selectedCategory.subSections.map((sub, i) => (
-                  <SubSectionAccordion key={i} sub={sub} onSelectReport={setSelectedReport} />
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </>
-      )}
-
-      {/* Search results */}
-      {isSearching && (
-        <div className="px-5">
-          <SearchResults query={query} onSelectReport={setSelectedReport} />
+        <div className="px-5 space-y-3">
+          <p className="text-[14px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Categories</p>
+          {CATEGORIES.map((cat) => (
+            <CategoryAccordion key={cat.id} cat={cat} onSelectSub={setSelectedSub} />
+          ))}
         </div>
       )}
 
-      {/* Report request drawer */}
-      {selectedReport && (
-        <ReportDrawer item={selectedReport} onClose={() => setSelectedReport(null)} />
+      {isSearching && (
+        <div className="px-5">
+          <SearchResults query={query} onSelectSub={setSelectedSub} />
+        </div>
+      )}
+
+      {selectedSub && (
+        <ReportDrawer sub={selectedSub} onClose={() => setSelectedSub(null)} />
       )}
 
     </div>
