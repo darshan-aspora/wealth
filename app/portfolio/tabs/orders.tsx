@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ClipboardList } from "lucide-react";
+import { CheckCircle, Clock, Bell } from "lucide-react";
 import {
   type OpenOrder, type CompletedOrder, type FailedOrder, type Order,
   OrderCard, registerOrders,
 } from "@/app/portfolio/components/shared-order";
-import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -68,15 +67,90 @@ export function OrdersTab({ empty }: { empty?: boolean }) {
   const [activeTab, setActiveTab] = useState<OrderTab>("open");
 
   if (empty) {
+    const orderTypes = [
+      {
+        icon: Clock,
+        label: "Market Order",
+        sub: "Executes instantly at current price",
+        visual: (
+          <div className="flex items-end gap-1 h-8">
+            {[3, 5, 4, 6, 5, 7, 6].map((h, i) => (
+              <div key={i} style={{ height: `${h * 4}px` }} className={cn("flex-1 rounded-sm", i === 6 ? "bg-foreground/60" : "bg-muted")} />
+            ))}
+          </div>
+        ),
+        badge: "Instant",
+        badgeColor: "bg-emerald-50 text-emerald-700",
+      },
+      {
+        icon: Bell,
+        label: "Limit Order",
+        sub: "Fills only at your specified price",
+        visual: (
+          <div className="relative h-8">
+            <div className="absolute inset-y-0 w-full flex items-center">
+              <div className="w-full h-px bg-muted border-dashed" style={{ borderTop: "1.5px dashed", borderColor: "currentColor" }} />
+            </div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-foreground/70 w-2.5 h-2.5" />
+            <p className="absolute left-0 top-0 text-[10px] font-semibold text-muted-foreground">Target $180</p>
+          </div>
+        ),
+        badge: "Patient",
+        badgeColor: "bg-blue-50 text-blue-700",
+      },
+      {
+        icon: CheckCircle,
+        label: "Stop Loss",
+        sub: "Auto-sells if price falls below trigger",
+        visual: (
+          <div className="relative h-8">
+            <div className="flex items-end gap-1 h-full">
+              {[7, 6, 5, 6, 4, 3, 2].map((h, i) => (
+                <div key={i} style={{ height: `${h * 4}px` }} className={cn("flex-1 rounded-sm", i >= 4 ? "bg-red-200" : "bg-muted")} />
+              ))}
+            </div>
+            <div className="absolute right-0 bottom-0 text-[10px] font-semibold text-red-400">Triggered</div>
+          </div>
+        ),
+        badge: "Protection",
+        badgeColor: "bg-red-50 text-red-600",
+      },
+    ];
     return (
-      <EmptyState
-        icon={ClipboardList}
-        title="No orders yet"
-        subtitle="You haven't placed any orders. Explore stocks and ETFs to make your first trade."
-        actions={[
-          { label: "Explore & Trade", href: "/home-v3", primary: true },
-        ]}
-      />
+      <div className="pb-24">
+        <div className="px-5 pt-5 pb-3">
+          <p className="text-[22px] font-bold text-foreground mb-1">No orders yet</p>
+          <p className="text-[14px] text-muted-foreground">Place your first trade. All orders track here in real time.</p>
+        </div>
+
+        <div className="px-5 mb-5">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Order types</p>
+          <div className="space-y-2">
+            {orderTypes.map((ot) => {
+              const OIcon = ot.icon;
+              return (
+                <div key={ot.label} className="rounded-2xl border border-border/40 bg-background px-4 py-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <OIcon size={14} className="text-foreground" />
+                      <p className="text-[14px] font-bold text-foreground">{ot.label}</p>
+                    </div>
+                    <span className={cn("text-[11px] font-semibold rounded-full px-2 py-0.5", ot.badgeColor)}>{ot.badge}</span>
+                  </div>
+                  {ot.visual}
+                  <p className="text-[12px] text-muted-foreground mt-2">{ot.sub}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-5">
+          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+            Explore &amp; Trade
+          </button>
+        </div>
+      </div>
     );
   }
 

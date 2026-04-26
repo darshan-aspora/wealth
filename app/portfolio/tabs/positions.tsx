@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Zap, BarChart2 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -424,15 +423,62 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
   const [exitAllOpen, setExitAllOpen] = useState(false);
 
   if (empty) {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay();
+    const isMarketOpen = day >= 1 && day <= 5 && hour >= 9 && hour < 16;
     return (
-      <EmptyState
-        icon={Activity}
-        title="No open positions"
-        subtitle="You don't have any open intraday or F&O positions. Explore the markets to get started."
-        actions={[
-          { label: "Explore Markets", href: "/home-v3", primary: true },
-        ]}
-      />
+      <div className="pb-24">
+        {/* Market status banner */}
+        <div className={cn(
+          "mx-5 mt-5 mb-5 rounded-2xl px-4 py-3 flex items-center gap-3",
+          isMarketOpen ? "bg-emerald-50 border border-emerald-200/60" : "bg-muted/40 border border-border/40"
+        )}>
+          <div className={cn("w-2 h-2 rounded-full shrink-0", isMarketOpen ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/40")} />
+          <div>
+            <p className={cn("text-[13px] font-bold", isMarketOpen ? "text-emerald-700" : "text-foreground")}>
+              Market {isMarketOpen ? "Open" : "Closed"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {isMarketOpen ? "NYSE & NASDAQ trading hours: 9:30 AM – 4:00 PM ET" : "Opens Mon–Fri, 9:30 AM – 4:00 PM ET"}
+            </p>
+          </div>
+        </div>
+
+        {/* MTM placeholder */}
+        <div className="mx-5 mb-5 rounded-2xl border border-border/40 bg-background px-5 py-5 text-center">
+          <p className="text-[13px] text-muted-foreground mb-1">Today&apos;s MTM P&L</p>
+          <p className="text-[36px] font-bold text-foreground/15 tabular-nums">$0.00</p>
+          <p className="text-[12px] text-muted-foreground/60 mt-1">Positions you open will appear here live</p>
+        </div>
+
+        {/* Two type cards */}
+        <div className="px-5 mb-5">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Position types</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => {}} className="rounded-2xl border border-border/40 bg-background px-4 py-5 text-left active:bg-muted/30 transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center mb-3">
+                <Zap size={17} className="text-foreground" />
+              </div>
+              <p className="text-[14px] font-bold text-foreground mb-1">Intraday</p>
+              <p className="text-[12px] text-muted-foreground leading-snug">Buy & sell within the same trading session</p>
+            </button>
+            <button onClick={() => {}} className="rounded-2xl border border-border/40 bg-background px-4 py-5 text-left active:bg-muted/30 transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center mb-3">
+                <BarChart2 size={17} className="text-foreground" />
+              </div>
+              <p className="text-[14px] font-bold text-foreground mb-1">Options</p>
+              <p className="text-[12px] text-muted-foreground leading-snug">Covered calls & protective puts</p>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5">
+          <button onClick={() => {}} className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+            Explore Markets
+          </button>
+        </div>
+      </div>
     );
   }
 

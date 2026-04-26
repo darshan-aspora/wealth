@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, X, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { OrderCard, addOrders, type CompletedOrder } from "@/app/portfolio/components/shared-order";
-import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -493,14 +492,76 @@ export function PnlTab({ empty }: { empty?: boolean }) {
 
   if (empty) {
     return (
-      <EmptyState
-        icon={TrendingUp}
-        title="No P&L data yet"
-        subtitle="Your profit & loss will appear here once you start trading. Make your first trade to get started."
-        actions={[
-          { label: "Explore & Trade", href: "/home-v3", primary: true },
-        ]}
-      />
+      <div className="pb-24">
+        {/* Range tabs ghost */}
+        <div className="px-5 pt-5 pb-4">
+          <div className="flex gap-2">
+            {["1M", "3M", "Current FY", "Custom"].map((p, i) => (
+              <div key={p} className={cn(
+                "flex-1 py-2.5 rounded-xl text-[14px] font-semibold text-center",
+                i === 0 ? "bg-foreground/10 text-foreground/30" : "border border-border/30 text-muted-foreground/30"
+              )}>
+                {p}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ghost chart area */}
+        <div className="mx-5 mb-4 rounded-3xl border border-border/40 bg-background overflow-hidden">
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-[13px] text-muted-foreground mb-0.5">Total P&L</p>
+            <p className="text-[32px] font-bold text-foreground/15 tabular-nums leading-none">$0.00</p>
+          </div>
+          {/* Ghost chart */}
+          <div className="px-5 pb-5">
+            <div className="relative h-[100px]">
+              <svg viewBox="0 0 300 80" className="w-full h-full" preserveAspectRatio="none">
+                {/* Axis */}
+                <line x1="0" y1="79" x2="300" y2="79" stroke="currentColor" strokeWidth="0.5" className="text-border/40" />
+                <line x1="0" y1="0" x2="0" y2="79" stroke="currentColor" strokeWidth="0.5" className="text-border/40" />
+                {/* Flat zero line (dashed) */}
+                <line x1="0" y1="40" x2="300" y2="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" className="text-foreground/15" />
+                {/* Ghost bars */}
+                {[0, 50, 100, 150, 200, 250].map((x) => (
+                  <rect key={x} x={x + 5} y={35} width={40} height={5} rx="2" className="fill-muted" />
+                ))}
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-[12px] font-medium text-muted-foreground/60">Trade to see your P&L chart</p>
+              </div>
+            </div>
+          </div>
+          {/* Ghost metrics row */}
+          <div className="grid grid-cols-3 divide-x divide-border/30 border-t border-border/30">
+            {[{ l: "Realized", v: "$0.00" }, { l: "Unrealized", v: "$0.00" }, { l: "Today", v: "$0.00" }].map((m) => (
+              <div key={m.l} className="px-3 py-3 text-center">
+                <p className="text-[14px] font-bold text-foreground/15 tabular-nums">{m.v}</p>
+                <p className="text-[11px] text-muted-foreground/50 mt-0.5">{m.l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ghost calendar row */}
+        <div className="mx-5 mb-5 rounded-2xl border border-border/40 bg-background px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[13px] font-semibold text-muted-foreground/50">P&L Calendar</p>
+            <CalendarDays size={14} className="text-muted-foreground/30" />
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 21 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-md bg-muted/40" />
+            ))}
+          </div>
+        </div>
+
+        <div className="px-5">
+          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+            Start Trading
+          </button>
+        </div>
+      </div>
     );
   }
 

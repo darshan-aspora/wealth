@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Landmark, X, Info, Wallet } from "lucide-react";
+import { Copy, Landmark, X, Info, Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -677,15 +676,66 @@ export function BuyingPowerTab({ empty }: { empty?: boolean }) {
 
   if (empty) {
     return (
-      <EmptyState
-        icon={Wallet}
-        title="No funds added yet"
-        subtitle="Add money to your account to start investing. Your transaction history will appear here."
-        actions={[
-          { label: "Add Funds", primary: true },
-          { label: "Learn More" },
-        ]}
-      />
+      <div className="pb-24">
+        {/* Balance card */}
+        <div className="mx-5 mt-6 mb-4 rounded-3xl bg-foreground px-6 py-7 flex flex-col items-center text-center">
+          <p className="text-[13px] font-medium text-background/50 mb-2 uppercase tracking-widest">Available Cash</p>
+          <p className="text-[52px] font-bold text-background leading-none tabular-nums mb-1">$0.00</p>
+          <p className="text-[13px] text-background/40 mt-2">Add funds to start investing</p>
+        </div>
+
+        {/* Quick amounts */}
+        <div className="px-5 mb-4">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Add</p>
+          <div className="grid grid-cols-4 gap-2">
+            {["$50", "$100", "$250", "$500"].map((amt) => (
+              <button key={amt} className="rounded-2xl border border-border/50 bg-background py-3.5 text-[15px] font-bold text-foreground active:bg-muted/50 transition-colors">
+                {amt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Payment methods */}
+        <div className="px-5 mb-5">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Transfer via</p>
+          <div className="space-y-2">
+            <button className="w-full flex items-center gap-3.5 rounded-2xl border border-border/50 bg-background px-4 py-4 active:bg-muted/30 transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                <Landmark size={16} className="text-foreground" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-semibold text-foreground">Bank Transfer (ACH)</p>
+                <p className="text-[12px] text-muted-foreground">2–3 business days · No fees</p>
+              </div>
+              <span className="text-[11px] font-semibold text-muted-foreground/60 bg-muted rounded-full px-2 py-0.5">Free</span>
+            </button>
+            <button className="w-full flex items-center gap-3.5 rounded-2xl border border-border/50 bg-background px-4 py-4 active:bg-muted/30 transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                <Zap size={16} className="text-foreground" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-semibold text-foreground">Instant Transfer</p>
+                <p className="text-[12px] text-muted-foreground">Available immediately · 1.5% fee</p>
+              </div>
+              <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">Instant</span>
+            </button>
+          </div>
+        </div>
+
+        {/* SIPC note */}
+        <div className="mx-5 flex items-center gap-2 rounded-2xl bg-muted/40 px-4 py-3 mb-5">
+          <Shield size={14} className="text-muted-foreground shrink-0" />
+          <p className="text-[12px] text-muted-foreground leading-snug">Your cash is SIPC-protected up to $500,000</p>
+        </div>
+
+        {/* CTA */}
+        <div className="px-5">
+          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+            Add Funds
+          </button>
+        </div>
+      </div>
     );
   }
 

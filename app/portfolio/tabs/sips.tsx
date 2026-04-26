@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
-import { EmptyState } from "../components/empty-state";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -87,18 +85,103 @@ function PausedSipCard({ sip }: { sip: Sip }) {
 
 export function SipsTab({ empty }: { empty?: boolean }) {
   const [filter, setFilter] = useState<SipFilter>("All");
+  const amounts = ["$25", "$50", "$100", "$250"];
+  const freqs = ["Daily", "Weekly", "Monthly"];
+  const [selectedAmt, setSelectedAmt] = useState(amounts[1]);
+  const [selectedFreq, setSelectedFreq] = useState(freqs[1]);
 
   if (empty) {
+    const amtVal = parseInt(selectedAmt.replace("$", ""));
+    const multiplier = selectedFreq === "Daily" ? 252 : selectedFreq === "Weekly" ? 52 : 12;
+    const projected1y = Math.round(amtVal * multiplier * 1.10);
+    const projected3y = Math.round(amtVal * multiplier * 3 * 1.28);
+    const bars = [
+      { label: "Now", val: 0 },
+      { label: "6M", val: Math.round(amtVal * multiplier * 0.5 * 1.05) },
+      { label: "1Y", val: projected1y },
+      { label: "2Y", val: Math.round(amtVal * multiplier * 2 * 1.18) },
+      { label: "3Y", val: projected3y },
+    ];
+    const maxVal = bars[bars.length - 1].val || 1;
     return (
-      <EmptyState
-        icon={RefreshCw}
-        title="No active SIPs"
-        subtitle="Set up a Systematic Investment Plan to invest automatically in stocks, ETFs, or collections."
-        actions={[
-          { label: "Create a SIP", href: "/home-v3", primary: true },
-          { label: "Explore Stocks & ETFs", href: "/home-v3" },
-        ]}
-      />
+      <div className="pb-24">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-2">
+          <p className="text-[22px] font-bold text-foreground mb-1">Set up a SIP</p>
+          <p className="text-[14px] text-muted-foreground">Invest a fixed amount automatically and watch it compound.</p>
+        </div>
+
+        {/* Mini SIP configurator */}
+        <div className="mx-5 mt-4 mb-4 rounded-3xl border border-border/40 bg-background px-5 py-5">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Amount per {selectedFreq.toLowerCase().replace("ly", "").replace("month", "month")}</p>
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {amounts.map((a) => (
+              <button
+                key={a}
+                onClick={() => setSelectedAmt(a)}
+                className={cn(
+                  "py-3 rounded-xl text-[14px] font-bold transition-colors",
+                  selectedAmt === a ? "bg-foreground text-background" : "border border-border/50 text-foreground"
+                )}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Frequency</p>
+          <div className="flex gap-2 mb-5">
+            {freqs.map((f) => (
+              <button
+                key={f}
+                onClick={() => setSelectedFreq(f)}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors",
+                  selectedFreq === f ? "bg-foreground text-background" : "border border-border/50 text-muted-foreground"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          {/* Growth bars */}
+          <div className="flex items-end gap-2 h-20 mb-2">
+            {bars.map((b, i) => (
+              <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={cn("w-full rounded-t-lg transition-all duration-300", i === 0 ? "bg-muted/40" : i === bars.length - 1 ? "bg-foreground" : "bg-foreground/30")}
+                  style={{ height: i === 0 ? "4px" : `${Math.max(8, (b.val / maxVal) * 72)}px` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {bars.map((b) => (
+              <div key={b.label} className="flex-1 text-center">
+                <p className="text-[10px] text-muted-foreground">{b.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border/40 flex justify-between">
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-0.5">1-year projection</p>
+              <p className="text-[16px] font-bold text-foreground tabular-nums">${projected1y.toLocaleString()}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] text-muted-foreground mb-0.5">3-year projection</p>
+              <p className="text-[16px] font-bold text-foreground tabular-nums">${projected3y.toLocaleString()}</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-2">Projections assume ~10% annual return. Not a guarantee.</p>
+        </div>
+
+        <div className="px-5">
+          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+            Create a SIP
+          </button>
+        </div>
+      </div>
     );
   }
 

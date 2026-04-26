@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, SlidersHorizontal, Layers } from "lucide-react";
+import { X, SlidersHorizontal, TrendingUp, Globe, BarChart2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { EmptyState } from "../components/empty-state";
 
 type ChangeRange = "1D" | "1M" | "3M" | "6M" | "1Y" | "Max";
 const CHANGE_RANGES: ChangeRange[] = ["1D", "1M", "3M", "6M", "1Y", "Max"];
@@ -226,17 +225,65 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
   const [changeRange, setChangeRange] = useState<ChangeRange>("Max");
 
   if (empty) {
+    const categories = [
+      {
+        label: "US Stocks",
+        sub: "NYSE & NASDAQ",
+        tickers: ["AAPL", "TSLA", "NVDA", "MSFT"],
+        icon: TrendingUp,
+      },
+      {
+        label: "ETFs",
+        sub: "S&P 500, Sector funds",
+        tickers: ["SPY", "QQQ", "VTI", "IVV"],
+        icon: BarChart2,
+      },
+      {
+        label: "Global ETFs",
+        sub: "Europe, Asia & Emerging",
+        tickers: ["ACWI", "VEA", "EEM", "VXUS"],
+        icon: Globe,
+      },
+    ];
     return (
-      <EmptyState
-        icon={Layers}
-        title="No holdings yet"
-        subtitle="Start building your portfolio by investing in stocks, ETFs, or Global ETFs."
-        actions={[
-          { label: "Explore Stocks", href: "/home-v3", primary: true },
-          { label: "Explore ETFs", href: "/home-v3" },
-          { label: "Explore Global ETFs", href: "/home-v3" },
-        ]}
-      />
+      <div className="pb-24 px-5 pt-5">
+        <p className="text-[22px] font-bold text-foreground mb-1">Build your portfolio</p>
+        <p className="text-[14px] text-muted-foreground mb-5">Choose what you want to invest in</p>
+        <div className="space-y-3">
+          {categories.map((cat) => {
+            const CatIcon = cat.icon;
+            return (
+              <button
+                key={cat.label}
+                onClick={() => router.push("/home-v3")}
+                className="w-full rounded-3xl border border-border/40 bg-background px-5 py-5 text-left active:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                      <CatIcon size={17} className="text-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-foreground">{cat.label}</p>
+                      <p className="text-[12px] text-muted-foreground">{cat.sub}</p>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground/40 text-xl">›</span>
+                </div>
+                <div className="flex gap-2">
+                  {cat.tickers.map((t) => (
+                    <span key={t} className="rounded-lg bg-muted px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">{t}</span>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-muted/40 px-4 py-3">
+          <Shield size={13} className="text-muted-foreground shrink-0" />
+          <p className="text-[12px] text-muted-foreground">Fractional shares available from $1</p>
+        </div>
+      </div>
     );
   }
 
