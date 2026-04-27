@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { X, ChevronDown, Info, ChevronRight, Minus, Plus } from "lucide-react";
+import { X, ChevronDown, Info, ChevronRight, Minus, Plus, ShieldCheck, Zap, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
@@ -111,18 +111,25 @@ export default function OptionsChainPage() {
   const [ltpOpen, setLtpOpen]         = useState(false);
   const [sortAsc, setSortAsc]         = useState(true);
 
+  type OptionsLevel = 1 | 2;
   type TradeSelection = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number };
+  type BasketLeg = TradeSelection & { lots: number; id: number };
+
+  const [level, setLevel]             = useState<OptionsLevel | null>(null);
+  const [levelOpen, setLevelOpen]     = useState(true);
   const [selected, setSelected]       = useState<TradeSelection | null>(null);
   const [lots, setLots]               = useState(1);
+  const [basket, setBasket]           = useState<BasketLeg[]>([]);
+  const basketIdRef                   = useRef(0);
 
   const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
     setSelected((prev) => {
-      if (prev && prev.strike === strike && prev.side === side) return null; // tap same = deselect
+      if (prev && prev.strike === strike && prev.side === side) return null;
       setLots(1);
-      // Level 1 only: calls are sold (covered call), puts are bought (protective put)
-      return { strike, side, mode: side === "call" ? "sell" : "buy", ltp };
+      const defaultMode = level === 2 ? "buy" : side === "call" ? "sell" : "buy";
+      return { strike, side, mode: defaultMode, ltp };
     });
-  }, []);
+  }, [level]);
 
   const baseChain = useMemo(
     () => buildChain(currentPrice, hashStr(symbol + expiry)),
@@ -224,6 +231,12 @@ export default function OptionsChainPage() {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setLevelOpen(true)}
+          className="flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 shrink-0"
+        >
+          {level ? `L${level}` : "Level"} <ChevronDown size={13} strokeWidth={2.5} />
+        </button>
         <button
           onClick={() => setExpiryOpen(true)}
           className="flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 shrink-0"
@@ -468,6 +481,45 @@ export default function OptionsChainPage() {
         </div>
       </div>}
 
+      {/* ── Level 2 basket (shown above footer when basket has legs) ── */}
+      <AnimatePresence>
+        {level === 2 && basket.length > 0 && !selected && (
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 420, damping: 35 }}
+            className="shrink-0 border-t border-border/40 bg-background px-4 pt-3 pb-8"
+          >
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[13px] font-bold text-foreground">Basket · {basket.length} {basket.length === 1 ? "Leg" : "Legs"}</p>
+              <button onClick={() => setBasket([])} className="text-[11px] text-muted-foreground active:opacity-60">Clear all</button>
+            </div>
+            <div className="flex flex-col gap-1.5 mb-3">
+              {basket.map((leg) => (
+                <div key={leg.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2.5">
+                  <span className={cn(
+                    "text-[10px] font-bold rounded-md px-1.5 py-0.5 uppercase shrink-0",
+                    leg.mode === "buy" ? "bg-gain/15 text-gain" : "bg-loss/15 text-loss"
+                  )}>{leg.mode}</span>
+                  <p className="flex-1 text-[13px] font-semibold text-foreground tabular-nums">
+                    {leg.strike.toFixed(1)} {leg.side === "call" ? "CE" : "PE"}
+                    <span className="font-normal text-muted-foreground"> · {leg.lots} {leg.lots === 1 ? "lot" : "lots"}</span>
+                  </p>
+                  <span className="text-[12px] text-muted-foreground tabular-nums">${leg.ltp.toFixed(2)}</span>
+                  <button onClick={() => setBasket((b) => b.filter((l) => l.id !== leg.id))} className="ml-1 active:opacity-60">
+                    <Trash2 size={13} className="text-muted-foreground" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button className="w-full flex items-center justify-center rounded-xl bg-foreground text-background text-[15px] font-bold py-3.5 active:opacity-85">
+              Review Strategy
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Trade footer ── */}
       <AnimatePresence>
         {selected && (
@@ -479,7 +531,7 @@ export default function OptionsChainPage() {
             className="shrink-0 border-t border-border/40 bg-background px-4 pt-4 pb-8"
           >
             {/* Row 1: option identity + close */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <button
                 onClick={() => {
                   const params = new URLSearchParams({
@@ -500,22 +552,18 @@ export default function OptionsChainPage() {
                 </p>
                 <ChevronRight size={14} strokeWidth={2.2} className="text-muted-foreground shrink-0 ml-0.5" />
               </button>
-              <button
-                onClick={() => setSelected(null)}
-                className="rounded-full p-1.5 bg-muted/60 active:opacity-70 shrink-0 ml-2"
-              >
+              <button onClick={() => setSelected(null)} className="rounded-full p-1.5 bg-muted/60 active:opacity-70 shrink-0 ml-2">
                 <X size={14} strokeWidth={2.5} className="text-foreground" />
               </button>
             </div>
 
-            {/* Row 2: info pills */}
             {(() => {
               const available = 12450;
               const reqMargin = selected.ltp * lots * 100;
               const insufficient = reqMargin > available;
               return (
                 <>
-                  <div className="flex gap-2.5 mb-4">
+                  <div className="flex gap-2.5 mb-3">
                     <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Available</p>
                       <p className="text-[14px] font-bold text-foreground tabular-nums">${available.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
@@ -528,49 +576,76 @@ export default function OptionsChainPage() {
                     </div>
                   </div>
 
-                  {/* Level 1 eligibility notice */}
-                  <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-1">
-                    <Info size={13} className="text-muted-foreground shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-muted-foreground leading-snug">
-                      {selected.side === "call"
-                        ? "Covered calls require you to own shares of this stock."
-                        : "Protective puts require you to own shares of this stock."}
-                    </p>
-                  </div>
+                  {level === 2 && (
+                    <div className="flex gap-2 mb-3">
+                      {(["buy", "sell"] as const).map((m) => (
+                        <button key={m}
+                          onClick={() => setSelected((s) => s ? { ...s, mode: m } : s)}
+                          className={cn(
+                            "flex-1 py-2 rounded-xl text-[13px] font-bold transition-colors",
+                            selected.mode === m
+                              ? m === "buy" ? "bg-gain text-white" : "bg-loss text-white"
+                              : "bg-muted/50 text-muted-foreground"
+                          )}
+                        >
+                          {m === "buy" ? "Buy" : "Sell"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Row 3: lots stepper + strategy action */}
+                  {level === 1 && (
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-3">
+                      <Info size={13} className="text-muted-foreground shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        {selected.side === "call"
+                          ? "Covered calls require you to own shares of this stock."
+                          : "Protective puts require you to own shares of this stock."}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-stretch gap-2.5" style={{ height: 50 }}>
-                    {/* Lots stepper */}
                     <div className="flex items-stretch rounded-xl border border-border/60 overflow-hidden shrink-0">
-                      <button
-                        onClick={() => setLots((l) => Math.max(1, l - 1))}
-                        className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
-                      >
+                      <button onClick={() => setLots((l) => Math.max(1, l - 1))} className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors">
                         <Minus size={14} strokeWidth={2.5} className="text-foreground" />
                       </button>
-                      <span className="flex items-center justify-center px-2 text-[15px] font-bold text-foreground tabular-nums min-w-[30px]">
-                        {lots}
-                      </span>
-                      <button
-                        onClick={() => setLots((l) => l + 1)}
-                        className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors"
-                      >
+                      <span className="flex items-center justify-center px-2 text-[15px] font-bold text-foreground tabular-nums min-w-[30px]">{lots}</span>
+                      <button onClick={() => setLots((l) => l + 1)} className="flex items-center justify-center px-3 active:bg-muted/60 transition-colors">
                         <Plus size={14} strokeWidth={2.5} className="text-foreground" />
                       </button>
                     </div>
 
-                    {/* Single Level 1 strategy button */}
-                    <button
-                      disabled={insufficient}
-                      className={cn(
-                        "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border border-border/60",
-                        insufficient
-                          ? "text-muted-foreground/40 cursor-not-allowed"
-                          : "text-foreground bg-transparent active:bg-muted/40"
-                      )}
-                    >
-                      {selected.side === "call" ? "Sell Covered Call" : "Buy Protective Put"} · {lots} {lots === 1 ? "Lot" : "Lots"}
-                    </button>
+                    {level === 1 ? (
+                      <button
+                        disabled={insufficient}
+                        className={cn(
+                          "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors border border-border/60",
+                          insufficient ? "text-muted-foreground/40 cursor-not-allowed" : "text-foreground bg-transparent active:bg-muted/40"
+                        )}
+                      >
+                        {selected.side === "call" ? "Sell Covered Call" : "Buy Protective Put"} · {lots} {lots === 1 ? "Lot" : "Lots"}
+                      </button>
+                    ) : (
+                      <button
+                        disabled={insufficient}
+                        onClick={() => {
+                          if (insufficient) return;
+                          setBasket((b) => [...b, { ...selected, lots, id: ++basketIdRef.current }]);
+                          setSelected(null);
+                        }}
+                        className={cn(
+                          "flex-1 flex items-center justify-center rounded-xl text-[15px] font-bold transition-colors",
+                          insufficient
+                            ? "bg-muted/50 text-muted-foreground/40 cursor-not-allowed"
+                            : selected.mode === "buy"
+                              ? "bg-gain text-white active:opacity-85"
+                              : "bg-loss text-white active:opacity-85"
+                        )}
+                      >
+                        Add to Basket · {lots} {lots === 1 ? "Lot" : "Lots"}
+                      </button>
+                    )}
                   </div>
                 </>
               );
@@ -657,6 +732,83 @@ export default function OptionsChainPage() {
                 contract was executed. It reflects the actual last deal made in the market, and may differ
                 from the current bid/ask spread.
               </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Level selector sheet ── */}
+      <AnimatePresence>
+        {levelOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black z-40"
+              onClick={() => { if (level) setLevelOpen(false); }}
+            />
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-background px-4 pt-3 pb-10"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-10 h-1 rounded-full bg-border" />
+              </div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[20px] font-bold text-foreground">Options Level</p>
+                {level && (
+                  <button onClick={() => setLevelOpen(false)} className="rounded-full p-1.5 active:bg-muted/50">
+                    <X size={18} className="text-foreground" />
+                  </button>
+                )}
+              </div>
+              <p className="text-[13px] text-muted-foreground mb-5 leading-snug">Choose your approved options level to see the right strategies for you.</p>
+
+              <div className="flex flex-col gap-3">
+                {/* Level 1 */}
+                <button
+                  onClick={() => { setLevel(1); setLevelOpen(false); setBasket([]); }}
+                  className={cn(
+                    "w-full text-left rounded-2xl border-2 p-4 transition-colors active:opacity-80",
+                    level === 1 ? "border-foreground bg-foreground/5" : "border-border/50 bg-muted/30"
+                  )}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <ShieldCheck size={18} className="text-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-foreground">Level 1 — Conservative</p>
+                      <p className="text-[11px] text-muted-foreground">Covered Calls · Cash-Secured Puts</p>
+                    </div>
+                    {level === 1 && <div className="ml-auto w-4 h-4 rounded-full bg-foreground shrink-0" />}
+                  </div>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">
+                    Income-generating strategies backed by stock or cash. Lowest risk, suitable for retirement accounts.
+                  </p>
+                </button>
+
+                {/* Level 2 */}
+                <button
+                  onClick={() => { setLevel(2); setLevelOpen(false); setBasket([]); }}
+                  className={cn(
+                    "w-full text-left rounded-2xl border-2 p-4 transition-colors active:opacity-80",
+                    level === 2 ? "border-foreground bg-foreground/5" : "border-border/50 bg-muted/30"
+                  )}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <Zap size={18} className="text-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-foreground">Level 2 — Standard</p>
+                      <p className="text-[11px] text-muted-foreground">Long Calls · Long Puts · Spreads · Straddles</p>
+                    </div>
+                    {level === 2 && <div className="ml-auto w-4 h-4 rounded-full bg-foreground shrink-0" />}
+                  </div>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">
+                    Buy calls and puts directionally, or combine multiple legs into spreads and straddles. Risk limited to premium paid.
+                  </p>
+                </button>
+              </div>
             </motion.div>
           </>
         )}
