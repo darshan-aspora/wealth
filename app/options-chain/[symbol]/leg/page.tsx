@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, STOCK_PRICES } from "@/lib/options-chain";
 
-const DETAIL_TABS = ["Overview", "Candle Chart", "Payoff"] as const;
+const DETAIL_TABS = ["Overview", "Candle Chart"] as const;
 type DetailTab = (typeof DETAIL_TABS)[number];
 type OptionSide = "call" | "put";
 type TradeMode = "buy" | "sell";
@@ -116,166 +116,9 @@ function formatStrikeLabel(strike: number) {
   return Number.isInteger(strike) ? `${strike}` : strike.toFixed(1);
 }
 
-const SVG_W = 300;
-const SVG_H = 160;
-// Zero line sits at vertical center; half the chart height for loss, half for profit
-const ZERO_Y = SVG_H / 2;
-const SVG_PAD_BOT = 4;
 
-function PayoffChart({
-  side,
-  tradeMode,
-  stockPrice,
-  breakEven,
-  entryCost,
-  daysToExpiry,
-  readOnly = false,
-}: {
-  side: OptionSide;
-  tradeMode: TradeMode;
-  stockPrice: number;
-  breakEven: number;
-  entryCost: number;
-  daysToExpiry: number;
-  readOnly?: boolean;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
 
-  const halfRange = stockPrice * 0.20;
-  const minPrice = breakEven - halfRange;
-  const maxPrice = breakEven + halfRange;
-  const priceRange = maxPrice - minPrice;
 
-  // For readOnly, fix the marker at a reasonable expected price
-  const defaultFrac = readOnly
-    ? Math.max(0.55, Math.min(0.9, (stockPrice * (side === "call" ? 1.1 : 0.9) - minPrice) / priceRange))
-    : 0.75;
-  const [sliderFrac, setSliderFrac] = useState(defaultFrac);
-
-  const pnlAt = (p: number): number => {
-    if (tradeMode === "buy") {
-      if (side === "call") return Math.max(-entryCost, (p - breakEven) * 100);
-      return Math.max(-entryCost, (breakEven - p) * 100);
-    } else {
-      if (side === "call") return Math.min(entryCost, -(p - breakEven) * 100);
-      return Math.min(entryCost, -(breakEven - p) * 100);
-    }
-  };
-
-  const sliderPrice = minPrice + sliderFrac * priceRange;
-  const sliderPnL = pnlAt(sliderPrice);
-  const pricePctChange = ((sliderPrice - stockPrice) / stockPrice) * 100;
-
-  const handlePointerMove = (clientX: number) => {
-    if (readOnly || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setSliderFrac(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)));
-  };
-
-  const maxPnlMag = Math.max(entryCost, halfRange * 100) * 1.05;
-  const toX = (price: number) => ((price - minPrice) / priceRange) * SVG_W;
-  const toY = (pnl: number) => ZERO_Y - (pnl / maxPnlMag) * (ZERO_Y - 8);
-
-  const N = 80;
-  const points = Array.from({ length: N }, (_, i) => {
-    const p = minPrice + (i / (N - 1)) * priceRange;
-    return { price: p, pnl: pnlAt(p) };
-  });
-  const polyPoints = points.map((pt) => `${toX(pt.price).toFixed(1)},${toY(pt.pnl).toFixed(1)}`).join(" ");
-
-  const BAR_COUNT = 22;
-  const barW = SVG_W / BAR_COUNT;
-  const barHeights = Array.from({ length: BAR_COUNT }, (_, i) => {
-    const center = BAR_COUNT / 2;
-    const dist = Math.abs(i + 0.5 - center);
-    return Math.max(6, 42 - dist * 3 + Math.sin(i * 1.9) * 5);
-  });
-
-  const sliderX = sliderFrac * SVG_W;
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border/40">
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-0 border-b border-border/40 bg-background">
-        <div className="border-r border-border/40 px-4 py-3">
-          <p className="text-[0.6875em] text-muted-foreground">Expected Price at Expiry</p>
-          <p className="mt-0.5 text-[0.9375em] font-semibold tracking-[-0.3px] text-foreground">
-            {formatCurrency(sliderPrice, 0)}
-            <span className={cn("ml-1 text-[0.75em] font-medium", pricePctChange >= 0 ? "text-gain" : "text-loss")}>
-              ({pricePctChange >= 0 ? "+" : ""}{pricePctChange.toFixed(0)}%)
-            </span>
-          </p>
-        </div>
-        <div className="bg-background px-4 py-3">
-          <p className="text-[0.6875em] text-muted-foreground">Expected P&amp;L</p>
-          <p className={cn("mt-0.5 text-[0.9375em] font-semibold tracking-[-0.3px]", sliderPnL >= 0 ? "text-gain" : "text-loss")}>
-            {sliderPnL >= 0 ? "+" : ""}{formatCurrency(sliderPnL, 0)}
-          </p>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div
-        ref={containerRef}
-        className={cn("relative overflow-hidden bg-[#fafafa]", !readOnly && "cursor-col-resize touch-none select-none")}
-        style={{ height: SVG_H + 32 }}
-        onPointerDown={readOnly ? undefined : (e) => {
-          isDragging.current = true;
-          handlePointerMove(e.clientX);
-          (e.target as HTMLElement).setPointerCapture(e.pointerId);
-        }}
-        onPointerMove={readOnly ? undefined : (e) => { if (isDragging.current) handlePointerMove(e.clientX); }}
-        onPointerUp={readOnly ? undefined : () => { isDragging.current = false; }}
-        onPointerCancel={readOnly ? undefined : () => { isDragging.current = false; }}
-      >
-        <svg width="100%" height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`} preserveAspectRatio="none">
-          <defs>
-            <clipPath id="payoff-clip-loss">
-              <rect x="0" y={ZERO_Y} width={SVG_W} height={SVG_H - ZERO_Y} />
-            </clipPath>
-            <clipPath id="payoff-clip-profit">
-              <rect x="0" y="0" width={SVG_W} height={ZERO_Y} />
-            </clipPath>
-          </defs>
-
-          {barHeights.map((h, i) => (
-            <rect key={i} x={i * barW + 1} y={SVG_H - SVG_PAD_BOT - h} width={Math.max(1, barW - 2)} height={h} fill="#e5e7eb" rx="2" />
-          ))}
-
-          <line x1="0" y1={ZERO_Y} x2={SVG_W} y2={ZERO_Y} stroke="#d1d5db" strokeWidth="0.8" />
-          <polyline points={polyPoints} fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#payoff-clip-loss)" />
-          <polyline points={polyPoints} fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#payoff-clip-profit)" />
-
-          {/* Marker line — dashed in readOnly, solid handle in interactive */}
-          <line x1={sliderX} y1={0} x2={sliderX} y2={SVG_H} stroke="#374151" strokeWidth={readOnly ? 1 : 1.5} strokeDasharray={readOnly ? "4 3" : undefined} opacity={readOnly ? 0.5 : 1} />
-        </svg>
-
-        {!readOnly && (
-          <div
-            className="pointer-events-none absolute flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-foreground px-2.5 py-1.5"
-            style={{ left: `${sliderFrac * 100}%`, bottom: 26 }}
-          >
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-2.5 w-[2px] rounded-full bg-background/70" />
-            ))}
-          </div>
-        )}
-
-        <div className="absolute bottom-1 left-0 right-0 flex items-center justify-between px-3 text-[0.625em] text-muted-foreground">
-          <span>{formatCurrency(minPrice, 0)}</span>
-          <span>{formatCurrency(maxPrice, 0)}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 divide-x divide-border/40 border-t border-border/40 bg-background">
-        <StatPill label="Break-even" value={formatCurrency(breakEven, 0)} noBorder />
-        <StatPill label="Entry Cost" value={formatCurrency(entryCost, 0)} noBorder />
-        <StatPill label="Time left" value={`${daysToExpiry} Days`} noBorder />
-      </div>
-    </div>
-  );
-}
 
 // ─── Candle chart ─────────────────────────────────────────────────────────────
 
@@ -530,6 +373,7 @@ function CandleChart({ ltp, seed }: { ltp: number; seed: number }) {
 function PayoffFull({
   side,
   tradeMode,
+  onTradeChange,
   stockPrice,
   breakEven,
   entryCost,
@@ -537,6 +381,7 @@ function PayoffFull({
 }: {
   side: OptionSide;
   tradeMode: TradeMode;
+  onTradeChange: (m: TradeMode) => void;
   stockPrice: number;
   breakEven: number;
   entryCost: number;
@@ -603,28 +448,48 @@ function PayoffFull({
   // Scenario price steps along the bottom
   const scenarioPrices = Array.from({ length: 5 }, (_, i) => minPrice + (i / 4) * priceRange);
 
+  const svgContainerH = SVG_H2 + 56;
+
   return (
-    <div className="flex flex-col gap-0">
-      {/* P&L hero — above chart, centered */}
-      <div className="bg-background px-5 pb-5 pt-6 text-center">
-        <p className="text-[0.6875em] font-medium uppercase tracking-[0.05em] text-muted-foreground">Expected P&amp;L</p>
-        <p className={cn("mt-3 text-[2.75em] font-extrabold leading-none tracking-[-2px]", isProfit ? "text-gain" : "text-loss")}>
-          {isProfit ? "+" : ""}{formatCurrency(sliderPnL, 0)}
-        </p>
-        <p className="mt-3 text-[0.8125em] text-muted-foreground">
-          If stock reaches{" "}
-          <span className="font-semibold text-foreground">{formatCurrency(sliderPrice, 0)}</span>
-          <span className={cn("ml-1 font-medium", pricePctChange >= 0 ? "text-gain" : "text-loss")}>
-            ({pricePctChange >= 0 ? "+" : ""}{pricePctChange.toFixed(1)}%)
-          </span>
-        </p>
+    <div className="flex flex-col gap-0 bg-background">
+      {/* Header row: P&L hero + Buy/Sell toggle */}
+      <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[0.6875em] font-medium uppercase tracking-[0.05em] text-muted-foreground mb-1">Expected P&amp;L</p>
+          <p className={cn("text-[2em] font-extrabold leading-none tracking-[-1.5px]", isProfit ? "text-gain" : "text-loss")}>
+            {isProfit ? "+" : ""}{formatCurrency(sliderPnL, 0)}
+          </p>
+          <p className="mt-1.5 text-[0.75em] text-muted-foreground">
+            If stock reaches{" "}
+            <span className="font-semibold text-foreground">{formatCurrency(sliderPrice, 0)}</span>
+            <span className={cn("ml-1 font-medium", pricePctChange >= 0 ? "text-gain" : "text-loss")}>
+              ({pricePctChange >= 0 ? "+" : ""}{pricePctChange.toFixed(1)}%)
+            </span>
+          </p>
+        </div>
+        <div className="flex gap-1.5 shrink-0 mt-0.5">
+          {(["buy", "sell"] as TradeMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => onTradeChange(m)}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-[0.75em] font-semibold transition-colors",
+                tradeMode === m
+                  ? m === "buy" ? "bg-gain text-white" : "bg-loss text-white"
+                  : "border border-border/60 text-muted-foreground bg-background",
+              )}
+            >
+              {m === "buy" ? "Buy" : "Sell"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Full payoff chart — edge to edge */}
       <div
         ref={containerRef}
         className="relative touch-none select-none bg-[#fafafa]"
-        style={{ height: SVG_H2 + 56 }}
+        style={{ height: svgContainerH }}
         onPointerDown={(e) => {
           isDragging.current = true;
           handlePointerMove(e.clientX);
@@ -634,7 +499,7 @@ function PayoffFull({
         onPointerUp={() => { isDragging.current = false; }}
         onPointerCancel={() => { isDragging.current = false; }}
       >
-        <svg width="100%" height={SVG_H2} viewBox={`0 0 ${SVG_W2} ${SVG_H2}`} preserveAspectRatio="none">
+        <svg width="100%" height={SVG_H2} viewBox={`0 0 ${SVG_W2} ${SVG_H2}`} preserveAspectRatio="none" overflow="visible">
           <defs>
             <clipPath id="full-clip-loss">
               <rect x="0" y={ZERO_Y2} width={SVG_W2} height={SVG_H2 - ZERO_Y2} />
@@ -655,14 +520,24 @@ function PayoffFull({
           <polyline points={polyPts} fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#full-clip-profit)" />
 
           <line x1={sliderX2} y1="0" x2={sliderX2} y2={SVG_H2} stroke={isProfit ? "#22c55e" : "#ef4444"} strokeWidth="1.5" opacity="0.8" />
-          <circle cx={sliderX2} cy={sliderY2} r="5" fill={isProfit ? "#22c55e" : "#ef4444"} />
-          <circle cx={sliderX2} cy={sliderY2} r="3" fill="white" />
         </svg>
 
-        {/* Draggable handle — grip pill only */}
+        {/* Dot — use px for top so it's relative to SVG height, not container height */}
+        <div
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+          style={{
+            left: `${sliderFrac * 100}%`,
+            top: sliderY2,
+            width: 14,
+            height: 14,
+            backgroundColor: isProfit ? "#22c55e" : "#ef4444",
+          }}
+        />
+
+        {/* Draggable grip — top edge sits exactly at the SVG bottom, touching the line */}
         <div
           className="pointer-events-none absolute flex -translate-x-1/2 flex-col items-center"
-          style={{ left: `${sliderFrac * 100}%`, bottom: 22 }}
+          style={{ left: `${sliderFrac * 100}%`, top: SVG_H2 }}
         >
           <div className={cn("flex items-center gap-[3px] rounded-full px-3 py-2 shadow-md", isProfit ? "bg-gain" : "bg-loss")}>
             {[0, 1, 2].map((i) => (
@@ -679,7 +554,7 @@ function PayoffFull({
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-2 bg-background px-4 pb-6 pt-4">
+      <div className="grid grid-cols-3 gap-2 bg-background px-4 pb-4 pt-4">
         <StatPill label="Break-even" value={formatCurrency(breakEven, 0)} />
         <StatPill label="Entry Cost" value={formatCurrency(entryCost, 0)} />
         <StatPill label="Time left" value={`${daysToExpiry} Days`} />
@@ -704,9 +579,8 @@ export default function OptionLegDetailPage() {
   const [greeksSheetVisible, setGreeksSheetVisible] = useState(false);
   const openGreeksSheet = () => { setGreeksSheetMounted(true); requestAnimationFrame(() => setGreeksSheetVisible(true)); };
   const closeGreeksSheet = () => { setGreeksSheetVisible(false); setTimeout(() => setGreeksSheetMounted(false), 300); };
-  const [side, setSide] = useState<OptionSide>(initialSide);
-  // Level 1 only: calls are always sold (covered call), puts are always bought (protective put)
-  const tradeMode: TradeMode = side === "call" ? "sell" : "buy";
+  const [side] = useState<OptionSide>(initialSide);
+  const [tradeMode, setTradeMode] = useState<TradeMode>("buy");
   const [expiry] = useState(initialExpiry);
   const [selectedStrike] = useState(initialStrike);
 
@@ -745,7 +619,7 @@ export default function OptionLegDetailPage() {
 
 
   return (
-    <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-[#fafafa] text-base">
+    <div className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background text-base">
       <StatusBar />
 
       <div className="shrink-0 bg-background px-4 pb-3 pt-3">
@@ -770,22 +644,6 @@ export default function OptionLegDetailPage() {
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center gap-1.5">
-            <div className="inline-flex items-center rounded-lg bg-muted p-0.5">
-              {(["call", "put"] as OptionSide[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSide(s)}
-                  className={cn(
-                    "rounded-md px-2.5 py-1 text-[0.6875em] font-semibold transition-colors",
-                    side === s ? "bg-foreground text-background shadow-sm" : "text-muted-foreground",
-                  )}
-                >
-                  {s === "call" ? "Call" : "Put"}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -793,74 +651,216 @@ export default function OptionLegDetailPage() {
 
 
       <main className={cn("no-scrollbar flex-1", activeTab === "Candle Chart" ? "overflow-y-hidden" : "overflow-y-auto")}>
-        <div className={cn(activeTab === "Candle Chart" ? "h-full" : "space-y-2 pb-28")}>
+        <div className={cn(activeTab === "Candle Chart" ? "h-full" : "space-y-2")}>
           {activeTab === "Candle Chart" && (
             <CandleChart ltp={ltp} seed={candleSeed} />
           )}
 
-          {activeTab === "Payoff" && (
-            <PayoffFull
-              side={side}
-              tradeMode={tradeMode}
-              stockPrice={stock.price}
-              breakEven={breakEven}
-              entryCost={entryCost}
-              daysToExpiry={daysToExpiry}
-            />
-          )}
-
           {activeTab === "Overview" && (
             <>
+              {/* Max Profit / Max Loss */}
               <div className="grid grid-cols-2 gap-3 bg-background px-4 py-3">
-                <MetricCard
-                  icon={<TrendingUp size={20} className="text-gain" />}
-                  label="Max Profit"
-                  value={maxProfit}
-                  tone="positive"
-                  bgClass="bg-[#d5ffe6]"
-                />
-                <MetricCard
-                  icon={<TrendingDown size={20} className="text-loss" />}
-                  label="Max Loss"
-                  value={formatCurrency(maxLoss, 0)}
-                  tone="negative"
-                  bgClass="bg-[#f7e4e6]"
-                />
+                <MetricCard icon={<TrendingUp size={20} className="text-gain" />} label="Max Profit" value={maxProfit} tone="positive" bgClass="bg-muted" />
+                <MetricCard icon={<TrendingDown size={20} className="text-loss" />} label="Max Loss" value={formatCurrency(maxLoss, 0)} tone="negative" bgClass="bg-muted" />
               </div>
 
-              <div className="bg-background px-4 pb-0 pt-3">
-                <PayoffChart
-                  side={side}
-                  tradeMode={tradeMode}
-                  stockPrice={stock.price}
-                  breakEven={breakEven}
-                  entryCost={entryCost}
-                  daysToExpiry={daysToExpiry}
-                  readOnly
-                />
+              {/* Payoff chart (merged widget) */}
+              <PayoffFull
+                side={side}
+                tradeMode={tradeMode}
+                onTradeChange={setTradeMode}
+                stockPrice={stock.price}
+                breakEven={breakEven}
+                entryCost={entryCost}
+                daysToExpiry={daysToExpiry}
+              />
+
+              {/* Redirect links — combined single row */}
+              {(() => {
+                const STOCK_NAMES: Record<string, string> = {
+                  AAPL: "Apple Inc.", NVDA: "NVIDIA Corp.", INTC: "Intel Corp.", SNAP: "Snap Inc.",
+                  MSFT: "Microsoft Corp.", AMZN: "Amazon.com Inc.", META: "Meta Platforms Inc.",
+                  GOOGL: "Alphabet Inc.", TSLA: "Tesla Inc.", PLTR: "Palantir Technologies Inc.",
+                  COIN: "Coinbase Global Inc.", SHOP: "Shopify Inc.", SQ: "Block Inc.",
+                  ABNB: "Airbnb Inc.", CRWD: "CrowdStrike Holdings Inc.",
+                };
+                const fullName = STOCK_NAMES[symbol] ?? symbol;
+                return (
+                  <div className="bg-background px-4 py-2">
+                    <div className="flex items-center justify-between py-3 border-b border-border/40">
+                      <div>
+                        <p className="text-[0.75em] text-muted-foreground">Underlying stock</p>
+                        <p className="text-[0.9375em] font-semibold text-foreground mt-0.5">{fullName} <span className="text-muted-foreground font-normal">({symbol})</span></p>
+                      </div>
+                      <button onClick={() => router.push(`/stocks/${symbol}`)} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
+                        View stock ›
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="text-[0.75em] text-muted-foreground">Options chain</p>
+                        <p className="text-[0.9375em] font-semibold text-foreground mt-0.5">{symbol} · {expiryShort}</p>
+                      </div>
+                      <button onClick={() => router.push(`/options-chain/${symbol}`)} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
+                        View chain ›
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Positions widget — OpenCard style */}
+              <div className="bg-background px-4 py-4">
+                <p className="text-[0.875em] font-semibold text-foreground mb-3">Your Position</p>
+                <div className="rounded-2xl border border-border/40 overflow-hidden divide-y divide-border/30">
+                  {[
+                    { qty: 2, avgPrice: ltp * 0.91, side: "buy" as const },
+                    { qty: 1, avgPrice: ltp * 1.06, side: "sell" as const },
+                  ].map((pos, i) => {
+                    const pnl = pos.side === "buy"
+                      ? (ltp - pos.avgPrice) * pos.qty * 100
+                      : (pos.avgPrice - ltp) * pos.qty * 100;
+                    const isGain = pnl >= 0;
+                    return (
+                      <div key={i} className="px-4 py-3.5">
+                        {/* Row 1: side badge + instrument label */}
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <span className={cn(
+                            "text-[0.6875em] font-bold rounded-md px-1.5 py-0.5 uppercase",
+                            pos.side === "buy" ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"
+                          )}>
+                            {pos.side}
+                          </span>
+                          <p className="text-[0.9375em] font-bold text-foreground tracking-tight">
+                            {symbol} · {expiryShort} · {formatStrikeLabel(strike)} {side === "call" ? "CE" : "PE"}
+                          </p>
+                        </div>
+                        {/* Row 2: qty / avg / ltp + P&L */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 text-[0.875em]">
+                            <div className="flex flex-col">
+                              <span className="text-[0.75em] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
+                              <span className="font-semibold text-foreground">{pos.qty}</span>
+                            </div>
+                            <div className="w-px h-5 bg-border/50" />
+                            <div className="flex flex-col">
+                              <span className="text-[0.75em] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
+                              <span className="font-semibold text-foreground">{formatCurrency(pos.avgPrice)}</span>
+                            </div>
+                            <div className="w-px h-5 bg-border/50" />
+                            <div className="flex flex-col">
+                              <span className="text-[0.75em] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
+                              <span className="font-semibold text-foreground">{formatCurrency(ltp)}</span>
+                            </div>
+                          </div>
+                          <p className={cn("text-[1em] font-bold tabular-nums shrink-0", isGain ? "text-gain" : "text-loss")}>
+                            {isGain ? "+" : ""}{formatCurrency(pnl, 0)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Performance — 52W high/low + LTP */}
+              <div className="bg-background px-4 py-4">
+                <p className="text-[0.875em] font-semibold text-foreground mb-3">Performance</p>
+                <div className="rounded-2xl border border-border/40 px-4 py-4">
+                  {(() => {
+                    const low52 = ltp * 0.52;
+                    const high52 = ltp * 1.68;
+                    const ltpFrac = Math.max(0.02, Math.min(0.98, (ltp - low52) / (high52 - low52)));
+                    return (
+                      <>
+                        <div className="relative h-1.5 rounded-full bg-muted mb-3">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-loss via-muted-foreground/30 to-gain" />
+                          <div
+                            className="absolute -top-1 w-3.5 h-3.5 rounded-full bg-foreground border-2 border-background shadow"
+                            style={{ left: `calc(${ltpFrac * 100}% - 7px)` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[0.6875em] text-muted-foreground mb-3">
+                          <span>52W Low {formatCurrency(low52, 0)}</span>
+                          <span>LTP {formatCurrency(ltp)}</span>
+                          <span>52W High {formatCurrency(high52, 0)}</span>
+                        </div>
+                        <div className="grid grid-cols-3 divide-x divide-border/40 border-t border-border/40 pt-3">
+                          {[
+                            { label: "Day High", value: formatCurrency(ltp * 1.04, 0) },
+                            { label: "Day Low", value: formatCurrency(ltp * 0.96, 0) },
+                            { label: "Open", value: formatCurrency(ltp * 0.99, 0) },
+                          ].map((s) => (
+                            <div key={s.label} className="text-center px-2">
+                              <p className="text-[0.6875em] text-muted-foreground">{s.label}</p>
+                              <p className="text-[0.8125em] font-semibold text-foreground mt-0.5">{s.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Greeks — compact horizontal strip */}
+              <div className="bg-background px-4 py-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="text-[0.875em] font-semibold text-foreground">Greeks</p>
+                  <button onClick={openGreeksSheet}><Info size={13} className="text-muted-foreground" /></button>
+                </div>
+                <div className="rounded-2xl border border-border/40 divide-y divide-border/30">
+                  {greekRows.map((item) => (
+                    <div key={item.label} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[0.8125em] text-muted-foreground w-12">{item.label}</p>
+                        <p className="text-[0.6875em] text-muted-foreground/60">{item.note}</p>
+                      </div>
+                      <p className="text-[0.9375em] font-semibold text-foreground tabular-nums">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Market Depth */}
+              <div className="bg-background px-4 py-4">
+                <p className="text-[0.875em] font-semibold text-foreground mb-3">Market Depth</p>
+                <div className="rounded-2xl border border-border/40 overflow-hidden">
+                  <div className="grid grid-cols-3 text-[0.625em] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-2 border-b border-border/30">
+                    <span>Bid Qty</span>
+                    <span className="text-center">Price</span>
+                    <span className="text-right">Ask Qty</span>
+                  </div>
+                  {(() => {
+                    const levels = Array.from({ length: 5 }, (_, i) => ({
+                      price: ltp - (2 - i) * 0.05,
+                      bidQty: Math.round(800 - i * 120 + Math.sin(i * 2.1) * 80),
+                      askQty: Math.round(600 + i * 110 + Math.cos(i * 1.8) * 70),
+                    }));
+                    const maxQty = Math.max(...levels.flatMap((l) => [l.bidQty, l.askQty]));
+                    return levels.map((l, i) => (
+                      <div key={i} className="relative grid grid-cols-3 px-4 py-2.5 text-[0.8125em]">
+                        <div className="absolute left-0 rounded-r-sm" style={{ width: `${(l.bidQty / maxQty) * 48}%`, backgroundColor: "rgba(34,197,94,0.12)", top: "25%", bottom: "25%" }} />
+                        <div className="absolute right-0 rounded-l-sm" style={{ width: `${(l.askQty / maxQty) * 48}%`, backgroundColor: "rgba(239,68,68,0.12)", top: "25%", bottom: "25%" }} />
+                        <span className="relative z-10 text-gain font-semibold tabular-nums">{l.bidQty}</span>
+                        <span className="relative z-10 text-center font-semibold text-foreground tabular-nums">{formatCurrency(l.price)}</span>
+                        <span className="relative z-10 text-right text-loss font-semibold tabular-nums">{l.askQty}</span>
+                      </div>
+                    ));
+                  })()}
+                  <div className="grid grid-cols-2 divide-x divide-border/30 border-t border-border/30">
+                    <div className="px-4 py-2.5 text-center">
+                      <p className="text-[0.625em] text-muted-foreground">Total Bid</p>
+                      <p className="text-[0.875em] font-semibold text-gain">2,840</p>
+                    </div>
+                    <div className="px-4 py-2.5 text-center">
+                      <p className="text-[0.625em] text-muted-foreground">Total Ask</p>
+                      <p className="text-[0.875em] font-semibold text-loss">3,210</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
-          )}
-
-
-          {activeTab === "Overview" && (
-            <div className="bg-background px-4 py-6">
-              <div className="flex items-center gap-2">
-                <p className="text-base font-semibold tracking-[-0.32px] text-foreground">Greeks</p>
-                <button onClick={openGreeksSheet}>
-                  <Info size={14} className="text-muted-foreground" />
-                </button>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {greekRows.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-border/50 p-4">
-                    <p className="text-[0.8125em] text-muted-foreground">{item.label}</p>
-                    <p className="mt-1 text-[1.375em] font-semibold tracking-[-0.6px] text-foreground">{item.value}</p>
-                    <p className="mt-2 text-[0.75em] text-muted-foreground">{item.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
         </div>
       </main>
@@ -874,18 +874,22 @@ export default function OptionLegDetailPage() {
               : "Protective puts require you to already own shares of this stock. The put is bought to hedge your long position."}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant="outline"
-            className="h-11 rounded-xl border-black/10 text-[0.9375em] font-semibold text-foreground"
+            className="h-11 rounded-xl border-black/10 text-[0.875em] font-semibold text-foreground"
           >
             Set Alert
           </Button>
           <Button
-            variant="outline"
-            className="h-11 rounded-xl border-black/10 text-[0.9375em] font-semibold text-foreground"
+            className="h-11 rounded-xl bg-loss text-[0.875em] font-semibold text-white hover:bg-loss/90 active:opacity-80"
           >
-            {side === "call" ? "Sell Covered Call" : "Buy Protective Put"}
+            Sell
+          </Button>
+          <Button
+            className="h-11 rounded-xl bg-gain text-[0.875em] font-semibold text-white hover:bg-gain/90 active:opacity-80"
+          >
+            Buy
           </Button>
         </div>
       </div>

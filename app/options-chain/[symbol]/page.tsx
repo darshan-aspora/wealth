@@ -24,9 +24,16 @@ function barWidths(strikeIdx: number, totalRows: number): { red: number; green: 
   return { red: Math.max(3, Math.min(16, r)), green: Math.max(3, Math.min(16, g)) };
 }
 
+function formatOI(v: number) {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K`;
+  return String(v);
+}
+
 // Columns from center outward: LTP (innermost) → Gamma (outermost)
 const SIDE_COLS = [
   { key: "ltp",   label: "LTP",   w: 88  },
+  { key: "oi",    label: "OI",    w: 68  },
   { key: "iv",    label: "IV",    w: 62  },
   { key: "delta", label: "Delta", w: 58  },
   { key: "theta", label: "Theta", w: 56  },
@@ -67,6 +74,7 @@ function Num({ val, right }: { val: string | number; right?: boolean }) {
 function callCell(key: string, row: GreekRow) {
   const c = row.call;
   if (key === "ltp")   return <LtpCell ltp={c.ltp} pct={c.ltpChgPct} right />;
+  if (key === "oi")    return <Num val={formatOI(c.oi)} right />;
   if (key === "iv")    return <Num val={`${(c.iv * 100).toFixed(0)}%`} right />;
   if (key === "delta") return <Num val={c.delta.toFixed(2)} right />;
   if (key === "theta") return <Num val={c.theta} right />;
@@ -77,6 +85,7 @@ function callCell(key: string, row: GreekRow) {
 function putCell(key: string, row: GreekRow) {
   const p = row.put;
   if (key === "ltp")   return <LtpCell ltp={p.ltp} pct={p.ltpChgPct} />;
+  if (key === "oi")    return <Num val={formatOI(p.oi)} />;
   if (key === "iv")    return <Num val={`${(p.iv * 100).toFixed(0)}%`} />;
   if (key === "delta") return <Num val={p.delta.toFixed(2)} />;
   if (key === "theta") return <Num val={p.theta} />;

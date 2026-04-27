@@ -3547,13 +3547,12 @@ function TechnicalTab() {
 
 // ─── Options Tab ─────────────────────────────────────────────────────────────
 
-type OptionExpiryFilter = "Daily Expiry" | "Weekly" | "Monthly" | "Quarterly";
+type OptionExpiryFilter = "Weekly" | "Monthly" | "Yearly (LEAP)";
 
 const OPTION_EXPIRY_FILTERS: OptionExpiryFilter[] = [
-  "Daily Expiry",
   "Weekly",
   "Monthly",
-  "Quarterly",
+  "Yearly (LEAP)",
 ];
 
 interface PopularOptionTemplate {
@@ -3566,15 +3565,6 @@ interface PopularOptionTemplate {
 }
 
 const POPULAR_OPTION_TEMPLATES: Record<OptionExpiryFilter, PopularOptionTemplate[]> = {
-  "Daily Expiry": [
-    { underlyingFactor: 1.0, strikeFactor: 1.01, callOrPut: "CALL", oi: 1_210_000, priceFactor: 0.052, changePct: 18.1 },
-    { underlyingFactor: 1.0, strikeFactor: 0.99, callOrPut: "PUT", oi: 895_000, priceFactor: 0.047, changePct: 14.6 },
-    { underlyingFactor: 1.0, strikeFactor: 1.03, callOrPut: "CALL", oi: 750_000, priceFactor: 0.039, changePct: 22.6 },
-    { underlyingFactor: 1.0, strikeFactor: 0.97, callOrPut: "PUT", oi: 620_000, priceFactor: 0.034, changePct: -10.8 },
-    { underlyingFactor: 1.0, strikeFactor: 1.05, callOrPut: "CALL", oi: 290_000, priceFactor: 0.026, changePct: 17.2 },
-    { underlyingFactor: 1.0, strikeFactor: 0.95, callOrPut: "PUT", oi: 190_000, priceFactor: 0.024, changePct: -7.4 },
-    { underlyingFactor: 1.0, strikeFactor: 1.08, callOrPut: "CALL", oi: 250_000, priceFactor: 0.029, changePct: 13.1 },
-  ],
   Weekly: [
     { underlyingFactor: 1.0, strikeFactor: 1.02, callOrPut: "CALL", oi: 990_000, priceFactor: 0.061, changePct: 12.8 },
     { underlyingFactor: 1.0, strikeFactor: 0.98, callOrPut: "PUT", oi: 840_000, priceFactor: 0.056, changePct: 9.4 },
@@ -3589,11 +3579,12 @@ const POPULAR_OPTION_TEMPLATES: Record<OptionExpiryFilter, PopularOptionTemplate
     { underlyingFactor: 1.0, strikeFactor: 0.9, callOrPut: "PUT", oi: 410_000, priceFactor: 0.051, changePct: -4.4 },
     { underlyingFactor: 1.0, strikeFactor: 1.15, callOrPut: "CALL", oi: 305_000, priceFactor: 0.043, changePct: 7.6 },
   ],
-  Quarterly: [
-    { underlyingFactor: 1.0, strikeFactor: 1.05, callOrPut: "CALL", oi: 620_000, priceFactor: 0.092, changePct: 7.1 },
-    { underlyingFactor: 1.0, strikeFactor: 0.95, callOrPut: "PUT", oi: 560_000, priceFactor: 0.087, changePct: 5.2 },
-    { underlyingFactor: 1.0, strikeFactor: 1.12, callOrPut: "CALL", oi: 380_000, priceFactor: 0.063, changePct: 8.6 },
-    { underlyingFactor: 1.0, strikeFactor: 0.88, callOrPut: "PUT", oi: 335_000, priceFactor: 0.058, changePct: -3.8 },
+  "Yearly (LEAP)": [
+    { underlyingFactor: 1.0, strikeFactor: 1.1, callOrPut: "CALL", oi: 420_000, priceFactor: 0.14, changePct: 5.3 },
+    { underlyingFactor: 1.0, strikeFactor: 0.9, callOrPut: "PUT", oi: 360_000, priceFactor: 0.13, changePct: 3.8 },
+    { underlyingFactor: 1.0, strikeFactor: 1.2, callOrPut: "CALL", oi: 280_000, priceFactor: 0.11, changePct: 6.1 },
+    { underlyingFactor: 1.0, strikeFactor: 0.8, callOrPut: "PUT", oi: 230_000, priceFactor: 0.10, changePct: -2.9 },
+    { underlyingFactor: 1.0, strikeFactor: 1.3, callOrPut: "CALL", oi: 160_000, priceFactor: 0.085, changePct: 4.7 },
   ],
 };
 
@@ -3618,30 +3609,26 @@ function getShortStockName(name: string) {
 function OptionsTab() {
   const stock = useStock();
   const router = useRouter();
-  const [expiryFilter, setExpiryFilter] = useState<OptionExpiryFilter>("Daily Expiry");
+  const [expiryFilter, setExpiryFilter] = useState<OptionExpiryFilter>("Weekly");
   const shortName = getShortStockName(stock.name);
 
   const rows = useMemo(() => {
-    const baseDate = expiryFilter === "Daily Expiry"
-      ? "Apr 25"
-      : expiryFilter === "Weekly"
-        ? "May 2"
-        : expiryFilter === "Monthly"
-          ? "May 16"
-          : "Jun 20";
+    const baseDate = expiryFilter === "Weekly"
+      ? "May 2"
+      : expiryFilter === "Monthly"
+        ? "May 16"
+        : "Jan 15 '27";
 
     return POPULAR_OPTION_TEMPLATES[expiryFilter].map((template, index) => {
       const underlying = +(stock.price * template.underlyingFactor).toFixed(2);
       const strike = Math.max(1, Math.round(stock.price * template.strikeFactor));
       const optionPrice = +(stock.price * template.priceFactor).toFixed(2);
       const change = +(optionPrice * (template.changePct / 100)).toFixed(2);
-      const expiryDate = expiryFilter === "Daily Expiry"
-        ? "25 Apr 2026"
-        : expiryFilter === "Weekly"
-          ? "2 May 2026"
-          : expiryFilter === "Monthly"
-            ? "16 May 2026"
-            : "20 Jun 2026";
+      const expiryDate = expiryFilter === "Weekly"
+        ? "2 May 2026"
+        : expiryFilter === "Monthly"
+          ? "16 May 2026"
+          : "15 Jan 2027";
 
       return {
         id: `${expiryFilter}-${index}`,
