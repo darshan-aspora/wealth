@@ -834,44 +834,7 @@ export default function OptionLegDetailPage() {
                 </div>
               </div>
 
-              {/* Market Depth */}
-              <div className="bg-background px-4 py-4">
-                <p className="text-[0.875em] font-semibold text-foreground mb-3">Market Depth</p>
-                <div className="rounded-2xl border border-border/40 overflow-hidden">
-                  <div className="grid grid-cols-3 text-[0.625em] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-2 border-b border-border/30">
-                    <span>Bid Qty</span>
-                    <span className="text-center">Price</span>
-                    <span className="text-right">Ask Qty</span>
-                  </div>
-                  {(() => {
-                    const levels = Array.from({ length: 5 }, (_, i) => ({
-                      price: ltp - (2 - i) * 0.05,
-                      bidQty: Math.round(800 - i * 120 + Math.sin(i * 2.1) * 80),
-                      askQty: Math.round(600 + i * 110 + Math.cos(i * 1.8) * 70),
-                    }));
-                    const maxQty = Math.max(...levels.flatMap((l) => [l.bidQty, l.askQty]));
-                    return levels.map((l, i) => (
-                      <div key={i} className="relative grid grid-cols-3 px-4 py-2.5 text-[0.8125em]">
-                        <div className="absolute left-0 rounded-r-sm" style={{ width: `${(l.bidQty / maxQty) * 48}%`, backgroundColor: "rgba(34,197,94,0.12)", top: "25%", bottom: "25%" }} />
-                        <div className="absolute right-0 rounded-l-sm" style={{ width: `${(l.askQty / maxQty) * 48}%`, backgroundColor: "rgba(239,68,68,0.12)", top: "25%", bottom: "25%" }} />
-                        <span className="relative z-10 text-gain font-semibold tabular-nums">{l.bidQty}</span>
-                        <span className="relative z-10 text-center font-semibold text-foreground tabular-nums">{formatCurrency(l.price)}</span>
-                        <span className="relative z-10 text-right text-loss font-semibold tabular-nums">{l.askQty}</span>
-                      </div>
-                    ));
-                  })()}
-                  <div className="grid grid-cols-2 divide-x divide-border/30 border-t border-border/30">
-                    <div className="px-4 py-2.5 text-center">
-                      <p className="text-[0.625em] text-muted-foreground">Total Bid</p>
-                      <p className="text-[0.875em] font-semibold text-gain">2,840</p>
-                    </div>
-                    <div className="px-4 py-2.5 text-center">
-                      <p className="text-[0.625em] text-muted-foreground">Total Ask</p>
-                      <p className="text-[0.875em] font-semibold text-loss">3,210</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Market Depth — hidden, re-enable when ready */}
             </>
           )}
         </div>
