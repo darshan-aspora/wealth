@@ -328,6 +328,17 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
             <p className="text-[15px] font-semibold text-foreground">{COLLECTIONS.length}</p>
           </div>
         </div>
+
+        {/* Stacked allocation bar */}
+        <div className="h-1.5 rounded-full overflow-hidden flex gap-px mt-4">
+          {COLLECTIONS.map((c, i) => (
+            <div
+              key={c.id}
+              className="h-full bg-foreground"
+              style={{ width: `${(c.current / totalCurrent) * 100}%`, opacity: 0.15 + i * 0.17 }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ── Cards ── */}
