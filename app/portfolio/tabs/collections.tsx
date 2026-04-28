@@ -21,11 +21,9 @@ interface Collection {
   id: number;
   name: string;
   theme: string;
-  sipAmount: number;
-  sipFrequency: string;
+  sip?: { amount: number; frequency: string };
   invested: number;
   current: number;
-  portfolioWeight: number;
   stocks: CollectionStock[];
 }
 
@@ -37,12 +35,10 @@ const COLLECTIONS: Collection[] = [
   {
     id: 1,
     name: "Tech Giants",
-    theme: "Large-cap US technology leaders driving global innovation",
-    sipAmount: 150,
-    sipFrequency: "Monthly on 12th",
+    theme: "Large-cap US technology leaders driving global innovation. Concentrated in the companies setting the pace for AI, cloud, and consumer hardware.",
+    sip: { amount: 150, frequency: "Monthly on 12th" },
     invested: 16_240,
     current: 18_420,
-    portfolioWeight: 34.2,
     stocks: [
       { name: "Apple Inc.",      ticker: "AAPL", invested: 4_800, current: 5_620 },
       { name: "Microsoft Corp.", ticker: "MSFT", invested: 4_200, current: 4_910 },
@@ -54,12 +50,10 @@ const COLLECTIONS: Collection[] = [
   {
     id: 2,
     name: "Dividend Kings",
-    theme: "Consistent dividend payers with strong balance sheets",
-    sipAmount: 100,
-    sipFrequency: "Monthly on 12th",
+    theme: "Consistent dividend payers with decades of uninterrupted payouts and strong balance sheets. Built for income and stability.",
+    sip: { amount: 100, frequency: "Monthly on 12th" },
     invested: 11_310,
     current: 12_850,
-    portfolioWeight: 23.9,
     stocks: [
       { name: "Johnson & Johnson", ticker: "JNJ", invested: 2_500, current: 2_720 },
       { name: "Procter & Gamble",  ticker: "PG",  invested: 2_100, current: 2_380 },
@@ -73,12 +67,9 @@ const COLLECTIONS: Collection[] = [
   {
     id: 3,
     name: "High Growth",
-    theme: "Emerging disruptors with high upside and higher risk",
-    sipAmount: 80,
-    sipFrequency: "Weekly on Friday",
+    theme: "Emerging disruptors with high upside and higher volatility. Best suited for long horizons and investors comfortable with drawdowns.",
     invested:  9_581,
     current:   8_960,
-    portfolioWeight: 16.6,
     stocks: [
       { name: "Tesla, Inc.",    ticker: "TSLA", invested: 3_200, current: 2_940 },
       { name: "Palantir Tech.", ticker: "PLTR", invested: 2_800, current: 2_700 },
@@ -89,12 +80,10 @@ const COLLECTIONS: Collection[] = [
   {
     id: 4,
     name: "Stable Compounders",
-    theme: "Quality businesses compounding steadily over the long term",
-    sipAmount: 50,
-    sipFrequency: "Monthly on 12th",
+    theme: "Quality businesses with durable moats compounding steadily over the long term. Low drama, high conviction.",
+    sip: { amount: 50, frequency: "Monthly on 12th" },
     invested:  5_730,
     current:   6_210,
-    portfolioWeight: 11.5,
     stocks: [
       { name: "Visa Inc.",     ticker: "V",    invested: 2_100, current: 2_380 },
       { name: "Mastercard",    ticker: "MA",   invested: 1_800, current: 1_960 },
@@ -105,12 +94,9 @@ const COLLECTIONS: Collection[] = [
   {
     id: 5,
     name: "Global ETF Mix",
-    theme: "Broad international exposure through diversified ETFs",
-    sipAmount: 60,
-    sipFrequency: "Fortnightly on Friday",
+    theme: "Broad international exposure through diversified ETFs spanning the US, developed markets, and emerging economies.",
     invested:  4_270,
     current:   4_581,
-    portfolioWeight: 8.5,
     stocks: [
       { name: "Invesco QQQ Trust",  ticker: "QQQ",  invested: 1_800, current: 1_980 },
       { name: "iShares MSCI ACWI",  ticker: "ACWI", invested: 1_470, current: 1_601 },
@@ -118,8 +104,6 @@ const COLLECTIONS: Collection[] = [
     ],
   },
 ];
-
-const TOTAL_PORTFOLIO = 53_860;
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -146,7 +130,7 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
   return (
     <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
 
-      {/* Collapsed: name + value + gain only */}
+      {/* Collapsed row */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full text-left px-5 pt-5 pb-5 active:opacity-70 transition-opacity"
@@ -157,7 +141,10 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
               <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-foreground" style={{ opacity: 0.15 + index * 0.17 }} />
               <p className="text-[16px] font-bold text-foreground leading-tight">{col.name}</p>
             </div>
-            <p className="text-[13px] text-muted-foreground">{col.stocks.length} stocks · ${col.sipAmount}/mo SIP</p>
+            <p className="text-[13px] text-muted-foreground">
+              {col.stocks.length} holdings
+              {col.sip ? ` · $${col.sip.amount}/mo SIP` : " · One-time"}
+            </p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-[18px] font-bold text-foreground tabular-nums">${fmt(col.current)}</p>
@@ -172,41 +159,35 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
       {/* Expanded */}
       {open && (
         <div className="border-t border-border/40">
+          <div className="px-5 pt-4 pb-4 space-y-5">
 
-          {/* Theme + allocation */}
-          <div className="px-5 pt-4 pb-4 space-y-4">
-            <p className="text-[13px] text-muted-foreground leading-snug">{col.theme}</p>
+            {/* Blurb */}
+            <p className="text-[13px] text-muted-foreground leading-relaxed">{col.theme}</p>
 
-            {/* Stats */}
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-[12px] text-muted-foreground mb-0.5">Invested</p>
-                <p className="text-[14px] font-semibold text-foreground">${fmt(col.invested)}</p>
+            {/* Invested + SIP details */}
+            <div className="flex items-stretch gap-3">
+              <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Invested</p>
+                <p className="text-[15px] font-semibold text-foreground tabular-nums">${fmt(col.invested)}</p>
               </div>
-              <div className="w-px h-7 bg-border/40" />
-              <div>
-                <p className="text-[12px] text-muted-foreground mb-0.5">SIP frequency</p>
-                <p className="text-[14px] font-semibold text-foreground">{col.sipFrequency}</p>
-              </div>
-            </div>
-
-            {/* Allocation bar */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] text-muted-foreground">Portfolio allocation</span>
-                <span className="text-[12px] text-foreground">{col.portfolioWeight}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-foreground/60" style={{ width: `${col.portfolioWeight}%` }} />
-              </div>
+              {col.sip ? (
+                <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
+                  <p className="text-[11px] text-muted-foreground mb-1">SIP</p>
+                  <p className="text-[15px] font-semibold text-foreground">${col.sip.amount}/mo</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{col.sip.frequency}</p>
+                </div>
+              ) : (
+                <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
+                  <p className="text-[11px] text-muted-foreground mb-1">Investment type</p>
+                  <p className="text-[15px] font-semibold text-foreground">One-time</p>
+                </div>
+              )}
             </div>
 
             {/* Holdings */}
             <div className="space-y-3">
-              <p className="text-[12px] text-muted-foreground uppercase tracking-wide">Holdings</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Holdings</p>
               {col.stocks.map((s) => {
-                const sg    = s.current - s.invested;
-                const sgPct = (sg / s.invested) * 100;
                 return (
                   <div key={s.ticker} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -219,10 +200,8 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[14px] text-foreground tabular-nums">${fmt(s.current)}</p>
-                      <p className={cn("text-[12px] tabular-nums", sg >= 0 ? "text-emerald-500" : "text-red-500")}>
-                        {gainStr(sg, sgPct)}
-                      </p>
+                      <p className="text-[14px] font-medium text-foreground tabular-nums">${fmt(s.current)}</p>
+                      <p className="text-[12px] text-muted-foreground tabular-nums">Invested ${fmt(s.invested)}</p>
                     </div>
                   </div>
                 );
@@ -233,11 +212,17 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
           {/* Actions */}
           <div className="border-t border-border/40 flex divide-x divide-border/40">
             <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
-              Add funds
+              Invest more
             </button>
-            <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
-              Edit SIP
-            </button>
+            {col.sip ? (
+              <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
+                Edit SIP
+              </button>
+            ) : (
+              <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
+                Set up SIP
+              </button>
+            )}
             <button className="flex-1 flex items-center justify-center gap-1 py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
               Details <ChevronRight size={13} />
             </button>
@@ -314,40 +299,22 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
   const totalCurrent  = COLLECTIONS.reduce((s, c) => s + c.current, 0);
   const totalGain     = totalCurrent - totalInvested;
   const totalGainPct  = (totalGain / totalInvested) * 100;
-  const collectionShare = ((totalCurrent / TOTAL_PORTFOLIO) * 100).toFixed(1);
 
   return (
     <div className="pb-24">
 
       {/* ── Summary card ── */}
       <div className="mx-5 mb-5 rounded-2xl border border-border/50 bg-white px-5 py-5">
-
-        {/* Value + portfolio share */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-[12px] text-muted-foreground mb-1">Collections Value</p>
-            <p className="text-[28px] font-bold text-foreground tabular-nums leading-none">${fmt(totalCurrent)}</p>
-            <div className={cn("flex items-center gap-1 mt-1.5", totalGain >= 0 ? "text-emerald-500" : "text-red-500")}>
-              {totalGain >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-              <span className="text-[13px] tabular-nums">{gainStr(totalGain, totalGainPct)}</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-[12px] text-muted-foreground mb-1">Of portfolio</p>
-            <p className="text-[28px] font-bold text-foreground leading-none">{collectionShare}%</p>
-            <p className="text-[12px] text-muted-foreground mt-1">{COLLECTIONS.length} collections</p>
-          </div>
+        <p className="text-[12px] text-muted-foreground mb-1">Collections Value</p>
+        <p className="text-[32px] font-bold text-foreground tabular-nums leading-none">${fmt(totalCurrent)}</p>
+        <div className={cn("flex items-center gap-1 mt-2", totalGain >= 0 ? "text-emerald-500" : "text-red-500")}>
+          {totalGain >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+          <span className="text-[13px] tabular-nums">{gainStr(totalGain, totalGainPct)}</span>
         </div>
-
-        {/* Stacked allocation bar */}
-        <div className="h-1.5 rounded-full overflow-hidden flex gap-px">
-          {COLLECTIONS.map((c, i) => (
-            <div
-              key={c.id}
-              className="h-full bg-foreground"
-              style={{ width: `${(c.current / totalCurrent) * 100}%`, opacity: 0.15 + i * 0.17 }}
-            />
-          ))}
+        <div className="mt-3 flex items-center gap-3">
+          <p className="text-[12px] text-muted-foreground">${fmt(totalInvested)} invested</p>
+          <span className="text-muted-foreground/40 text-[12px]">·</span>
+          <p className="text-[12px] text-muted-foreground">{COLLECTIONS.length} collections</p>
         </div>
       </div>
 
