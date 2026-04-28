@@ -748,6 +748,18 @@ export function ExploreOptions() {
           ];
         }
 
+        // Parse "Apr 20 18000 CALL" → leg URL params
+        function legUrl(ticker: string, optionStr: string, price?: string) {
+          const parts = optionStr.trim().split(/\s+/);
+          // format: "Mon DD Strike CALL|PUT"
+          const side = parts[parts.length - 1].toLowerCase() === "put" ? "put" : "call";
+          const strike = parts[parts.length - 2] ?? "0";
+          const expiry = parts.slice(0, parts.length - 2).join(" ");
+          const ltp = price ? price.replace(/[^0-9.]/g, "") : "0";
+          const params = new URLSearchParams({ strike, side, expiry, ltp });
+          return `/options-chain/${encodeURIComponent(ticker)}/leg?${params.toString()}`;
+        }
+
         // Top chains filtered
         const topChains = TOP_CHAINS.filter((item) => matchesFilter(item.assetType, filter));
 
@@ -801,7 +813,7 @@ export function ExploreOptions() {
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={popularCap + popularTab + filter}
-              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(popularRows[i].index)}`)}
+              onRowClick={(i) => { const r = popularRows[i]; router.push(legUrl(r.index, r.option, r.underlying)); }}
               rows={popularRows.map((r) => [
                   instrCell(fullName(r.index), r.option, assetTag(r.assetType)),
                   priceCell(`$${r.underlying}`),
@@ -821,7 +833,7 @@ export function ExploreOptions() {
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={under10Cap + filter}
-              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(under10Rows[i].index)}`)}
+              onRowClick={(i) => { const r = under10Rows[i]; router.push(legUrl(r.index, r.strike, r.price)); }}
               rows={under10Rows.map((r) => {
                 const oiVal = String(Math.round(tickerSeed(r.index, 9) % 800000 + 10000));
                 return [
@@ -848,7 +860,7 @@ export function ExploreOptions() {
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={sectorCap + sector + filter}
-              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(sectorialRows[i].index)}`)}
+              onRowClick={(i) => { const r = sectorialRows[i]; router.push(legUrl(r.index, r.option)); }}
               rows={sectorialRows.map((r) => {
                 const g = gk(r.index);
                 return [
@@ -875,7 +887,7 @@ export function ExploreOptions() {
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={focusCap + focusTab + filter}
-              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(focusRows[i].ticker)}`)}
+              onRowClick={(i) => { const r = focusRows[i]; router.push(legUrl(r.ticker, r.contract)); }}
               rows={focusRows.map((r) => {
                 const g = gk(r.ticker);
                 return [
