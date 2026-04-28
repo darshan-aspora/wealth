@@ -6,7 +6,7 @@ import { X, ChevronDown, Info, ChevronRight, Minus, Plus, ShieldCheck, Zap, Tras
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
-import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, seeded, STOCK_PRICES, type GreekRow } from "@/lib/options-chain";
+import { buildChain, formatExpiryShort, getExpiryGroups, hashStr, STOCK_PRICES, type GreekRow } from "@/lib/options-chain";
 
 /* ------------------------------------------------------------------ */
 /*  Layout constants                                                   */
@@ -16,13 +16,6 @@ const ROW_H    = 52;
 const STRIKE_W = 72;
 const ATM_PILL_H = 22; // pill height for offset calc
 
-function rawBarValues(strikeIdx: number, totalRows: number): { red: number; green: number } {
-  const rand = seeded(strikeIdx * 137 + 42);
-  const t = strikeIdx / Math.max(1, totalRows - 1);
-  const r = 3 + t * 13 + (rand() - 0.5) * 4;
-  const g = 3 + (1 - t) * 13 + (rand() - 0.5) * 4;
-  return { red: Math.max(1, r), green: Math.max(1, g) };
-}
 
 function formatOI(v: number) {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -300,6 +293,31 @@ export default function OptionsChainPage() {
       <div ref={vScrollRef} className="flex-1 overflow-y-auto no-scrollbar relative">
         <div style={{ height: totalH, position: "relative" }}>
 
+          {/* Full-width OI bars — one per row, behind all content */}
+          {(() => {
+            const maxCallOI = Math.max(...chain.map(r => r.call.oi));
+            const maxPutOI  = Math.max(...chain.map(r => r.put.oi));
+            return chain.map((row, rowIdx) => {
+              const greenPct = (row.call.oi / maxCallOI) * 50;
+              const redPct   = (row.put.oi  / maxPutOI)  * 50;
+              return (
+                <div
+                  key={`oi-${row.strike}`}
+                  className="absolute left-0 right-0 flex pointer-events-none"
+                  style={{ top: rowIdx * ROW_H + ROW_H - 3, height: 3, zIndex: 1 }}
+                >
+                  {/* Red (put OI) — right-aligned from left edge to center */}
+                  <div className="w-1/2 flex justify-end">
+                    <div className="h-full bg-loss/50" style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }} />
+                  </div>
+                  {/* Green (call OI) — left-aligned from center to right edge */}
+                  <div className="w-1/2 flex justify-start">
+                    <div className="h-full bg-gain/50" style={{ width: `${greenPct}%`, borderRadius: "0 3px 3px 0" }} />
+                  </div>
+                </div>
+              );
+            });
+          })()}
 
           {/* Left scroll panel (calls) */}
           <div
@@ -398,15 +416,9 @@ export default function OptionsChainPage() {
             className="absolute top-0 bottom-0 bg-background"
             style={{ left: "50%", transform: "translateX(-50%)", width: STRIKE_W, zIndex: 10 }}
           >
-            {(() => {
-              const rawBars = chain.map((_, i) => rawBarValues(i, chain.length));
-              const maxRed   = Math.max(...rawBars.map(b => b.red));
-              const maxGreen = Math.max(...rawBars.map(b => b.green));
-              return chain.map((row, rowIdx) => {
+            {chain.map((row) => {
               const isATM         = row.strike === atmStrike;
               const isRowSelected = selected?.strike === row.strike;
-              const redPct   = (rawBars[rowIdx].red   / maxRed)   * 100;
-              const greenPct = (rawBars[rowIdx].green / maxGreen) * 100;
               return (
                 <div
                   key={row.strike}
@@ -441,27 +453,9 @@ export default function OptionsChainPage() {
                       {row.strike.toFixed(1)}
                     </span>
                   )}
-                  {/* OI bars — pinned to bottom, grow outward from center */}
-                  <div className="absolute bottom-0 left-0 right-0 flex h-[3px]">
-                    {/* Red — right-aligned, rounded on left corners */}
-                    <div className="flex-1 flex justify-end">
-                      <div
-                        className="h-full bg-loss/60"
-                        style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }}
-                      />
-                    </div>
-                    {/* Green — left-aligned, rounded on right corners */}
-                    <div className="flex-1 flex justify-start">
-                      <div
-                        className="h-full bg-gain/60"
-                        style={{ width: `${greenPct}%`, borderRadius: "0 3px 3px 0" }}
-                      />
-                    </div>
-                  </div>
                 </div>
               );
-            });
-            })()}
+            })}
           </div>
 
         </div>
