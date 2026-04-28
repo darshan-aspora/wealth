@@ -120,7 +120,7 @@ function ExploreContent() {
         </div>
       </div>
 
-      <main className="no-scrollbar flex-1 overflow-y-auto" onScroll={handleScroll}>
+      <main className="no-scrollbar flex-1 overflow-y-auto overflow-x-hidden" onScroll={handleScroll}>
         {activeTab === "equity" && (
           <>
             {currentVersion === "ftux" && <ExploreFTUX />}
