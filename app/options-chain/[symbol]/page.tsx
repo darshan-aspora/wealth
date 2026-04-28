@@ -447,9 +447,16 @@ export default function OptionsChainPage() {
                   )}>
                     {row.strike.toFixed(1)}
                   </span>
-                  <div className="flex gap-0.5 mt-1 items-center">
-                    <div className="h-[2px] rounded-full bg-loss/60" style={{ width: redW }} />
-                    <div className="h-[2px] rounded-full bg-gain/60" style={{ width: greenW }} />
+                  {/* OI bars — pinned to bottom, grow outward from center */}
+                  <div className="absolute bottom-0 left-0 right-0 flex h-[7px]">
+                    {/* Red (put OI) — right-aligned so it grows leftward from center */}
+                    <div className="flex-1 flex justify-end">
+                      <div className="h-full bg-loss/60" style={{ width: redW }} />
+                    </div>
+                    {/* Green (call OI) — left-aligned so it grows rightward from center */}
+                    <div className="flex-1 flex justify-start">
+                      <div className="h-full bg-gain/60" style={{ width: greenW }} />
+                    </div>
                   </div>
                 </div>
               );
