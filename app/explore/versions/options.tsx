@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpDown, Link2, LayoutGrid, TrendingUp, BarChart2, Layers, Globe } from "lucide-react";
+import { LayoutGrid, TrendingUp, BarChart2, Layers, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
-
-interface ColDef {
-  label: string;
-  align?: "left" | "right";
-  minWidth?: number;
-}
 
 const MARKET_CAPS = ["Mega Cap", "Large Cap", "Mid Cap", "Small Cap", "Micro Cap", "Nano Cap"] as const;
 type MarketCap = (typeof MARKET_CAPS)[number];
@@ -26,46 +21,6 @@ type AssetType = "Stock" | "Index" | "ETF" | "Global ETF";
 /* ------------------------------------------------------------------ */
 /*  Table primitive                                                    */
 /* ------------------------------------------------------------------ */
-
-function OptionsTable({ cols, rows, onRowClick }: { cols: ColDef[]; rows: React.ReactNode[][]; onRowClick?: (i: number) => void }) {
-  if (rows.length === 0) {
-    return <p className="px-5 py-5 text-[14px] text-muted-foreground text-center">No data for this filter.</p>;
-  }
-  const [first, ...rest] = cols;
-  return (
-    <div>
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="text-muted-foreground text-[12px] uppercase tracking-wider">
-            <th className="text-left py-2.5 pl-5 pr-2 font-medium w-full">{first.label}</th>
-            {rest.map((col, i) => (
-              <th key={i} className={cn("py-2.5 px-2 font-medium whitespace-nowrap", col.align === "left" ? "text-left" : "text-right", i === rest.length - 1 && "pr-5")}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, ri) => (
-            <tr key={ri} className={cn("border-t border-border/30", onRowClick && "cursor-pointer active:bg-muted/40")} onClick={() => onRowClick?.(ri)}>
-              <td className="py-3.5 pl-5 pr-2 w-full">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-[3px] h-8 rounded-full shrink-0 bg-neutral-800" />
-                  {row[0]}
-                </div>
-              </td>
-              {row.slice(1).map((cell, ci) => (
-                <td key={ci} className={cn("py-3.5 px-2 whitespace-nowrap", (cols[ci + 1]?.align ?? "right") === "right" ? "text-right" : "text-left", ci === row.length - 2 && "pr-5")}>
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Shared UI atoms                                                    */
@@ -85,73 +40,6 @@ function PctBadge({ value }: { value: number }) {
     <span className={cn("text-[14px] font-semibold tabular-nums", pos ? "text-gain" : "text-loss")}>
       {pos ? "+" : ""}{value.toFixed(1)}%
     </span>
-  );
-}
-
-function Cell({ top, bottom, tag }: { top: string; bottom?: string; tag?: string }) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5">
-        <p className="text-[14px] font-semibold text-foreground leading-tight">{top}</p>
-        {tag && <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{tag}</span>}
-      </div>
-      {bottom && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{bottom}</p>}
-    </div>
-  );
-}
-
-function NumCell({ value }: { value: string }) {
-  return <span className="text-[14px] tabular-nums text-foreground">{value}</span>;
-}
-
-function FlipperBtn({ cap, onCycle }: { cap: MarketCap; onCycle: () => void }) {
-  return (
-    <button onClick={onCycle} className="flex items-center gap-1 rounded-full border border-border/60 bg-background px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 transition-opacity whitespace-nowrap">
-      {cap} <ArrowUpDown size={12} strokeWidth={2} />
-    </button>
-  );
-}
-
-function WidgetCard({ title, subtitle, cap, onCycle, children }: { title: string; subtitle?: string; cap?: MarketCap; onCycle?: () => void; children: React.ReactNode }) {
-  return (
-    <div className="mx-5 rounded-2xl border border-border/50 bg-card overflow-hidden">
-      <div className="px-5 pt-4 pb-1 flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-[17px] font-bold text-foreground">{title}</p>
-          {subtitle && <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">{subtitle}</p>}
-        </div>
-        {cap && onCycle && <FlipperBtn cap={cap} onCycle={onCycle} />}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function TabRow<T extends string>({ tabs, active, onChange }: { tabs: readonly T[]; active: T; onChange: (t: T) => void }) {
-  return (
-    <div className="overflow-x-auto no-scrollbar px-5 pb-1 pt-3">
-      <div className="flex gap-2">
-        {tabs.map((t) => (
-          <button key={t} onClick={() => onChange(t)} className={cn("shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold border transition-colors", active === t ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border/60")}>
-            {t}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SectorChips<T extends string>({ chips, active, onChange }: { chips: readonly T[]; active: T; onChange: (c: T) => void }) {
-  return (
-    <div className="overflow-x-auto no-scrollbar px-5 pb-1 pt-3">
-      <div className="flex gap-2">
-        {chips.map((chip) => (
-          <button key={chip} onClick={() => onChange(chip)} className={cn("shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold border transition-colors", active === chip ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border/60")}>
-            {chip}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -669,15 +557,32 @@ function fullName(ticker: string) {
   return FULL_NAMES[ticker] ?? ticker;
 }
 
-function assetBadge(assetType: AssetType) {
-  if (assetType === "Global ETF") return "Global";
-  return assetType;
-}
-
 function assetTag(assetType: AssetType): string | undefined {
   if (assetType === "ETF") return "ETF";
   if (assetType === "Global ETF") return "Global";
+  if (assetType === "Index") return "Index";
   return undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mock greeks / price helper (deterministic from ticker chars)       */
+/* ------------------------------------------------------------------ */
+
+function tickerSeed(ticker: string, salt = 0): number {
+  let h = salt * 31;
+  for (let i = 0; i < ticker.length; i++) h = (Math.imul(31, h) + ticker.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function mockGreeks(ticker: string) {
+  const s = (n: number) => tickerSeed(ticker, n);
+  const delta  = +((s(1) % 80) / 100 + 0.10).toFixed(2);
+  const theta  = -+((s(2) % 200) / 100 + 0.50).toFixed(2);
+  const vega   = +((s(3) % 400) / 100 + 1.00).toFixed(2);
+  const gamma  = +((s(4) % 50)  / 1000 + 0.003).toFixed(3);
+  const vol    = String(Math.round(((s(5) % 800) + 100) * 100));
+  const price  = +((s(6) % 1500) / 100 + 1.00).toFixed(2);
+  return { delta, theta, vega, gamma, vol, price };
 }
 
 /* ------------------------------------------------------------------ */
@@ -792,103 +697,179 @@ export function ExploreOptions() {
         );
       })()}
 
-      {/* ── Top Option Chains ── */}
-      <WidgetCard title="Top Option Chains" subtitle="Most active options across indices, ETFs, and stocks.">
-        <div className="pb-2">
-          {TOP_CHAINS.filter((item) => matchesFilter(item.assetType, filter)).map((item, i, arr) => (
-            <button key={item.symbol} onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)} className={cn("w-full flex items-center gap-3 px-5 py-3.5 active:bg-muted/30 transition-colors", i < arr.length - 1 && "border-b border-border/30")}>
-              <div className="w-10 h-10 rounded-xl bg-muted shrink-0 flex items-center justify-center">
-                <span className="text-[11px] font-bold text-muted-foreground">{item.ticker}</span>
+      {/* ── Shared column defs ── */}
+      {(() => {
+        const OPT_COLS = [
+          { header: "Instrument",       align: "left"  as const },
+          { header: "Price",            align: "right" as const, minWidth: 90 },
+          { header: "OI",               align: "right" as const, minWidth: 80 },
+          { header: "Volume",           align: "right" as const, minWidth: 80 },
+          { header: "Δ Delta",          align: "right" as const, minWidth: 76 },
+          { header: "Θ Theta",          align: "right" as const, minWidth: 76 },
+          { header: "V Vega",           align: "right" as const, minWidth: 76 },
+          { header: "Γ Gamma",          align: "right" as const, minWidth: 76 },
+        ];
+
+        function instrCell(name: string, sub: string, tag?: string) {
+          return (
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className="text-[14px] font-semibold text-foreground leading-tight">{name}</p>
+                {tag && <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{tag}</span>}
               </div>
-              <div className="flex-1 min-w-0 text-left">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-[15px] font-bold text-foreground truncate">{item.symbol}</p>
-                  <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    {assetBadge(item.assetType)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-[13px] text-muted-foreground tabular-nums">${item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  <PctBadge value={item.change} />
-                </div>
-              </div>
-              <Link2 size={15} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
-            </button>
-          ))}
-        </div>
-      </WidgetCard>
+              <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{sub}</p>
+            </div>
+          );
+        }
 
-      {/* ── Popular ── */}
-      <WidgetCard title="Popular" subtitle="High open interest options getting the most trader attention." cap={popularCap} onCycle={() => setPopularCap(nextCap(popularCap))}>
-        <TabRow tabs={POPULAR_TABS} active={popularTab} onChange={setPopularTab} />
-        <OptionsTable
-          cols={[
-            { label: "Options"              },
-            { label: "OI",  align: "right" },
-            { label: "Vol", align: "right" },
-          ]}
-          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(popularRows[i].index)}`)}
-          rows={popularRows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.option} tag={assetTag(r.assetType)} />,
-            <NumCell key="oi" value={r.oi} />,
-            <NumCell key="v" value={fmtNum(String(Math.round(+r.oi.replace(/K$/,"000").replace(/M$/,"000000").replace(/[^0-9]/g,"") * 0.22)))} />,
-          ])}
-        />
-      </WidgetCard>
+        function gk(ticker: string) { return mockGreeks(ticker); }
 
-      {/* ── Top Options Under $10 ── */}
-      <WidgetCard title="Top Options Under $10" subtitle="Affordable contracts to control big positions with less capital." cap={under10Cap} onCycle={() => setUnder10Cap(nextCap(under10Cap))}>
-        <OptionsTable
-          cols={[
-            { label: "Options"                    },
-            { label: "Opt. Price", align: "right" },
-          ]}
-          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(under10Rows[i].index)}`)}
-          rows={under10Rows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.strike} tag={assetTag(r.assetType)} />,
-            <div key="p" className="text-right">
-              <p className="text-[14px] font-semibold text-foreground tabular-nums">{r.price}</p>
-              <PctBadge value={r.change} />
-            </div>,
-          ])}
-        />
-      </WidgetCard>
+        function priceCell(val: string, chg?: number) {
+          return (
+            <div className="text-right">
+              <p className="text-[14px] font-semibold text-foreground tabular-nums">{val}</p>
+              {chg !== undefined && <PctBadge value={chg} />}
+            </div>
+          );
+        }
 
-      {/* ── Sectorial ── */}
-      <WidgetCard title="Sectorial" subtitle="Browse options by sector to trade industry themes directly." cap={sectorCap} onCycle={() => setSectorCap(nextCap(sectorCap))}>
-        <SectorChips chips={SECTOR_CHIPS} active={sector} onChange={setSector} />
-        <OptionsTable
-          cols={[
-            { label: "Options"              },
-            { label: "OI",  align: "right" },
-            { label: "Vol", align: "right" },
-          ]}
-          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(sectorialRows[i].index)}`)}
-          rows={sectorialRows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.option} tag={assetTag(r.assetType)} />,
-            <NumCell key="oi" value={fmtNum(r.oi)} />,
-            <NumCell key="v" value={fmtNum(r.vol)} />,
-          ])}
-        />
-      </WidgetCard>
+        function numR(v: string | number) {
+          return <span className="text-[14px] tabular-nums text-foreground">{typeof v === "number" ? v : v}</span>;
+        }
 
-      {/* ── Options in Focus ── */}
-      <WidgetCard title="Options in Focus" subtitle="Top gainers, losers, and unusual activity worth watching today." cap={focusCap} onCycle={() => setFocusCap(nextCap(focusCap))}>
-        <TabRow tabs={FOCUS_TABS} active={focusTab} onChange={setFocusTab} />
-        <OptionsTable
-          cols={[
-            { label: "Options"              },
-            { label: "OI",  align: "right" },
-            { label: "Vol", align: "right" },
-          ]}
-          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(focusRows[i].ticker)}`)}
-          rows={focusRows.map((r) => [
-            <Cell key="t" top={fullName(r.ticker)} bottom={r.contract} tag={assetTag(r.assetType)} />,
-            <NumCell key="oi" value={fmtNum(r.openInt)} />,
-            <NumCell key="v" value={fmtNum(String(Math.round(+r.openInt.replace(/,/g, "") * 0.18)))} />,
-          ])}
-        />
-      </WidgetCard>
+        function greekRow(ticker: string) {
+          const g = gk(ticker);
+          return [
+            numR(fmtNum(g.vol)),
+            numR(g.delta.toFixed(2)),
+            numR(g.theta.toFixed(2)),
+            numR(g.vega.toFixed(2)),
+            numR(g.gamma.toFixed(3)),
+          ];
+        }
+
+        // Top chains filtered
+        const topChains = TOP_CHAINS.filter((item) => matchesFilter(item.assetType, filter));
+
+        return (
+          <>
+            {/* ── Top Option Chains ── */}
+            <ScrollableTableWidget
+              title="Top Option Chains"
+              description="Most active options across indices, ETFs, and stocks."
+              columns={OPT_COLS}
+              visibleDataCols={2}
+              scrollableMinWidth={500}
+              rowHeight="h-[60px]"
+              animationKey={filter}
+              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(topChains[i].symbol)}`)}
+              rows={topChains.map((item) => [
+                  instrCell(item.symbol, item.ticker, assetTag(item.assetType)),
+                  priceCell(`$${item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, item.change),
+                  numR(fmtNum(String(Math.round(item.price * 12000)))),
+                  ...greekRow(item.ticker),
+                ])}
+            />
+
+            {/* ── Popular ── */}
+            <ScrollableTableWidget
+              title="Popular"
+              description="High open interest options getting the most trader attention."
+              flipper={{ label: popularCap, onPress: () => setPopularCap(nextCap(popularCap)) }}
+              tabs={POPULAR_TABS.map((t) => ({ id: t, label: t }))}
+              activeTab={popularTab}
+              onTabChange={(id) => setPopularTab(id as PopularTab)}
+              pillLayoutId="popular-tab"
+              columns={OPT_COLS}
+              visibleDataCols={2}
+              scrollableMinWidth={500}
+              rowHeight="h-[60px]"
+              animationKey={popularCap + popularTab + filter}
+              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(popularRows[i].index)}`)}
+              rows={popularRows.map((r) => [
+                  instrCell(fullName(r.index), r.option, assetTag(r.assetType)),
+                  priceCell(`$${r.underlying}`),
+                  numR(r.oi),
+                  ...greekRow(r.index),
+                ])}
+            />
+
+            {/* ── Top Options Under $10 ── */}
+            <ScrollableTableWidget
+              title="Top Options Under $10"
+              description="Affordable contracts to control big positions with less capital."
+              flipper={{ label: under10Cap, onPress: () => setUnder10Cap(nextCap(under10Cap)) }}
+              columns={OPT_COLS}
+              visibleDataCols={2}
+              scrollableMinWidth={500}
+              rowHeight="h-[60px]"
+              animationKey={under10Cap + filter}
+              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(under10Rows[i].index)}`)}
+              rows={under10Rows.map((r) => {
+                const oiVal = String(Math.round(tickerSeed(r.index, 9) % 800000 + 10000));
+                return [
+                  instrCell(fullName(r.index), r.strike, assetTag(r.assetType)),
+                  priceCell(r.price, r.change),
+                  numR(fmtNum(oiVal)),
+                  ...greekRow(r.index),
+                ];
+              })}
+            />
+
+            {/* ── Sectorial ── */}
+            <ScrollableTableWidget
+              title="Sectorial"
+              description="Browse options by sector to trade industry themes directly."
+              flipper={{ label: sectorCap, onPress: () => setSectorCap(nextCap(sectorCap)) }}
+              tabs={SECTOR_CHIPS.map((t) => ({ id: t, label: t }))}
+              activeTab={sector}
+              onTabChange={(id) => setSector(id as SectorChip)}
+              pillLayoutId="sector-tab"
+              columns={OPT_COLS}
+              visibleDataCols={2}
+              scrollableMinWidth={500}
+              rowHeight="h-[60px]"
+              animationKey={sectorCap + sector + filter}
+              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(sectorialRows[i].index)}`)}
+              rows={sectorialRows.map((r) => {
+                const g = gk(r.index);
+                return [
+                  instrCell(fullName(r.index), r.option, assetTag(r.assetType)),
+                  priceCell(`$${g.price}`),
+                  numR(fmtNum(r.oi)),
+                  ...greekRow(r.index),
+                ];
+              })}
+            />
+
+            {/* ── Options in Focus ── */}
+            <ScrollableTableWidget
+              title="Options in Focus"
+              description="Top gainers, losers, and unusual activity worth watching today."
+              flipper={{ label: focusCap, onPress: () => setFocusCap(nextCap(focusCap)) }}
+              tabs={FOCUS_TABS.map((t) => ({ id: t, label: t }))}
+              activeTab={focusTab}
+              onTabChange={(id) => setFocusTab(id as FocusTab)}
+              pillLayoutId="focus-tab"
+              columns={OPT_COLS}
+              visibleDataCols={2}
+              scrollableMinWidth={500}
+              rowHeight="h-[60px]"
+              animationKey={focusCap + focusTab + filter}
+              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(focusRows[i].ticker)}`)}
+              rows={focusRows.map((r) => {
+                const g = gk(r.ticker);
+                return [
+                  instrCell(fullName(r.ticker), r.contract, assetTag(r.assetType)),
+                  priceCell(`$${g.price}`),
+                  numR(fmtNum(r.openInt)),
+                  ...greekRow(r.ticker),
+                ];
+              })}
+            />
+          </>
+        );
+      })()}
 
     </div>
   );
