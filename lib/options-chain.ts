@@ -1,7 +1,7 @@
 export interface GreekRow {
   strike: number;
-  call: { ltp: number; ltpChgPct: number; oi: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
-  put: { ltp: number; ltpChgPct: number; oi: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
+  call: { ltp: number; bid: number; ask: number; ltpChgPct: number; oi: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
+  put: { ltp: number; bid: number; ask: number; ltpChgPct: number; oi: number; iv: number; delta: number; theta: number; vega: number; gamma: number };
 }
 
 export interface ExpiryGroupItem {
@@ -53,8 +53,8 @@ export function buildChain(currentPrice: number, seed: number): GreekRow[] {
     const putOI  = Math.max(500, Math.round(oiBase * (0.8 + rand() * 0.4)));
     rows.push({
       strike,
-      call: { ltp: +(callIntr + tv + rand() * 0.3).toFixed(2), ltpChgPct: +((rand() - 0.45) * 7).toFixed(2), oi: callOI, iv, delta: cDelta, theta, vega, gamma },
-      put: { ltp: +(putIntr + tv * 0.75 + rand() * 0.25).toFixed(2), ltpChgPct: +((rand() - 0.45) * 5).toFixed(2), oi: putOI, iv, delta: pDelta, theta, vega, gamma },
+      call: (() => { const ltp = +(callIntr + tv + rand() * 0.3).toFixed(2); const spread = Math.max(0.01, +(ltp * (0.012 + rand() * 0.008)).toFixed(2)); return { ltp, bid: +(ltp - spread).toFixed(2), ask: +(ltp + spread).toFixed(2), ltpChgPct: +((rand() - 0.45) * 7).toFixed(2), oi: callOI, iv, delta: cDelta, theta, vega, gamma }; })(),
+      put: (() => { const ltp = +(putIntr + tv * 0.75 + rand() * 0.25).toFixed(2); const spread = Math.max(0.01, +(ltp * (0.012 + rand() * 0.008)).toFixed(2)); return { ltp, bid: +(ltp - spread).toFixed(2), ask: +(ltp + spread).toFixed(2), ltpChgPct: +((rand() - 0.45) * 5).toFixed(2), oi: putOI, iv, delta: pDelta, theta, vega, gamma }; })(),
     });
   }
 

@@ -624,6 +624,54 @@ const TOP_CHAINS: { symbol: string; ticker: string; price: number; change: numbe
 ];
 
 /* ------------------------------------------------------------------ */
+/*  Full name lookup                                                   */
+/* ------------------------------------------------------------------ */
+
+const FULL_NAMES: Record<string, string> = {
+  NDX: "NASDAQ 100 Index", SPX: "S&P 500 Index", SPY: "SPDR S&P 500 ETF", QQQ: "Invesco QQQ Trust",
+  IWM: "iShares Russell 2000", EFA: "iShares MSCI EAFE", ACWI: "iShares MSCI ACWI ETF",
+  VEA: "Vanguard FTSE Dev. Markets", EWJ: "iShares MSCI Japan", EEM: "iShares MSCI Emg. Mkts",
+  NVDA: "NVIDIA Corporation", AAPL: "Apple Inc.", MSFT: "Microsoft Corp.", TSLA: "Tesla Inc.",
+  META: "Meta Platforms", AMZN: "Amazon.com Inc.", AMD: "Advanced Micro Devices",
+  JPM: "JPMorgan Chase", GS: "Goldman Sachs", DIS: "Walt Disney Co.", BAC: "Bank of America",
+  V: "Visa Inc.", MA: "Mastercard Inc.", SBUX: "Starbucks Corp.", NKE: "Nike Inc.",
+  PYPL: "PayPal Holdings", REGN: "Regeneron Pharma.", BIIB: "Biogen Inc.",
+  NEE: "NextEra Energy", F: "Ford Motor Co.", GM: "General Motors", RIVN: "Rivian Automotive",
+  RUI: "Russell 1000 Index", RUT: "Russell 2000 Index", MID: "S&P 400 Mid Cap Index",
+  R1000: "Russell 1000 Index", R2000: "Russell 2000 Index",
+  XLF: "Financial Select SPDR", XLY: "Consumer Discr. SPDR", XLE: "Energy Select SPDR",
+  XBI: "SPDR S&P Biotech ETF", IBB: "iShares Biotech ETF", MDY: "SPDR MidCap 400 ETF",
+  IWC: "iShares Micro-Cap ETF", SLY: "SPDR S&P 600 Small Cap", IJH: "iShares Core S&P 400",
+  ICLN: "iShares Global Clean Energy", TAN: "Invesco Solar ETF", INRG: "iShares Clean Energy",
+  VFH: "Vanguard Financials ETF", IXG: "iShares Global Financials", IXJ: "iShares Global Healthcare",
+  DRIV: "Global X Auto & EV ETF", IDRV: "iShares Self-Driving EV", KARS: "KraneShares EV & Future Mobility",
+  CARZ: "First Trust Nasdaq CEA", IYT: "iShares US Transportation", FINX: "Global X FinTech ETF",
+  DWMC: "AdvisorShares DoubleLine Value", ZBRA: "Zebra Technologies", SAIA: "Saia Inc.",
+  TECH: "Bio-Techne Corp.", SMTC: "Semtech Corp.", TPHS: "Trinity Place Holdings",
+  RNLX: "Renalytix Plc", BFST: "Business First Bancshares", HNNA: "Hennessy Advisors",
+  MCVT: "Mill City Ventures", MITI: "Mitesco Inc.", CNET: "ZW Data Action Technologies",
+  CDAY: "Ceridian HCM", SAIA2: "Saia Inc.", ITRI: "Itron Inc.", AMBA: "Ambarella Inc.",
+  GDOT: "Green Dot Corp.", RPAY: "Repay Holdings", HALO: "Halozyme Therapeutics",
+  LAZR: "Luminar Technologies", MOD: "Modine Manufacturing", PAYS: "Paysign Inc.",
+  AMPS: "Altus Power Inc.", INBX: "Inhibrx Inc.", IDEA: "IDEANOMICS Inc.",
+  MCRR: "Mesa Air Group", RUN: "Sunrun Inc.", SPWR: "SunPower Corp.",
+  PRTH: "Priority Technology", AMPE: "Ampio Pharmaceuticals", MOTS: "Motus GI Holdings",
+  EVGO: "EVgo Inc.", RIDE: "Lordstown Motors", MFIN: "Medallion Financial",
+  SNPX: "Synapse Energy Economics", RNAZ: "TransCode Therapeutics", SOLO: "Electrameccanica Vehicles",
+  WKHS: "Workhorse Group", FWRD: "Forward Air Corp.", RLAY: "Relay Therapeutics",
+  PYPL2: "PayPal Holdings",
+};
+
+function fullName(ticker: string) {
+  return FULL_NAMES[ticker] ?? ticker;
+}
+
+function assetBadge(assetType: AssetType) {
+  if (assetType === "Global ETF") return "Global";
+  return assetType;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main Export                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -739,15 +787,15 @@ export function ExploreOptions() {
       <WidgetCard title="Top Option Chains" subtitle="Most active options across indices, ETFs, and stocks.">
         <div className="pb-2">
           {TOP_CHAINS.filter((item) => matchesFilter(item.assetType, filter)).map((item, i, arr) => (
-            <div key={item.symbol} className={cn("flex items-center gap-3 px-5 py-3.5", i < arr.length - 1 && "border-b border-border/30")}>
+            <button key={item.symbol} onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)} className={cn("w-full flex items-center gap-3 px-5 py-3.5 active:bg-muted/30 transition-colors", i < arr.length - 1 && "border-b border-border/30")}>
               <div className="w-10 h-10 rounded-xl bg-muted shrink-0 flex items-center justify-center">
                 <span className="text-[11px] font-bold text-muted-foreground">{item.ticker}</span>
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <div className="flex items-center gap-1.5">
                   <p className="text-[15px] font-bold text-foreground truncate">{item.symbol}</p>
                   <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    {item.assetType === "Global ETF" ? "G.ETF" : item.assetType}
+                    {assetBadge(item.assetType)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -755,10 +803,8 @@ export function ExploreOptions() {
                   <PctBadge value={item.change} />
                 </div>
               </div>
-              <button onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)} className="w-9 h-9 rounded-full border border-border/60 flex items-center justify-center active:bg-muted/50 transition-colors shrink-0">
-                <Link2 size={15} strokeWidth={1.8} className="text-muted-foreground" />
-              </button>
-            </div>
+              <Link2 size={15} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
+            </button>
           ))}
         </div>
       </WidgetCard>
@@ -772,8 +818,9 @@ export function ExploreOptions() {
             { label: "OI",  align: "right" },
             { label: "Vol", align: "right" },
           ]}
+          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(popularRows[i].index)}`)}
           rows={popularRows.map((r) => [
-            <Cell key="i" top={r.index} bottom={r.option} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.option} />,
             <NumCell key="oi" value={r.oi} />,
             <NumCell key="v" value={fmtNum(String(Math.round(+r.oi.replace(/K$/,"000").replace(/M$/,"000000").replace(/[^0-9]/g,"") * 0.22)))} />,
           ])}
@@ -787,8 +834,9 @@ export function ExploreOptions() {
             { label: "Options"                    },
             { label: "Opt. Price", align: "right" },
           ]}
+          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(under10Rows[i].index)}`)}
           rows={under10Rows.map((r) => [
-            <Cell key="i" top={r.index} bottom={r.strike} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.strike} />,
             <div key="p" className="text-right">
               <p className="text-[14px] font-semibold text-foreground tabular-nums">{r.price}</p>
               <PctBadge value={r.change} />
@@ -806,8 +854,9 @@ export function ExploreOptions() {
             { label: "OI",  align: "right" },
             { label: "Vol", align: "right" },
           ]}
+          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(sectorialRows[i].index)}`)}
           rows={sectorialRows.map((r) => [
-            <Cell key="i" top={r.index} bottom={r.option} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.option} />,
             <NumCell key="oi" value={fmtNum(r.oi)} />,
             <NumCell key="v" value={fmtNum(r.vol)} />,
           ])}
@@ -823,8 +872,9 @@ export function ExploreOptions() {
             { label: "OI",  align: "right" },
             { label: "Vol", align: "right" },
           ]}
+          onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(focusRows[i].ticker)}`)}
           rows={focusRows.map((r) => [
-            <Cell key="t" top={r.ticker} bottom={r.contract} />,
+            <Cell key="t" top={fullName(r.ticker)} bottom={r.contract} />,
             <NumCell key="oi" value={fmtNum(r.openInt)} />,
             <NumCell key="v" value={fmtNum(String(Math.round(+r.openInt.replace(/,/g, "") * 0.18)))} />,
           ])}

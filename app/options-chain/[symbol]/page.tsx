@@ -94,17 +94,18 @@ function putCell(key: string, row: GreekRow) {
 /*  Basket payoff helpers                                              */
 /* ------------------------------------------------------------------ */
 
-type BasketLegData = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number; lots: number };
+type BasketLegData = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number; bid: number; ask: number; lots: number };
 
 function legPnl(leg: BasketLegData, price: number): number {
   const mult = leg.lots * 100;
-  const premium = leg.ltp * mult;
+  const entryPrice = leg.mode === "buy" ? leg.ask : leg.bid;
+  const premium = entryPrice * mult;
   if (leg.mode === "buy") {
-    if (leg.side === "call") return Math.max(-premium, (price - leg.strike - leg.ltp) * mult);
-    return Math.max(-premium, (leg.strike - leg.ltp - price) * mult);
+    if (leg.side === "call") return Math.max(-premium, (price - leg.strike - entryPrice) * mult);
+    return Math.max(-premium, (leg.strike - entryPrice - price) * mult);
   } else {
-    if (leg.side === "call") return Math.min(premium, -(price - leg.strike - leg.ltp) * mult);
-    return Math.min(premium, -(leg.strike - leg.ltp - price) * mult);
+    if (leg.side === "call") return Math.min(premium, -(price - leg.strike - entryPrice) * mult);
+    return Math.min(premium, -(leg.strike - entryPrice - price) * mult);
   }
 }
 
@@ -254,7 +255,7 @@ export default function OptionsChainPage() {
   const [sortAsc, setSortAsc]         = useState(true);
 
   type OptionsLevel = 1 | 2;
-  type TradeSelection = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number };
+  type TradeSelection = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number; bid: number; ask: number };
   type BasketLeg = TradeSelection & { lots: number; id: number };
 
   const [level, setLevel]             = useState<OptionsLevel | null>(null);
@@ -267,12 +268,12 @@ export default function OptionsChainPage() {
   const [chargesOpen, setChargesOpen] = useState(false);
   const [regFeesOpen, setRegFeesOpen] = useState(false);
 
-  const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
+  const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number, bid: number, ask: number) => {
     setSelected((prev) => {
       if (prev && prev.strike === strike && prev.side === side) return null;
       setLots(1);
       const defaultMode = level === 2 ? "buy" : "sell";
-      return { strike, side, mode: defaultMode, ltp };
+      return { strike, side, mode: defaultMode, ltp, bid, ask };
     });
   }, [level]);
 
@@ -488,7 +489,7 @@ export default function OptionsChainPage() {
                 return (
                   <div
                     key={row.strike}
-                    onClick={() => handleRowTap(row.strike, "call", row.call.ltp)}
+                    onClick={() => handleRowTap(row.strike, "call", row.call.ltp, row.call.bid, row.call.ask)}
                     className={cn(
                       "flex items-center justify-end border-b border-border/40 cursor-pointer active:opacity-75",
                       rowBg,
@@ -534,7 +535,7 @@ export default function OptionsChainPage() {
                 return (
                   <div
                     key={row.strike}
-                    onClick={() => handleRowTap(row.strike, "put", row.put.ltp)}
+                    onClick={() => handleRowTap(row.strike, "put", row.put.ltp, row.put.bid, row.put.ask)}
                     className={cn(
                       "flex items-center justify-start border-b border-border/40 cursor-pointer active:opacity-75",
                       rowBg,
@@ -676,7 +677,7 @@ export default function OptionsChainPage() {
                     <span className="font-normal text-muted-foreground"> · {leg.lots} {leg.lots === 1 ? "lot" : "lots"}</span>
                   </p>
                   <span className="text-[12px] text-muted-foreground tabular-nums">
-                    {leg.mode === "sell" ? `Margin $${(leg.ltp * leg.lots * 100 * 3.2).toFixed(0)}` : `$${leg.ltp.toFixed(2)}`}
+                    {leg.mode === "sell" ? `Margin $${(leg.bid * leg.lots * 100 * 3.2).toFixed(0)}` : `$${leg.ask.toFixed(2)}`}
                   </span>
                   <button onClick={() => setBasket((b) => b.filter((l) => l.id !== leg.id))} className="ml-1 active:opacity-60">
                     <Trash2 size={13} className="text-muted-foreground" />
@@ -689,7 +690,7 @@ export default function OptionsChainPage() {
             {(() => {
               const available   = 12450;
               const totalMargin = basket.reduce((s, leg) =>
-                leg.mode === "sell" ? s + leg.ltp * leg.lots * 100 * 3.2 : s + leg.ltp * leg.lots * 100, 0);
+                leg.mode === "sell" ? s + leg.bid * leg.lots * 100 * 3.2 : s + leg.ask * leg.lots * 100, 0);
               const brokerage    = +(totalMargin * 0.05 / 100).toFixed(2);
               const secFee       = +(totalMargin * 0.02 / 100).toFixed(2);
               const finraFee     = +(totalMargin * 0.015 / 100).toFixed(2);
@@ -841,7 +842,7 @@ export default function OptionsChainPage() {
                   {selected.strike.toFixed(1)}&nbsp;{selected.side === "call" ? "CE" : "PE"}
                   <span className="font-normal text-muted-foreground"> · {expiryShort}</span>
                   <span className="text-border/60"> &ensp;|&ensp;</span>
-                  <span className="font-normal text-muted-foreground">LTP ${selected.ltp.toFixed(2)}</span>
+                  <span className="font-normal text-muted-foreground">LTP ${selected.ltp.toFixed(2)} · {selected.mode === "buy" ? "Ask" : "Bid"} ${(selected.mode === "buy" ? selected.ask : selected.bid).toFixed(2)}</span>
                 </p>
                 <ChevronRight size={14} strokeWidth={2.2} className="text-muted-foreground shrink-0 ml-0.5" />
               </button>
@@ -852,7 +853,8 @@ export default function OptionsChainPage() {
 
             {(() => {
               const available = 12450;
-              const reqMargin = selected.ltp * lots * 100;
+              const activePrice = selected.mode === "buy" ? selected.ask : selected.bid;
+              const reqMargin = activePrice * lots * 100;
               const insufficient = reqMargin > available;
               return (
                 <>
@@ -862,8 +864,8 @@ export default function OptionsChainPage() {
                       {(() => {
                         const isSell = selected.mode === "sell";
                         const displayAmt = isSell
-                          ? (selected.ltp * lots * 100 * 3.2).toLocaleString("en-US", { minimumFractionDigits: 0 })
-                          : (selected.ltp * lots * 100).toLocaleString("en-US", { minimumFractionDigits: 0 });
+                          ? (activePrice * lots * 100 * 3.2).toLocaleString("en-US", { minimumFractionDigits: 0 })
+                          : (activePrice * lots * 100).toLocaleString("en-US", { minimumFractionDigits: 0 });
                         return (
                       <div className="flex items-center justify-between mb-2.5">
                         <div className="flex flex-col">
