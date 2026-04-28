@@ -164,22 +164,16 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
             {/* Blurb */}
             <p className="text-[13px] text-muted-foreground leading-relaxed">{col.theme}</p>
 
-            {/* Invested + SIP details */}
-            <div className="flex items-stretch gap-3">
-              <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
-                <p className="text-[11px] text-muted-foreground mb-1">Invested</p>
+            {/* Invested + SIP merged row */}
+            <div className="rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-muted-foreground mb-0.5">Invested</p>
                 <p className="text-[15px] font-semibold text-foreground tabular-nums">${fmt(col.invested)}</p>
               </div>
-              {col.sip ? (
-                <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
-                  <p className="text-[11px] text-muted-foreground mb-1">SIP</p>
+              {col.sip && (
+                <div className="text-right">
+                  <p className="text-[11px] text-muted-foreground mb-0.5">SIP · {col.sip.frequency}</p>
                   <p className="text-[15px] font-semibold text-foreground">${col.sip.amount}/mo</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{col.sip.frequency}</p>
-                </div>
-              ) : (
-                <div className="flex-1 rounded-xl bg-muted/50 px-4 py-3">
-                  <p className="text-[11px] text-muted-foreground mb-1">Investment type</p>
-                  <p className="text-[15px] font-semibold text-foreground">One-time</p>
                 </div>
               )}
             </div>
