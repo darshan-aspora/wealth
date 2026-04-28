@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, TrendingUp, BarChart2, Layers, Globe, GitBranch } from "lucide-react";
+import { LayoutGrid, TrendingUp, BarChart2, Layers, Globe, GitBranch, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
@@ -802,7 +802,7 @@ export function ExploreOptions() {
             <ScrollableTableWidget
               title="Popular"
               description="High open interest options getting the most trader attention."
-              flipper={{ label: popularCap, onPress: () => setPopularCap(nextCap(popularCap)) }}
+              flipper={{ label: popularCap, icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />, onFlip: () => setPopularCap(nextCap(popularCap)) }}
               tabs={POPULAR_TABS.map((t) => ({
                   id: t,
                   label: t === popularTab && t !== "Expiring Today" ? `${t} Expiry` : t,
@@ -829,7 +829,7 @@ export function ExploreOptions() {
             <ScrollableTableWidget
               title="Top Options Under $10"
               description="Affordable contracts to control big positions with less capital."
-              flipper={{ label: under10Cap, onPress: () => setUnder10Cap(nextCap(under10Cap)) }}
+              flipper={{ label: under10Cap, icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />, onFlip: () => setUnder10Cap(nextCap(under10Cap)) }}
               columns={OPT_COLS}
               visibleDataCols={3}
               frozenWidthOffset={60}
@@ -852,7 +852,7 @@ export function ExploreOptions() {
             <ScrollableTableWidget
               title="Sectorial"
               description="Browse options by sector to trade industry themes directly."
-              flipper={{ label: sectorCap, onPress: () => setSectorCap(nextCap(sectorCap)) }}
+              flipper={{ label: sectorCap, icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />, onFlip: () => setSectorCap(nextCap(sectorCap)) }}
               tabs={SECTOR_CHIPS.map((t) => ({ id: t, label: t }))}
               activeTab={sector}
               onTabChange={(id) => setSector(id as SectorChip)}
@@ -879,7 +879,7 @@ export function ExploreOptions() {
             <ScrollableTableWidget
               title="Options in Focus"
               description="Top gainers, losers, and unusual activity worth watching today."
-              flipper={{ label: focusCap, onPress: () => setFocusCap(nextCap(focusCap)) }}
+              flipper={{ label: focusCap, icon: <ArrowUpDown size={13} className="flex-shrink-0 text-muted-foreground" />, onFlip: () => setFocusCap(nextCap(focusCap)) }}
               tabs={FOCUS_TABS.map((t) => ({ id: t, label: t }))}
               activeTab={focusTab}
               onTabChange={(id) => setFocusTab(id as FocusTab)}
