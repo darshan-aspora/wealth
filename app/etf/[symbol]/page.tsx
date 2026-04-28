@@ -208,6 +208,33 @@ function formatOptionOI(value: number) {
   return `${value}`;
 }
 
+function mockOI(price: number, sym: string) {
+  let h = 0;
+  for (let i = 0; i < sym.length; i++) h = (Math.imul(31, h) + sym.charCodeAt(i)) | 0;
+  let s = Math.abs(h) % 2147483647 || 1;
+  const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  const base = Math.round(price * 80);
+  const callOI = base + Math.round(rand() * base * 0.6);
+  const putOI  = Math.round(callOI * (0.4 + rand() * 0.35));
+  return { callOI, putOI, pcr: +(putOI / callOI).toFixed(2) };
+}
+function fmtOI(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return n.toLocaleString();
+  return String(n);
+}
+function mockFutures(price: number, sym: string) {
+  let h = 0;
+  for (let i = 0; i < sym.length; i++) h = (Math.imul(17, h) + sym.charCodeAt(i)) | 0;
+  let s = Math.abs(h) % 2147483647 || 1;
+  const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  return [
+    { expiry: "28 Apr '26", price: +(price * (1 + (rand() - 0.48) * 0.006)).toFixed(2), pct: +((rand() - 0.45) * 6).toFixed(2) },
+    { expiry: "26 May '26", price: +(price * (1 + (rand() - 0.46) * 0.008)).toFixed(2), pct: +((rand() - 0.44) * 6).toFixed(2) },
+    { expiry: "25 Jun '26", price: +(price * (1 + (rand() - 0.44) * 0.01)).toFixed(2),  pct: +((rand() - 0.43) * 6).toFixed(2) },
+  ];
+}
+
 function ETFOptionsTab({ symbol, name, price }: { symbol: string; name: string; price: number }) {
   const router = useRouter();
   const [expiryFilter, setExpiryFilter] = useState<OptionExpiryFilter>("Daily Expiry");
@@ -245,6 +272,8 @@ function ETFOptionsTab({ symbol, name, price }: { symbol: string; name: string; 
   }, [expiryFilter, price]);
 
   const shortName = name.replace(/\b(ETF|Trust|Fund|Inc\.?|Corp\.?)\b/gi, "").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
+  const oi = useMemo(() => mockOI(price, symbol), [price, symbol]);
+  const futures = useMemo(() => mockFutures(price, symbol), [price, symbol]);
 
   return (
     <div className="flex min-h-full flex-col pb-6">
@@ -260,6 +289,49 @@ function ETFOptionsTab({ symbol, name, price }: { symbol: string; name: string; 
         >
           Option Chain
         </Button>
+      </div>
+
+      {/* OI Summary */}
+      <div className="border-b border-border/60 px-4 py-5">
+        <h3 className="mb-4 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.3px] text-foreground">
+          Open Interest (OI)
+          <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted-foreground">i</span>
+        </h3>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <p className="text-[13px] text-muted-foreground">Total Put OI</p>
+            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{fmtOI(oi.putOI)}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[13px] text-muted-foreground">Put:Call ratio</p>
+            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{oi.pcr}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[13px] text-muted-foreground">Total Call OI</p>
+            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{fmtOI(oi.callOI)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Futures */}
+      <div className="border-b border-border/60 px-4 py-5">
+        <h3 className="mb-4 text-[17px] font-semibold tracking-[-0.3px] text-foreground">Top {shortName} Futures</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {futures.map((fut) => (
+            <div key={fut.expiry} className="rounded-2xl border border-border/60 p-4">
+              <p className="text-[15px] font-semibold tracking-[-0.3px]">
+                {shortName} <span className="font-bold">Fut</span>
+              </p>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">{fut.expiry}</p>
+              <p className="mt-4 text-[18px] font-semibold tracking-[-0.4px]">
+                ${fut.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className={cn("mt-0.5 text-[13px] font-medium", fut.pct >= 0 ? "text-gain" : "text-loss")}>
+                {fut.pct >= 0 ? "+" : ""}{fut.pct.toFixed(2)}%
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Popular options section */}
