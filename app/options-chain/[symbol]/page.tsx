@@ -302,7 +302,7 @@ export default function OptionsChainPage() {
               const redPct   = (row.put.oi  / maxPutOI)  * 100;
               const greenPct = (row.call.oi / maxCallOI) * 100;
               return (
-                <div key={`oi-${row.strike}`} className="pointer-events-none" style={{ position: "absolute", top: rowIdx * ROW_H + ROW_H - 3, left: 0, right: 0, height: 3, zIndex: 1 }}>
+                <div key={`oi-${row.strike}`} className="pointer-events-none" style={{ position: "absolute", top: rowIdx * ROW_H + ROW_H - 8, left: 0, right: 0, height: 3, zIndex: 1 }}>
                   {/* Red — container spans app-left → strike-left; bar right-aligned so it touches the strike */}
                   <div className="absolute top-0 bottom-0 flex justify-end" style={{ left: 0, right: `calc(50% + ${STRIKE_W / 2}px)` }}>
                     <div className="h-full bg-loss/50" style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }} />
