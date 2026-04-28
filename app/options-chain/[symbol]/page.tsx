@@ -354,6 +354,7 @@ export default function OptionsChainPage() {
   }, [chain]);
 
   const expiryShort = formatExpiryShort(expiry);
+  const expiryTag = expiryGroups.flatMap(g => g.items).find(i => i.date === expiry)?.tag ?? "";
 
   // Total content height (no dedicated ATM row — pill overlays the border)
   const totalH = chain.length * ROW_H;
@@ -386,7 +387,7 @@ export default function OptionsChainPage() {
           onClick={() => setExpiryOpen(true)}
           className="flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 shrink-0"
         >
-          {expiryShort} <ChevronDown size={13} strokeWidth={2.5} />
+          {expiryShort} <span className="text-muted-foreground font-normal">({expiryTag})</span> <ChevronDown size={13} strokeWidth={2.5} />
         </button>
       </div>
 
