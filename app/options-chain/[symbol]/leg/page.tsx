@@ -68,7 +68,7 @@ function DetailTabs({ activeTab, onChange }: { activeTab: DetailTab; onChange: (
               onClick={() => onChange(tab)}
               className={cn(
                 "shrink-0 border-b-2 px-3 py-3 text-[0.875em] transition-colors",
-                active ? "border-blue-500 font-bold text-foreground" : "border-transparent text-muted-foreground",
+                active ? "border-foreground font-bold text-foreground" : "border-transparent text-muted-foreground",
               )}
             >
               {tab}
@@ -475,7 +475,7 @@ function PayoffFull({
               className={cn(
                 "px-4 py-1.5 rounded-full text-[0.75em] font-semibold transition-colors",
                 tradeMode === m
-                  ? m === "buy" ? "bg-gain text-white" : "bg-loss text-white"
+                  ? "bg-foreground text-background"
                   : "border border-border/60 text-muted-foreground bg-background",
               )}
             >
@@ -704,7 +704,7 @@ export default function OptionLegDetailPage() {
                         <p className="text-[0.75em] text-muted-foreground">Underlying stock</p>
                         <p className="text-[0.9375em] font-semibold text-foreground mt-0.5">{fullName} <span className="text-muted-foreground font-normal">({symbol})</span></p>
                       </div>
-                      <button onClick={() => router.push(underlyingRoute(symbol))} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
+                      <button onClick={() => router.push(underlyingRoute(symbol))} className="text-[0.75em] font-semibold text-foreground active:opacity-60 shrink-0 ml-3">
                         View underlying ›
                       </button>
                     </div>
@@ -713,7 +713,7 @@ export default function OptionLegDetailPage() {
                         <p className="text-[0.75em] text-muted-foreground">Options chain</p>
                         <p className="text-[0.9375em] font-semibold text-foreground mt-0.5">{symbol} · {expiryShort}</p>
                       </div>
-                      <button onClick={() => router.push(`/options-chain/${symbol}`)} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
+                      <button onClick={() => router.push(`/options-chain/${symbol}`)} className="text-[0.75em] font-semibold text-foreground active:opacity-60 shrink-0 ml-3">
                         View chain ›
                       </button>
                     </div>
@@ -894,12 +894,12 @@ export default function OptionLegDetailPage() {
             Set Alert
           </Button>
           <Button
-            className="h-11 rounded-xl bg-loss text-[0.875em] font-semibold text-white hover:bg-loss/90 active:opacity-80"
+            className="h-11 rounded-xl bg-foreground text-[0.875em] font-semibold text-background hover:bg-foreground/90 active:opacity-80"
           >
             Sell
           </Button>
           <Button
-            className="h-11 rounded-xl bg-gain text-[0.875em] font-semibold text-white hover:bg-gain/90 active:opacity-80"
+            className="h-11 rounded-xl bg-foreground text-[0.875em] font-semibold text-background hover:bg-foreground/90 active:opacity-80"
           >
             Buy
           </Button>
