@@ -297,22 +297,23 @@ export default function OptionsChainPage() {
           {(() => {
             const maxCallOI = Math.max(...chain.map(r => r.call.oi));
             const maxPutOI  = Math.max(...chain.map(r => r.put.oi));
+            const halfW     = SIDE_W + STRIKE_W / 2; // pixels from center to edge
             return chain.map((row, rowIdx) => {
-              const greenPct = (row.call.oi / maxCallOI) * 50;
-              const redPct   = (row.put.oi  / maxPutOI)  * 50;
+              const greenW = Math.round((row.call.oi / maxCallOI) * halfW);
+              const redW   = Math.round((row.put.oi  / maxPutOI)  * halfW);
               return (
                 <div
                   key={`oi-${row.strike}`}
                   className="absolute left-0 right-0 flex pointer-events-none"
                   style={{ top: rowIdx * ROW_H + ROW_H - 3, height: 3, zIndex: 1 }}
                 >
-                  {/* Red (put OI) — right-aligned from left edge to center */}
-                  <div className="w-1/2 flex justify-end">
-                    <div className="h-full bg-loss/50" style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }} />
+                  {/* Red (put OI) — right-aligned toward center from left */}
+                  <div className="flex-1 flex justify-end">
+                    <div className="h-full bg-loss/50" style={{ width: redW, borderRadius: "3px 0 0 3px" }} />
                   </div>
-                  {/* Green (call OI) — left-aligned from center to right edge */}
-                  <div className="w-1/2 flex justify-start">
-                    <div className="h-full bg-gain/50" style={{ width: `${greenPct}%`, borderRadius: "0 3px 3px 0" }} />
+                  {/* Green (call OI) — left-aligned toward center from right */}
+                  <div className="flex-1 flex justify-start">
+                    <div className="h-full bg-gain/50" style={{ width: greenW, borderRadius: "0 3px 3px 0" }} />
                   </div>
                 </div>
               );
@@ -334,7 +335,7 @@ export default function OptionsChainPage() {
                 const isCallSelected = selected?.strike === row.strike && selected?.side === "call";
                 const rowBg = isCallSelected
                   ? ""
-                  : isATM ? "bg-muted/60" : callITM ? "bg-gain/[0.08]" : callOTM ? "bg-amber-50/70" : "";
+                  : isATM ? "bg-muted" : callITM ? "bg-gain/[0.08]" : callOTM ? "bg-amber-50/70" : "";
                 return (
                   <div
                     key={row.strike}
@@ -380,7 +381,7 @@ export default function OptionsChainPage() {
                 const isPutSelected = selected?.strike === row.strike && selected?.side === "put";
                 const rowBg = isPutSelected
                   ? ""
-                  : isATM ? "bg-muted/60" : putITM ? "bg-gain/[0.08]" : putOTM ? "bg-amber-50/70" : "";
+                  : isATM ? "bg-muted" : putITM ? "bg-gain/[0.08]" : putOTM ? "bg-amber-50/70" : "";
                 return (
                   <div
                     key={row.strike}
@@ -424,7 +425,7 @@ export default function OptionsChainPage() {
                   key={row.strike}
                   className={cn(
                     "relative flex flex-col items-center justify-center border-b border-border/20",
-                    isATM && !isRowSelected ? "bg-foreground/[0.05]" : "bg-background",
+                    isATM && !isRowSelected ? "bg-muted" : "bg-background",
                   )}
                   style={{
                     height: ROW_H,
@@ -461,27 +462,43 @@ export default function OptionsChainPage() {
         </div>
       </div>
 
-      {/* ── Legend (hidden when trade footer is open) ── */}
-      {!selected && basket.length === 0 && <div className="shrink-0 flex items-center justify-center gap-4 px-4 py-3 border-t border-border/40 bg-background">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-gain/50" />
-          <span className="text-[11px] text-muted-foreground">
-            <span className="font-semibold text-foreground">ITM</span> (In The Money)
-          </span>
+      {/* ── Legend + contract info (hidden when trade footer is open) ── */}
+      {!selected && basket.length === 0 && (
+        <div className="shrink-0 border-t border-border/40 bg-background">
+          {/* Row 1: ITM / ATM / OTM legend */}
+          <div className="flex items-center justify-center gap-4 px-4 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-gain/50" />
+              <span className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">ITM</span> In The Money</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-muted border border-border/60" />
+              <span className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">ATM</span> At The Money</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-amber-300" />
+              <span className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">OTM</span> Out of Money</span>
+            </div>
+          </div>
+          {/* Row 2: contract info */}
+          <div className="flex items-center justify-around px-4 pb-3 border-t border-border/20">
+            <div className="text-center pt-2">
+              <p className="text-[10px] text-muted-foreground mb-0.5">Lot Size</p>
+              <p className="text-[12px] font-semibold text-foreground">1 Lot = 100</p>
+            </div>
+            <div className="w-px h-7 bg-border/40" />
+            <div className="text-center pt-2">
+              <p className="text-[10px] text-muted-foreground mb-0.5">Buy Price</p>
+              <p className="text-[12px] font-semibold text-foreground">Premium × 100</p>
+            </div>
+            <div className="w-px h-7 bg-border/40" />
+            <div className="text-center pt-2">
+              <p className="text-[10px] text-muted-foreground mb-0.5">Sell Margin</p>
+              <p className="text-[12px] font-semibold text-foreground">~$1,240 / Lot</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-foreground" />
-          <span className="text-[11px] text-muted-foreground">
-            <span className="font-semibold text-foreground">ATM</span> (At The Money)
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-300" />
-          <span className="text-[11px] text-muted-foreground">
-            <span className="font-semibold text-foreground">OTM</span> (Out of The Money)
-          </span>
-        </div>
-      </div>}
+      )}
 
       {/* ── Level 2 basket (shown above footer when basket has legs) ── */}
       <AnimatePresence>
@@ -497,6 +514,7 @@ export default function OptionsChainPage() {
               <p className="text-[13px] font-bold text-foreground">Basket · {basket.length} {basket.length === 1 ? "Leg" : "Legs"}</p>
               <button onClick={() => setBasket([])} className="text-[11px] text-muted-foreground active:opacity-60">Clear all</button>
             </div>
+            {/* Legs */}
             <div className="flex flex-col gap-1.5 mb-3">
               {basket.map((leg) => (
                 <div key={leg.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2.5">
@@ -508,13 +526,65 @@ export default function OptionsChainPage() {
                     {leg.strike.toFixed(1)} {leg.side === "call" ? "CE" : "PE"}
                     <span className="font-normal text-muted-foreground"> · {leg.lots} {leg.lots === 1 ? "lot" : "lots"}</span>
                   </p>
-                  <span className="text-[12px] text-muted-foreground tabular-nums">${leg.ltp.toFixed(2)}</span>
+                  <span className="text-[12px] text-muted-foreground tabular-nums">
+                    {leg.mode === "sell" ? `Margin $${(leg.ltp * leg.lots * 100 * 3.2).toFixed(0)}` : `$${leg.ltp.toFixed(2)}`}
+                  </span>
                   <button onClick={() => setBasket((b) => b.filter((l) => l.id !== leg.id))} className="ml-1 active:opacity-60">
                     <Trash2 size={13} className="text-muted-foreground" />
                   </button>
                 </div>
               ))}
             </div>
+
+            {/* Available / Margin Required */}
+            {(() => {
+              const available   = 12450;
+              const totalMargin = basket.reduce((s, leg) =>
+                leg.mode === "sell" ? s + leg.ltp * leg.lots * 100 * 3.2 : s + leg.ltp * leg.lots * 100, 0);
+              const brokerage   = Math.round(totalMargin * 0.0003);
+              const sebi        = Math.round(totalMargin * 0.0001);
+              const stamp       = Math.round(totalMargin * 0.00015);
+              const gst         = Math.round(brokerage * 0.18);
+              const totalCharges = brokerage + sebi + stamp + gst;
+              return (
+                <>
+                  <div className="flex gap-2 mb-3">
+                    <div className="flex-1 rounded-xl bg-muted/50 px-3 py-2.5">
+                      <p className="text-[10px] text-muted-foreground mb-0.5">Available</p>
+                      <p className="text-[14px] font-bold text-foreground tabular-nums">${available.toLocaleString()}</p>
+                    </div>
+                    <div className={cn("flex-1 rounded-xl px-3 py-2.5", totalMargin > available ? "bg-loss/10" : "bg-muted/50")}>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">Margin Required</p>
+                      <p className={cn("text-[14px] font-bold tabular-nums", totalMargin > available ? "text-loss" : "text-foreground")}>
+                        ${Math.round(totalMargin).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Margin breakdown */}
+                  <div className="rounded-xl bg-muted/40 px-3 py-2.5 mb-3 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Charges</p>
+                    {[
+                      { label: "Brokerage",  val: brokerage },
+                      { label: "SEBI fees",  val: sebi },
+                      { label: "Stamp duty", val: stamp },
+                      { label: "GST (18%)",  val: gst },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-[12px] text-muted-foreground">{label}</span>
+                        <span className="text-[12px] text-foreground tabular-nums">${val.toLocaleString()}</span>
+                      </div>
+                    ))}
+                    <div className="h-px bg-border/40 my-1" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-semibold text-foreground">Total charges</span>
+                      <span className="text-[12px] font-semibold text-foreground tabular-nums">${totalCharges.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
             <button className="w-full flex items-center justify-center rounded-xl bg-foreground text-background text-[15px] font-bold py-3.5 active:opacity-85">
               Review Strategy
             </button>
@@ -567,11 +637,19 @@ export default function OptionsChainPage() {
                 <>
                   {level === 2 ? (
                     <>
-                      {/* Row 1: Premium (left) + Buy/Sell pills (right) */}
+                      {/* Row 1: Premium/Margin (left) + Buy/Sell pills (right) */}
+                      {(() => {
+                        const isSell = selected.mode === "sell";
+                        const displayAmt = isSell
+                          ? (selected.ltp * lots * 100 * 3.2).toLocaleString("en-US", { minimumFractionDigits: 0 })
+                          : (selected.ltp * lots * 100).toLocaleString("en-US", { minimumFractionDigits: 0 });
+                        return (
                       <div className="flex items-center justify-between mb-2.5">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-1">Premium</span>
-                          <span className="text-[20px] font-bold text-foreground tabular-nums leading-none">${(selected.ltp * lots * 100).toLocaleString("en-US", { minimumFractionDigits: 0 })}</span>
+                          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-1">
+                            {isSell ? "Margin" : "Premium"}
+                          </span>
+                          <span className="text-[20px] font-bold text-foreground tabular-nums leading-none">${displayAmt}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {(["buy", "sell"] as const).map((m) => (
@@ -589,6 +667,8 @@ export default function OptionsChainPage() {
                           ))}
                         </div>
                       </div>
+                        );
+                      })()}
 
                       {/* Row 2: Lots stepper + Add Leg */}
                       <div className="flex items-stretch gap-2" style={{ height: 46 }}>
