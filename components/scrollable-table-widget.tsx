@@ -142,11 +142,11 @@ export function ScrollableTableWidget({
               className={cn("shrink-0 border-r transition-colors duration-200", isScrolled ? "border-border/40" : "border-transparent")}
               style={{ width: frozenW ?? minFrozenWidth }}
             >
-              <div className={cn(headerHeight, "flex items-center pl-5 pr-3 text-[14px] font-medium text-muted-foreground", alignCls(frozenCol?.align))}>
+              <div className={cn(headerHeight, "flex items-center pl-11 pr-3 text-[14px] font-medium text-muted-foreground", alignCls(frozenCol?.align))}>
                 {frozenCol?.header}
               </div>
               {rows.map((row, i) => (
-                <div key={i} onClick={() => onRowClick?.(i)} className={cn(rowHeight, "flex items-center pl-5 pr-3", onRowClick && "cursor-pointer active:bg-muted/50")}>
+                <div key={i} onClick={() => onRowClick?.(i)} className={cn(rowHeight, "flex items-center pl-11 pr-3", onRowClick && "cursor-pointer active:bg-muted/50")}>
                   {row[0]}
                 </div>
               ))}

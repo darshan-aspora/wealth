@@ -608,7 +608,7 @@ export function ExploreOptions() {
   const focusRows    = IN_FOCUS_DATA[focusCap][focusTab].filter(r => matchesFilter(r.assetType, filter));
 
   return (
-    <div className="space-y-11 pb-8">
+    <div className="space-y-16 pb-8">
 
       {/* ── Learn Options Banner ── */}
       <div className="mx-5 mt-5 rounded-2xl bg-[#1C1C1E] overflow-hidden">
