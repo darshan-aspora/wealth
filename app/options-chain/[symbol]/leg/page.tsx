@@ -563,7 +563,7 @@ function PayoffFull({
   );
 }
 
-const INDEX_SYMBOLS = new Set(["SPX", "NDX", "RUT", "DJIA", "VIX"]);
+const INDEX_SYMBOLS = new Set(["SPX", "NDX", "RUT", "DJIA", "VIX", "RUI", "MID", "R1000", "R2000", "DJI"]);
 const ETF_SYMBOLS = new Set([
   "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT", "HYG", "EEM",
   "VXX", "UVXY", "SQQQ", "TQQQ", "SPXL", "SPXS", "ACWI", "EFA", "VTI",
