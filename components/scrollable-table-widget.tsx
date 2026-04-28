@@ -38,6 +38,7 @@ export interface ScrollableTableWidgetProps {
   visibleDataCols?: number;
   minFrozenWidth?: number;
   scrollableMinWidth?: number;
+  frozenWidthOffset?: number;
   rowHeight?: string;
   headerHeight?: string;
   animationKey?: string;
@@ -64,6 +65,7 @@ export function ScrollableTableWidget({
   visibleDataCols = 2,
   minFrozenWidth = 120,
   scrollableMinWidth = 780,
+  frozenWidthOffset = 0,
   rowHeight = "h-[64px]",
   headerHeight = "h-[40px]",
   animationKey,
@@ -101,8 +103,8 @@ export function ScrollableTableWidget({
     }
 
     const containerW = container.getBoundingClientRect().width;
-    setFrozenW(Math.max(minFrozenWidth, containerW - visibleSum));
-  }, [visibleDataCols, minFrozenWidth]);
+    setFrozenW(Math.max(minFrozenWidth, containerW - visibleSum) + frozenWidthOffset);
+  }, [visibleDataCols, minFrozenWidth, frozenWidthOffset]);
 
   useEffect(() => { measure(); }, [measure, rows, animationKey]);
   useEffect(() => {

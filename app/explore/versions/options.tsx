@@ -759,6 +759,7 @@ export function ExploreOptions() {
               description="Most active options across indices, ETFs, and stocks."
               columns={OPT_COLS}
               visibleDataCols={3}
+              frozenWidthOffset={40}
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={filter}
@@ -782,6 +783,7 @@ export function ExploreOptions() {
               pillLayoutId="popular-tab"
               columns={OPT_COLS}
               visibleDataCols={3}
+              frozenWidthOffset={40}
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={popularCap + popularTab + filter}
@@ -801,6 +803,7 @@ export function ExploreOptions() {
               flipper={{ label: under10Cap, onPress: () => setUnder10Cap(nextCap(under10Cap)) }}
               columns={OPT_COLS}
               visibleDataCols={3}
+              frozenWidthOffset={40}
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={under10Cap + filter}
@@ -827,6 +830,7 @@ export function ExploreOptions() {
               pillLayoutId="sector-tab"
               columns={OPT_COLS}
               visibleDataCols={3}
+              frozenWidthOffset={40}
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={sectorCap + sector + filter}
@@ -853,6 +857,7 @@ export function ExploreOptions() {
               pillLayoutId="focus-tab"
               columns={OPT_COLS}
               visibleDataCols={3}
+              frozenWidthOffset={40}
               scrollableMinWidth={500}
               rowHeight="h-[60px]"
               animationKey={focusCap + focusTab + filter}
