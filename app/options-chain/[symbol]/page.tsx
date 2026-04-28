@@ -16,12 +16,12 @@ const ROW_H    = 52;
 const STRIKE_W = 72;
 const ATM_PILL_H = 22; // pill height for offset calc
 
-function barWidths(strikeIdx: number, totalRows: number): { red: number; green: number } {
+function rawBarValues(strikeIdx: number, totalRows: number): { red: number; green: number } {
   const rand = seeded(strikeIdx * 137 + 42);
-  const t = strikeIdx / Math.max(1, totalRows - 1); // 0 = top row (low strike), 1 = bottom row (high strike)
-  const r = Math.round(3 + t * 13 + (rand() - 0.5) * 4);
-  const g = Math.round(3 + (1 - t) * 13 + (rand() - 0.5) * 4);
-  return { red: Math.max(3, Math.min(16, r)), green: Math.max(3, Math.min(16, g)) };
+  const t = strikeIdx / Math.max(1, totalRows - 1);
+  const r = 3 + t * 13 + (rand() - 0.5) * 4;
+  const g = 3 + (1 - t) * 13 + (rand() - 0.5) * 4;
+  return { red: Math.max(1, r), green: Math.max(1, g) };
 }
 
 function formatOI(v: number) {
@@ -420,10 +420,15 @@ export default function OptionsChainPage() {
             className="absolute top-0 bottom-0 bg-background"
             style={{ left: "50%", transform: "translateX(-50%)", width: STRIKE_W, zIndex: 10 }}
           >
-            {chain.map((row, rowIdx) => {
+            {(() => {
+              const rawBars = chain.map((_, i) => rawBarValues(i, chain.length));
+              const maxRed   = Math.max(...rawBars.map(b => b.red));
+              const maxGreen = Math.max(...rawBars.map(b => b.green));
+              return chain.map((row, rowIdx) => {
               const isATM         = row.strike === atmStrike;
               const isRowSelected = selected?.strike === row.strike;
-              const { red: redW, green: greenW } = barWidths(rowIdx, chain.length);
+              const redPct   = (rawBars[rowIdx].red   / maxRed)   * 100;
+              const greenPct = (rawBars[rowIdx].green / maxGreen) * 100;
               return (
                 <div
                   key={row.strike}
@@ -449,18 +454,25 @@ export default function OptionsChainPage() {
                   </span>
                   {/* OI bars — pinned to bottom, grow outward from center */}
                   <div className="absolute bottom-0 left-0 right-0 flex h-[7px]">
-                    {/* Red (put OI) — right-aligned so it grows leftward from center */}
+                    {/* Red — right-aligned, rounded on left corners */}
                     <div className="flex-1 flex justify-end">
-                      <div className="h-full bg-loss/60" style={{ width: redW }} />
+                      <div
+                        className="h-full bg-loss/60"
+                        style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }}
+                      />
                     </div>
-                    {/* Green (call OI) — left-aligned so it grows rightward from center */}
+                    {/* Green — left-aligned, rounded on right corners */}
                     <div className="flex-1 flex justify-start">
-                      <div className="h-full bg-gain/60" style={{ width: greenW }} />
+                      <div
+                        className="h-full bg-gain/60"
+                        style={{ width: `${greenPct}%`, borderRadius: "0 3px 3px 0" }}
+                      />
                     </div>
                   </div>
                 </div>
               );
-            })}
+            });
+            })()}
           </div>
 
         </div>
