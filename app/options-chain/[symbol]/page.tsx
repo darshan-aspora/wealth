@@ -234,6 +234,7 @@ export default function OptionsChainPage() {
   const [basket, setBasket]           = useState<BasketLeg[]>([]);
   const basketIdRef                   = useRef(0);
   const [payoffOpen, setPayoffOpen]   = useState(false);
+  const [chargesOpen, setChargesOpen] = useState(false);
 
   const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
     setSelected((prev) => {
@@ -665,11 +666,14 @@ export default function OptionsChainPage() {
               const available   = 12450;
               const totalMargin = basket.reduce((s, leg) =>
                 leg.mode === "sell" ? s + leg.ltp * leg.lots * 100 * 3.2 : s + leg.ltp * leg.lots * 100, 0);
-              const brokerage   = Math.round(totalMargin * 0.0003);
-              const sebi        = Math.round(totalMargin * 0.0001);
-              const stamp       = Math.round(totalMargin * 0.00015);
-              const gst         = Math.round(brokerage * 0.18);
-              const totalCharges = brokerage + sebi + stamp + gst;
+              const brokerage    = +(totalMargin * 0.05 / 100).toFixed(2);
+              const secFee       = +(totalMargin * 0.02 / 100).toFixed(2);
+              const finraFee     = +(totalMargin * 0.015 / 100).toFixed(2);
+              const exchangeFees = +(totalMargin * 0.02 / 100).toFixed(2);
+              const opraFee      = +(totalMargin * 0.01 / 100).toFixed(2);
+              const regFees      = +(secFee + finraFee + exchangeFees + opraFee).toFixed(2);
+              const totalCharges = +(brokerage + regFees).toFixed(2);
+              const fmt = (v: number) => `$${v.toFixed(2)}`;
               return (
                 <>
                   <div className="flex gap-2 mb-3">
@@ -685,25 +689,53 @@ export default function OptionsChainPage() {
                     </div>
                   </div>
 
-                  {/* Margin breakdown */}
-                  <div className="rounded-xl bg-muted/40 px-3 py-2.5 mb-3 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Charges</p>
-                    {[
-                      { label: "Brokerage",  val: brokerage },
-                      { label: "SEBI fees",  val: sebi },
-                      { label: "Stamp duty", val: stamp },
-                      { label: "GST (18%)",  val: gst },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="flex items-center justify-between">
-                        <span className="text-[12px] text-muted-foreground">{label}</span>
-                        <span className="text-[12px] text-foreground tabular-nums">${val.toLocaleString()}</span>
+                  {/* Charges — collapsed by default */}
+                  <div className="rounded-xl bg-muted/40 overflow-hidden mb-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-3 pt-2.5 pb-1.5">Charges &amp; Fees</p>
+
+                    {/* Total charges row — toggles expansion */}
+                    <button
+                      onClick={() => setChargesOpen(v => !v)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 bg-background active:bg-muted/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-foreground">Total Charges</span>
+                        <ChevronDown size={13} className={cn("text-muted-foreground transition-transform", chargesOpen && "rotate-180")} />
                       </div>
-                    ))}
-                    <div className="h-px bg-border/40 my-1" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-semibold text-foreground">Total charges</span>
-                      <span className="text-[12px] font-semibold text-foreground tabular-nums">${totalCharges.toLocaleString()}</span>
-                    </div>
+                      <span className="text-[13px] font-bold text-foreground tabular-nums">{fmt(totalCharges)}</span>
+                    </button>
+
+                    {chargesOpen && (
+                      <div className="px-3 pb-2.5 space-y-0">
+                        {/* Aspora Brokerage */}
+                        <div className="flex items-center justify-between py-2 border-t border-border/30">
+                          <span className="text-[13px] text-muted-foreground">Aspora Brokerage</span>
+                          <span className="text-[13px] text-foreground tabular-nums">{fmt(brokerage)}</span>
+                        </div>
+
+                        {/* Regulatory Fees — always expanded sub-section */}
+                        <div className="border-t border-border/30">
+                          <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[13px] text-muted-foreground">Regulatory Fees</span>
+                              <ChevronDown size={11} className="text-muted-foreground" />
+                            </div>
+                            <span className="text-[13px] text-foreground tabular-nums">{fmt(regFees)}</span>
+                          </div>
+                          {[
+                            { label: "SEC Fee",       val: secFee },
+                            { label: "FINRA Fee",     val: finraFee },
+                            { label: "Exchange Fees", val: exchangeFees },
+                            { label: "OPRA Fee",      val: opraFee },
+                          ].map(({ label, val }) => (
+                            <div key={label} className="flex items-center justify-between py-1.5 pl-3">
+                              <span className="text-[12px] text-muted-foreground/70">{label}</span>
+                              <span className="text-[12px] text-muted-foreground tabular-nums">{fmt(val)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               );
