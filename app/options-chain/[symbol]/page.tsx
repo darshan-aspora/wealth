@@ -425,7 +425,15 @@ export default function OptionsChainPage() {
                   }}
                 >
                   {isATM ? (
-                    <span className="text-[13px] font-semibold tabular-nums text-foreground bg-muted px-2 py-0.5 rounded-md">
+                    <span
+                      className="text-[13px] font-semibold tabular-nums text-foreground"
+                      style={{
+                        border: "1.5px solid rgba(0,0,0,0.2)",
+                        background: "rgba(0,0,0,0.04)",
+                        borderRadius: 4,
+                        padding: "2px 6px",
+                      }}
+                    >
                       {row.strike.toFixed(1)}
                     </span>
                   ) : (
