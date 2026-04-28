@@ -302,16 +302,37 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
 
       {/* ── Summary card ── */}
       <div className="mx-5 mb-5 rounded-2xl border border-border/50 bg-white px-5 py-5">
-        <p className="text-[12px] text-muted-foreground mb-1">Collections Value</p>
-        <p className="text-[32px] font-bold text-foreground tabular-nums leading-none">${fmt(totalCurrent)}</p>
-        <div className={cn("flex items-center gap-1 mt-2", totalGain >= 0 ? "text-emerald-500" : "text-red-500")}>
-          {totalGain >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-          <span className="text-[13px] tabular-nums">{gainStr(totalGain, totalGainPct)}</span>
+
+        {/* Row 1: current value | profit */}
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[12px] text-muted-foreground mb-1">Current value</p>
+            <p className="text-[28px] font-bold text-foreground tabular-nums leading-none">${fmt(totalCurrent)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[12px] text-muted-foreground mb-1">Total profit</p>
+            <p className={cn("text-[28px] font-bold tabular-nums leading-none", totalGain >= 0 ? "text-emerald-500" : "text-red-500")}>
+              {totalGain >= 0 ? "+" : "−"}${fmt(Math.abs(totalGain))}
+            </p>
+            <p className={cn("text-[13px] tabular-nums mt-0.5", totalGain >= 0 ? "text-emerald-500" : "text-red-500")}>
+              {totalGain >= 0 ? "+" : ""}{totalGainPct.toFixed(1)}%
+            </p>
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-3">
-          <p className="text-[12px] text-muted-foreground">${fmt(totalInvested)} invested</p>
-          <span className="text-muted-foreground/40 text-[12px]">·</span>
-          <p className="text-[12px] text-muted-foreground">{COLLECTIONS.length} collections</p>
+
+        {/* Divider */}
+        <div className="h-px bg-border/40 my-4" />
+
+        {/* Row 2: invested | collections count */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[12px] text-muted-foreground mb-0.5">Total invested</p>
+            <p className="text-[15px] font-semibold text-foreground tabular-nums">${fmt(totalInvested)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[12px] text-muted-foreground mb-0.5">Collections</p>
+            <p className="text-[15px] font-semibold text-foreground">{COLLECTIONS.length}</p>
+          </div>
         </div>
       </div>
 
