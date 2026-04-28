@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronRight, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -223,9 +223,6 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
                 Set up SIP
               </button>
             )}
-            <button className="flex-1 flex items-center justify-center gap-1 py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
-              Details <ChevronRight size={13} />
-            </button>
           </div>
         </div>
       )}
