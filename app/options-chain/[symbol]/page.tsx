@@ -300,28 +300,6 @@ export default function OptionsChainPage() {
       <div ref={vScrollRef} className="flex-1 overflow-y-auto no-scrollbar relative">
         <div style={{ height: totalH, position: "relative" }}>
 
-          {/* ATM dark line behind the pill */}
-          {atmDividerIdx >= 0 && (
-            <div
-              className="absolute left-0 right-0 pointer-events-none"
-              style={{ top: atmDividerY - 1, height: 2, background: "hsl(var(--foreground) / 0.18)", zIndex: 18 }}
-            />
-          )}
-
-          {/* ATM floating pill — absolutely overlays the border between last ITM and first OTM row */}
-          {atmDividerIdx >= 0 && (
-            <div
-              className="absolute left-0 right-0 flex items-center justify-center pointer-events-none"
-              style={{ top: atmDividerY - ATM_PILL_H / 2, height: ATM_PILL_H, zIndex: 20 }}
-            >
-              <div className="flex items-center gap-1.5 bg-foreground rounded-full px-3.5 py-[5px] shadow-lg">
-                <span className="text-[12px] font-bold text-background tabular-nums">{currentPrice.toFixed(2)}</span>
-                <span className={cn("text-[11px] font-semibold tabular-nums", stock.pct >= 0 ? "text-gain" : "text-loss")}>
-                  {stock.pct >= 0 ? "+" : ""}{stock.pct.toFixed(2)}%
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Left scroll panel (calls) */}
           <div
@@ -446,14 +424,17 @@ export default function OptionsChainPage() {
                     } : {}),
                   }}
                 >
-                  <span className={cn(
-                    "text-[13px] font-semibold tabular-nums",
-                    isATM ? "text-foreground" : "text-muted-foreground",
-                  )}>
-                    {row.strike.toFixed(1)}
-                  </span>
+                  {isATM ? (
+                    <span className="text-[13px] font-semibold tabular-nums text-foreground bg-muted px-2 py-0.5 rounded-md">
+                      {row.strike.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="text-[13px] font-semibold tabular-nums text-muted-foreground">
+                      {row.strike.toFixed(1)}
+                    </span>
+                  )}
                   {/* OI bars — pinned to bottom, grow outward from center */}
-                  <div className="absolute bottom-0 left-0 right-0 flex h-[7px]">
+                  <div className="absolute bottom-0 left-0 right-0 flex h-[3px]">
                     {/* Red — right-aligned, rounded on left corners */}
                     <div className="flex-1 flex justify-end">
                       <div
