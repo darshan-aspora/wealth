@@ -108,6 +108,36 @@ function legPnl(leg: BasketLegData, price: number): number {
   }
 }
 
+function MiniPayoffGraph({ legs, stockPrice }: { legs: BasketLegData[]; stockPrice: number }) {
+  const halfRange = stockPrice * 0.2;
+  const minP = stockPrice - halfRange;
+  const maxP = stockPrice + halfRange;
+  const N = 40;
+  const points = Array.from({ length: N }, (_, i) => {
+    const price = minP + (i / (N - 1)) * (maxP - minP);
+    return legs.reduce((s, l) => s + legPnl(l, price), 0);
+  });
+  const maxPnl = Math.max(...points);
+  const minPnl = Math.min(...points);
+  const range = Math.max(Math.abs(maxPnl), Math.abs(minPnl)) * 1.1 || 1;
+  const W = 44; const H = 28;
+  const toX = (i: number) => (i / (N - 1)) * W;
+  const toY = (v: number) => H / 2 - (v / range) * (H / 2);
+  const polyPts = points.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(" ");
+  const zeroY = toY(0);
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+      <defs>
+        <clipPath id="mini-profit"><rect x="0" y="0" width={W} height={zeroY} /></clipPath>
+        <clipPath id="mini-loss"><rect x="0" y={zeroY} width={W} height={H - zeroY} /></clipPath>
+      </defs>
+      <line x1="0" y1={zeroY} x2={W} y2={zeroY} stroke="#d1d5db" strokeWidth="0.8" strokeDasharray="2 2" />
+      <polyline points={polyPts} fill="none" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#mini-profit)" />
+      <polyline points={polyPts} fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#mini-loss)" />
+    </svg>
+  );
+}
+
 function BasketPayoffChart({ legs, stockPrice, compact, onExpand }: {
   legs: BasketLegData[];
   stockPrice: number;
@@ -235,6 +265,7 @@ export default function OptionsChainPage() {
   const basketIdRef                   = useRef(0);
   const [payoffOpen, setPayoffOpen]   = useState(false);
   const [chargesOpen, setChargesOpen] = useState(false);
+  const [regFeesOpen, setRegFeesOpen] = useState(false);
 
   const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
     setSelected((prev) => {
@@ -653,15 +684,7 @@ export default function OptionsChainPage() {
               ))}
             </div>
 
-            {/* Payoff preview */}
-            <BasketPayoffChart
-              legs={basket}
-              stockPrice={currentPrice}
-              compact
-              onExpand={() => setPayoffOpen(true)}
-            />
-
-            {/* Available / Margin Required */}
+            {/* Payoff + Available + Margin — single row */}
             {(() => {
               const available   = 12450;
               const totalMargin = basket.reduce((s, leg) =>
@@ -676,14 +699,23 @@ export default function OptionsChainPage() {
               const fmt = (v: number) => `$${v.toFixed(2)}`;
               return (
                 <>
+                  {/* Single row: Payoff square | Available | Margin Required */}
                   <div className="flex gap-2 mb-3">
+                    {/* Payoff mini square */}
+                    <button
+                      onClick={() => setPayoffOpen(true)}
+                      className="w-[72px] shrink-0 rounded-xl bg-muted/50 border border-border/40 flex flex-col items-center justify-center gap-1 py-2 active:opacity-70"
+                    >
+                      <MiniPayoffGraph legs={basket} stockPrice={currentPrice} />
+                      <p className="text-[9px] text-muted-foreground leading-none">Payoff</p>
+                    </button>
                     <div className="flex-1 rounded-xl bg-muted/50 px-3 py-2.5">
                       <p className="text-[10px] text-muted-foreground mb-0.5">Available</p>
                       <p className="text-[14px] font-bold text-foreground tabular-nums">${available.toLocaleString()}</p>
                     </div>
                     <div className={cn("flex-1 rounded-xl px-3 py-2.5", totalMargin > available ? "bg-loss/10" : "bg-muted/50")}>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">Margin Required</p>
-                      <p className={cn("text-[14px] font-bold tabular-nums", totalMargin > available ? "text-loss" : "text-foreground")}>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">Req. Margin</p>
+                      <p className={cn("text-[13px] font-bold tabular-nums", totalMargin > available ? "text-loss" : "text-foreground")}>
                         ${Math.round(totalMargin).toLocaleString()}
                       </p>
                     </div>
@@ -713,16 +745,19 @@ export default function OptionsChainPage() {
                           <span className="text-[13px] text-foreground tabular-nums">{fmt(brokerage)}</span>
                         </div>
 
-                        {/* Regulatory Fees — always expanded sub-section */}
+                        {/* Regulatory Fees — collapsed by default */}
                         <div className="border-t border-border/30">
-                          <div className="flex items-center justify-between py-2">
+                          <button
+                            onClick={() => setRegFeesOpen(v => !v)}
+                            className="w-full flex items-center justify-between py-2 active:opacity-70"
+                          >
                             <div className="flex items-center gap-1">
                               <span className="text-[13px] text-muted-foreground">Regulatory Fees</span>
-                              <ChevronDown size={11} className="text-muted-foreground" />
+                              <ChevronDown size={11} className={cn("text-muted-foreground transition-transform", regFeesOpen && "rotate-180")} />
                             </div>
                             <span className="text-[13px] text-foreground tabular-nums">{fmt(regFees)}</span>
-                          </div>
-                          {[
+                          </button>
+                          {regFeesOpen && [
                             { label: "SEC Fee",       val: secFee },
                             { label: "FINRA Fee",     val: finraFee },
                             { label: "Exchange Fees", val: exchangeFees },
