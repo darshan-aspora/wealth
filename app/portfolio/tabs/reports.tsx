@@ -6,7 +6,7 @@ import {
   FileText, TrendingUp, ShieldAlert, Receipt, Brain,
   Mail, Download, CalendarDays,
 } from "lucide-react";
-import { EmptyState } from "../components/empty-state";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -434,17 +434,68 @@ function CategoryAccordion({ cat, onSelectSub }: { cat: Category; onSelectSub: (
 
 export function ReportsTab({ empty }: { empty?: boolean }) {
   const [selectedSub, setSelectedSub] = useState<SubSection | null>(null);
+  const router = useRouter();
 
   if (empty) {
+    const SIZE = 80;   // icon circle diameter
+    const R    = 108;  // orbit radius
+    const CX   = 160;  // container center x
+    const CY   = 160;  // container center y
+    const W    = CX * 2;
+    const H    = CY * 2;
+
     return (
-      <EmptyState
-        icon={FileText}
-        title="No reports available"
-        subtitle="Reports like tax statements, P&L summaries, and contract notes will appear here once you start trading."
-        actions={[
-          { label: "Start Investing", href: "/home-v3", primary: true },
-        ]}
-      />
+      <div className="pb-24 pt-8 flex flex-col items-center px-5">
+        {/* Circular arrangement */}
+        <div className="select-none mb-7" style={{ width: W, height: H, position: "relative" }}>
+          {CATEGORIES.map((cat, i) => {
+            const angleDeg = -90 + i * (360 / CATEGORIES.length);
+            const angleRad = (angleDeg * Math.PI) / 180;
+            const left = CX + R * Math.cos(angleRad) - SIZE / 2;
+            const top  = CY + R * Math.sin(angleRad) - SIZE / 2;
+            return (
+              <div
+                key={cat.id}
+                className="flex items-center justify-center bg-white absolute"
+                style={{
+                  width: SIZE,
+                  height: SIZE,
+                  left,
+                  top,
+                  borderRadius: "50%",
+                  border: "1px solid rgba(0,0,0,0.07)",
+                  boxShadow: "0 6px 28px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                <span style={{ transform: "scale(1.4)", display: "flex", color: "rgba(0,0,0,0.65)" }}>
+                  {cat.icon}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Category name pills */}
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          {CATEGORIES.map((cat) => (
+            <span key={cat.id} className="px-3 py-1 rounded-full bg-muted text-[12px] font-semibold text-muted-foreground">
+              {cat.label}
+            </span>
+          ))}
+        </div>
+
+        {/* Message + CTA */}
+        <p className="text-[16px] font-bold text-foreground mb-1 text-center">No reports available yet</p>
+        <p className="text-[13px] text-muted-foreground text-center mb-6 leading-relaxed">
+          Tax, performance and account reports are generated once you start investing.
+        </p>
+        <button
+          onClick={() => router.push("/home-v3")}
+          className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity"
+        >
+          Start Investing
+        </button>
+      </div>
     );
   }
 

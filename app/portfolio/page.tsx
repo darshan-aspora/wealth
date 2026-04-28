@@ -17,12 +17,13 @@ import { BuyingPowerTab } from "./tabs/buying-power";
 import { SipsTab } from "./tabs/sips";
 import { PnlTab } from "./tabs/pnl";
 import { ReportsTab } from "./tabs/reports";
+import { CollectionsTab } from "./tabs/collections";
 
 /* ------------------------------------------------------------------ */
 /*  Tab definitions                                                    */
 /* ------------------------------------------------------------------ */
 
-const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "P&L", "Reports"] as const;
+const tabs = ["Overview", "Holdings", "Collections", "Positions", "Orders", "Buying Power", "SIPs", "P&L", "Reports"] as const;
 type Tab = (typeof tabs)[number];
 
 /* ------------------------------------------------------------------ */
@@ -120,13 +121,14 @@ function PortfolioContent() {
               {activeTab === "SIPs" && <SipsTab empty={empty} />}
               {activeTab === "P&L" && <PnlTab empty={empty} />}
               {activeTab === "Reports" && <ReportsTab empty={empty} />}
+              {activeTab === "Collections" && <CollectionsTab empty={empty} />}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Floating Analyse Portfolio button — Overview tab only */}
-      {activeTab === "Overview" && (
+      {/* Floating Analyse Portfolio button — Overview tab only, when data exists */}
+      {activeTab === "Overview" && !empty && (
         <div className="absolute bottom-[calc(56px+env(safe-area-inset-bottom,0px)+30px)] left-0 right-0 flex justify-center pb-3 pointer-events-none z-30">
           <button className="pointer-events-auto flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background shadow-lg active:opacity-80 transition-opacity">
             Analyse Portfolio

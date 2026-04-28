@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, X, CalendarDays } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { OrderCard, addOrders, type CompletedOrder } from "@/app/portfolio/components/shared-order";
@@ -480,6 +481,7 @@ addOrders(allPnlOrders);
 /* ------------------------------------------------------------------ */
 
 export function PnlTab({ empty }: { empty?: boolean }) {
+  const router = useRouter();
   const today = new Date();
   const todayVal: DateVal = { year: today.getFullYear(), month: today.getMonth(), day: today.getDate() };
   const monthAgo = new Date(today); monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -491,73 +493,45 @@ export function PnlTab({ empty }: { empty?: boolean }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   if (empty) {
+    const ghostRows = [
+      { w1: "w-24", w2: "w-14", wr1: "w-16", wr2: "w-10" },
+      { w1: "w-20", w2: "w-10", wr1: "w-14", wr2: "w-12" },
+      { w1: "w-28", w2: "w-16", wr1: "w-14", wr2: "w-8"  },
+      { w1: "w-20", w2: "w-12", wr1: "w-16", wr2: "w-10" },
+    ];
     return (
       <div className="pb-24">
-        {/* Range tabs ghost */}
-        <div className="px-5 pt-5 pb-4">
-          <div className="flex gap-2">
-            {["1M", "3M", "Current FY", "Custom"].map((p, i) => (
-              <div key={p} className={cn(
-                "flex-1 py-2.5 rounded-xl text-[14px] font-semibold text-center",
-                i === 0 ? "bg-foreground/10 text-foreground/30" : "border border-border/30 text-muted-foreground/30"
-              )}>
-                {p}
-              </div>
-            ))}
-          </div>
+        {/* Total P&L hero */}
+        <div className="px-5 pt-6 pb-5 border-b border-border/40">
+          <p className="text-[13px] text-muted-foreground mb-2">Total P&amp;L</p>
+          <p className="text-[40px] font-bold text-foreground/20 tabular-nums leading-none mb-1">$0.00</p>
+          <p className="text-[13px] text-muted-foreground/60">Place a trade and your P&amp;L will appear here</p>
         </div>
 
-        {/* Ghost chart area */}
-        <div className="mx-5 mb-4 rounded-3xl border border-border/40 bg-background overflow-hidden">
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-[13px] text-muted-foreground mb-0.5">Total P&L</p>
-            <p className="text-[32px] font-bold text-foreground/15 tabular-nums leading-none">$0.00</p>
-          </div>
-          {/* Ghost chart */}
-          <div className="px-5 pb-5">
-            <div className="relative h-[100px]">
-              <svg viewBox="0 0 300 80" className="w-full h-full" preserveAspectRatio="none">
-                {/* Axis */}
-                <line x1="0" y1="79" x2="300" y2="79" stroke="currentColor" strokeWidth="0.5" className="text-border/40" />
-                <line x1="0" y1="0" x2="0" y2="79" stroke="currentColor" strokeWidth="0.5" className="text-border/40" />
-                {/* Flat zero line (dashed) */}
-                <line x1="0" y1="40" x2="300" y2="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" className="text-foreground/15" />
-                {/* Ghost bars */}
-                {[0, 50, 100, 150, 200, 250].map((x) => (
-                  <rect key={x} x={x + 5} y={35} width={40} height={5} rx="2" className="fill-muted" />
-                ))}
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-[12px] font-medium text-muted-foreground/60">Trade to see your P&L chart</p>
+        {/* Ghost order rows */}
+        <div className="divide-y divide-border/40 border-b border-border/40 mb-6">
+          {ghostRows.map((row, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-muted/50 shrink-0" />
+                <div className="space-y-2">
+                  <div className={cn("h-3 rounded-full bg-muted/60", row.w1)} />
+                  <div className={cn("h-2 rounded-full bg-muted/40", row.w2)} />
+                </div>
+              </div>
+              <div className="text-right space-y-2">
+                <div className={cn("h-3 rounded-full bg-muted/60 ml-auto", row.wr1)} />
+                <div className={cn("h-2 rounded-full bg-muted/40 ml-auto", row.wr2)} />
               </div>
             </div>
-          </div>
-          {/* Ghost metrics row */}
-          <div className="grid grid-cols-3 divide-x divide-border/30 border-t border-border/30">
-            {[{ l: "Realized", v: "$0.00" }, { l: "Unrealized", v: "$0.00" }, { l: "Today", v: "$0.00" }].map((m) => (
-              <div key={m.l} className="px-3 py-3 text-center">
-                <p className="text-[14px] font-bold text-foreground/15 tabular-nums">{m.v}</p>
-                <p className="text-[11px] text-muted-foreground/50 mt-0.5">{m.l}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Ghost calendar row */}
-        <div className="mx-5 mb-5 rounded-2xl border border-border/40 bg-background px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[13px] font-semibold text-muted-foreground/50">P&L Calendar</p>
-            <CalendarDays size={14} className="text-muted-foreground/30" />
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 21 }).map((_, i) => (
-              <div key={i} className="aspect-square rounded-md bg-muted/40" />
-            ))}
-          </div>
+          ))}
         </div>
 
         <div className="px-5">
-          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+          <button
+            onClick={() => router.push("/home-v3")}
+            className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity"
+          >
             Start Trading
           </button>
         </div>

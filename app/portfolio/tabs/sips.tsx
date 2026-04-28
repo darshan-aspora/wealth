@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { TrendingUp, BarChart2, Globe, ChevronRight, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
 
 /* ------------------------------------------------------------------ */
@@ -83,12 +85,50 @@ function PausedSipCard({ sip }: { sip: Sip }) {
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
+type InstrumentCategory = "Stocks" | "ETF" | "Collections";
+
+const PICKER_INSTRUMENTS: Record<InstrumentCategory, { ticker: string; name: string; price: string; change: string; up: boolean }[]> = {
+  Stocks: [
+    { ticker: "AAPL",  name: "Apple Inc.",               price: "$198.50", change: "+2.9%",  up: true  },
+    { ticker: "TSLA",  name: "Tesla, Inc.",               price: "$248.30", change: "-1.4%",  up: false },
+    { ticker: "NVDA",  name: "NVIDIA Corporation",        price: "$924.80", change: "+3.2%",  up: true  },
+    { ticker: "MSFT",  name: "Microsoft Corporation",     price: "$425.30", change: "+2.2%",  up: true  },
+    { ticker: "GOOGL", name: "Alphabet Inc.",              price: "$176.80", change: "+1.7%",  up: true  },
+    { ticker: "META",  name: "Meta Platforms, Inc.",       price: "$502.40", change: "+1.5%",  up: true  },
+    { ticker: "AMZN",  name: "Amazon.com, Inc.",           price: "$178.40", change: "+0.9%",  up: true  },
+    { ticker: "NFLX",  name: "Netflix, Inc.",              price: "$580.00", change: "-0.6%",  up: false },
+  ],
+  ETF: [
+    { ticker: "SPY",  name: "SPDR S&P 500 ETF Trust",    price: "$510.20", change: "+1.1%",  up: true  },
+    { ticker: "QQQ",  name: "Invesco QQQ Trust",          price: "$390.60", change: "+1.8%",  up: true  },
+    { ticker: "VTI",  name: "Vanguard Total Stock Mkt",   price: "$240.10", change: "+0.9%",  up: true  },
+    { ticker: "VOO",  name: "Vanguard S&P 500 ETF",       price: "$244.80", change: "+1.0%",  up: true  },
+    { ticker: "GLD",  name: "SPDR Gold Shares",           price: "$318.50", change: "+0.4%",  up: true  },
+    { ticker: "ACWI", name: "iShares MSCI ACWI ETF",      price: "$102.30", change: "+0.7%",  up: true  },
+    { ticker: "IWM",  name: "iShares Russell 2000 ETF",   price: "$198.40", change: "-0.3%",  up: false },
+    { ticker: "TLT",  name: "iShares 20+ Year Treasury",  price: "$92.60",  change: "+0.2%",  up: true  },
+  ],
+  Collections: [
+    { ticker: "TECH",  name: "Tech Giants",               price: "12 stocks", change: "3 ETFs",  up: true },
+    { ticker: "STBL",  name: "Stable Compounders",         price: "8 stocks",  change: "2 ETFs",  up: true },
+    { ticker: "GRWTH", name: "Global Growth",              price: "15 stocks", change: "4 ETFs",  up: true },
+    { ticker: "DIVD",  name: "Dividend Kings",             price: "10 stocks", change: "1 ETF",   up: true },
+    { ticker: "CNSM",  name: "Consumer Brands",            price: "9 stocks",  change: "2 ETFs",  up: true },
+    { ticker: "HLTH",  name: "Healthcare Leaders",         price: "11 stocks", change: "3 ETFs",  up: true },
+    { ticker: "CLMT",  name: "Climate & Clean Energy",     price: "13 stocks", change: "5 ETFs",  up: true },
+    { ticker: "FINC",  name: "Financial Services",         price: "10 stocks", change: "2 ETFs",  up: true },
+  ],
+};
+
 export function SipsTab({ empty }: { empty?: boolean }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<SipFilter>("All");
   const amounts = ["$25", "$50", "$100", "$250"];
   const freqs = ["Daily", "Weekly", "Monthly"];
   const [selectedAmt, setSelectedAmt] = useState(amounts[1]);
   const [selectedFreq, setSelectedFreq] = useState(freqs[1]);
+  const [instrumentSheetOpen, setInstrumentSheetOpen] = useState(false);
+  const [pickerCategory, setPickerCategory] = useState<InstrumentCategory>("Stocks");
 
   if (empty) {
     const amtVal = parseInt(selectedAmt.replace("$", ""));
@@ -104,6 +144,7 @@ export function SipsTab({ empty }: { empty?: boolean }) {
     ];
     const maxVal = bars[bars.length - 1].val || 1;
     return (
+      <>
       <div className="pb-24">
         {/* Header */}
         <div className="px-5 pt-5 pb-2">
@@ -177,11 +218,95 @@ export function SipsTab({ empty }: { empty?: boolean }) {
         </div>
 
         <div className="px-5">
-          <button className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity">
+          <button
+            onClick={() => setInstrumentSheetOpen(true)}
+            className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity"
+          >
             Create a SIP
           </button>
         </div>
       </div>
+
+      {/* Instrument picker bottom sheet */}
+      <AnimatePresence>
+        {instrumentSheetOpen && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/40"
+              onClick={() => setInstrumentSheetOpen(false)}
+            />
+            <motion.div
+              key="sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed bottom-0 left-0 right-0 mx-auto max-w-[430px] z-50 rounded-t-3xl bg-background pt-5"
+              style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 mb-1">
+                <p className="text-[18px] font-bold text-foreground">Pick your favourite instrument</p>
+                <button onClick={() => setInstrumentSheetOpen(false)} className="rounded-full p-1.5 -mr-1 active:bg-muted/60 transition-colors">
+                  <X size={18} className="text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-[13px] text-muted-foreground px-5 mb-4">
+                {selectedFreq} · {selectedAmt} per {selectedFreq === "Daily" ? "day" : selectedFreq === "Weekly" ? "week" : "month"}
+              </p>
+
+              {/* Category tabs */}
+              <div className="px-5 mb-3">
+                <div className="flex rounded-2xl bg-[#EEEEF3] p-1 gap-1">
+                  {(["Stocks", "ETF", "Collections"] as InstrumentCategory[]).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setPickerCategory(cat)}
+                      className={cn(
+                        "flex-1 rounded-xl py-2 text-[13px] font-semibold transition-colors",
+                        pickerCategory === cat ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instrument list */}
+              <div className="overflow-y-auto flex-1 pb-10">
+                <div className="divide-y divide-border/40 border-t border-border/40">
+                  {PICKER_INSTRUMENTS[pickerCategory].map((inst) => (
+                    <button
+                      key={inst.ticker}
+                      onClick={() => setInstrumentSheetOpen(false)}
+                      className="w-full flex items-center gap-3 px-5 py-4 active:bg-muted/30 transition-colors text-left"
+                    >
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <span className="text-[11px] font-bold text-foreground">{inst.ticker.slice(0, 2)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-bold text-foreground leading-tight truncate">{inst.name}</p>
+                        <p className="text-[12px] text-muted-foreground">{inst.ticker}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[14px] font-semibold text-foreground">{inst.price}</p>
+                        <p className={cn("text-[14px] font-semibold", pickerCategory === "Collections" ? "text-foreground" : inst.up ? "text-gain" : "text-loss")}>{inst.change}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      </>
     );
   }
 

@@ -231,18 +231,21 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
         sub: "NYSE & NASDAQ",
         tickers: ["AAPL", "TSLA", "NVDA", "MSFT"],
         icon: TrendingUp,
+        href: "/home-v3",
       },
       {
         label: "ETFs",
         sub: "S&P 500, Sector funds",
         tickers: ["SPY", "QQQ", "VTI", "IVV"],
         icon: BarChart2,
+        href: "/home-v3?tab=etf",
       },
       {
         label: "Global ETFs",
         sub: "Europe, Asia & Emerging",
         tickers: ["ACWI", "VEA", "EEM", "VXUS"],
         icon: Globe,
+        href: "/home-v3?tab=global-etf",
       },
     ];
     return (
@@ -255,7 +258,7 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
             return (
               <button
                 key={cat.label}
-                onClick={() => router.push("/home-v3")}
+                onClick={() => router.push(cat.href)}
                 className="w-full rounded-3xl border border-border/40 bg-background px-5 py-5 text-left active:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center justify-between mb-3">

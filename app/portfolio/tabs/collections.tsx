@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { ChevronRight, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -250,7 +252,64 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
 
-export function CollectionsTab() {
+const PREVIEW_CARDS = [
+  { name: "Tech Giants",    tickers: ["AAPL", "NVDA", "MSFT", "GOOGL"], rotate: -10, zIndex: 0 },
+  { name: "Dividend Kings", tickers: ["JNJ",  "KO",   "PG",   "JPM"],   rotate:   0, zIndex: 2 },
+  { name: "High Growth",    tickers: ["TSLA", "PLTR", "CRWD", "SNOW"],  rotate:  10, zIndex: 0 },
+];
+
+export function CollectionsTab({ empty }: { empty?: boolean }) {
+  const router = useRouter();
+
+  if (empty) {
+    return (
+      <div className="pb-24 px-5 pt-8">
+        {/* Fanned card deck — horizontal spread */}
+        <div className="relative flex justify-center mb-10" style={{ height: 180 }}>
+          <div className="relative" style={{ width: 310 }}>
+          {PREVIEW_CARDS.map((card, i) => (
+            <motion.div
+              key={card.name}
+              className="absolute bg-white rounded-3xl px-5 py-5 border border-border/40"
+              initial={{ opacity: 0, y: 40, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: card.rotate }}
+              transition={{ delay: i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                width: 190,
+                left: i * 60,
+                top: 0,
+                transformOrigin: "bottom center",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+                zIndex: card.zIndex,
+              }}
+            >
+              <p className="text-[15px] font-bold text-foreground mb-3">{card.name}</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {card.tickers.map((t) => (
+                  <span key={t} className="rounded-lg bg-muted px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+          </div>
+        </div>
+
+        <p className="text-[22px] font-bold text-foreground mb-1">No collections yet</p>
+        <p className="text-[14px] text-muted-foreground mb-6">
+          Curated baskets of stocks and ETFs built around themes — invest in all of them with a single SIP.
+        </p>
+        <button
+          onClick={() => router.push("/home-v3")}
+          className="w-full rounded-2xl bg-foreground py-4 text-[15px] font-bold text-background active:opacity-75 transition-opacity"
+        >
+          Explore Collections
+        </button>
+      </div>
+    );
+  }
+
   const totalInvested = COLLECTIONS.reduce((s, c) => s + c.invested, 0);
   const totalCurrent  = COLLECTIONS.reduce((s, c) => s + c.current, 0);
   const totalGain     = totalCurrent - totalInvested;
