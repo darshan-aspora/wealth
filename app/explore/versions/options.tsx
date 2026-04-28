@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, TrendingUp, BarChart2, Layers, Globe, Link2 } from "lucide-react";
+import { LayoutGrid, TrendingUp, BarChart2, Layers, Globe, GitBranch } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollableTableWidget } from "@/components/scrollable-table-widget";
@@ -791,7 +791,7 @@ export function ExploreOptions() {
                       onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)}
                       className="shrink-0 w-9 h-9 rounded-full border border-border/60 flex items-center justify-center active:bg-muted/50 transition-colors"
                     >
-                      <Link2 size={15} strokeWidth={1.8} className="text-muted-foreground" />
+                      <GitBranch size={15} strokeWidth={1.8} className="text-muted-foreground" />
                     </button>
                   </div>
                 ))}
