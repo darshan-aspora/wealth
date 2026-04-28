@@ -65,13 +65,13 @@ function nextCap(cap: MarketCap): MarketCap {
 /*  Data — Popular                                                     */
 /* ------------------------------------------------------------------ */
 
-const POPULAR_TABS = ["Daily Expiry", "Weekly", "Monthly", "Quarterly"] as const;
+const POPULAR_TABS = ["Expiring Today", "Weekly", "Monthly", "Quarterly"] as const;
 type PopularTab = (typeof POPULAR_TABS)[number];
 type PopularRow = { assetType: AssetType; index: string; option: string; underlying: string; oi: string };
 
 const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
   "Mega Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "Index",      index: "NDX", option: "Apr 20 18000 CALL", underlying: "17,995",    oi: "1.2M" },
       { assetType: "ETF",        index: "SPY",        option: "Apr 20 5200 PUT",   underlying: "5,195.25",  oi: "899K" },
       { assetType: "ETF",        index: "QQQ",        option: "Apr 20 420 CALL",   underlying: "419.80",    oi: "750K" },
@@ -103,7 +103,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
   },
   "Large Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "Stock",      index: "JPM",   option: "Apr 20 200 CALL",  underlying: "198.40",  oi: "480K" },
       { assetType: "Stock",      index: "GS",    option: "Apr 20 450 PUT",   underlying: "447.20",  oi: "360K" },
       { assetType: "ETF",        index: "XLF",        option: "Apr 20 42 CALL",   underlying: "41.80",   oi: "290K" },
@@ -128,7 +128,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
   },
   "Mid Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "Stock",  index: "ZBRA",  option: "Apr 20 310 CALL",  underlying: "308.50",  oi: "125K" },
       { assetType: "ETF",    index: "MDY",         option: "Apr 20 580 CALL",  underlying: "578.20",  oi: "98K"  },
       { assetType: "Stock",  index: "SAIA",    option: "Apr 20 440 CALL",  underlying: "438.80",  oi: "82K"  },
@@ -150,7 +150,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
   },
   "Small Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "ETF",    index: "IWM",         option: "Apr 20 195 CALL",  underlying: "193.80",  oi: "310K" },
       { assetType: "ETF",    index: "SLY",         option: "Apr 20 82 PUT",    underlying: "81.40",   oi: "94K"  },
       { assetType: "Stock",  index: "SMTC",        option: "Apr 20 44 CALL",   underlying: "42.80",   oi: "38K"  },
@@ -172,7 +172,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
   },
   "Micro Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "ETF",    index: "IWC",         option: "Apr 20 36 CALL",   underlying: "35.60",   oi: "28K"  },
       { assetType: "Stock",  index: "TPHS",        option: "Apr 20 8 CALL",    underlying: "7.80",    oi: "8K"   },
       { assetType: "ETF",    index: "DWMC",        option: "Apr 20 18 PUT",    underlying: "17.80",   oi: "14K"  },
@@ -190,7 +190,7 @@ const POPULAR_DATA: Record<MarketCap, Record<PopularTab, PopularRow[]>> = {
     ],
   },
   "Nano Cap": {
-    "Daily Expiry": [
+    "Expiring Today": [
       { assetType: "Stock",  index: "HNNA",        option: "Apr 20 14 CALL",   underlying: "13.80",   oi: "4.2K" },
       { assetType: "Stock",  index: "MCVT",        option: "Apr 20 6 PUT",     underlying: "5.90",    oi: "2.8K" },
     ],
@@ -592,7 +592,7 @@ function mockGreeks(ticker: string) {
 export function ExploreOptions() {
   const router = useRouter();
   const [filter, setFilter]         = useState<FilterChip>("All");
-  const [popularTab, setPopularTab] = useState<PopularTab>("Daily Expiry");
+  const [popularTab, setPopularTab] = useState<PopularTab>("Expiring Today");
   const [sector, setSector]         = useState<SectorChip>("FinTech");
   const [focusTab, setFocusTab]     = useState<FocusTab>("Top Gainer");
 
@@ -803,7 +803,10 @@ export function ExploreOptions() {
               title="Popular"
               description="High open interest options getting the most trader attention."
               flipper={{ label: popularCap, onPress: () => setPopularCap(nextCap(popularCap)) }}
-              tabs={POPULAR_TABS.map((t) => ({ id: t, label: t }))}
+              tabs={POPULAR_TABS.map((t) => ({
+                  id: t,
+                  label: t === popularTab && t !== "Expiring Today" ? `${t} Expiry` : t,
+                }))}
               activeTab={popularTab}
               onTabChange={(id) => setPopularTab(id as PopularTab)}
               pillLayoutId="popular-tab"
