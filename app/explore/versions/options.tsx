@@ -88,11 +88,14 @@ function PctBadge({ value }: { value: number }) {
   );
 }
 
-function Cell({ top, bottom }: { top: string; bottom?: string }) {
+function Cell({ top, bottom, tag }: { top: string; bottom?: string; tag?: string }) {
   return (
     <div>
-      <p className="text-[14px] font-semibold text-foreground leading-tight whitespace-nowrap">{top}</p>
-      {bottom && <p className="text-[12px] text-muted-foreground leading-tight">{bottom}</p>}
+      <div className="flex items-center gap-1.5">
+        <p className="text-[14px] font-semibold text-foreground leading-tight">{top}</p>
+        {tag && <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{tag}</span>}
+      </div>
+      {bottom && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{bottom}</p>}
     </div>
   );
 }
@@ -671,6 +674,12 @@ function assetBadge(assetType: AssetType) {
   return assetType;
 }
 
+function assetTag(assetType: AssetType): string | undefined {
+  if (assetType === "ETF") return "ETF";
+  if (assetType === "Global ETF") return "Global";
+  return undefined;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Main Export                                                        */
 /* ------------------------------------------------------------------ */
@@ -820,7 +829,7 @@ export function ExploreOptions() {
           ]}
           onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(popularRows[i].index)}`)}
           rows={popularRows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.option} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.option} tag={assetTag(r.assetType)} />,
             <NumCell key="oi" value={r.oi} />,
             <NumCell key="v" value={fmtNum(String(Math.round(+r.oi.replace(/K$/,"000").replace(/M$/,"000000").replace(/[^0-9]/g,"") * 0.22)))} />,
           ])}
@@ -836,7 +845,7 @@ export function ExploreOptions() {
           ]}
           onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(under10Rows[i].index)}`)}
           rows={under10Rows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.strike} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.strike} tag={assetTag(r.assetType)} />,
             <div key="p" className="text-right">
               <p className="text-[14px] font-semibold text-foreground tabular-nums">{r.price}</p>
               <PctBadge value={r.change} />
@@ -856,7 +865,7 @@ export function ExploreOptions() {
           ]}
           onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(sectorialRows[i].index)}`)}
           rows={sectorialRows.map((r) => [
-            <Cell key="i" top={fullName(r.index)} bottom={r.option} />,
+            <Cell key="i" top={fullName(r.index)} bottom={r.option} tag={assetTag(r.assetType)} />,
             <NumCell key="oi" value={fmtNum(r.oi)} />,
             <NumCell key="v" value={fmtNum(r.vol)} />,
           ])}
@@ -874,7 +883,7 @@ export function ExploreOptions() {
           ]}
           onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(focusRows[i].ticker)}`)}
           rows={focusRows.map((r) => [
-            <Cell key="t" top={fullName(r.ticker)} bottom={r.contract} />,
+            <Cell key="t" top={fullName(r.ticker)} bottom={r.contract} tag={assetTag(r.assetType)} />,
             <NumCell key="oi" value={fmtNum(r.openInt)} />,
             <NumCell key="v" value={fmtNum(String(Math.round(+r.openInt.replace(/,/g, "") * 0.18)))} />,
           ])}
