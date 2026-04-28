@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { TrendingUp, BarChart2, Globe, ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
 
@@ -121,7 +121,6 @@ const PICKER_INSTRUMENTS: Record<InstrumentCategory, { ticker: string; name: str
 };
 
 export function SipsTab({ empty }: { empty?: boolean }) {
-  const router = useRouter();
   const [filter, setFilter] = useState<SipFilter>("All");
   const amounts = ["$25", "$50", "$100", "$250"];
   const freqs = ["Daily", "Weekly", "Monthly"];
