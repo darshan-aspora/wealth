@@ -563,6 +563,18 @@ function PayoffFull({
   );
 }
 
+const INDEX_SYMBOLS = new Set(["SPX", "NDX", "RUT", "DJIA", "VIX"]);
+const ETF_SYMBOLS = new Set([
+  "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT", "HYG", "EEM",
+  "VXX", "UVXY", "SQQQ", "TQQQ", "SPXL", "SPXS", "ACWI", "EFA", "VTI",
+]);
+
+function underlyingRoute(sym: string) {
+  if (INDEX_SYMBOLS.has(sym)) return `/indices/${encodeURIComponent(sym)}`;
+  if (ETF_SYMBOLS.has(sym))   return `/etf/${encodeURIComponent(sym)}`;
+  return `/stocks/${encodeURIComponent(sym)}`;
+}
+
 export default function OptionLegDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -692,8 +704,8 @@ export default function OptionLegDetailPage() {
                         <p className="text-[0.75em] text-muted-foreground">Underlying stock</p>
                         <p className="text-[0.9375em] font-semibold text-foreground mt-0.5">{fullName} <span className="text-muted-foreground font-normal">({symbol})</span></p>
                       </div>
-                      <button onClick={() => router.push(`/stocks/${symbol}`)} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
-                        View stock ›
+                      <button onClick={() => router.push(underlyingRoute(symbol))} className="text-[0.75em] font-semibold text-blue-600 active:opacity-60 shrink-0 ml-3">
+                        View underlying ›
                       </button>
                     </div>
                     <div className="flex items-center justify-between py-3">
