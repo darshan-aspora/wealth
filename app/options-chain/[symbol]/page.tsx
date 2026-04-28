@@ -90,6 +90,125 @@ function putCell(key: string, row: GreekRow) {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Basket payoff helpers                                              */
+/* ------------------------------------------------------------------ */
+
+type BasketLegData = { strike: number; side: "call" | "put"; mode: "buy" | "sell"; ltp: number; lots: number };
+
+function legPnl(leg: BasketLegData, price: number): number {
+  const mult = leg.lots * 100;
+  const premium = leg.ltp * mult;
+  if (leg.mode === "buy") {
+    if (leg.side === "call") return Math.max(-premium, (price - leg.strike - leg.ltp) * mult);
+    return Math.max(-premium, (leg.strike - leg.ltp - price) * mult);
+  } else {
+    if (leg.side === "call") return Math.min(premium, -(price - leg.strike - leg.ltp) * mult);
+    return Math.min(premium, -(leg.strike - leg.ltp - price) * mult);
+  }
+}
+
+function BasketPayoffChart({ legs, stockPrice, compact, onExpand }: {
+  legs: BasketLegData[];
+  stockPrice: number;
+  compact?: boolean;
+  onExpand?: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const halfRange = stockPrice * 0.2;
+  const minP = stockPrice - halfRange;
+  const maxP = stockPrice + halfRange;
+  const priceRange = maxP - minP;
+  const N = 80;
+
+  const points = Array.from({ length: N }, (_, i) => {
+    const price = minP + (i / (N - 1)) * priceRange;
+    return { price, pnl: legs.reduce((s, l) => s + legPnl(l, price), 0) };
+  });
+
+  const maxPnl = Math.max(...points.map(p => p.pnl));
+  const minPnl = Math.min(...points.map(p => p.pnl));
+  const pnlRange = Math.max(Math.abs(maxPnl), Math.abs(minPnl)) * 1.1 || 1;
+
+  const SVG_W = 300;
+  const SVG_H = compact ? 56 : 180;
+  const toX = (p: number) => ((p - minP) / priceRange) * SVG_W;
+  const toY = (pnl: number) => {
+    const mid = SVG_H / 2;
+    return mid - (pnl / pnlRange) * mid;
+  };
+
+  const polyPts = points.map(pt => `${toX(pt.price).toFixed(1)},${toY(pt.pnl).toFixed(1)}`).join(" ");
+
+  const defaultFrac = (stockPrice - minP) / priceRange;
+  const [sliderFrac, setSliderFrac] = useState(defaultFrac);
+  const sliderPrice = minP + sliderFrac * priceRange;
+  const sliderPnl = legs.reduce((s, l) => s + legPnl(l, sliderPrice), 0);
+  const isProfit = sliderPnl >= 0;
+  const sliderX = sliderFrac * SVG_W;
+  const sliderY = toY(sliderPnl);
+
+  const handlePointerMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setSliderFrac(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)));
+  };
+
+  const zeroLineY = toY(0);
+
+  return (
+    <div
+      className={cn("rounded-xl overflow-hidden bg-muted/30 border border-border/40", compact && "cursor-pointer active:opacity-75")}
+      onClick={compact ? onExpand : undefined}
+    >
+      {!compact && (
+        <div className="px-4 pt-3 pb-1 flex items-start justify-between">
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Expected P&L at expiry</p>
+            <p className={cn("text-[22px] font-bold leading-none tabular-nums", isProfit ? "text-gain" : "text-loss")}>
+              {isProfit ? "+" : ""}${Math.abs(sliderPnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Max Profit</p>
+            <p className="text-[13px] font-semibold text-gain tabular-nums">+${Math.abs(maxPnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}</p>
+            <p className="text-[10px] text-muted-foreground mt-1 mb-0.5">Max Loss</p>
+            <p className="text-[13px] font-semibold text-loss tabular-nums">−${Math.abs(minPnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}</p>
+          </div>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className="relative touch-none select-none"
+        style={{ height: compact ? 56 : SVG_H + 8 }}
+        onPointerDown={compact ? undefined : (e) => { isDragging.current = true; handlePointerMove(e.clientX); (e.target as HTMLElement).setPointerCapture(e.pointerId); }}
+        onPointerMove={compact ? undefined : (e) => { if (isDragging.current) handlePointerMove(e.clientX); }}
+        onPointerUp={compact ? undefined : () => { isDragging.current = false; }}
+        onPointerCancel={compact ? undefined : () => { isDragging.current = false; }}
+      >
+        <svg width="100%" height={compact ? 56 : SVG_H} viewBox={`0 0 ${SVG_W} ${compact ? 56 : SVG_H}`} preserveAspectRatio="none" overflow="visible">
+          <defs>
+            <clipPath id="basket-clip-loss"><rect x="0" y={zeroLineY} width={SVG_W} height={(compact ? 56 : SVG_H) - zeroLineY} /></clipPath>
+            <clipPath id="basket-clip-profit"><rect x="0" y="0" width={SVG_W} height={zeroLineY} /></clipPath>
+          </defs>
+          <line x1="0" y1={zeroLineY} x2={SVG_W} y2={zeroLineY} stroke="#d1d5db" strokeWidth="1" strokeDasharray="4 3" />
+          <polyline points={polyPts} fill="none" stroke="#ef4444" strokeWidth={compact ? 2 : 2.5} strokeLinecap="round" strokeLinejoin="round" clipPath="url(#basket-clip-loss)" />
+          <polyline points={polyPts} fill="none" stroke="#22c55e" strokeWidth={compact ? 2 : 2.5} strokeLinecap="round" strokeLinejoin="round" clipPath="url(#basket-clip-profit)" />
+          {!compact && <line x1={sliderX} y1="0" x2={sliderX} y2={SVG_H} stroke={isProfit ? "#22c55e" : "#ef4444"} strokeWidth="1.5" opacity="0.7" />}
+        </svg>
+        {!compact && (
+          <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+            style={{ left: `${sliderFrac * 100}%`, top: sliderY, width: 12, height: 12, backgroundColor: isProfit ? "#22c55e" : "#ef4444" }} />
+        )}
+      </div>
+      {compact && (
+        <p className="text-center text-[10px] text-muted-foreground pb-1.5">Tap to view payoff</p>
+      )}
+    </div>
+  );
+}
+
 export default function OptionsChainPage() {
   const params = useParams();
   const router = useRouter();
@@ -114,6 +233,7 @@ export default function OptionsChainPage() {
   const [lots, setLots]               = useState(1);
   const [basket, setBasket]           = useState<BasketLeg[]>([]);
   const basketIdRef                   = useRef(0);
+  const [payoffOpen, setPayoffOpen]   = useState(false);
 
   const handleRowTap = useCallback((strike: number, side: "call" | "put", ltp: number) => {
     setSelected((prev) => {
@@ -532,6 +652,14 @@ export default function OptionsChainPage() {
               ))}
             </div>
 
+            {/* Payoff preview */}
+            <BasketPayoffChart
+              legs={basket}
+              stockPrice={currentPrice}
+              compact
+              onExpand={() => setPayoffOpen(true)}
+            />
+
             {/* Available / Margin Required */}
             {(() => {
               const available   = 12450;
@@ -585,6 +713,37 @@ export default function OptionsChainPage() {
               Review Strategy
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Payoff full sheet ── */}
+      <AnimatePresence>
+        {payoffOpen && basket.length > 0 && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 0.45 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black z-40"
+              onClick={() => setPayoffOpen(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-background overflow-hidden"
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-border" />
+              </div>
+              <div className="flex items-center justify-between px-5 pb-2">
+                <p className="text-[18px] font-bold text-foreground">Payoff · {basket.length} {basket.length === 1 ? "Leg" : "Legs"}</p>
+                <button onClick={() => setPayoffOpen(false)} className="rounded-full p-1.5 bg-muted/60 active:opacity-70">
+                  <X size={14} strokeWidth={2.5} className="text-foreground" />
+                </button>
+              </div>
+              <div className="px-4 pb-8">
+                <BasketPayoffChart legs={basket} stockPrice={currentPrice} />
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
