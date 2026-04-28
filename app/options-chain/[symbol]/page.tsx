@@ -293,27 +293,23 @@ export default function OptionsChainPage() {
       <div ref={vScrollRef} className="flex-1 overflow-y-auto no-scrollbar relative">
         <div style={{ height: totalH, position: "relative" }}>
 
-          {/* Full-width OI bars — one per row, behind all content */}
+          {/* OI bars — anchored at strike cell edges, grow outward */}
           {(() => {
             const maxCallOI = Math.max(...chain.map(r => r.call.oi));
             const maxPutOI  = Math.max(...chain.map(r => r.put.oi));
-            const halfW     = SIDE_W + STRIKE_W / 2; // pixels from center to edge
+            const strikeRight = `calc(50% + ${STRIKE_W / 2}px)`;
             return chain.map((row, rowIdx) => {
-              const greenW = Math.round((row.call.oi / maxCallOI) * halfW);
-              const redW   = Math.round((row.put.oi  / maxPutOI)  * halfW);
+              const redPct   = (row.put.oi  / maxPutOI)  * 100;
+              const greenPct = (row.call.oi / maxCallOI) * 100;
               return (
-                <div
-                  key={`oi-${row.strike}`}
-                  className="absolute left-0 right-0 flex pointer-events-none"
-                  style={{ top: rowIdx * ROW_H + ROW_H - 3, height: 3, zIndex: 1 }}
-                >
-                  {/* Red (put OI) — right-aligned toward center from left */}
-                  <div className="flex-1 flex justify-end">
-                    <div className="h-full bg-loss/50" style={{ width: redW, borderRadius: "3px 0 0 3px" }} />
+                <div key={`oi-${row.strike}`} className="pointer-events-none" style={{ position: "absolute", top: rowIdx * ROW_H + ROW_H - 3, left: 0, right: 0, height: 3, zIndex: 1 }}>
+                  {/* Red — container spans app-left → strike-left; bar right-aligned so it touches the strike */}
+                  <div className="absolute top-0 bottom-0 flex justify-end" style={{ left: 0, right: `calc(50% + ${STRIKE_W / 2}px)` }}>
+                    <div className="h-full bg-loss/50" style={{ width: `${redPct}%`, borderRadius: "3px 0 0 3px" }} />
                   </div>
-                  {/* Green (call OI) — left-aligned toward center from right */}
-                  <div className="flex-1 flex justify-start">
-                    <div className="h-full bg-gain/50" style={{ width: greenW, borderRadius: "0 3px 3px 0" }} />
+                  {/* Green — container spans strike-right → app-right; bar left-aligned so it touches the strike */}
+                  <div className="absolute top-0 bottom-0 flex justify-start" style={{ left: strikeRight, right: 0 }}>
+                    <div className="h-full bg-gain/50" style={{ width: `${greenPct}%`, borderRadius: "0 3px 3px 0" }} />
                   </div>
                 </div>
               );
