@@ -754,23 +754,37 @@ export function ExploreOptions() {
         return (
           <>
             {/* ── Top Option Chains ── */}
-            <ScrollableTableWidget
-              title="Top Option Chains"
-              description="Most active options across indices, ETFs, and stocks."
-              columns={OPT_COLS}
-              visibleDataCols={3}
-              frozenWidthOffset={60}
-              scrollableMinWidth={500}
-              rowHeight="h-[60px]"
-              animationKey={filter}
-              onRowClick={(i) => router.push(`/options-chain/${encodeURIComponent(topChains[i].symbol)}`)}
-              rows={topChains.map((item) => [
-                  instrCell(item.symbol, item.ticker, assetTag(item.assetType)),
-                  priceCell(`$${item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, item.change),
-                  numR(fmtNum(String(Math.round(item.price * 12000)))),
-                  ...greekRow(item.ticker),
-                ])}
-            />
+            <div className="mx-5">
+              <p className="text-[17px] font-bold text-foreground mb-1">Top Option Chains</p>
+              <p className="text-[13px] text-muted-foreground mb-3 leading-snug">Most active options across indices, ETFs, and stocks.</p>
+              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                {topChains.map((item, i) => (
+                  <div key={item.ticker} className={cn("flex items-center gap-3 px-4 py-3.5", i < topChains.length - 1 && "border-b border-border/30")}>
+                    <div className="w-10 h-10 rounded-xl bg-muted shrink-0 flex items-center justify-center">
+                      <span className="text-[11px] font-bold text-muted-foreground">{item.ticker}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[15px] font-bold text-foreground truncate">{item.symbol}</p>
+                        {assetTag(item.assetType) && (
+                          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{assetTag(item.assetType)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-[13px] text-muted-foreground tabular-nums">${item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <PctBadge value={item.change} />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/options-chain/${encodeURIComponent(item.symbol)}`)}
+                      className="shrink-0 rounded-xl bg-muted/60 border border-border/50 px-3 py-1.5 text-[12px] font-semibold text-foreground active:opacity-70 transition-opacity"
+                    >
+                      Chain
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* ── Popular ── */}
             <ScrollableTableWidget
