@@ -723,16 +723,14 @@ export default function OptionsChainPage() {
 
                   {/* Charges — collapsed by default */}
                   <div className="rounded-xl bg-muted/40 overflow-hidden mb-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-3 pt-2.5 pb-1.5">Charges &amp; Fees</p>
-
                     {/* Total charges row — toggles expansion */}
                     <button
                       onClick={() => setChargesOpen(v => !v)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 bg-background active:bg-muted/40 transition-colors"
+                      className="w-full flex items-center justify-between px-3 pt-3 pb-2.5 bg-background active:bg-muted/40 transition-colors"
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-foreground">Total Charges</span>
-                        <ChevronDown size={13} className={cn("text-muted-foreground transition-transform", chargesOpen && "rotate-180")} />
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Charges &amp; Fees</span>
+                        <ChevronDown size={11} className={cn("text-muted-foreground transition-transform", chargesOpen && "rotate-180")} />
                       </div>
                       <span className="text-[13px] font-bold text-foreground tabular-nums">{fmt(totalCharges)}</span>
                     </button>
