@@ -313,7 +313,7 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
 
         {/* Stacked allocation bar */}
         <div className="h-1.5 rounded-full overflow-hidden flex gap-px mt-4">
-          {COLLECTIONS.map((c) => (
+          {COLLECTIONS.map((c, i) => (
             <div
               key={c.id}
               className="h-full bg-foreground"
