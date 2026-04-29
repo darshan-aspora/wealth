@@ -225,18 +225,6 @@ function fmtOI(n: number) {
   if (n >= 1_000) return n.toLocaleString();
   return String(n);
 }
-function mockFutures(price: number, sym: string) {
-  let h = 0;
-  for (let i = 0; i < sym.length; i++) h = (Math.imul(17, h) + sym.charCodeAt(i)) | 0;
-  let s = Math.abs(h) % 2147483647 || 1;
-  const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-  return [
-    { expiry: "28 Apr '26", price: +(price * (1 + (rand() - 0.48) * 0.006)).toFixed(2), pct: +((rand() - 0.45) * 6).toFixed(2) },
-    { expiry: "26 May '26", price: +(price * (1 + (rand() - 0.46) * 0.008)).toFixed(2), pct: +((rand() - 0.44) * 6).toFixed(2) },
-    { expiry: "25 Jun '26", price: +(price * (1 + (rand() - 0.44) * 0.01)).toFixed(2),  pct: +((rand() - 0.43) * 6).toFixed(2) },
-  ];
-}
-
 function OIInfoDrawer({ open, onClose, putOI, callOI, pcr }: { open: boolean; onClose: () => void; putOI: number; callOI: number; pcr: number }) {
   const fmtN = (n: number) => n.toLocaleString("en-US");
   const sentiment = pcr > 1 ? "bearish" : pcr < 0.7 ? "bullish" : "neutral";
@@ -316,7 +304,6 @@ function ETFOptionsTab({ symbol, name, price }: { symbol: string; name: string; 
 
   const shortName = name.replace(/\b(ETF|Trust|Fund|Inc\.?|Corp\.?)\b/gi, "").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
   const oi = useMemo(() => mockOI(price, symbol), [price, symbol]);
-  const futures = useMemo(() => mockFutures(price, symbol), [price, symbol]);
 
   return (
     <div className="flex min-h-full flex-col pb-6">

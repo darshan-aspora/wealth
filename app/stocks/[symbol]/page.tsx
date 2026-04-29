@@ -3632,19 +3632,6 @@ function fmtOI(n: number) {
   return String(n);
 }
 
-function mockFutures(price: number, symbol: string) {
-  let h = 0;
-  for (let i = 0; i < symbol.length; i++) h = (Math.imul(17, h) + symbol.charCodeAt(i)) | 0;
-  const seed = Math.abs(h) % 2147483647 || 1;
-  let s = seed;
-  const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-  return [
-    { expiry: "28 Apr '26", price: +(price * (1 + (rand() - 0.48) * 0.006)).toFixed(2), pct: +((rand() - 0.45) * 6).toFixed(2) },
-    { expiry: "26 May '26", price: +(price * (1 + (rand() - 0.46) * 0.008)).toFixed(2), pct: +((rand() - 0.44) * 6).toFixed(2) },
-    { expiry: "25 Jun '26", price: +(price * (1 + (rand() - 0.44) * 0.01)).toFixed(2),  pct: +((rand() - 0.43) * 6).toFixed(2) },
-  ];
-}
-
 function OIInfoDrawer({ open, onClose, putOI, callOI, pcr }: { open: boolean; onClose: () => void; putOI: number; callOI: number; pcr: number }) {
   const fmtN = (n: number) => n.toLocaleString("en-US");
   const sentiment = pcr > 1 ? "bearish" : pcr < 0.7 ? "bullish" : "neutral";
@@ -3710,7 +3697,6 @@ function OptionsTab() {
   const [oiDrawerOpen, setOiDrawerOpen] = useState(false);
   const shortName = getShortStockName(stock.name);
   const oi = useMemo(() => mockOI(stock.price, stock.symbol), [stock.price, stock.symbol]);
-  const futures = useMemo(() => mockFutures(stock.price, stock.symbol), [stock.price, stock.symbol]);
 
   const rows = useMemo(() => {
     const baseDate = expiryFilter === "Daily"

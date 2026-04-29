@@ -395,7 +395,7 @@ function NavHeader({ label, onPrev, onNext, canPrev, canNext }: { label: string;
 /*  Month grid                                                         */
 /* ------------------------------------------------------------------ */
 
-function MonthGrid({ monthKey, year, monthIndex, isCurrentMonth, onDayTap }: {
+function MonthGrid({ monthKey, isCurrentMonth, onDayTap }: {
   monthKey: string; year: number; monthIndex: number; isCurrentMonth: boolean; onDayTap: (day: DayPnL) => void;
 }) {
   const monthData = PNL_CALENDAR[monthKey];
