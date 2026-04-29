@@ -136,7 +136,7 @@ export default function OrderDetailPage() {
     );
   }
 
-  const label       = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
+  const label       = [order.symbol, order.expiry, order.optionType ? order.optionType[0] + order.optionType.slice(1).toLowerCase() : undefined].filter(Boolean).join(" ");
   const isCompleted = order.kind === "completed";
   const isFailed    = order.kind === "failed";
   const isOpen      = order.kind === "open";

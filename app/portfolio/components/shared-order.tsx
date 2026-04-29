@@ -41,6 +41,7 @@ export interface BaseOrder {
   executedAt:     string;
   placedAt?:      string;
   orderSource?:   OrderSource;
+  pnl?:           number;
 }
 
 export interface OpenOrder      extends BaseOrder { kind: "open" }
@@ -146,7 +147,7 @@ function StatusBadge({ kind }: { kind: Order["kind"] }) {
 export function OrderDrawer({ order, onClose }: { order: Order; onClose: () => void }) {
   const [chargesExpanded, setChargesExpanded] = useState(false);
   const [regExpanded, setRegExpanded]         = useState(false);
-  const label       = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
+  const label       = [order.symbol, order.expiry, order.optionType ? order.optionType[0] + order.optionType.slice(1).toLowerCase() : undefined].filter(Boolean).join(" ");
   const isCompleted = order.kind === "completed";
   const isFailed    = order.kind === "failed";
   const isOpen      = order.kind === "open";
@@ -410,9 +411,19 @@ export function OrderCard({ order }: { order: Order }) {
 
       {/* Right */}
       <div className="text-right shrink-0">
-        <p className="text-[15px] font-bold text-foreground tabular-nums leading-tight">
-          ${order.investedAmount.toLocaleString("en-US", { minimumFractionDigits: 0 })}
-        </p>
+        {order.kind === "completed" && (order as CompletedOrder).pnl !== undefined ? (() => {
+          const pnl = (order as CompletedOrder).pnl!;
+          const isUp = pnl >= 0;
+          return (
+            <p className={cn("text-[15px] font-bold tabular-nums leading-tight", isUp ? "text-emerald-500" : "text-red-500")}>
+              {isUp ? "+" : "−"}${Math.abs(pnl).toLocaleString("en-US", { minimumFractionDigits: 0 })}
+            </p>
+          );
+        })() : (
+          <p className="text-[15px] font-bold text-foreground tabular-nums leading-tight">
+            ${order.investedAmount.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+          </p>
+        )}
         <p className="text-[12px] text-muted-foreground mt-0.5">{order.time}</p>
       </div>
     </button>

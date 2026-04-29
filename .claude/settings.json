@@ -1,5 +1,10 @@
 {
   "permissions": {
+    "deny": [
+      "Bash(git push *)",
+      "Bash(npx vercel *)",
+      "Bash(vercel *)"
+    ],
     "allow": [
       "Bash(wc -l /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/mock-data.ts)",
       "Bash(ls -la /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/revenue.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/events.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/my-orders.tsx /Users/apple/Dev/02-US-Equity/app/stocks/[symbol]/components/about.tsx)",

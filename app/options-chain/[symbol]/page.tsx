@@ -395,7 +395,7 @@ export default function OptionsChainPage() {
       {/* ── CALL / LTP? / PUT ── */}
       <div className="shrink-0 flex border-b border-border/40">
         <div className="flex-1 flex items-center justify-center py-2">
-          <span className="text-[12px] font-bold text-gain tracking-wider">CALL</span>
+          <span className="text-[12px] font-bold text-gain tracking-wider">Call</span>
         </div>
         <button
           onClick={() => setLtpOpen(true)}
@@ -406,7 +406,7 @@ export default function OptionsChainPage() {
           <span className="whitespace-nowrap">LTP?</span>
         </button>
         <div className="flex-1 flex items-center justify-center py-2">
-          <span className="text-[12px] font-bold text-loss tracking-wider">PUT</span>
+          <span className="text-[12px] font-bold text-loss tracking-wider">Put</span>
         </div>
       </div>
 
@@ -825,7 +825,7 @@ export default function OptionsChainPage() {
             className="shrink-0 border-t border-border/40 bg-background px-4 pt-4 pb-8"
           >
             {/* Row 1: option identity + close */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-5">
               <button
                 onClick={() => {
                   const params = new URLSearchParams({
@@ -867,7 +867,7 @@ export default function OptionsChainPage() {
                           ? (activePrice * lots * 100 * 3.2).toLocaleString("en-US", { minimumFractionDigits: 0 })
                           : (activePrice * lots * 100).toLocaleString("en-US", { minimumFractionDigits: 0 });
                         return (
-                      <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center justify-between mb-5">
                         <div className="flex flex-col">
                           <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-1">
                             {isSell ? "Margin" : "Premium"}
@@ -926,7 +926,7 @@ export default function OptionsChainPage() {
                     </>
                   ) : (
                     <>
-                  <div className="flex gap-2.5 mb-3">
+                  <div className="flex gap-2.5 mb-5">
                     <div className="flex-1 rounded-xl bg-muted/40 px-3.5 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 mb-0.5">Available</p>
                       <p className="text-[14px] font-bold text-foreground tabular-nums">${available.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
@@ -939,7 +939,7 @@ export default function OptionsChainPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-3">
+                  <div className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2.5 mb-5">
                     <Info size={13} className="text-muted-foreground shrink-0 mt-0.5" />
                     <p className="text-[11px] text-muted-foreground leading-snug">
                       {selected.side === "call"

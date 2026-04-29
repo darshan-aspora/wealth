@@ -49,7 +49,7 @@ function PositionDetailInner() {
   const daysToExpiry = searchParams.get("dte") ? parseInt(searchParams.get("dte")!) : undefined;
   const status = (searchParams.get("status") ?? "open") as "open" | "partial_fill" | "pending";
 
-  const label = [symbol, expiry, type].filter(Boolean).join(" ");
+  const label = [symbol, expiry, type ? type[0] + type.slice(1).toLowerCase() : undefined].filter(Boolean).join(" ");
   const isUp = pnl >= 0;
   const isPartial = status === "partial_fill";
   const isPending = status === "pending";

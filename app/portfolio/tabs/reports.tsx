@@ -292,12 +292,11 @@ function ReportDrawer({ sub, onClose }: { sub: SubSection; onClose: () => void }
           {/* Included reports */}
           <div>
             <p className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Included in this report</p>
-            <div className="rounded-2xl border border-border/50 bg-muted/30 divide-y divide-border/40 overflow-hidden">
+            <div className="flex flex-wrap gap-2">
               {sub.includes.map((name, i) => (
-                <div key={i} className="flex items-center gap-2.5 px-4 py-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-foreground/30 shrink-0" />
-                  <p className="text-[15px] text-foreground font-medium">{name}</p>
-                </div>
+                <span key={i} className="rounded-lg bg-muted/60 border border-border/40 px-3 py-1.5 text-[13px] font-medium text-foreground">
+                  {name}
+                </span>
               ))}
             </div>
           </div>

@@ -23,7 +23,7 @@ import { CollectionsTab } from "./tabs/collections";
 /*  Tab definitions                                                    */
 /* ------------------------------------------------------------------ */
 
-const tabs = ["Overview", "Holdings", "Collections", "Positions", "Orders", "Buying Power", "SIPs", "P&L", "Reports"] as const;
+const tabs = ["Overview", "Holdings", "Positions", "Orders", "Buying Power", "SIPs", "Collections", "P&L", "Reports"] as const;
 type Tab = (typeof tabs)[number];
 
 /* ------------------------------------------------------------------ */

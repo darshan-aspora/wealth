@@ -68,11 +68,11 @@ export function OptionsChain({ symbol, currentPrice }: OptionsChainProps) {
           {/* CALLS / PUTS labels */}
           <div className="flex items-center px-2 pb-1">
             <div className="flex-1 pl-1">
-              <span className="text-[12px] font-bold tracking-widest text-[hsl(var(--gain))]">CALLS</span>
+              <span className="text-[12px] font-bold tracking-widest text-[hsl(var(--gain))]">Calls</span>
             </div>
             <div className={W_STRIKE} />
             <div className="flex-1 pr-1 text-right">
-              <span className="text-[12px] font-bold tracking-widest text-[hsl(var(--loss))]">PUTS</span>
+              <span className="text-[12px] font-bold tracking-widest text-[hsl(var(--loss))]">Puts</span>
             </div>
           </div>
 

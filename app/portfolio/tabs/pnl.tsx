@@ -469,6 +469,7 @@ function toCompletedOrder(o: PnlOrder): CompletedOrder {
     orderId:          o.orderId,
     time:             "",
     executedAt:       "",
+    pnl:              o.pnl,
   };
 }
 
@@ -607,21 +608,14 @@ export function PnlTab({ empty }: { empty?: boolean }) {
       <div className="px-5">
         {/* Summary card */}
         <SummaryCard from={from} to={to} onOpenPicker={() => setPickerOpen(true)} data={RANGE_DATA[preset]} />
+      </div>
 
-        {/* Orders list */}
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[16px] font-bold text-foreground">{RANGE_DATA[preset].orders.length} Orders</p>
-          <button className="flex items-center gap-1 rounded-lg border border-border/50 px-3 py-1.5">
-            <span className="text-[14px] font-semibold text-muted-foreground">Value</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground">
-              <path d="M6 2v8M3 7l3 3 3-3M3 5l3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
-          {RANGE_DATA[preset].orders.map((o) => <OrderCard key={o.symbol} order={toCompletedOrder(o)} />)}
-        </div>
+      {/* Orders list */}
+      <div className="px-5 mb-2">
+        <p className="text-[16px] text-foreground">{RANGE_DATA[preset].orders.length} Orders</p>
+      </div>
+      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+        {RANGE_DATA[preset].orders.map((o) => <OrderCard key={o.symbol} order={toCompletedOrder(o)} />)}
       </div>
 
       {/* Date range picker drawer */}

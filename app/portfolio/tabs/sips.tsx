@@ -392,7 +392,7 @@ export function SipsTab({ empty }: { empty?: boolean }) {
 
       {/* ── Active SIPs ── */}
       {filteredActive.length > 0 && (
-        <div className="px-5 mb-1">
+        <div className="px-5 mb-1 mt-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[16px] text-foreground">Active SIP ({filteredActive.length})</p>
             <p className="text-[13px] font-normal text-muted-foreground">Due Date</p>

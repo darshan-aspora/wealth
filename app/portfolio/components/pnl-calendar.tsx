@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PNL_CALENDAR, type DayPnL } from "./portfolio-mock-data";
+import { OrderCard, addOrders, type CompletedOrder } from "./shared-order";
 
-const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI"];
+const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const MONTH_NAMES_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTH_NAMES_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -46,12 +47,23 @@ type PeriodSelection =
 /*  Mock order data (shared across all sheet types)                    */
 /* ------------------------------------------------------------------ */
 
-interface DayOrder { symbol: string; qty: number; avgPrice: number; exitPrice: number; pnl: number }
-
-const MOCK_ORDERS: DayOrder[] = [
-  { symbol: "TSLA", qty: 10, avgPrice: 244, exitPrice: 222, pnl: -220 },
-  { symbol: "SPY",  qty: 20, avgPrice: 100, exitPrice: 120, pnl:  400 },
+const MOCK_COMPLETED_ORDERS: CompletedOrder[] = [
+  {
+    kind: "completed", symbol: "TSLA", companyName: "Tesla Inc", side: "S",
+    filledQty: 10, totalQty: 10, priceType: "market", price: 222,
+    avgExecutedPrice: 222, investedAmount: 2440, charges: 0, brokerage: 0,
+    regulatoryFee: 0, secFee: 0, finraFee: 0, exchangeFee: 0, opraFee: 0,
+    orderId: "CAL001", time: "", executedAt: "", pnl: -220,
+  },
+  {
+    kind: "completed", symbol: "SPY", companyName: "SPDR S&P 500", side: "B", tag: "ETF",
+    filledQty: 20, totalQty: 20, priceType: "market", price: 120,
+    avgExecutedPrice: 120, investedAmount: 2000, charges: 0, brokerage: 0,
+    regulatoryFee: 0, secFee: 0, finraFee: 0, exchangeFee: 0, opraFee: 0,
+    orderId: "CAL002", time: "", executedAt: "", pnl: 400,
+  },
 ];
+addOrders(MOCK_COMPLETED_ORDERS);
 
 const MOCK_CHARGES = {
   brokerage: 7,
@@ -207,48 +219,6 @@ function PnlBreakdownCard({ realisedPnl, dateLabel }: { realisedPnl: number; dat
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Order cards (shared)                                               */
-/* ------------------------------------------------------------------ */
-
-function OrderCards({ orders }: { orders: DayOrder[] }) {
-  return (
-    <div className="space-y-2.5">
-      {orders.map((o) => {
-        const isGain = o.pnl >= 0;
-        return (
-          <div key={o.symbol} className="rounded-2xl border border-border/50 bg-white px-5 py-5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[14px] font-bold shrink-0 bg-muted text-foreground">S</span>
-                <p className="text-[16px] font-bold text-foreground tracking-wide">{o.symbol}</p>
-              </div>
-              <p className={cn("text-[16px] font-bold tabular-nums", isGain ? "text-gain" : "text-loss")}>
-                {isGain ? "+" : ""}{o.pnl}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 mt-2.5 pl-[30px]">
-              <div className="flex flex-col">
-                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-                <span className="text-[14px] font-semibold text-foreground">{o.qty}</span>
-              </div>
-              <div className="w-px h-6 bg-border/50" />
-              <div className="flex flex-col">
-                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-                <span className="text-[14px] font-semibold text-foreground">${o.avgPrice}</span>
-              </div>
-              <div className="w-px h-6 bg-border/50" />
-              <div className="flex flex-col">
-                <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Exit</span>
-                <span className="text-[14px] font-semibold text-foreground">${o.exitPrice}</span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Unified period detail sheet                                        */
@@ -293,7 +263,9 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
           {selection.type === "day" && (
             <>
               <p className="text-[14px] font-semibold text-foreground">Top Orders</p>
-              <OrderCards orders={MOCK_ORDERS} />
+              <div className="divide-y divide-border/40 border border-border/40 rounded-2xl overflow-hidden">
+                {MOCK_COMPLETED_ORDERS.map((o) => <OrderCard key={o.orderId} order={o} />)}
+              </div>
               <PnlBreakdownCard realisedPnl={selection.pnl} dateLabel={selection.label} />
             </>
           )}
@@ -310,7 +282,9 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
                   { label: "Avg / Day",  value: formatPnL(stats.pnl / (stats.greenDays + stats.redDays || 1)), colored: true, isGain },
                 ]} />
                 <p className="text-[14px] font-semibold text-foreground">Top Orders</p>
-                <OrderCards orders={MOCK_ORDERS} />
+                <div className="divide-y divide-border/40 border border-border/40 rounded-2xl overflow-hidden">
+                  {MOCK_COMPLETED_ORDERS.map((o) => <OrderCard key={o.orderId} order={o} />)}
+                </div>
                 <PnlBreakdownCard realisedPnl={selection.pnl} dateLabel={selection.label} />
               </>
             );
@@ -332,7 +306,9 @@ function PeriodDetailSheet({ selection, onClose }: { selection: PeriodSelection;
                   { label: "Worst Day",   value: formatPnL(stats.worstDay),  colored: true, isGain: false },
                 ]} />
                 <p className="text-[14px] font-semibold text-foreground">Recent Orders</p>
-                <OrderCards orders={MOCK_ORDERS} />
+                <div className="divide-y divide-border/40 border border-border/40 rounded-2xl overflow-hidden">
+                  {MOCK_COMPLETED_ORDERS.map((o) => <OrderCard key={o.orderId} order={o} />)}
+                </div>
                 <PnlBreakdownCard realisedPnl={stats.pnl} dateLabel="All Time" />
               </>
             );
@@ -385,20 +361,17 @@ function DayCell({ day, isToday, onTap }: { day: DayPnL; isToday: boolean; onTap
     <div
       onClick={() => day.isTrading && onTap?.(day)}
       className={cn(
-        "rounded-lg p-1.5 flex flex-col items-center justify-center min-h-[68px]",
+        "aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5",
         day.isTrading ? "bg-foreground/[0.04]" : "bg-muted/10",
         day.isTrading && "cursor-pointer active:scale-95 transition-transform",
-        isToday && "ring-1.5 ring-foreground/50"
+        isToday && "ring-1 ring-foreground/50"
       )}
     >
-      <span className="text-[14px] font-semibold text-foreground/80 mb-0.5">{day.date}</span>
+      <span className="text-[12px] font-semibold text-foreground/80 leading-none">{day.date}</span>
       {day.isTrading ? (
-        <>
-          <PnlValue value={day.pnl - CHARGES_TOTAL} className="text-[13px] leading-tight" />
-          <span className="text-[10px] text-muted-foreground mt-0.5">{day.trades} trade{day.trades !== 1 ? "s" : ""}</span>
-        </>
+        <PnlValue value={day.pnl - CHARGES_TOTAL} className="text-[11px] leading-none" />
       ) : (
-        <span className="text-[13px] text-muted-foreground">—</span>
+        <span className="text-[11px] text-muted-foreground leading-none">—</span>
       )}
     </div>
   );
@@ -429,23 +402,22 @@ function MonthGrid({ monthKey, year, monthIndex, isCurrentMonth, onDayTap }: {
   if (!monthData) return null;
 
   const gridCells: (DayPnL | null)[] = [];
-  const leadingBlanks = monthData.firstWeekday >= 5 ? 0 : monthData.firstWeekday;
-  for (let i = 0; i < leadingBlanks; i++) gridCells.push(null);
+  // firstWeekday is Mon-based (0=Mon, 6=Sun)
+  for (let i = 0; i < monthData.firstWeekday; i++) gridCells.push(null);
   for (const day of monthData.days) {
-    const dow = new Date(year, monthIndex, day.date).getDay();
-    if (dow >= 1 && dow <= 5) gridCells.push(day);
+    gridCells.push(day);
   }
 
   const todayDate = isCurrentMonth ? new Date().getDate() : -1;
 
   return (
     <>
-      <div className="grid grid-cols-5 gap-1.5 mb-1">
+      <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
+          <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-7 gap-1">
         {gridCells.map((cell, i) => {
           if (!cell) return <div key={`blank-${i}`} className="min-h-[68px]" />;
           return <DayCell key={cell.date} day={cell} isToday={cell.date === todayDate} onTap={onDayTap} />;
@@ -475,16 +447,16 @@ function WeekView({ onDayTap }: { onDayTap: (day: DayPnL, date: Date) => void })
     return mon;
   }, [weekOffset]);
 
-  const friday = useMemo(() => {
-    const f = new Date(currentMonday);
-    f.setDate(f.getDate() + 4);
-    return f;
+  const sunday = useMemo(() => {
+    const s = new Date(currentMonday);
+    s.setDate(s.getDate() + 6);
+    return s;
   }, [currentMonday]);
 
-  const weekLabel = `${MONTH_NAMES_SHORT[currentMonday.getMonth()]} ${currentMonday.getDate()} – ${MONTH_NAMES_SHORT[friday.getMonth()]} ${friday.getDate()}`;
+  const weekLabel = `${MONTH_NAMES_SHORT[currentMonday.getMonth()]} ${currentMonday.getDate()} – ${MONTH_NAMES_SHORT[sunday.getMonth()]} ${sunday.getDate()}`;
 
   const weekDays = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => {
+    return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(currentMonday);
       d.setDate(d.getDate() + i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -503,12 +475,12 @@ function WeekView({ onDayTap }: { onDayTap: (day: DayPnL, date: Date) => void })
     <div className="space-y-3">
       <NavHeader label={weekLabel} onPrev={() => setWeekOffset((p) => p - 1)} onNext={() => setWeekOffset((p) => p + 1)} canPrev={canPrev} canNext={canNext} />
       <PnlStats days={weekDays.map((w) => w.dayPnl)} />
-      <div className="grid grid-cols-5 gap-1.5 mb-1">
+      <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
+          <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground tracking-wider py-1">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-7 gap-1">
         {weekDays.map(({ dayPnl, date }, i) => (
           <DayCell key={i} day={dayPnl} isToday={isCurrentWeek && dayPnl.date === todayDate} onTap={() => onDayTap(dayPnl, date)} />
         ))}
@@ -557,10 +529,7 @@ function YearView({ onMonthTap }: { onMonthTap: (monthIndex: number, year: numbe
             >
               <span className="text-[13px] font-semibold text-foreground/80 mb-0.5">{MONTH_NAMES_SHORT[month]}</span>
               {hasData ? (
-                <>
-                  <PnlValue value={stats.pnl - CHARGES_TOTAL} className="text-[14px] leading-tight" />
-                  <span className="text-[10px] text-muted-foreground mt-0.5">{stats.trades} trades</span>
-                </>
+                <PnlValue value={stats.pnl - CHARGES_TOTAL} className="text-[14px] leading-tight" />
               ) : (
                 <span className="text-[12px] text-muted-foreground">—</span>
               )}

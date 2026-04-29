@@ -117,7 +117,7 @@ function CancelAllDrawer({ open, onClose }: { open: boolean; onClose: () => void
         <div className="overflow-y-auto flex-1 px-5 space-y-2.5 pb-4">
           {OPEN_ORDERS.map((o, i) => {
             const isChecked = selected.has(i);
-            const label = [o.symbol, o.expiry, o.optionType].filter(Boolean).join(" ");
+            const label = [o.symbol, o.expiry, o.optionType ? o.optionType[0] + o.optionType.slice(1).toLowerCase() : undefined].filter(Boolean).join(" ");
             const isPartial = o.filledQty > 0 && o.filledQty < o.totalQty;
             const qtyMeta = o.lots !== undefined
               ? `${fmtQty(o.lots)} lot × ${fmtQty(o.totalQty)}`

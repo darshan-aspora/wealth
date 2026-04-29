@@ -35,11 +35,11 @@ function buildOrders(symbol: string, ltp: number): Order[] {
     { id: "a1", side: "B", symbol, ltp, filledQty: 0, totalQty: 5,  orderType: "limit",  limitPrice: ltp - 1.30, filter: "active",    time: "10:32 AM" },
     { id: "a2", side: "B", symbol, ltp, filledQty: 3, totalQty: 5,  orderType: "market",                         filter: "active",    time: "10:18 AM" },
     { id: "a3", side: "B", symbol, ltp, filledQty: 4, totalQty: 5,  orderType: "limit",  limitPrice: ltp - 1.30, filter: "active",    time: "10:05 AM" },
-    { id: "a4", side: "B", symbol: `${symbol} 150 APR 27 PUT`, ltp, filledQty: 0, totalQty: 2, unit: "Lot", orderType: "sl", slTrigger: 18, filter: "active", time: "9:47 AM" },
+    { id: "a4", side: "B", symbol: `${symbol} 150 APR 27 Put`, ltp, filledQty: 0, totalQty: 2, unit: "Lot", orderType: "sl", slTrigger: 18, filter: "active", time: "9:47 AM" },
     // ── Completed ──
     { id: "c1", side: "B", symbol, ltp, filledQty: 10, totalQty: 10, orderType: "limit", limitPrice: ltp - 3.20, avgPrice: ltp - 3.30, filter: "completed", time: "Yesterday" },
     { id: "c2", side: "S", symbol, ltp, filledQty: 5,  totalQty: 5,  orderType: "market",                        avgPrice: ltp + 0.40, filter: "completed", time: "Yesterday" },
-    { id: "c3", side: "B", symbol: `${symbol} 200 MAR PUT`, ltp, filledQty: 3, totalQty: 3, unit: "Lot", orderType: "limit", limitPrice: 15.50, avgPrice: 15.40, filter: "completed", time: "Apr 20" },
+    { id: "c3", side: "B", symbol: `${symbol} 200 MAR Put`, ltp, filledQty: 3, totalQty: 3, unit: "Lot", orderType: "limit", limitPrice: 15.50, avgPrice: 15.40, filter: "completed", time: "Apr 20" },
     // ── Failed ──
     { id: "f1", side: "B", symbol, ltp, filledQty: 0, totalQty: 8, orderType: "limit",  limitPrice: ltp - 16.00, failReason: "Insufficient funds",    filter: "failed", time: "Apr 18" },
     { id: "f2", side: "S", symbol, ltp, filledQty: 0, totalQty: 3, orderType: "market",                          failReason: "Insufficient holdings", filter: "failed", time: "Apr 17" },

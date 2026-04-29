@@ -3737,7 +3737,7 @@ function OptionsTab() {
       return {
         id: `${expiryFilter}-${index}`,
         indexLabel: stock.exchange,
-        optionLabel: `${baseDate} ${strike} ${template.callOrPut}`,
+        optionLabel: `${baseDate} ${strike} ${template.callOrPut === "CALL" ? "Call" : "Put"}`,
         expiryDate,
         strikeValue: strike,
         side: template.callOrPut === "CALL" ? "call" as const : "put" as const,
@@ -3753,82 +3753,72 @@ function OptionsTab() {
 
   return (
     <div className="flex min-h-full flex-col pb-6">
-      <div className="border-b border-border/60 px-4 pb-5 pt-4">
-        <h2 className="text-[20px] font-semibold tracking-[-0.3px] text-foreground">Option Chain and Prices</h2>
-        <p className="mt-2 max-w-[360px] text-[14px] leading-[1.38] text-muted-foreground">
-          Explore options data like calls, puts, and strike prices. Understand market expectations for future price movements.
-        </p>
+      {/* Key Information */}
+      <div className="border-b border-border/60 px-4 py-5">
+        <p className="text-[17px] font-semibold tracking-[-0.3px] text-foreground mb-4">Key Information</p>
+
+        {/* OI row */}
+        <div className="flex items-center gap-2 mb-4">
+          <p className="text-[13px] font-medium text-foreground">Open Interest (OI)</p>
+          <button onClick={() => setOiDrawerOpen(true)} className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted-foreground active:opacity-60">i</button>
+        </div>
+        {(() => {
+          const total = oi.callOI + oi.putOI;
+          const callPct = Math.round((oi.callOI / total) * 100);
+          const putPct = 100 - callPct;
+          return (
+            <div className="mb-5">
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                  <p className="text-[12px] text-muted-foreground">Total Call OI</p>
+                  <p className="mt-0.5 text-[16px] font-semibold tracking-[-0.3px] text-emerald-600">{fmtOI(oi.callOI)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[12px] text-muted-foreground">Put:Call ratio</p>
+                  <p className="mt-0.5 text-[16px] font-semibold tracking-[-0.3px]">{oi.pcr}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[12px] text-muted-foreground">Total Put OI</p>
+                  <p className="mt-0.5 text-[16px] font-semibold tracking-[-0.3px] text-red-500">{fmtOI(oi.putOI)}</p>
+                </div>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden flex gap-px">
+                <div className="h-full rounded-l-full bg-emerald-500" style={{ width: `${callPct}%` }} />
+                <div className="h-full rounded-r-full bg-red-400" style={{ width: `${putPct}%` }} />
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[11px] text-emerald-600 font-medium">Calls {callPct}%</span>
+                <span className="text-[11px] text-red-500 font-medium">Puts {putPct}%</span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Lot size / Buy price / Sell margin */}
+        <div className="grid grid-cols-3 divide-x divide-border/60 rounded-xl bg-muted/40 overflow-hidden mb-5">
+          <div className="px-3 py-3 text-center">
+            <p className="text-[11px] text-muted-foreground">Lot Size</p>
+            <p className="mt-0.5 text-[13px] font-bold tracking-[-0.2px]">1 Lot = 100</p>
+          </div>
+          <div className="px-3 py-3 text-center">
+            <p className="text-[11px] text-muted-foreground">Buy Price</p>
+            <p className="mt-0.5 text-[13px] font-bold tracking-[-0.2px]">Premium × 100</p>
+          </div>
+          <div className="px-3 py-3 text-center">
+            <p className="text-[11px] text-muted-foreground">Sell Margin</p>
+            <p className="mt-0.5 text-[13px] font-bold tracking-[-0.2px]">~${Math.round(stock.price * 100 * 0.124).toLocaleString()} / Lot</p>
+          </div>
+        </div>
+
         <Button
           onClick={() => router.push(`/options-chain/${encodeURIComponent(stock.symbol)}`)}
-          className="mt-4 h-12 w-full rounded-[10px] bg-black text-[16px] font-medium text-white hover:bg-black/95"
+          className="h-12 w-full rounded-[10px] bg-black text-[16px] font-medium text-white hover:bg-black/95"
         >
           Option Chain
         </Button>
       </div>
 
-      {/* OI Summary */}
-      <div className="border-b border-border/60 px-4 py-5">
-        <h3 className="mb-4 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.3px] text-foreground">
-          Open Interest (OI)
-          <button
-            onClick={() => setOiDrawerOpen(true)}
-            className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted-foreground active:opacity-60"
-          >i</button>
-        </h3>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <p className="text-[13px] text-muted-foreground">Total Put OI</p>
-            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{fmtOI(oi.putOI)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[13px] text-muted-foreground">Put:Call ratio</p>
-            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{oi.pcr}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[13px] text-muted-foreground">Total Call OI</p>
-            <p className="mt-1 text-[20px] font-semibold tracking-[-0.4px]">{fmtOI(oi.callOI)}</p>
-          </div>
-        </div>
-      </div>
-
       <OIInfoDrawer open={oiDrawerOpen} onClose={() => setOiDrawerOpen(false)} putOI={oi.putOI} callOI={oi.callOI} pcr={oi.pcr} />
-
-      {/* Top Futures */}
-      <div className="border-b border-border/60 px-4 py-5">
-        <h3 className="mb-4 text-[17px] font-semibold tracking-[-0.3px] text-foreground">Futures Contracts</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {futures.map((fut) => (
-            <div key={fut.expiry} className="rounded-2xl border border-border/60 p-4">
-              <p className="text-[15px] font-semibold tracking-[-0.3px]">
-                {shortName} <span className="font-bold">Fut</span>
-              </p>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">{fut.expiry}</p>
-              <p className="mt-4 text-[18px] font-semibold tracking-[-0.4px]">
-                ${fut.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              <p className={cn("mt-0.5 text-[13px] font-medium", fut.pct >= 0 ? "text-gain" : "text-loss")}>
-                {fut.pct >= 0 ? "+" : ""}{fut.pct.toFixed(2)}%
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Lot Size / Buy Price / Sell Margin */}
-      <div className="border-b border-border/60 grid grid-cols-3 divide-x divide-border/60">
-        <div className="px-4 py-4 text-center">
-          <p className="text-[12px] text-muted-foreground">Lot Size</p>
-          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">1 Lot = 100</p>
-        </div>
-        <div className="px-4 py-4 text-center">
-          <p className="text-[12px] text-muted-foreground">Buy Price</p>
-          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">Premium × 100</p>
-        </div>
-        <div className="px-4 py-4 text-center">
-          <p className="text-[12px] text-muted-foreground">Sell Margin</p>
-          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">~${Math.round(stock.price * 100 * 0.124).toLocaleString()} / Lot</p>
-        </div>
-      </div>
 
       <div className="px-4 pt-5">
         <h3 className="text-[20px] font-semibold tracking-[-0.4px] text-foreground">Popular {shortName} Options</h3>

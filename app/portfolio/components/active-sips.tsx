@@ -18,14 +18,15 @@ const ACTIVE_SIPS: Sip[] = [
 
 export function ActiveSips() {
   return (
-    <Card className="border-border/50 shadow-none">
-      <CardContent className="p-5">
-        <p className="text-[17px] font-bold text-foreground">Active SIP ({ACTIVE_SIPS.length})</p>
-        <p className="text-[13px] text-muted-foreground mt-1 mb-4">
-          Scheduled investments running on autopilot — set it and keep compounding.
-        </p>
-
-        <div className="flex flex-col gap-3">
+    <Card className="border-border/50 shadow-none overflow-hidden">
+      <CardContent className="p-0">
+        <div className="px-5 pt-5 pb-4">
+          <p className="text-[17px] font-bold text-foreground">Active SIP ({ACTIVE_SIPS.length})</p>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Scheduled investments running on autopilot — set it and keep compounding.
+          </p>
+        </div>
+        <div className="divide-y divide-border/40 border-t border-border/40">
           {ACTIVE_SIPS.map((sip) => (
             <SipCard key={sip.id} sip={sip} />
           ))}
