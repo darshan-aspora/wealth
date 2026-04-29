@@ -265,29 +265,6 @@ function HoldingAvatar({ name }: { name: string }) {
   );
 }
 
-function Sparkline({ name, isGain }: { name: string; isGain: boolean }) {
-  const seed = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const pts = Array.from({ length: 9 }, (_, i) => ((seed * (i + 3) * 31 + i * 17) % 38) + 10);
-  const W = 64, H = 28;
-  const min = Math.min(...pts), max = Math.max(...pts);
-  const range = max - min || 1;
-  const path = pts
-    .map((v, i) => `${(i / (pts.length - 1)) * W},${H - ((v - min) / range) * (H - 6) - 3}`)
-    .join(" ");
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="shrink-0">
-      <polyline
-        points={path}
-        fill="none"
-        stroke={isGain ? "#10B981" : "#ef4444"}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
 /* ------------------------------------------------------------------ */
@@ -384,7 +361,6 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
   const heroPnl = heroCurrentValue - heroInvested;
   const heroPnlPct = heroInvested > 0 ? (heroPnl / heroInvested) * 100 : 0;
   const heroTodayPnl = filtered.reduce((s, h) => s + h.currentValue * (h.dayChangePct / 100), 0);
-  const heroTodayPnlPct = heroCurrentValue > 0 ? (heroTodayPnl / heroCurrentValue) * 100 : 0;
   // Weighted average XIRR by current value
   const heroXirr = heroCurrentValue > 0
     ? filtered.reduce((s, h) => s + h.xirr * h.currentValue, 0) / heroCurrentValue

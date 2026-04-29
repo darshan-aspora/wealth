@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -109,28 +108,11 @@ function fmt(n: number) {
   return n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-function gainStr(g: number, pctVal: number) {
-  return `${g >= 0 ? "+" : "−"}$${fmt(Math.abs(g))} (${g >= 0 ? "+" : ""}${pctVal.toFixed(1)}%)`;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Collection card                                                    */
 /* ------------------------------------------------------------------ */
 
-function CollectionAvatar({ name, index }: { name: string; index: number }) {
-  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  const hue = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-  return (
-    <div
-      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
-      style={{ backgroundColor: `hsl(${hue}, 50%, 50%)` }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function CollectionCard({ col, index }: { col: Collection; index: number }) {
+function CollectionCard({ col }: { col: Collection }) {
   const [open, setOpen] = useState(false);
   const gain    = col.current - col.invested;
   const gainPct = (gain / col.invested) * 100;
@@ -347,7 +329,7 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
       </div>
       <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {COLLECTIONS.map((c, i) => (
-          <CollectionCard key={c.id} col={c} index={i} />
+          <CollectionCard key={c.id} col={c} />
         ))}
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { X, Plus, LogOut, AlertTriangle, Clock } from "lucide-react";
+import { X, Plus, LogOut, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 

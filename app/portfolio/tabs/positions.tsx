@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Zap, BarChart2, Activity } from "lucide-react";
+import { Plus, LogOut, ArrowRight, AlertTriangle, Clock, X, Zap, BarChart2, Activity } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -106,17 +106,6 @@ const fmtQty = (n: number) =>
 /*  Status badge for open positions                                    */
 /* ------------------------------------------------------------------ */
 
-function OpenStatusBadge({ status }: { status: OpenStatus; filledQty?: number; orderedQty?: number }) {
-  if (status === "pending") {
-    return (
-      <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-semibold text-muted-foreground">
-        Pending
-      </span>
-    );
-  }
-  return null;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Close reason badge                                                 */
 /* ------------------------------------------------------------------ */
@@ -137,46 +126,6 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
       {label}
     </span>
   );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Side badge                                                         */
-/* ------------------------------------------------------------------ */
-
-function SideBadge({ side }: { side: "B" | "S" }) {
-  return (
-    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[14px] font-bold shrink-0 bg-muted text-foreground">
-      {side}
-    </span>
-  );
-}
-
-function SideAvatar({ side }: { side: "B" | "S" }) {
-  return (
-    <div className={cn(
-      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[14px] font-bold",
-      side === "B" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
-    )}>
-      {side}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Qty display                                                        */
-/* ------------------------------------------------------------------ */
-
-function QtyDisplay({ p }: { p: OpenPosition }) {
-  if (p.lots !== undefined) {
-    return (
-      <span className="flex items-center gap-0.5">
-        <span className="font-semibold text-foreground">{p.lots}</span>
-        <span className="text-muted-foreground/60 text-[12px] mx-0.5">lot ×</span>
-        <span className="font-semibold text-foreground">{p.filledQty || p.orderedQty}</span>
-      </span>
-    );
-  }
-  return <span className="font-semibold text-foreground">{fmtQty(p.filledQty || p.orderedQty)}</span>;
 }
 
 /* ------------------------------------------------------------------ */
