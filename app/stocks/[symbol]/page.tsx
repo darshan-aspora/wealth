@@ -3737,6 +3737,22 @@ function OptionsTab() {
         </div>
       </div>
 
+      {/* Lot Size / Buy Price / Sell Margin */}
+      <div className="border-b border-border/60 grid grid-cols-3 divide-x divide-border/60">
+        <div className="px-4 py-4 text-center">
+          <p className="text-[12px] text-muted-foreground">Lot Size</p>
+          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">1 Lot = 100</p>
+        </div>
+        <div className="px-4 py-4 text-center">
+          <p className="text-[12px] text-muted-foreground">Buy Price</p>
+          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">Premium × 100</p>
+        </div>
+        <div className="px-4 py-4 text-center">
+          <p className="text-[12px] text-muted-foreground">Sell Margin</p>
+          <p className="mt-1 text-[14px] font-bold tracking-[-0.28px]">~${Math.round(stock.price * 100 * 0.124).toLocaleString()} / Lot</p>
+        </div>
+      </div>
+
       <div className="px-4 pt-5">
         <h3 className="text-[20px] font-semibold tracking-[-0.4px] text-foreground">Popular {shortName} Options</h3>
       </div>
