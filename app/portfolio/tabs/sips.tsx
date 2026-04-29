@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SipCard, type Sip as SharedSip } from "@/app/portfolio/components/shared-sip";
 
@@ -147,6 +147,38 @@ export function SipsTab({ empty }: { empty?: boolean }) {
       <div className="pb-24">
         {/* Header */}
         <div className="px-5 pt-5 pb-2">
+          {/* Empty state — compounding growth bars */}
+          <div className="rounded-2xl bg-amber-50/60 border border-amber-100 px-4 pt-4 pb-4 mb-5">
+            <div className="flex items-center gap-1.5 mb-4">
+              <RefreshCw size={12} className="text-amber-500" />
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">No SIPs running</p>
+            </div>
+            {/* Compounding bars */}
+            <div className="flex items-end gap-2 h-14 mb-2">
+              {[
+                { h: 12, label: "Now" },
+                { h: 32, label: "6M" },
+                { h: 52, label: "1Y" },
+                { h: 72, label: "2Y" },
+                { h: 100, label: "3Y" },
+              ].map(({ h, label }) => (
+                <div key={label} className="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    className="w-full rounded-t-lg bg-amber-300/40"
+                    style={{ height: `${(h / 100) * 56}px` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {["Now", "6M", "1Y", "2Y", "3Y"].map((l) => (
+                <p key={l} className="flex-1 text-center text-[10px] text-amber-500/70 font-semibold">{l}</p>
+              ))}
+            </div>
+            <p className="text-[12px] text-muted-foreground mt-3 leading-snug">Set up a SIP to start compounding your wealth automatically.</p>
+          </div>
+
+          <div className="h-[45px]" />
           <p className="text-[22px] font-bold text-foreground mb-1">Set up a SIP</p>
           <p className="text-[14px] text-muted-foreground">Invest a fixed amount automatically and watch it compound.</p>
         </div>

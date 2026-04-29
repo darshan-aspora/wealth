@@ -823,7 +823,8 @@ export function BuyingPowerTab({ empty }: { empty?: boolean }) {
         </div>
 
         {/* Transaction list */}
-        <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+      </div>
+      <div className="py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
           {filtered.map((tx) => (
             <button
               key={tx.id}
@@ -842,7 +843,6 @@ export function BuyingPowerTab({ empty }: { empty?: boolean }) {
               </div>
             </button>
           ))}
-        </div>
       </div>
 
       {/* Transaction detail drawer */}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, LineChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { OrderCard, addOrders, type CompletedOrder } from "@/app/portfolio/components/shared-order";
@@ -503,6 +503,36 @@ export function PnlTab({ empty }: { empty?: boolean }) {
       <div className="pb-24">
         {/* Total P&L hero */}
         <div className="px-5 pt-6 pb-5 border-b border-border/40">
+          {/* Empty state — ghost ascending area chart */}
+          <div className="rounded-2xl bg-emerald-50/50 border border-emerald-100 px-4 pt-4 pb-3 mb-5 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-3">
+              <LineChart size={12} className="text-emerald-500" />
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Realised P&amp;L</p>
+            </div>
+            <svg viewBox="0 0 280 64" className="w-full h-14 mb-3" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="pnlAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0,60 C30,58 50,52 80,46 C110,40 130,34 160,26 C190,18 220,12 250,7 L280,4 L280,64 L0,64 Z"
+                fill="url(#pnlAreaGrad)"
+              />
+              <path
+                d="M0,60 C30,58 50,52 80,46 C110,40 130,34 160,26 C190,18 220,12 250,7 L280,4"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="1.5"
+                strokeDasharray="5 3"
+                opacity="0.45"
+              />
+            </svg>
+            <p className="text-[12px] text-muted-foreground leading-snug">Make your first trade and your P&amp;L curve will start taking shape.</p>
+          </div>
+
+          <div className="h-[45px]" />
           <p className="text-[13px] text-muted-foreground mb-2">Total P&amp;L</p>
           <p className="text-[40px] font-bold text-foreground/20 tabular-nums leading-none mb-1">$0.00</p>
           <p className="text-[13px] text-muted-foreground/60">Place a trade and your P&amp;L will appear here</p>

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { CheckCircle, Clock, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, Clock, XCircle, ArrowRight, X } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   type OpenOrder, type CompletedOrder, type FailedOrder, type Order,
-  OrderCard, registerOrders,
+  OrderCard, registerOrders, fmtQty, priceLabel,
 } from "@/app/portfolio/components/shared-order";
 
 /* ------------------------------------------------------------------ */
@@ -64,8 +65,128 @@ const TABS: { id: OrderTab; label: string }[] = [
 // Register all orders globally so the detail page can look them up by ID
 registerOrders([...OPEN_ORDERS, ...COMPLETED_ORDERS, ...FAILED_ORDERS]);
 
+/* ------------------------------------------------------------------ */
+/*  Cancel all drawer                                                  */
+/* ------------------------------------------------------------------ */
+
+function CancelAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [selected, setSelected] = useState<Set<number>>(
+    () => new Set(OPEN_ORDERS.map((_, i) => i))
+  );
+
+  const toggle = (i: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) { next.delete(i); } else { next.add(i); }
+      return next;
+    });
+
+  const allSelected = selected.size === OPEN_ORDERS.length;
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+
+        <div className="px-5 pt-2 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] font-bold text-foreground leading-tight">Cancel orders</p>
+              <p className="text-[14px] text-muted-foreground mt-1">Selected orders will be cancelled immediately</p>
+            </div>
+            <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between shrink-0">
+          <p className="text-[13px] text-muted-foreground">
+            {selected.size} of {OPEN_ORDERS.length} selected
+          </p>
+          <button
+            onClick={() => setSelected(allSelected ? new Set() : new Set(OPEN_ORDERS.map((_, i) => i)))}
+            className="text-[13px] font-semibold text-foreground active:opacity-60"
+          >
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 space-y-2.5 pb-4">
+          {OPEN_ORDERS.map((o, i) => {
+            const isChecked = selected.has(i);
+            const label = [o.symbol, o.expiry, o.optionType].filter(Boolean).join(" ");
+            const isPartial = o.filledQty > 0 && o.filledQty < o.totalQty;
+            const qtyMeta = o.lots !== undefined
+              ? `${fmtQty(o.lots)} lot × ${fmtQty(o.totalQty)}`
+              : isPartial
+                ? `${fmtQty(o.filledQty)} / ${fmtQty(o.totalQty)}`
+                : fmtQty(o.totalQty);
+
+            return (
+              <button
+                key={i}
+                onClick={() => toggle(i)}
+                className={cn(
+                  "w-full text-left rounded-2xl border px-4 py-4 flex items-center gap-3 transition-all active:scale-[0.99]",
+                  isChecked ? "border-foreground bg-white" : "border-border/40 bg-white/60"
+                )}
+              >
+                <div className={cn(
+                  "shrink-0 w-5 h-5 rounded-full flex items-center justify-center border-2 transition-colors",
+                  isChecked ? "bg-foreground border-foreground" : "border-border/50 bg-transparent"
+                )}>
+                  {isChecked && (
+                    <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                      <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                    <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground shrink-0">
+                      {o.side === "B" ? "BUY" : "SELL"}
+                    </span>
+                    <p className="text-[15px] font-bold text-foreground leading-tight">{label}</p>
+                    {o.tag && (
+                      <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground">{o.tag}</span>
+                    )}
+                    {isPartial && (
+                      <span className="text-[11px] font-semibold text-amber-600">Partial fill</span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-muted-foreground tabular-nums">
+                    {qtyMeta} · {priceLabel(o.priceType, o.price)}
+                  </p>
+                </div>
+
+                <p className="text-[14px] font-semibold text-foreground tabular-nums shrink-0">
+                  ${o.investedAmount.toLocaleString("en-US")}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
+          <button
+            disabled={selected.size === 0}
+            className="w-full rounded-2xl bg-foreground text-background py-4 text-[15px] font-bold active:opacity-80 transition-opacity disabled:opacity-30"
+          >
+            {selected.size === 0 ? "Select orders to cancel" : `Cancel ${selected.size} order${selected.size > 1 ? "s" : ""}`}
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function OrdersTab({ empty }: { empty?: boolean }) {
   const [activeTab, setActiveTab] = useState<OrderTab>("open");
+  const [cancelAllOpen, setCancelAllOpen] = useState(false);
   const router = useRouter();
 
   if (empty) {
@@ -162,14 +283,21 @@ export function OrdersTab({ empty }: { empty?: boolean }) {
       <div className="px-5 mb-3 flex items-center justify-between">
         <p className="text-[16px] font-semibold text-muted-foreground">{orders.length} Orders</p>
         {activeTab === "open" && (
-          <button className="text-[16px] font-semibold text-muted-foreground active:opacity-60">Cancel all</button>
+          <button
+            onClick={() => setCancelAllOpen(true)}
+            className="rounded-xl border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground active:opacity-60 transition-opacity"
+          >
+            Cancel all
+          </button>
         )}
       </div>
 
       {/* List — each item manages its own drawer */}
-      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+      <div className="py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {orders.map((o, i) => <OrderCard key={i} order={o} />)}
       </div>
+
+      <CancelAllDrawer open={cancelAllOpen} onClose={() => setCancelAllOpen(false)} />
     </div>
   );
 }

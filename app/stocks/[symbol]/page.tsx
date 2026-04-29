@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { StatusBar, HomeIndicator } from "@/components/iphone-frame";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ScrollablePillTabs } from "@/components/ui/scrollable-pill-tabs";
 import { useAI } from "@/contexts/ai-context";
 import { StockTabs } from "@/app/shared-components/stock-tabs";
@@ -3547,9 +3548,10 @@ function TechnicalTab() {
 
 // ─── Options Tab ─────────────────────────────────────────────────────────────
 
-type OptionExpiryFilter = "Weekly" | "Monthly" | "Yearly (LEAP)";
+type OptionExpiryFilter = "Daily" | "Weekly" | "Monthly" | "Yearly (LEAP)";
 
 const OPTION_EXPIRY_FILTERS: OptionExpiryFilter[] = [
+  "Daily",
   "Weekly",
   "Monthly",
   "Yearly (LEAP)",
@@ -3565,6 +3567,13 @@ interface PopularOptionTemplate {
 }
 
 const POPULAR_OPTION_TEMPLATES: Record<OptionExpiryFilter, PopularOptionTemplate[]> = {
+  Daily: [
+    { underlyingFactor: 1.0, strikeFactor: 1.005, callOrPut: "CALL", oi: 1_240_000, priceFactor: 0.018, changePct: 22.4 },
+    { underlyingFactor: 1.0, strikeFactor: 0.995, callOrPut: "PUT",  oi: 1_080_000, priceFactor: 0.016, changePct: 18.1 },
+    { underlyingFactor: 1.0, strikeFactor: 1.01,  callOrPut: "CALL", oi:   760_000, priceFactor: 0.013, changePct: 31.5 },
+    { underlyingFactor: 1.0, strikeFactor: 0.99,  callOrPut: "PUT",  oi:   640_000, priceFactor: 0.012, changePct: -9.3 },
+    { underlyingFactor: 1.0, strikeFactor: 1.015, callOrPut: "CALL", oi:   420_000, priceFactor: 0.009, changePct: 14.7 },
+  ],
   Weekly: [
     { underlyingFactor: 1.0, strikeFactor: 1.02, callOrPut: "CALL", oi: 990_000, priceFactor: 0.061, changePct: 12.8 },
     { underlyingFactor: 1.0, strikeFactor: 0.98, callOrPut: "PUT", oi: 840_000, priceFactor: 0.056, changePct: 9.4 },
@@ -3636,31 +3645,94 @@ function mockFutures(price: number, symbol: string) {
   ];
 }
 
+function OIInfoDrawer({ open, onClose, putOI, callOI, pcr }: { open: boolean; onClose: () => void; putOI: number; callOI: number; pcr: number }) {
+  const fmtN = (n: number) => n.toLocaleString("en-US");
+  const sentiment = pcr > 1 ? "bearish" : pcr < 0.7 ? "bullish" : "neutral";
+  const sentimentColor = sentiment === "bullish" ? "text-emerald-500" : sentiment === "bearish" ? "text-red-500" : "text-amber-500";
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[85dvh] flex flex-col inset-x-0 mx-auto max-w-[430px]">
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+        <div className="px-5 pt-3 pb-4 border-b border-border/40 shrink-0 flex items-start justify-between gap-3">
+          <p className="text-[18px] font-bold text-foreground">Open Interest (OI)</p>
+          <button onClick={onClose} className="rounded-full p-1 -mr-1 -mt-0.5 active:bg-muted/50 shrink-0">
+            <X size={20} className="text-foreground" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-5 py-5 space-y-5">
+          <p className="text-[14px] text-muted-foreground leading-relaxed">
+            Open Interest is the total number of outstanding option contracts that have not been settled. Higher OI means more market participation and liquidity in that strike.
+          </p>
+
+          <div className="rounded-2xl bg-muted/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] text-muted-foreground">Total Call OI</p>
+              <p className="text-[15px] font-bold text-foreground tabular-nums">{fmtN(callOI)}</p>
+            </div>
+            <div className="h-px bg-border/40" />
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] text-muted-foreground">Total Put OI</p>
+              <p className="text-[15px] font-bold text-foreground tabular-nums">{fmtN(putOI)}</p>
+            </div>
+            <div className="h-px bg-border/40" />
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] text-muted-foreground">Put:Call Ratio</p>
+              <p className={cn("text-[15px] font-bold tabular-nums", sentimentColor)}>{pcr} · {sentiment.charAt(0).toUpperCase() + sentiment.slice(1)}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-[13px] font-semibold text-foreground uppercase tracking-wide">How to read this</p>
+            {[
+              { label: "PCR > 1", desc: "More puts than calls — market participants are buying more downside protection. Often seen as bearish." },
+              { label: "PCR < 0.7", desc: "More calls than puts — market participants are positioned for upside. Often seen as bullish." },
+              { label: "PCR ≈ 0.7–1", desc: "Roughly balanced. Market has no strong directional bias." },
+            ].map((row) => (
+              <div key={row.label} className="rounded-xl bg-muted/30 px-4 py-3">
+                <p className="text-[13px] font-semibold text-foreground mb-0.5">{row.label}</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">{row.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 function OptionsTab() {
   const stock = useStock();
   const router = useRouter();
   const [expiryFilter, setExpiryFilter] = useState<OptionExpiryFilter>("Weekly");
+  const [oiDrawerOpen, setOiDrawerOpen] = useState(false);
   const shortName = getShortStockName(stock.name);
   const oi = useMemo(() => mockOI(stock.price, stock.symbol), [stock.price, stock.symbol]);
   const futures = useMemo(() => mockFutures(stock.price, stock.symbol), [stock.price, stock.symbol]);
 
   const rows = useMemo(() => {
-    const baseDate = expiryFilter === "Weekly"
-      ? "May 2"
-      : expiryFilter === "Monthly"
-        ? "May 16"
-        : "Jan 15 '27";
+    const baseDate = expiryFilter === "Daily"
+      ? "Apr 29"
+      : expiryFilter === "Weekly"
+        ? "May 2"
+        : expiryFilter === "Monthly"
+          ? "May 16"
+          : "Jan 15 '27";
 
     return POPULAR_OPTION_TEMPLATES[expiryFilter].map((template, index) => {
       const underlying = +(stock.price * template.underlyingFactor).toFixed(2);
       const strike = Math.max(1, Math.round(stock.price * template.strikeFactor));
       const optionPrice = +(stock.price * template.priceFactor).toFixed(2);
       const change = +(optionPrice * (template.changePct / 100)).toFixed(2);
-      const expiryDate = expiryFilter === "Weekly"
-        ? "2 May 2026"
-        : expiryFilter === "Monthly"
-          ? "16 May 2026"
-          : "15 Jan 2027";
+      const expiryDate = expiryFilter === "Daily"
+        ? "29 Apr 2026"
+        : expiryFilter === "Weekly"
+          ? "2 May 2026"
+          : expiryFilter === "Monthly"
+            ? "16 May 2026"
+            : "15 Jan 2027";
 
       return {
         id: `${expiryFilter}-${index}`,
@@ -3698,7 +3770,10 @@ function OptionsTab() {
       <div className="border-b border-border/60 px-4 py-5">
         <h3 className="mb-4 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.3px] text-foreground">
           Open Interest (OI)
-          <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted-foreground">i</span>
+          <button
+            onClick={() => setOiDrawerOpen(true)}
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted-foreground active:opacity-60"
+          >i</button>
         </h3>
         <div className="grid grid-cols-3 gap-2">
           <div>
@@ -3716,9 +3791,11 @@ function OptionsTab() {
         </div>
       </div>
 
+      <OIInfoDrawer open={oiDrawerOpen} onClose={() => setOiDrawerOpen(false)} putOI={oi.putOI} callOI={oi.callOI} pcr={oi.pcr} />
+
       {/* Top Futures */}
       <div className="border-b border-border/60 px-4 py-5">
-        <h3 className="mb-4 text-[17px] font-semibold tracking-[-0.3px] text-foreground">Top {shortName} Futures</h3>
+        <h3 className="mb-4 text-[17px] font-semibold tracking-[-0.3px] text-foreground">Futures Contracts</h3>
         <div className="grid grid-cols-2 gap-3">
           {futures.map((fut) => (
             <div key={fut.expiry} className="rounded-2xl border border-border/60 p-4">

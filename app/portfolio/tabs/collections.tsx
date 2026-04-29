@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -21,7 +21,6 @@ interface Collection {
   id: number;
   name: string;
   theme: string;
-  sip?: { amount: number; frequency: string };
   invested: number;
   current: number;
   stocks: CollectionStock[];
@@ -36,7 +35,6 @@ const COLLECTIONS: Collection[] = [
     id: 1,
     name: "Tech Giants",
     theme: "Large-cap US technology leaders driving global innovation. Concentrated in the companies setting the pace for AI, cloud, and consumer hardware.",
-    sip: { amount: 150, frequency: "Monthly on 12th" },
     invested: 16_240,
     current: 18_420,
     stocks: [
@@ -51,7 +49,6 @@ const COLLECTIONS: Collection[] = [
     id: 2,
     name: "Dividend Kings",
     theme: "Consistent dividend payers with decades of uninterrupted payouts and strong balance sheets. Built for income and stability.",
-    sip: { amount: 100, frequency: "Monthly on 12th" },
     invested: 11_310,
     current: 12_850,
     stocks: [
@@ -81,7 +78,6 @@ const COLLECTIONS: Collection[] = [
     id: 4,
     name: "Stable Compounders",
     theme: "Quality businesses with durable moats compounding steadily over the long term. Low drama, high conviction.",
-    sip: { amount: 50, frequency: "Monthly on 12th" },
     invested:  5_730,
     current:   6_210,
     stocks: [
@@ -121,6 +117,19 @@ function gainStr(g: number, pctVal: number) {
 /*  Collection card                                                    */
 /* ------------------------------------------------------------------ */
 
+function CollectionAvatar({ name, index }: { name: string; index: number }) {
+  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const hue = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  return (
+    <div
+      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
+      style={{ backgroundColor: `hsl(${hue}, 50%, 50%)` }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function CollectionCard({ col, index }: { col: Collection; index: number }) {
   const [open, setOpen] = useState(false);
   const gain    = col.current - col.invested;
@@ -128,65 +137,64 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
   const isUp    = gain >= 0;
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-white overflow-hidden">
-
-      {/* Collapsed row */}
+    <div>
+      {/* Main row */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full text-left px-5 pt-5 pb-5 active:opacity-70 transition-opacity"
+        className="w-full text-left py-5 active:opacity-70 transition-opacity flex items-start gap-3"
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-foreground" style={{ opacity: 0.15 + index * 0.17 }} />
-              <p className="text-[16px] font-bold text-foreground leading-tight">{col.name}</p>
-            </div>
-            <p className="text-[13px] text-muted-foreground">
-              {col.stocks.length} holdings
-              {col.sip ? ` · $${col.sip.amount}/mo SIP` : " · One-time"}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-[18px] font-bold text-foreground tabular-nums">${fmt(col.current)}</p>
-            <div className={cn("flex items-center justify-end gap-0.5 mt-0.5", isUp ? "text-emerald-500" : "text-red-500")}>
-              {isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              <span className="text-[12px] tabular-nums">{gainStr(gain, gainPct)}</span>
-            </div>
-          </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-bold text-foreground leading-tight mb-1">{col.name}</p>
+          <p className="text-[12px] text-muted-foreground">
+            {col.stocks.length} stocks
+          </p>
+        </div>
+
+        <div className="text-right shrink-0">
+          <p className="text-[16px] font-bold text-foreground tabular-nums leading-tight">${fmt(col.current)}</p>
+          <p className={cn("text-[12px] font-semibold tabular-nums mt-0.5", isUp ? "text-emerald-500" : "text-red-500")}>
+            {isUp ? "+" : "−"}${fmt(Math.abs(gain))} ({isUp ? "+" : ""}{gainPct.toFixed(1)}%)
+          </p>
         </div>
       </button>
 
-      {/* Expanded */}
+      {/* Expanded detail */}
       {open && (
-        <div className="border-t border-border/40">
-          <div className="px-5 pt-4 pb-4 space-y-5">
+        <div className="mb-4 rounded-2xl border border-border/40 bg-white overflow-hidden">
+          <div className="px-5 pt-4 pb-4 space-y-4">
 
-            {/* Blurb */}
             <p className="text-[13px] text-muted-foreground leading-relaxed">{col.theme}</p>
 
-            {/* Invested + SIP merged row */}
             <div className="rounded-xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] text-muted-foreground mb-0.5">Invested</p>
-                <p className="text-[15px] font-semibold text-foreground tabular-nums">${fmt(col.invested)}</p>
-              </div>
-              {col.sip && (
-                <div className="text-right">
-                  <p className="text-[11px] text-muted-foreground mb-0.5">SIP · {col.sip.frequency}</p>
-                  <p className="text-[15px] font-semibold text-foreground">${col.sip.amount}/mo</p>
-                </div>
-              )}
+              <p className="text-[13px] text-muted-foreground">Invested</p>
+              <p className="text-[15px] font-semibold text-foreground tabular-nums">${fmt(col.invested)}</p>
             </div>
 
-            {/* Holdings */}
             <div className="space-y-3">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Holdings</p>
               {col.stocks.map((s) => {
+                const sGain = s.current - s.invested;
+                const sIsUp = sGain >= 0;
                 return (
                   <div key={s.ticker} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold bg-muted text-foreground shrink-0">
-                        {s.ticker.slice(0, 2)}
+                      <div className="w-8 h-8 rounded-xl bg-[#F0F0F0] shrink-0 overflow-hidden">
+                        <img
+                          src={`https://assets.parqet.com/logos/symbol/${s.ticker}?format=png`}
+                          alt={s.ticker}
+                          className="w-full h-full object-cover"
+                          style={{ filter: "grayscale(100%) opacity(0.7)" }}
+                          onError={(e) => {
+                            const el = e.currentTarget;
+                            el.style.display = "none";
+                            if (el.parentElement) {
+                              el.parentElement.style.display = "flex";
+                              el.parentElement.style.alignItems = "center";
+                              el.parentElement.style.justifyContent = "center";
+                              el.parentElement.innerHTML = `<span style="font-size:10px;font-weight:700;color:#888">${s.ticker.slice(0, 2)}</span>`;
+                            }
+                          }}
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[14px] text-foreground truncate">{s.name}</p>
@@ -194,8 +202,10 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[14px] font-medium text-foreground tabular-nums">${fmt(s.current)}</p>
-                      <p className="text-[12px] text-muted-foreground tabular-nums">Invested ${fmt(s.invested)}</p>
+                      <p className="text-[14px] font-semibold text-foreground tabular-nums">${fmt(s.current)}</p>
+                      <p className={cn("text-[12px] tabular-nums", sIsUp ? "text-emerald-500" : "text-red-500")}>
+                        {sIsUp ? "+" : "−"}${fmt(Math.abs(sGain))}
+                      </p>
                     </div>
                   </div>
                 );
@@ -203,20 +213,10 @@ function CollectionCard({ col, index }: { col: Collection; index: number }) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="border-t border-border/40 flex divide-x divide-border/40">
-            <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
+          <div className="border-t border-border/40">
+            <button className="w-full flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
               Invest more
             </button>
-            {col.sip ? (
-              <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
-                Edit SIP
-              </button>
-            ) : (
-              <button className="flex-1 flex items-center justify-center py-4 text-[14px] text-foreground active:bg-muted/30 transition-colors">
-                Set up SIP
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -274,7 +274,7 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
 
         <p className="text-[22px] font-bold text-foreground mb-1">No collections yet</p>
         <p className="text-[14px] text-muted-foreground mb-6">
-          Curated baskets of stocks and ETFs built around themes — invest in all of them with a single SIP.
+          Curated baskets of stocks and ETFs built around themes — invest in all of them with a single tap.
         </p>
         <button
           onClick={() => router.push("/home-v3")}
@@ -341,11 +341,11 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
         </div>
       </div>
 
-      {/* ── Cards ── */}
+      {/* ── List ── */}
       <div className="px-5 mb-2">
-        <p className="text-[16px] text-foreground">Your Collections ({COLLECTIONS.length})</p>
+        <p className="text-[16px] text-foreground">{COLLECTIONS.length} Collections</p>
       </div>
-      <div className="mx-5 flex flex-col gap-3">
+      <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {COLLECTIONS.map((c, i) => (
           <CollectionCard key={c.id} col={c} index={i} />
         ))}

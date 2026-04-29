@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Zap, BarChart2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { TrendingUp, TrendingDown, Clock, Plus, LogOut, ArrowRight, AlertTriangle, X, ChevronRight, Zap, BarChart2, Activity } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -132,7 +133,7 @@ function CloseReasonBadge({ reason, date }: { reason: CloseReason; date?: string
   };
   const { label } = configs[reason];
   return (
-    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[14px] font-semibold text-muted-foreground whitespace-nowrap">
+    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
       {label}
     </span>
   );
@@ -147,6 +148,17 @@ function SideBadge({ side }: { side: "B" | "S" }) {
     <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md text-[14px] font-bold shrink-0 bg-muted text-foreground">
       {side}
     </span>
+  );
+}
+
+function SideAvatar({ side }: { side: "B" | "S" }) {
+  return (
+    <div className={cn(
+      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[14px] font-bold",
+      side === "B" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+    )}>
+      {side}
+    </div>
   );
 }
 
@@ -198,92 +210,84 @@ function OpenCard({ p, expanded, onToggle }: {
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const router = useRouter();
   const label = [p.symbol, p.expiry, p.type].filter(Boolean).join(" ");
+
+  function goToDetail() {
+    const qs = new URLSearchParams({
+      side: p.side,
+      pnl: String(p.pnl),
+      avg: String(p.avgPrice),
+      ltp: String(p.ltp),
+      filled: String(p.filledQty),
+      ordered: String(p.orderedQty),
+      status: p.status,
+    });
+    if (p.expiry) qs.set("expiry", p.expiry);
+    if (p.type) qs.set("type", p.type);
+    if (p.lots !== undefined) qs.set("lots", String(p.lots));
+    if (p.daysToExpiry !== undefined) qs.set("dte", String(p.daysToExpiry));
+    router.push(`/position-detail/${encodeURIComponent(p.symbol)}?${qs.toString()}`);
+  }
   const isPending = p.status === "pending";
   const showExpiry = p.daysToExpiry !== undefined && p.daysToExpiry <= 5;
 
+  const qtyMeta = p.status === "partial_fill"
+    ? `${fmtQty(p.filledQty)}/${fmtQty(p.orderedQty)}`
+    : p.lots !== undefined
+      ? `${p.lots} lot × ${p.filledQty || p.orderedQty}`
+      : fmtQty(p.filledQty || p.orderedQty);
+
   return (
-    <div style={expanded ? { borderTop: "1px solid #e1e1e1", borderBottom: "1px solid #e1e1e1" } : {}}>
-      {/* Tappable card body */}
-      <button className="w-full text-left px-5 py-4 active:bg-muted/20 transition-colors" onClick={onToggle}>
-        {/* Row 1: S/B badge + label + expiry badge right-aligned */}
-        <div className="flex items-center justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <SideBadge side={p.side} />
-            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-              <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
-              {p.tag && (
-                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
-              )}
-              <OpenStatusBadge status={p.status} filledQty={p.filledQty} orderedQty={p.orderedQty} />
-            </div>
+    <div>
+      <button className="w-full text-left py-5 flex items-start gap-3 active:opacity-70 transition-opacity" onClick={onToggle}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+            <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground shrink-0">
+              {p.side === "B" ? "BUY" : "SELL"}
+            </span>
+            <p className="text-[15px] font-bold text-foreground leading-tight">{label}</p>
+            {p.tag && <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-bold text-muted-foreground">{p.tag}</span>}
+            {p.status === "partial_fill" && <span className="text-[11px] font-semibold text-amber-600">Partial fill</span>}
+            {isPending && <span className="text-[11px] font-semibold text-muted-foreground">Pending</span>}
           </div>
-          {showExpiry && <ExpiryBadge days={p.daysToExpiry!} />}
+          <p className="text-[12px] text-muted-foreground tabular-nums">
+            {qtyMeta}
+            {!isPending && ` · Avg $${p.avgPrice} · LTP $${p.ltp}`}
+          </p>
         </div>
 
-        {/* Row 2: labeled columns + P&L */}
-        <div className="flex items-center justify-between gap-2 text-[14px]">
-          <div className="flex items-center gap-3">
-            {/* Qty — show filled/ordered if partial */}
-            <div className="flex flex-col">
-              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-              {p.status === "partial_fill" ? (
-                <span className="font-semibold text-foreground">{fmtQty(p.filledQty)}
-                  <span className="text-muted-foreground font-normal">/{fmtQty(p.orderedQty)}</span>
-                </span>
-              ) : (
-                <QtyDisplay p={p} />
-              )}
-            </div>
-            <div className="w-px h-6 bg-border/50" />
-            <div className="flex flex-col">
-              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-              <span className="font-semibold text-foreground">
-                {isPending ? <span className="text-muted-foreground">—</span> : `$${p.avgPrice}`}
-              </span>
-            </div>
-            <div className="w-px h-6 bg-border/50" />
-            <div className="flex flex-col">
-              <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
-              <span className="font-semibold text-foreground">${p.ltp}</span>
-            </div>
-          </div>
-
-          {/* P&L — hidden for pending */}
-          {isPending ? null : (
-            <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
+        <div className="text-right shrink-0">
+          {!isPending && (
+            <p className={cn("text-[16px] font-bold tabular-nums leading-tight", p.pnl >= 0 ? "text-emerald-500" : "text-red-500")}>
               {fmtPnl(p.pnl)}
             </p>
+          )}
+          {showExpiry && (
+            <div className="mt-1">
+              <ExpiryBadge days={p.daysToExpiry!} />
+            </div>
           )}
         </div>
       </button>
 
-      {/* Expanded actions */}
       {expanded && !isPending && (
-        <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
-            <Plus size={14} />
-            Add
+        <div className="border-t border-border/40 flex divide-x divide-border/40 -mx-0 mb-1">
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-[14px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+            <Plus size={13} />Add
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
-            <LogOut size={14} />
-            Exit position
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-[14px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+            <LogOut size={13} />Exit
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
-            Details
-            <ArrowRight size={14} />
+          <button onClick={goToDetail} className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-[14px] font-semibold text-foreground active:bg-muted/30 transition-colors">
+            Details<ArrowRight size={13} />
           </button>
         </div>
       )}
       {expanded && isPending && (
-        <div className="border-t border-border/40 flex divide-x divide-border/40">
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
-            Cancel order
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 px-8 py-4 text-[16px] font-semibold text-foreground active:bg-muted/30 transition-colors whitespace-nowrap">
-            Details
-            <ArrowRight size={14} />
-          </button>
+        <div className="border-t border-border/40 flex divide-x divide-border/40 mb-1">
+          <button className="flex-1 flex items-center justify-center py-3.5 text-[14px] font-semibold text-foreground active:bg-muted/30 transition-colors">Cancel order</button>
+          <button onClick={goToDetail} className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-[14px] font-semibold text-foreground active:bg-muted/30 transition-colors">Details<ArrowRight size={13} /></button>
         </div>
       )}
     </div>
@@ -330,82 +334,86 @@ function ExitAllDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           </div>
         </div>
 
+        {/* Select all row */}
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between shrink-0">
+          <p className="text-[13px] text-muted-foreground">
+            {selected.size} of {exitablePositions.length} selected
+          </p>
+          <button
+            onClick={() => setSelected(
+              selected.size === exitablePositions.length
+                ? new Set()
+                : new Set(exitablePositions.map((_, i) => i))
+            )}
+            className="text-[13px] font-semibold text-foreground active:opacity-60"
+          >
+            {selected.size === exitablePositions.length ? "Deselect all" : "Select all"}
+          </button>
+        </div>
+
         {/* List */}
-        <div className="overflow-y-auto flex-1 px-5 space-y-3 pb-4 pt-4">
+        <div className="overflow-y-auto flex-1 px-5 space-y-2.5 pb-4">
           {exitablePositions.map((p, i) => {
             const label = [p.symbol, p.expiry, p.type].filter(Boolean).join(" ");
             const isChecked = selected.has(i);
+            const isUp = p.pnl >= 0;
+
+            const qtyMeta = p.lots !== undefined
+              ? `${p.lots} lot × ${p.filledQty || p.orderedQty}`
+              : p.status === "partial_fill"
+                ? `${fmtQty(p.filledQty)}/${fmtQty(p.orderedQty)}`
+                : fmtQty(p.filledQty || p.orderedQty);
+
             return (
               <button
                 key={i}
                 onClick={() => toggle(i)}
-                className="w-full flex items-center gap-3 text-left active:opacity-70"
+                className={cn(
+                  "w-full text-left rounded-2xl border px-4 py-4 flex items-center gap-3 transition-all active:scale-[0.99]",
+                  isChecked ? "border-foreground bg-white" : "border-border/40 bg-white/60"
+                )}
               >
-                {/* Checkbox */}
+                {/* Check circle */}
                 <div className={cn(
-                  "shrink-0 w-5 h-5 rounded flex items-center justify-center border-2 transition-colors",
-                  isChecked ? "bg-foreground border-foreground" : "border-border bg-white"
+                  "shrink-0 w-5 h-5 rounded-full flex items-center justify-center border-2 transition-colors",
+                  isChecked ? "bg-foreground border-foreground" : "border-border/50 bg-transparent"
                 )}>
                   {isChecked && (
-                    <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
-                      <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                      <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </div>
 
-                {/* Card — same layout as OpenCard */}
-                <div className="flex-1 rounded-2xl border border-border/50 bg-white px-5 py-5">
-                  {/* Row 1: S/B badge + label */}
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <SideBadge side={p.side} />
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-[16px] font-bold text-foreground tracking-wide">{label}</p>
-                      {p.tag && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{p.tag}</span>
-                      )}
-                    </div>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                    <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground shrink-0">
+                      {p.side === "B" ? "BUY" : "SELL"}
+                    </span>
+                    <p className="text-[15px] font-bold text-foreground leading-tight">{label}</p>
                   </div>
-                  {/* Row 2: Qty | Avg | LTP + P&L */}
-                  <div className="flex items-center justify-between gap-2 text-[14px]">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-                        <QtyDisplay p={p} />
-                      </div>
-                      <div className="w-px h-6 bg-border/50" />
-                      <div className="flex flex-col">
-                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-                        <span className="font-semibold text-foreground">${p.avgPrice}</span>
-                      </div>
-                      <div className="w-px h-6 bg-border/50" />
-                      <div className="flex flex-col">
-                        <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
-                        <span className="font-semibold text-foreground">${p.ltp}</span>
-                      </div>
-                    </div>
-                    <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
-                      {fmtPnl(p.pnl)}
-                    </p>
-                  </div>
+                  <p className="text-[12px] text-muted-foreground tabular-nums">
+                    {qtyMeta} · Avg ${p.avgPrice} · LTP ${p.ltp}
+                  </p>
                 </div>
+
+                {/* P&L */}
+                <p className={cn("text-[15px] font-bold tabular-nums shrink-0", isUp ? "text-emerald-500" : "text-red-500")}>
+                  {fmtPnl(p.pnl)}
+                </p>
               </button>
             );
           })}
         </div>
 
         {/* CTA */}
-        <div className="shrink-0 px-5 pb-6 pt-3 border-t border-border/40">
+        <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border/40">
           <button
             disabled={selected.size === 0}
-            className="w-full flex items-center justify-between bg-foreground text-background rounded-2xl px-5 py-4 active:opacity-80 transition-opacity disabled:opacity-40"
+            className="w-full rounded-2xl bg-foreground text-background py-4 text-[15px] font-bold active:opacity-80 transition-opacity disabled:opacity-30"
           >
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-              <ChevronRight size={18} className="text-background" />
-            </div>
-            <span className="text-[16px] font-bold">
-              {selected.size === 0 ? "Select positions to exit" : `Swipe to Exit ${selected.size > 0 ? `${selected.size} ` : ""}All`}
-            </span>
-            <div className="w-9" />
+            {selected.size === 0 ? "Select positions to exit" : `Exit ${selected.size} position${selected.size > 1 ? "s" : ""}`}
           </button>
         </div>
       </SheetContent>
@@ -429,6 +437,23 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
     const isMarketOpen = day >= 1 && day <= 5 && hour >= 9 && hour < 16;
     return (
       <div className="pb-24">
+        {/* Empty state — ghost trading chart */}
+        <div className="mx-5 mt-5 mb-4 rounded-2xl bg-sky-50/60 border border-sky-100 px-5 pt-5 pb-4 overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[15px] font-bold text-foreground">No open positions</p>
+            <Activity size={28} className="text-sky-200" />
+          </div>
+          {/* Ghost candlestick bars */}
+          <div className="flex items-end gap-[3px] h-12 mb-3">
+            {[45, 70, 30, 85, 55, 40, 75, 35, 60, 80, 25, 65, 50, 90, 38].map((h, i) => (
+              <div key={i} className="flex-1 rounded-sm bg-sky-300/30" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+          <p className="text-[12px] text-muted-foreground">No active trades right now. Open a position to track it live.</p>
+        </div>
+
+        <div className="h-[45px]" />
+
         {/* Market status banner */}
         <div className={cn(
           "mx-5 mt-5 mb-5 rounded-2xl px-4 py-3 flex items-center gap-3",
@@ -443,13 +468,6 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
               {isMarketOpen ? "NYSE & NASDAQ trading hours: 9:30 AM – 4:00 PM ET" : "Opens Mon–Fri, 9:30 AM – 4:00 PM ET"}
             </p>
           </div>
-        </div>
-
-        {/* MTM placeholder */}
-        <div className="mx-5 mb-5 rounded-2xl border border-border/40 bg-background px-5 py-5 text-center">
-          <p className="text-[13px] text-muted-foreground mb-1">Today&apos;s MTM P&L</p>
-          <p className="text-[36px] font-bold text-foreground/15 tabular-nums">$0.00</p>
-          <p className="text-[12px] text-muted-foreground/60 mt-1">Positions you open will appear here live</p>
         </div>
 
         {/* Two type cards */}
@@ -488,25 +506,17 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
 
       {/* ── Today's P&L header ── */}
       <div className="bg-white border-b border-border/30 px-5 pt-5 pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Today&apos;s P&L</p>
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className={cn("text-[26px] font-bold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
-                {fmtPnl(todayPnl)}
-              </span>
-              <span className="flex items-center gap-0.5 text-[16px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
-                {isGain ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                {isGain ? "+" : ""}{todayPnlPct}%
-              </span>
-            </div>
+        <div className="text-center">
+          <p className="text-[14px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Today&apos;s P&L</p>
+          <div className="flex items-baseline justify-center gap-2 flex-wrap">
+            <span className={cn("text-[26px] font-bold tabular-nums leading-none", isGain ? "text-[#10B981]" : "text-red-500")}>
+              {fmtPnl(todayPnl)}
+            </span>
+            <span className="flex items-center gap-0.5 text-[16px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981]">
+              {isGain ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+              {isGain ? "+" : ""}{todayPnlPct}%
+            </span>
           </div>
-          <button
-            onClick={() => setExitAllOpen(true)}
-            className="shrink-0 mt-1 rounded-2xl bg-foreground px-4 py-2.5 text-[16px] font-bold text-background active:opacity-75 transition-opacity"
-          >
-            Exit all
-          </button>
         </div>
         <div className="mt-4 flex items-center rounded-xl bg-[#F8F9FA] divide-x divide-border/40">
           <div className="flex-1 px-3.5 py-2.5">
@@ -521,12 +531,20 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
       </div>
 
       {/* ── Open positions ── */}
-      <div className="px-5 mt-6 mb-3 flex items-center gap-2">
-        <p className="text-[16px] font-semibold text-foreground">Open</p>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{OPEN.length}</span>
+      <div className="px-5 mt-6 mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="text-[16px] font-semibold text-foreground">Open</p>
+          <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{OPEN.length}</span>
+        </div>
+        <button
+          onClick={() => setExitAllOpen(true)}
+          className="rounded-xl border border-border/60 px-3.5 py-1.5 text-[13px] font-semibold text-foreground active:opacity-60 transition-opacity"
+        >
+          Exit all
+        </button>
       </div>
 
-      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+      <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {OPEN.map((p, i) => (
           <OpenCard
             key={i}
@@ -543,49 +561,35 @@ export function PositionsTab({ empty }: { empty?: boolean }) {
         <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[14px] font-bold text-foreground">{CLOSED.length}</span>
       </div>
 
-      <div className="divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+      <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {CLOSED.map((p, i) => {
           const label = [p.symbol, p.expiry, p.type].filter(Boolean).join(" ");
           const isPartial = p.reason === "partial_close";
           const isWorthless = p.reason === "expired_worthless";
           return (
-            <div key={i} className="px-5 py-4">
-              {/* Row 1: label + reason badge */}
-              <div className="flex items-start justify-between gap-2 mb-2.5">
-                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <p className="text-[16px] font-bold text-muted-foreground tracking-wide">{label}</p>
+            <div key={i} className="py-5 flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                  <p className="text-[15px] font-bold text-muted-foreground leading-tight">{label}</p>
                   {isPartial && (
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">
+                    <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-bold text-muted-foreground">
                       {p.closedQty}/{p.totalQty} qty
                     </span>
                   )}
                 </div>
-                <CloseReasonBadge reason={p.reason} date={p.date} />
+                <p className="text-[12px] text-muted-foreground tabular-nums">
+                  Qty {fmtQty(p.closedQty)} · Avg ${p.entryPrice} · Exit{" "}
+                  {isWorthless ? "Worthless" : `$${p.exitPrice}`}
+                </p>
               </div>
 
-              {/* Row 2: Qty | Avg | Exit + P&L */}
-              <div className="flex items-center justify-between gap-2 text-[14px]">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-                    <span className="font-semibold text-muted-foreground">{fmtQty(p.closedQty)}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border/50" />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-                    <span className="font-semibold text-muted-foreground">${p.entryPrice}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border/50" />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Exit</span>
-                    <span className="font-semibold text-muted-foreground">
-                      {isWorthless ? <span className="text-muted-foreground/50">Worthless</span> : `$${p.exitPrice}`}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[16px] font-bold tabular-nums shrink-0 text-foreground">
+              <div className="text-right shrink-0">
+                <p className={cn("text-[16px] font-bold tabular-nums leading-tight", p.pnl >= 0 ? "text-emerald-500" : "text-red-500")}>
                   {fmtPnl(p.pnl)}
                 </p>
+                <div className="mt-1">
+                  <CloseReasonBadge reason={p.reason} date={p.date} />
+                </div>
               </div>
             </div>
           );

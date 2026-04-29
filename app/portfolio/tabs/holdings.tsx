@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, SlidersHorizontal, TrendingUp, Globe, BarChart2, Shield } from "lucide-react";
+import { X, SlidersHorizontal, TrendingUp, Globe, BarChart2, Shield, Wallet, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -209,8 +209,84 @@ const fmtInt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 /* ------------------------------------------------------------------ */
-/*  Component                                                          */
+/*  Holding card sub-components                                        */
 /* ------------------------------------------------------------------ */
+
+const LOGO_TICKER: Record<string, string> = {
+  "Apple Inc.": "AAPL",
+  "Microsoft Corporation": "MSFT",
+  "NVIDIA Corporation": "NVDA",
+  "Alphabet Inc.": "GOOGL",
+  "Meta Platforms, Inc.": "META",
+  "Tesla, Inc.": "TSLA",
+  "Amazon.com, Inc.": "AMZN",
+  "Netflix, Inc.": "NFLX",
+  "Super Micro Computer, Inc.": "SMCI",
+  "SPDR S&P 500 ETF Trust": "SPY",
+  "Invesco QQQ Trust": "QQQ",
+  "SPDR Gold Shares": "GLD",
+  "iShares Core S&P 500 ETF": "IVV",
+  "Vanguard Total Stock Market": "VTI",
+  "iShares MSCI World ETF": "URTH",
+  "Vanguard FTSE All-World ETF": "VT",
+  "iShares MSCI Emerging Markets ETF": "EEM",
+  "SPDR MSCI ACWI ex-US ETF": "CWI",
+};
+
+function HoldingAvatar({ name }: { name: string }) {
+  const ticker = LOGO_TICKER[name];
+  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const hue = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+
+  if (ticker) {
+    return (
+      <div className="w-11 h-11 rounded-2xl bg-[#F0F0F0] shrink-0 overflow-hidden">
+        <img
+          src={`https://assets.parqet.com/logos/symbol/${ticker}?format=png`}
+          alt={ticker}
+          className="w-full h-full object-cover"
+          style={{ filter: "grayscale(100%) opacity(0.7)" }}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              `https://logo.clearbit.com/${ticker.toLowerCase()}.com`;
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
+      style={{ backgroundColor: `hsl(${hue}, 55%, 52%)` }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+function Sparkline({ name, isGain }: { name: string; isGain: boolean }) {
+  const seed = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const pts = Array.from({ length: 9 }, (_, i) => ((seed * (i + 3) * 31 + i * 17) % 38) + 10);
+  const W = 64, H = 28;
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const range = max - min || 1;
+  const path = pts
+    .map((v, i) => `${(i / (pts.length - 1)) * W},${H - ((v - min) / range) * (H - 6) - 3}`)
+    .join(" ");
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="shrink-0">
+      <polyline
+        points={path}
+        fill="none"
+        stroke={isGain ? "#10B981" : "#ef4444"}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Main tab                                                           */
@@ -250,6 +326,16 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
     ];
     return (
       <div className="pb-24 px-5 pt-5">
+        {/* Empty state — dashed empty shelf */}
+        <div className="border-2 border-dashed border-border/50 rounded-3xl py-8 px-6 mb-5 flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-3">
+            <Wallet size={24} className="text-violet-400" />
+          </div>
+          <p className="text-[15px] font-bold text-foreground mb-1">No holdings yet</p>
+          <p className="text-[13px] text-muted-foreground leading-snug">Stocks and ETFs you invest in<br />will appear here</p>
+        </div>
+
+        <div className="h-[45px]" />
         <p className="text-[22px] font-bold text-foreground mb-1">Build your portfolio</p>
         <p className="text-[14px] text-muted-foreground mb-5">Choose what you want to invest in</p>
         <div className="space-y-3">
@@ -309,7 +395,7 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
 
       {/* Advisory banner — top */}
       {!advisoryDismissed && (
-        <div className="mx-5 mb-4 flex items-center justify-between rounded-xl bg-[#F2F2F2] px-4 py-3">
+        <div className="mx-5 mb-7 flex items-center justify-between rounded-xl bg-[#F2F2F2] px-4 py-3">
           <p className="text-[14px] text-muted-foreground">Advisory holding won&apos;t be visible here</p>
           <button onClick={() => setAdvisoryDismissed(true)} className="ml-3 shrink-0 active:opacity-60">
             <X size={17} className="text-muted-foreground" />
@@ -337,72 +423,70 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
         </div>
       </div>
 
-      {/* Hero card — white card stacked above gray Today's P&L strip */}
-      <div className="mx-5 mb-5">
-        {/* Front card */}
-        <div className="rounded-2xl border border-border/40 bg-white px-4 py-4 shadow-sm">
-          {/* Invested + Current value */}
-          <div className="flex gap-10 mb-3.5">
-            <div>
-              <p className="text-[16px] text-muted-foreground mb-1">Invested</p>
-              <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroInvested)}</p>
-            </div>
-            <div>
-              <p className="text-[16px] text-muted-foreground mb-1">Current value</p>
-              <p className="text-[18px] font-bold text-foreground">${fmtMoney(heroCurrentValue)}</p>
-            </div>
-          </div>
+      {/* Hero card */}
+      <div className="mx-5 mb-5 rounded-2xl border border-border/30 bg-white overflow-hidden shadow-sm">
 
-          <div className="h-px bg-border/40 mb-3.5" />
-
-          {/* P&L row */}
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[16px] text-muted-foreground">P&L</span>
-            <span className={cn("text-[16px] font-semibold", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
-              {heroPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroPnl))} ({heroPnlPct >= 0 ? "+" : ""}{heroPnlPct.toFixed(1)}%)
+        {/* Top — current value + all-time P&L */}
+        <div className="px-5 pt-5 pb-4">
+          <p className="text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Current Value</p>
+          <p className="text-[32px] font-bold text-foreground leading-none tabular-nums mb-3">
+            ${fmtMoney(heroCurrentValue)}
+          </p>
+          <div className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-3 py-1",
+            heroPnl >= 0 ? "bg-emerald-50" : "bg-red-50"
+          )}>
+            <span className={cn("text-[13px] font-semibold tabular-nums", heroPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              {heroPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroPnl))}
             </span>
-          </div>
-
-          {/* Estimated XIRR row */}
-          <div className="flex items-center justify-between">
-            <span className="text-[16px] text-muted-foreground">Estimated XIRR</span>
-            <span className={cn("text-[16px] font-semibold", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
-              {heroXirr >= 0 ? "+" : ""}{heroXirr.toFixed(1)}%
+            <span className={cn("text-[12px] font-medium", heroPnl >= 0 ? "text-[#10B981]/70" : "text-red-400")}>
+              ({heroPnlPct >= 0 ? "+" : ""}{heroPnlPct.toFixed(1)}%) all time
             </span>
           </div>
         </div>
 
-        {/* Gray strip — Today's P&L, peeks below the white card */}
-        <div className="bg-[#F2F3F7] rounded-b-2xl px-4 pt-2 pb-2.5 -mt-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[16px] text-muted-foreground">Today&apos;s P&L</span>
-            <span className={cn("text-[16px] font-semibold", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
-                {heroTodayPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroTodayPnl))} ({heroTodayPnlPct >= 0 ? "+" : ""}{heroTodayPnlPct.toFixed(1)}%)
-              </span>
+        {/* Divider */}
+        <div className="h-px bg-border/30 mx-5" />
+
+        {/* Stats row — Invested | XIRR | Today */}
+        <div className="grid grid-cols-3 divide-x divide-border/30">
+          <div className="px-4 py-3.5">
+            <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wide font-semibold mb-1">Invested</p>
+            <p className="text-[14px] font-bold text-foreground tabular-nums">${fmtMoney(heroInvested)}</p>
+          </div>
+          <div className="px-4 py-3.5">
+            <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wide font-semibold mb-1">Est. XIRR</p>
+            <p className={cn("text-[14px] font-bold tabular-nums", heroXirr >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              {heroXirr >= 0 ? "+" : ""}{heroXirr.toFixed(1)}%
+            </p>
+          </div>
+          <div className="px-4 py-3.5">
+            <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wide font-semibold mb-1">Today</p>
+            <p className={cn("text-[14px] font-bold tabular-nums", heroTodayPnl >= 0 ? "text-[#10B981]" : "text-red-500")}>
+              {heroTodayPnl >= 0 ? "+" : ""}${fmtMoney(Math.abs(heroTodayPnl))}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Holdings count + Change/Value toggle */}
-      <div className="mx-5 mb-3 flex items-center justify-between">
+      <div className="mx-5 mb-3 mt-7 flex items-center justify-between">
         <p className="text-[16px] font-semibold text-foreground">{filtered.length} Holdings</p>
         <div className="flex items-center gap-2">
-          {/* Settings button — only shown when "Change" is active */}
-          {valueMode === "Change" && (
-            <button
-              onClick={() => setChangeSheetOpen(true)}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-[#F5F5F5] active:opacity-60 transition-opacity"
-            >
-              <SlidersHorizontal size={16} className="text-foreground" />
-            </button>
-          )}
+          {/* Settings button — always visible */}
+          <button
+            onClick={() => setChangeSheetOpen(true)}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-[#F5F5F5] active:opacity-60 transition-opacity"
+          >
+            <SlidersHorizontal size={16} className="text-foreground" />
+          </button>
           <div className="flex rounded-full bg-[#F5F5F5] p-0.5">
             {(["Change", "Value"] as ValueMode[]).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setValueMode(mode)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-[16px] font-semibold transition-all",
+                  "px-4 py-1.5 rounded-full text-[14px] font-semibold transition-all",
                   valueMode === mode ? "bg-black text-white" : "text-muted-foreground"
                 )}
               >
@@ -457,63 +541,48 @@ export function HoldingsTab({ empty }: { empty?: boolean }) {
       </Sheet>
 
       {/* Holdings list */}
-      <div className="px-5 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
+      <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
         {filtered.map((h) => {
           const isGain = h.pnl >= 0;
           const sign = isGain ? "+" : "-";
           const absPnl = `${sign}$${fmtInt(Math.abs(h.pnl))}`;
           const pctPnl = `${sign}${Math.abs(h.pnlPct).toFixed(1)}%`;
-
-          const rightTop =
-            valueMode === "Value"
-              ? `$${fmtInt(h.currentValue)}`
-              : pctPnl;
-
-          const rightSub = absPnl;
+          const qtyFmt = h.qty % 1 === 0 ? String(h.qty) : h.qty.toFixed(5).replace(/\.?0+$/, "");
 
           return (
             <button
               key={h.name}
               onClick={() => router.push(`/holding-detail/${encodeURIComponent(h.name)}`)}
-              className="w-full text-left py-4 active:opacity-75 transition-opacity"
+              className="w-full text-left py-5 active:opacity-70 transition-opacity flex items-start gap-3"
             >
-              {/* Top row: name + current value */}
-              <div className="flex items-center justify-between gap-3 mb-2.5">
-                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <p className="text-[16px] font-bold text-foreground leading-snug truncate">{h.name}</p>
+              {/* Avatar */}
+              <HoldingAvatar name={h.name} />
+
+              {/* Name + meta */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-bold text-foreground truncate leading-tight mb-1">{h.name}</p>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Briefcase size={11} className="text-muted-foreground/60 shrink-0" />
+                  <span className="text-[12px] text-muted-foreground tabular-nums">{qtyFmt}</span>
                   {h.tag && (
-                    <span className="shrink-0 rounded-md bg-[#E3E3E3] px-1.5 py-0.5 text-[12px] font-bold text-foreground">
+                    <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground">
                       {h.tag}
                     </span>
                   )}
                 </div>
-                <p className="text-[18px] font-bold text-foreground leading-tight shrink-0">{rightTop}</p>
+                <p className="text-[12px] text-muted-foreground tabular-nums">
+                  Avg ${h.avgPrice} · LTP ${h.currentPrice}
+                </p>
               </div>
 
-              {/* Bottom row: labeled columns + P&L */}
-              <div className="flex items-center justify-between gap-2 text-[14px]">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Qty</span>
-                    <span className="font-normal text-foreground">{h.qty % 1 === 0 ? h.qty : h.qty.toFixed(5).replace(/\.?0+$/, "")}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border/50" />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">Avg</span>
-                    <span className="font-normal text-foreground">${h.avgPrice}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border/50" />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wide leading-none mb-0.5">LTP</span>
-                    <span className="font-normal text-foreground">
-                      ${h.currentPrice}
-                      <span className="ml-1 text-[13px] font-medium text-muted-foreground">
-                        ({h.dayChangePct > 0 ? "+" : ""}{h.dayChangePct.toFixed(1)}%)
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[15px] font-bold tabular-nums shrink-0 text-foreground">{rightSub}</p>
+              {/* Current value (always neutral) + P&L change below */}
+              <div className="text-right shrink-0">
+                <p className="text-[16px] font-bold text-foreground tabular-nums leading-tight">
+                  ${fmtInt(h.currentValue)}
+                </p>
+                <p className={cn("text-[12px] font-semibold tabular-nums mt-0.5", isGain ? "text-[#10B981]" : "text-red-500")}>
+                  {valueMode === "Value" ? absPnl : pctPnl}
+                </p>
               </div>
             </button>
           );

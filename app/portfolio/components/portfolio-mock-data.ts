@@ -4,17 +4,20 @@
 
 // ── Portfolio Summary ──
 
+// Holdings (non-advisory): currentValue = 56,181 · invested = 50,483 · todayPnl = 318.58
+// Advisory:                currentValue =  5,560 · invested =  6,270
+// Overview total (incl. advisory): currentValue = 61,741 · invested = 56,753
 export const PORTFOLIO_SUMMARY = {
-  currentValue: 48_625.80,
-  investedAmount: 45_780.50,
-  dayChange: 385.20,
-  dayChangePct: 0.80,
-  unrealizedPnl: 2_845.30,
-  unrealizedPnlPct: 6.21,
-  realizedPnl: 2_842.30,
-  realizedPnlPct: 8.21,
-  xirr: 18.42,
-  buyingPower: 12_485.50,
+  currentValue:      61_741.00,   // Holdings 56,181 + Advisory 5,560
+  investedAmount:    56_753.00,   // Holdings 50,483 + Advisory 6,270
+  dayChange:            318.58,   // sum of (currentValue * dayChangePct) across all Holdings
+  dayChangePct:           0.52,   // 318.58 / 61,741
+  unrealizedPnl:      4_988.00,   // Holdings P&L 5,698 + Advisory P&L -710
+  unrealizedPnlPct:       8.79,   // 4,988 / 56,753
+  realizedPnl:        2_842.30,
+  realizedPnlPct:         8.21,
+  xirr:                  14.20,
+  buyingPower:       12_485.50,
 };
 
 // ── Wealth Growth Chart Data (daily) ──
@@ -94,8 +97,8 @@ function generateDailyWealthData(): WealthDataPoint[] {
 
   // Normalize final value to match PORTFOLIO_SUMMARY.currentValue
   const lastPoint = points[points.length - 1];
-  const scale = 48_625.80 / lastPoint.value;
-  const investedScale = 45_780.50 / lastPoint.invested;
+  const scale = 61_741.00 / lastPoint.value;
+  const investedScale = 56_753.00 / lastPoint.invested;
   for (const p of points) {
     p.value = Math.round(p.value * scale * 100) / 100;
     p.invested = Math.round(p.invested * investedScale * 100) / 100;
@@ -125,11 +128,16 @@ export interface AssetClass {
   color: string;
 }
 
+// Derived from HOLDINGS in holdings.tsx:
+//   Stocks (9):      current 20,807 · invested 19,490
+//   ETFs (5):        current 27,924 · invested 24,002
+//   Global ETFs (4): current  7,450 · invested  6,992
+//   Advisory:        current  5,560 · invested  6,270  (not in Holdings tab)
 export const ASSET_CLASSES: AssetClass[] = [
-  { name: "Stocks",      icon: "TrendingUp", count: "8 holdings",  current: 34_250, invested: 41_580, xirr: 21.4, color: "bg-neutral-800" },
-  { name: "ETFs",        icon: "BarChart3",  count: "3 holdings",  current:  4_550, invested:  4_785, xirr:  5.2, color: "bg-neutral-500" },
-  { name: "Global ETFs", icon: "Globe",      count: "3 holdings",  current:  4_550, invested:  4_785, xirr:  5.2, color: "bg-neutral-400" },
-  { name: "Advisory",   icon: "Sparkles",   count: "3 baskets",   current:  5_560, invested:  6_270, xirr: 12.8, color: "bg-neutral-300" },
+  { name: "Stocks",      icon: "TrendingUp", count: "9 holdings",  current: 20_807, invested: 19_490, xirr: 10.8, color: "bg-neutral-800" },
+  { name: "ETFs",        icon: "BarChart3",  count: "5 holdings",  current: 27_924, invested: 24_002, xirr: 17.6, color: "bg-neutral-500" },
+  { name: "Global ETFs", icon: "Globe",      count: "4 holdings",  current:  7_450, invested:  6_992, xirr:  7.2, color: "bg-neutral-400" },
+  { name: "Advisory",    icon: "Sparkles",   count: "3 baskets",   current:  5_560, invested:  6_270, xirr: 12.8, color: "bg-neutral-300" },
 ];
 
 // ── Investment Style (Lumpsum vs SIP) ──

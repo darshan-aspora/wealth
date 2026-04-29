@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "assets.parqet.com" },
+      { protocol: "https", hostname: "logo.clearbit.com" },
+    ],
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       // Disable webpack's persistent filesystem cache in development.

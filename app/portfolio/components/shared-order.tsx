@@ -363,40 +363,58 @@ export function OrderCard({ order }: { order: Order }) {
   const router = useRouter();
   const label = [order.symbol, order.expiry, order.optionType].filter(Boolean).join(" ");
 
+  const isLot      = order.lots !== undefined;
+  const isFilled   = order.filledQty === order.totalQty || order.kind === "completed";
+  const isPartial  = !isFilled && order.filledQty > 0;
+
+  const qtyMeta = isLot
+    ? `${fmtQty(order.lots!)} lot × ${fmtQty(order.totalQty)}`
+    : isFilled
+      ? fmtQty(order.totalQty)
+      : isPartial
+        ? `${fmtQty(order.filledQty)} / ${fmtQty(order.totalQty)}`
+        : fmtQty(order.totalQty);
+
+  const priceMeta = order.kind === "completed"
+    ? `Avg $${(order as CompletedOrder).avgExecutedPrice}`
+    : priceLabel(order.priceType, order.price);
+
   return (
-    <>
-      <button
-        onClick={() => router.push(`/order-detail/${order.orderId}`)}
-        className="w-full text-left px-5 py-4 active:opacity-75 transition-opacity"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <SideBadge side={order.side} />
-            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-              <p className="text-[16px] font-bold text-foreground tracking-wide whitespace-nowrap">{label}</p>
-              {order.tag && (
-                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">{order.tag}</span>
-              )}
-            </div>
-          </div>
-          <QtyRight order={order} />
-        </div>
-
-        <div className={cn("flex items-center mt-2 pl-[30px]", order.kind === "failed" ? "justify-between" : "justify-end")}>
-          {order.kind === "failed" && (
-            <p className="text-[16px] font-semibold text-red-500">{(order as FailedOrder).failReason}</p>
+    <button
+      onClick={() => router.push(`/order-detail/${order.orderId}`)}
+      className="w-full text-left px-5 py-5 flex items-start gap-3 active:opacity-75 transition-opacity"
+    >
+      {/* Left */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+          {order.kind !== "completed" && (
+            <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground shrink-0">
+              {order.side === "B" ? "BUY" : "SELL"}
+            </span>
           )}
-          {order.kind === "completed" && (
-            <p className="text-[16px] text-muted-foreground font-medium">
-              {order.priceType === "market" ? "Market Price" : "Limit Price"}: ${(order as CompletedOrder).avgExecutedPrice}
-            </p>
+          <p className="text-[15px] font-bold text-foreground leading-tight">{label}</p>
+          {order.tag && (
+            <span className="rounded bg-[#E3E3E3] px-1 py-0.5 text-[10px] font-bold text-foreground">{order.tag}</span>
           )}
-          {order.kind === "open" && (
-            <p className="text-[16px] text-muted-foreground font-medium">{priceLabel(order.priceType, order.price)}</p>
+          {isPartial && (
+            <span className="text-[11px] font-semibold text-amber-600">Partial fill</span>
           )}
         </div>
-      </button>
+        <p className="text-[12px] text-muted-foreground tabular-nums">
+          {qtyMeta} · {priceMeta}
+        </p>
+        {order.kind === "failed" && (
+          <p className="text-[12px] font-semibold text-red-500 mt-0.5">{(order as FailedOrder).failReason}</p>
+        )}
+      </div>
 
-    </>
+      {/* Right */}
+      <div className="text-right shrink-0">
+        <p className="text-[15px] font-bold text-foreground tabular-nums leading-tight">
+          ${order.investedAmount.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+        </p>
+        <p className="text-[12px] text-muted-foreground mt-0.5">{order.time}</p>
+      </div>
+    </button>
   );
 }
