@@ -52,42 +52,22 @@ function TransactionTimeline({ transactions, currentPrice, currentQty }: {
       {sorted.map((tx, i) => {
         const isBuy = tx.side === "buy";
         running = parseFloat((running + (isBuy ? tx.qty : -tx.qty)).toFixed(8));
-        const unrealised = isBuy ? (currentPrice - tx.price) * tx.qty : null;
-        const unrealisedPct = isBuy ? ((currentPrice - tx.price) / tx.price) * 100 : null;
-
         return (
-          <div key={i} className="flex items-center justify-between gap-3 py-3.5">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                  {isBuy ? "Buy" : "Sell"}
-                </span>
-                <span className="text-muted-foreground/30 text-[10px]">·</span>
-                <p className="text-[13px] font-semibold text-foreground">{tx.date}</p>
-              </div>
-              <p className="text-[12px] text-muted-foreground">
-                {fmtQty(tx.qty)} shares @ ${tx.price.toFixed(2)} · {fmtQty(running)} held after
-              </p>
+          <div key={i} className="py-3.5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                {isBuy ? "Buy" : "Sell"}
+              </span>
+              <span className="text-muted-foreground/30 text-[10px]">·</span>
+              <p className="text-[13px] font-semibold text-foreground">{tx.date}</p>
             </div>
-
-            <div className="text-right shrink-0">
-              {isBuy && unrealised !== null && unrealisedPct !== null ? (
-                <>
-                  <p className="text-[13px] font-semibold tabular-nums text-foreground">
-                    {unrealisedPct >= 0 ? "+" : ""}{unrealisedPct.toFixed(2)}%
-                  </p>
-                  <p className="text-[12px] tabular-nums text-muted-foreground">
-                    {unrealised >= 0 ? "+" : ""}${fmtMoney(Math.abs(unrealised))}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-[13px] font-semibold tabular-nums text-foreground">
-                    ${fmtMoney(tx.price * tx.qty)}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground">Proceeds</p>
-                </>
-              )}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[12px] text-muted-foreground">
+                {fmtQty(tx.qty)} shares @ ${tx.price.toFixed(2)}
+              </p>
+              <p className="text-[12px] text-muted-foreground shrink-0">
+                {fmtQty(running)} held after
+              </p>
             </div>
           </div>
         );
