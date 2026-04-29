@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, LogOut, ArrowRight, AlertTriangle, Clock, X, Zap, BarChart2, Activity } from "lucide-react";
+import { Plus, LogOut, ArrowRight, AlertTriangle, Clock, X, Zap, BarChart2, Activity, TrendingUp, TrendingDown } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 

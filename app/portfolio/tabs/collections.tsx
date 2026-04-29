@@ -313,7 +313,7 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
 
         {/* Stacked allocation bar */}
         <div className="h-1.5 rounded-full overflow-hidden flex gap-px mt-4">
-          {COLLECTIONS.map((c, i) => (
+          {COLLECTIONS.map((c) => (
             <div
               key={c.id}
               className="h-full bg-foreground"
@@ -328,7 +328,7 @@ export function CollectionsTab({ empty }: { empty?: boolean }) {
         <p className="text-[16px] text-foreground">{COLLECTIONS.length} Collections</p>
       </div>
       <div className="px-5 py-2 divide-y divide-border/40 border-t border-border/40 border-b border-b-border/40">
-        {COLLECTIONS.map((c, i) => (
+        {COLLECTIONS.map((c) => (
           <CollectionCard key={c.id} col={c} />
         ))}
       </div>
