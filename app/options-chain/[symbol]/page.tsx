@@ -388,7 +388,7 @@ export default function OptionsChainPage() {
           onClick={() => setExpiryOpen(true)}
           className="flex items-center gap-1 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-semibold text-foreground active:opacity-70 shrink-0"
         >
-          {expiryShort} <span className="text-muted-foreground font-normal">({expiryTag})</span> <ChevronDown size={13} strokeWidth={2.5} />
+          <span className="text-muted-foreground font-normal">Expiry</span> {expiryShort} <span className="text-muted-foreground font-normal">({expiryTag})</span> <ChevronDown size={13} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -991,7 +991,7 @@ export default function OptionsChainPage() {
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 rounded-full bg-border" />
               </div>
-              <p className="px-5 pt-2 pb-3 text-[20px] font-bold text-foreground">Expiry</p>
+              <p className="px-5 pt-2 pb-3 text-[20px] font-bold text-foreground">Options Expiry</p>
               <div className="overflow-y-auto no-scrollbar" style={{ maxHeight: "72vh" }}>
                 {expiryGroups.map((group) => (
                   <div key={group.label}>
